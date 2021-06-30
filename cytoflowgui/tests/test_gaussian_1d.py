@@ -147,6 +147,7 @@ class TestGaussian1D(ImportedDataTest):
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view = self.wi.current_view = self.wi.default_view
+        self.view.current_plot = (1.0, 'A')
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
@@ -177,6 +178,7 @@ class TestGaussian1D(ImportedDataTest):
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view = self.wi.current_view = self.wi.default_view
+        self.view.current_plot = (1.0, 'A')
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
   
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')

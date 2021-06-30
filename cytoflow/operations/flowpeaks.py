@@ -256,6 +256,10 @@ class FlowPeaksOp(HasStrictTraits):
             raise util.CytoflowOpError('channels',
                                        "Must set at least one channel")
 
+        if len(self.channels) != len(set(self.channels)):
+            raise util.CytoflowOpError('channels', 
+                                       "Must not duplicate channels")
+
         for c in self.channels:
             if c not in experiment.data:
                 raise util.CytoflowOpError('channels',

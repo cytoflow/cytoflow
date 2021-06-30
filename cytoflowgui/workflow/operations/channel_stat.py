@@ -70,7 +70,7 @@ class ChannelStatisticWorkflowOp(WorkflowOperation, ChannelStatisticOp):
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
     subset = Property(Str, observe = "subset_list.items.str")
-    subset_list = List(ISubset)
+    subset_list = List(ISubset, apply = True)
     
     # functions aren't picklable, so make this one transient 
     # and send the name instead

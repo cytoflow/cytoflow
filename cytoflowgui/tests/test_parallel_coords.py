@@ -49,7 +49,6 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
                         
     def testBase(self):
-        self.fail("Fix this whole test fixture!  Lots of failures, but not showing.")
         pass
 
     def testChangeScale(self):
@@ -92,7 +91,7 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
             
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
-         
+                  
         exec(code)
 
     def testSerialize(self):

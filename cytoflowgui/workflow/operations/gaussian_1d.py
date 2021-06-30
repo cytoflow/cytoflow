@@ -86,7 +86,10 @@ class GaussianMixture1DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
         
     def get_notebook_code(self, idx):
         op = GaussianMixtureOp()
-        op.copy_traits(self, op.copyable_trait_names())      
+        op.copy_traits(self, op.copyable_trait_names())    
+        
+        op.channels = [self.channel]
+        op.scale = {self.channel : self.channel_scale}  
 
         return dedent("""
         op_{idx} = {repr}

@@ -19,6 +19,7 @@
 import numpy as np
 import scipy.stats
 import pandas
+from warnings import warn
 
 from traits.api import (Str, Callable, Property, List, provides, observe, Tuple, Undefined)
 
@@ -57,12 +58,12 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
     name = Str(apply = True)
     statistic = Tuple(Str, Str, apply = True)
     statistic_name = Str(apply = True)
-    by = List(Str)  
+    by = List(Str, apply = True)  
     
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
     subset = Property(Str, observe = "subset_list.items.str")
-    subset_list = List(ISubset)
+    subset_list = List(ISubset, apply = True)
 
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)
@@ -92,7 +93,16 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
         
         self.function = transform_functions[self.statistic_name]
         
-        return TransformStatisticOp.apply(self, experiment)
+        ret = TransformStatisticOp.apply(self, experiment)
+        
+        stat = ret.statistics[(self.name, self.statistic_name)]
+        
+        if Undefined in stat:
+            warn("One of the transformed values was Undefined. "
+                 "Subsequent operations may fail. "
+                 "Please report this as a bug! ")
+                    
+        return ret
     
     def clear_estimate(self):
         # no-op
@@ -100,7 +110,7 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
 
     def get_notebook_code(self, idx):
         op = TransformStatisticOp()
-        op.copy_traits(self, op.copyable_trait_names())
+        op.copy_traits(self, [x for x in op.copyable_trait_names() if x != 'fill'])
         
         fn_import = {"Mean" : "from numpy import mean",
                      "Median" : "from numpy import median",

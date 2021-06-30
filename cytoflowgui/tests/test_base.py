@@ -288,7 +288,7 @@ class BaseViewTest:
         
         # colwrap
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.xfacet = "Dox"
+        self.view.xfacet = "IP"
         self.view.plot_params.col_wrap = 2
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
            

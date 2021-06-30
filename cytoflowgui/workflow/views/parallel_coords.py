@@ -47,10 +47,6 @@ class ParallelCoordinatesWorkflowView(WorkflowFacetView, ParallelCoordinatesView
     def get_notebook_code(self, idx):
         view = ParallelCoordinatesView()
         view.copy_traits(self, view.copyable_trait_names())
-        
-        for channel in self.channels_list:
-            view.channels.append(channel.channel)
-            view.scale[channel.channel] = channel.scale
             
         plot_params_str = traits_str(self.plot_params)
 
@@ -59,11 +55,11 @@ class ParallelCoordinatesWorkflowView(WorkflowFacetView, ParallelCoordinatesView
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot = ", plot_name = " + repr(self.plotfacet) if self.plotfacet else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
         
-    @observe('[channels_list.items,channels_list.items.channel,channels_list.items.scale]')
+    @observe('[channels_list:items,channels_list:items:channel,channels_list:items:scale]')
     def _channels_updated(self, event):
         self.changed = 'channels_list'
         

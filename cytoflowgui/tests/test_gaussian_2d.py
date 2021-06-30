@@ -173,17 +173,22 @@ class TestGaussian2D(ImportedDataTest):
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view = self.wi.current_view = self.wi.default_view
+        self.view.current_plot = (1.0, 'A')
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.xfacet = "Dox"
+        self.view.current_plot = "A"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yfacet = "Well"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yfacet = ""
+        self.view.huefacet = "Well"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
-        
     
  
     def testSerialize(self):
@@ -207,7 +212,7 @@ class TestGaussian2D(ImportedDataTest):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
-         
+                     
         exec(code)
         nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")

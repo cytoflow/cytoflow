@@ -24,6 +24,7 @@ cytoflow.operations.base_op_views
 
 from warnings import warn
 import collections
+from natsort import natsorted
 
 from traits.api import (provides, Instance, Property, List, DelegatesTo)
 
@@ -100,7 +101,7 @@ class ByView(OpView):
     by = Property(List)
     
     def _get_facets(self):
-        return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]   
+        return natsorted([x for x in [self.xfacet, self.yfacet, self.huefacet] if x])
     
     def _get_by(self):
         if self.op.by:
@@ -166,7 +167,7 @@ class ByView(OpView):
                                              "Subset string '{0}' returned no events"
                                              .format(self.subset))
                 
-        by = list(set(self.by) - set(self.facets)) 
+        by = [x for x in self.by if x not in self.facets]
         
         class plot_enum(object):
             
@@ -255,7 +256,7 @@ class ByView(OpView):
                 
         # see if we're making subplots
         
-        by = list(set(self.by) - set(self.facets)) 
+        by = [x for x in self.by if x not in self.facets]
         
         plot_name = kwargs.get('plot_name', None)
 
@@ -269,15 +270,20 @@ class ByView(OpView):
         if plot_name is not None:
             if plot_name is not None and not by:
                 raise util.CytoflowViewError('plot_name',
-                                             "Plot {} not from enum_plots()"
+                                             "Don't set view.plot_name if you don't also set operation.by"
                                              .format(plot_name))
                                
             groupby = experiment.data.groupby(by)
 
-            if plot_name not in set(groupby.groups.keys()):
+            if plot_name not in groupby.groups.keys():
                 raise util.CytoflowViewError('plot_name',
-                                             "Plot {} not from enum_plots()"
-                                             .format(plot_name))
+                                             "Plot {} must be one of the values "
+                                             "returned by enum_plots(). "
+                                             "Possible plot names: {} " 
+                                             "(DEBUG: groupby keys: {}"
+                                             .format(plot_name, 
+                                                     [x for x in self.enum_plots(experiment)],
+                                                     groupby.groups.keys()))
                 
             experiment = experiment.clone()
             experiment.data = groupby.get_group(plot_name)

@@ -115,7 +115,6 @@ class BeadCalibrationWorkflowOp(WorkflowOperation, BeadCalibrationOp):
                     
         op.beads = self.BEADS[self.beads_name]
         
-
         return dedent("""
         # Beads: {beads}
         op_{idx} = {repr}

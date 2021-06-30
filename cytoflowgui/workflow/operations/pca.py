@@ -103,10 +103,6 @@ class PCAWorkflowOp(WorkflowOperation, PCAOp):
     def get_notebook_code(self, idx):
         op = PCAOp()
         op.copy_traits(self, op.copyable_trait_names())
-        
-        for channel in self.channels_list:
-            op.channels.append(channel.channel)
-            op.scale[channel.channel] = channel.scale
 
         return dedent("""
         op_{idx} = {repr}
