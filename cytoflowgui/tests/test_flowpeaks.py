@@ -62,7 +62,7 @@ class TestFlowPeaks(ImportedDataTest):
         
         # run estimate
         op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
@@ -76,7 +76,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
@@ -86,7 +86,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeScale(self):
@@ -97,7 +97,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
@@ -107,7 +107,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
                 
     def testChangeBy(self):
@@ -118,7 +118,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
                 
     def testChangeParams(self):
@@ -129,7 +129,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
@@ -139,7 +139,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
                 
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
@@ -149,7 +149,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
@@ -159,7 +159,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
            
     def testChangeSubset(self):
@@ -170,7 +170,7 @@ class TestFlowPeaks(ImportedDataTest):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
                   
     def testPlot(self):
@@ -182,7 +182,7 @@ class TestFlowPeaks(ImportedDataTest):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.show_density = True
         self.wi.current_view = self.wi.default_view
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+        self.workflow.wi_waitfor(self.wi, 'view_error', '', 60)
    
     def testSerializeOp(self):
         fh, filename = tempfile.mkstemp()

@@ -75,14 +75,9 @@ class KMeansWorkflowOp(WorkflowOperation, KMeansOp):
             raise util.CytoflowOpError('ychannel',
                                        "Must set Y channel")
         
-        self.channels = []
-        self.scale = {}
-
-        self.channels.append(self.xchannel)
-        self.scale[self.xchannel] = self.xscale
-        
-        self.channels.append(self.ychannel)
-        self.scale[self.ychannel] = self.yscale
+        self.channels = [self.xchannel, self.ychannel]
+        self.scale = {self.xchannel : self.xscale,
+                      self.ychannel : self.yscale}
         
         super().estimate(experiment, subset = self.subset)
         
@@ -97,7 +92,10 @@ class KMeansWorkflowOp(WorkflowOperation, KMeansOp):
     
     def get_notebook_code(self, idx):
         op = KMeansOp()
-        op.copy_traits(self, op.copyable_trait_names())      
+        op.copy_traits(self, op.copyable_trait_names())     
+        op.channels = [self.xchannel, self.ychannel] 
+        op.scale = {self.xchannel : self.xscale,
+                    self.ychannel : self.yscale}
 
         return dedent("""
         op_{idx} = {repr}

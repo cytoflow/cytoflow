@@ -58,7 +58,7 @@ class ImportWorkflowOp(WorkflowOperation, ImportOp):
     name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
     
     # how many events did we load?
-    ret_events = util.PositiveInt(0, allow_zero = True, status = True, estimate_result = True)
+    ret_events = util.PositiveInt(0, allow_zero = True, status = True, estimate_result = True, transient = True)
     
     # since we're actually calling super().apply() from self.estimate(), we need
     # to keep around the actual experiment that's returned

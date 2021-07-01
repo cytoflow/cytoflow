@@ -28,7 +28,7 @@ import pandas as pd
 
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations.tasbe import TasbeWorkflowOp, BleedthroughControl, TranslationControl
+from cytoflowgui.workflow.operations.tasbe import TasbeWorkflowOp, BleedthroughControl, TranslationControl, BeadUnit
 from cytoflowgui.workflow.subset import BoolSubset
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
@@ -63,6 +63,7 @@ class TestTASBE(TasbeTest):
         op.beads_file = self.cwd + "/../../cytoflow/tests/data/tasbe/beads.fcs"
         op.beads_unit = "MEFL"
         
+        op.do_color_translation = True
         op.to_channel = "FITC-A"
         
         self.op.translation_list[0].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
@@ -91,6 +92,36 @@ class TestTASBE(TasbeTest):
         self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))     
 
+    def testChangeChannelsThenPlot(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.channels = ["FITC-A", "Pacific Blue-A"]
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+        self.assertTrue(len(self.op.translation_list) == 1)
+        self.assertTrue(len(self.op.bleedthrough_list) == 2)
+
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.do_estimate = True
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))     
+        
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.wi.current_view = self.wi.default_view
+        self.wi.default_view.current_plot = "Autofluorescence"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.wi.default_view.current_plot = "Bleedthrough"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.wi.default_view.current_plot = "Bead Calibration"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+         
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.wi.default_view.current_plot = "Color Translation"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+
     def testPlot(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
@@ -110,7 +141,7 @@ class TestTASBE(TasbeTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(BleedthroughControl, TranslationControl):
+        with params_traits_comparator(BleedthroughControl, TranslationControl, BeadUnit):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)
@@ -121,7 +152,13 @@ class TestTASBE(TasbeTest):
                 os.unlink(filename)
 
             self.maxDiff = None
-
+            
+            # o = self.op.trait_get(self.op.copyable_trait_names())
+            # n = new_op.trait_get(self.op.copyable_trait_names())
+            #
+            # import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.3.0.202104101217/pysrc')
+            # import pydevd;pydevd.settrace()
+            
             self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
                                  new_op.trait_get(self.op.copyable_trait_names()))
 

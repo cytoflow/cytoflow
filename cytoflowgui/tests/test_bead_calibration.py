@@ -60,20 +60,6 @@ class TestBeadCalibration(TasbeTest):
     def testEstimate(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
-    def testTextParams(self):
-        self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.bead_peak_quantile = "75"
-        self.op.bead_brightness_threshold = "95.0"
-        self.op.bead_brightness_cutoff = "262000"
-        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
-
-        self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.do_estimate = True
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
-
-        
     def testRemoveChannel(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.units_list.pop()

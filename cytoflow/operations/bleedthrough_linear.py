@@ -22,6 +22,7 @@ cytoflow.operations.bleedthrough_linear
 ---------------------------------------
 '''
 import os, math
+from natsort import natsorted
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Instance,
                         Constant, Tuple, Float, Any, provides)
@@ -410,10 +411,11 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
         
-        _, axes2d = plt.subplots(nrows=3, ncols=3)    
+        channels = natsorted(list(set([x for (x, _) in list(self.op.spillover.keys())])))
+        num_channels = len(channels)
+        _, axes2d = plt.subplots(nrows=num_channels, ncols=num_channels)    
         
         # the completely arbitrary ordering of the channels
-        channels = list(set([x for (x, _) in list(self.op.spillover.keys())]))
         # num_channels = len(channels)
 
         for to_idx, row in enumerate(axes2d):

@@ -110,7 +110,7 @@ class TasbeWorkflowOp(WorkflowOperation):
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
     
-    estimate_progress = Str(Progress.NO_MODEL, estimate_result = True, status = True)
+    estimate_progress = Str(Progress.NO_MODEL, transient = True, estimate_result = True, status = True)
         
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
@@ -128,14 +128,12 @@ class TasbeWorkflowOp(WorkflowOperation):
     
     @observe('channels.items,to_channel,do_color_translation', post_init = True)
     def _on_channels_changed(self, _):
+        
+        # bleedthrough
         for channel in self.channels:
             if channel not in [control.channel for control in self.bleedthrough_list]:
                 self.bleedthrough_list.append(BleedthroughControl(channel = channel))
-                
-            if channel not in [unit.channel for unit in self.units_list]:
-                self.units_list.append(BeadUnit(channel = channel))
 
-            
         to_remove = []    
         for control in self.bleedthrough_list:
             if control.channel not in self.channels:
@@ -144,6 +142,12 @@ class TasbeWorkflowOp(WorkflowOperation):
         for control in to_remove:
             self.bleedthrough_list.remove(control)
             
+            
+        # bead calibration
+        for channel in self.channels:                
+            if channel not in [unit.channel for unit in self.units_list]:
+                self.units_list.append(BeadUnit(channel = channel))
+
         to_remove = []    
         for unit in self.units_list:
             if unit.channel not in self.channels:
@@ -151,22 +155,27 @@ class TasbeWorkflowOp(WorkflowOperation):
         
         for unit in to_remove:        
             self.units_list.remove(unit)
-                
-        if self.do_color_translation:
-            to_remove = []
-            for unit in self.units_list:
-                if unit.channel != self.to_channel:
-                    to_remove.append(unit)
             
-            for unit in to_remove:
-                self.units_list.remove(unit)
-                 
+        # color translation
+        if self.to_channel not in self.channels:
             self.translation_list = []
-            for c in self.channels:
-                if c == self.to_channel:
-                    continue
-                self.translation_list.append(TranslationControl(from_channel = c,
-                                                                 to_channel = self.to_channel))    
+            self.to_channel = ''
+            return 
+        
+        for channel in self.channels:
+            if channel != self.to_channel:
+                if channel not in [control.from_channel for control in self.translation_list]:
+                    self.translation_list.append(TranslationControl(from_channel = channel,
+                                                                    to_channel = self.to_channel))
+                 
+        to_remove = []
+        for control in self.translation_list:
+            if control.from_channel not in self.channels or \
+               control.to_channel not in self.channels:
+                to_remove.append(control)
+                
+        for control in to_remove:
+            self.translation_list.remove(control)
 
 
     @observe('to_channel', post_init = True)
@@ -448,7 +457,7 @@ def _load_v1(data, version):
     # and do_color_translation, both of which have okay defaults
     return TasbeWorkflowOp(**data)
     
-@camel_registry.loader('tasbe', version = 1)
+@camel_registry.loader('tasbe', version = 2)
 def _load_v2(data, version):
     return TasbeWorkflowOp(**data)
 
