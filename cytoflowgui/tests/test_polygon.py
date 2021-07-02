@@ -76,7 +76,7 @@ class TestPolygon(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view._vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
@@ -86,7 +86,7 @@ class TestPolygon(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view._vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
@@ -97,7 +97,7 @@ class TestPolygon(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view._vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
@@ -107,7 +107,7 @@ class TestPolygon(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view._vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
  

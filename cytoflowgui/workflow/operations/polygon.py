@@ -52,9 +52,10 @@ class PolygonSelectionView(WorkflowView, PolygonSelection):
         if not self.interactive:
             self.op.vertices = self._vertices
         
-    @observe('xchannel, ychannel, xscale, yscale', post_init = True)
+    @observe('xchannel,ychannel,xscale,yscale', post_init = True)
     def _reset_polygon(self, _):
         self._vertices = []
+        self.op.vertices = []
         
     def get_notebook_code(self, idx):
         view = PolygonSelection()
@@ -82,9 +83,9 @@ class PolygonWorkflowOp(WorkflowOperation, PolygonOp):
     # selected on a plot with scaled axes, we need to apply that 
     # scale function to both the vertices and the data before 
     # looking for path membership
-#     xscale = util.ScaleEnum(apply = True)
-#     yscale = util.ScaleEnum(apply = True)
 
+    xscale = util.ScaleEnum(apply = True)
+    yscale = util.ScaleEnum(apply = True)
     
     def default_view(self, **kwargs):
         return PolygonSelectionView(op = self, **kwargs)
