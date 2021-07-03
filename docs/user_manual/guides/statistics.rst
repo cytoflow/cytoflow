@@ -121,8 +121,24 @@ instead of grouping together events from the flow cytometer, it
 groups together *values in another statistic* before applying the
 function.  (This way, it *transforms* that statistic -- see?)
 
-This time, I'll group by *Day*
+This time, I'll group by **Drug** (and *not* **Day**).  Remember, this will
+take the starting statistic, split it into groups for each unique value
+of **Drug**, and then apply the **Fold** function to each group.  (Fold
+simply divides every value in the group by the minimum value.)
 
-TODO - fix this after the Transform Statistic is fixed!
+.. image:: images/stats10.png
 
- 
+.. image:: images/stats11.png
+
+The **Fold** function produces a statistic the same size and shape as
+the one it's operating on.  However, some functions *reduce* the size
+of the statistic -- for example, if we apply **Geom.Mean** again, 
+we only get a table with one column (because it's taking the geometric
+mean of all the values in each group):
+
+.. image:: images/stats12.png
+
+Statistics are a pretty key part of the way ``Cytoflow`` is meant to be
+used.  I hope this explanation made sense -- if you feel it can be 
+improved, please feel free to submit a bug (or, even better, a patch
+or pull request) to improve it.
