@@ -175,16 +175,23 @@ def _load_categoricalindex(data, version):
                                    categories = data['categories'],
                                    ordered = data['ordered'])
 
-@camel_registry.dumper(pandas.Series, 'pandas-series', version = 2)
-def _dump_series(s):
-    return dict(index = s.index,
-                data = s.values.tolist(),
-                dtype = s.dtype)
     
 @camel_registry.dumper(pandas.Series, 'pandas-series', version = 1)
 def _dump_series_v1(s):
     return dict(index = list(s.index),
                 data = list(s.values))
+
+@camel_registry.dumper(pandas.Series, 'pandas-series', version = 2)
+def _dump_series_v2(s):
+    return dict(index = s.index,
+                data = s.values.tolist(),
+                dtype = s.dtype)
+
+@camel_registry.dumper(pandas.Series, 'pandas-series', version = 3)
+def _dump_series(s):
+    return dict(index = s.index,
+                data = s.values.tolist(),
+                dtype = str(s.dtype))
     
 @camel_registry.loader('pandas-series', version = 1)
 def _load_series_v1(data, version):
@@ -200,6 +207,12 @@ def _load_series_v1(data, version):
     
 @camel_registry.loader('pandas-series', version = 2)
 def _load_series_v2(data, version):
+    return pandas.Series(data = data['data'],
+                         index = data['index'],
+                         dtype = data['dtype'])
+
+@camel_registry.loader('pandas-series', version = 3)
+def _load_series_v3(data, version):
     return pandas.Series(data = data['data'],
                          index = data['index'],
                          dtype = data['dtype'])
