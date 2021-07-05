@@ -108,9 +108,9 @@ pair of elements with the same value of **Variable**; the X value is from
 
 import pandas as pd
 
-from traits.api import provides, Property
+from traits.api import provides, Property, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -321,8 +321,8 @@ class Stats2DPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('stats_2d')
 
-    @contributes_to(VIEW_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = VIEW_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     
 

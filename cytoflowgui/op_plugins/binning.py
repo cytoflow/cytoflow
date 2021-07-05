@@ -64,15 +64,14 @@ which the event is located.
     bin_op.default_view().plot(ex2) 
 '''
 
-from traits.api import provides
-from traitsui.api import (View, Item, EnumEditor, VGroup, TextEditor, 
-                          CheckListEditor, ButtonEditor)
-from envisage.api import Plugin, contributes_to
+from traits.api import provides, List
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..view_plugins import ViewHandler
 from ..view_plugins.histogram import HistogramParamsHandler
-from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..editors import SubsetListEditor, ColorTextEditor, InstanceHandlerEditor
 from ..workflow.operations import BinningWorkflowOp, BinningWorkflowView
 from ..subset_controllers import subset_handler_factory
 
@@ -155,8 +154,6 @@ class BinningPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('binning')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

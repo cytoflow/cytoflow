@@ -75,9 +75,9 @@ Plots a "smoothed" histogram.
                    
 """
 
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..workflow.views import Kde1DWorkflowView, Kde1DPlotParams
@@ -178,9 +178,8 @@ class Kde1DPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('kde_1d')
 
-    @contributes_to(VIEW_PLUGIN_EXT)
-    def get_plugin(self):
-        return self         
-
+    plugin = List(contributes_to = VIEW_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
 
 

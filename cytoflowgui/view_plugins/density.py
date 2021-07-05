@@ -71,9 +71,9 @@ Plots a 2-dimensional density plot.
 
 """
 
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..workflow.views import DensityWorkflowView, DensityPlotParams
@@ -173,8 +173,8 @@ class DensityPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('density')
 
-    @contributes_to(VIEW_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = VIEW_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
         
 

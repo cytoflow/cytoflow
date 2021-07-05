@@ -82,16 +82,16 @@ an unsupervized manner.
 
 '''
 
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import (View, Item, EnumEditor, VGroup, TextEditor, 
                           CheckListEditor, ButtonEditor)
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..view_plugins import ViewHandler
 from ..view_plugins.scatterplot import ScatterplotParamsHandler
 from ..view_plugins.density import DensityParamsHandler
-from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..editors import SubsetListEditor, ColorTextEditor, InstanceHandlerEditor
 from ..workflow.operations import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
 from ..subset_controllers import subset_handler_factory
 
@@ -217,6 +217,6 @@ class FlowPeaksPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('flowpeaks')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

@@ -38,10 +38,10 @@ ratio of two other channels.
     
 '''
 
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import (View, Item, TextEditor, EnumEditor)
 from pyface.api import ImageResource
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
                        
 from ..workflow.operations import RatioWorkflowOp
 
@@ -80,7 +80,6 @@ class RatioPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('ratio')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

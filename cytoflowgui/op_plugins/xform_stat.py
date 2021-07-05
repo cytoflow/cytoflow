@@ -54,10 +54,10 @@ in **By**, then applies **Function** to the statistic in each group.
 import numpy as np
 import pandas as pd
 
-from traits.api import provides, Property
+from traits.api import provides, Property, List
 from traitsui.api import (View, Item, TextEditor, VGroup, EnumEditor, CheckListEditor)
 from pyface.api import ImageResource
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
                        
 from ..workflow.operations import TransformStatisticWorkflowOp
 from ..workflow.operations.xform_stat import transform_functions
@@ -179,8 +179,6 @@ class TransformStatisticPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('xform_stat')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

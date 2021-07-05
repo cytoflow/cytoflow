@@ -18,8 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from traits.api import Interface, Constant
-from envisage.api import contributes_to
+from traits.api import Interface, Constant, List
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -88,8 +87,8 @@ class IOperationPlugin(Interface):
         """      
         
         
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
         """
         Gets the :mod:`envisage` plugin for this operation (usually `self`).
         

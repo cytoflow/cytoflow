@@ -33,7 +33,7 @@ from traitsui.api import ButtonEditor, View, TextEditor, Item
 
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane, VSplitter, ITaskPane, TaskPane
 from pyface.tasks.action.api import SMenuBar, SMenu, TaskToggleGroup
-from envisage.api import Plugin, contributes_to, ExtensionPoint
+from envisage.api import Plugin, ExtensionPoint
 from envisage.ui.tasks.api import TaskFactory
 from pyface.api import FileDialog, OK, error
 from pyface.qt import QtGui
@@ -249,18 +249,18 @@ class ExportFigurePlugin(Plugin):
     # Protected interface.
     ###########################################################################
 
-    @contributes_to(PREFERENCES)
-    def _get_preferences(self):
+    preferences = List(contributes_to = PREFERENCES)
+    def _preferences_default(self):
         filename = os.path.join(os.path.dirname(__file__), 'preferences.ini')
         return [ 'file://' + filename ]
     
-    @contributes_to(PREFERENCES_PANES)
-    def _get_preferences_panes(self):
+    preferences_panes = List(contributes_to = PREFERENCES_PANES)
+    def _preferences_panes_default(self):
         from .preferences import CytoflowPreferencesPane
         return [CytoflowPreferencesPane]
 
-    @contributes_to(TASKS)
-    def _get_tasks(self):
+    tasks = List(contributes_to = TASKS)
+    def _tasks_default(self):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.export_task',
                             name = 'Export figure',
                             factory = lambda **x: ExportTask(application = self.application,
