@@ -12,10 +12,7 @@ on. They can help you use Cytoflow more effectively!
    
    facets
    statistics
+   mean
 
-..
-  Multivariate data - facets
-  Statistics - what are they? How do I use them?
-  Which estimate of center should I use?
   
   
