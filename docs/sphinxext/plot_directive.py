@@ -477,7 +477,7 @@ def run_code(code, code_path, ns=None, function_name=None):
                 if function_name is not None:
                     exec(function_name + "()", ns)
 
-        except (Exception, SystemExit):
+        except (Exception, SystemExit) as err:
             raise PlotError(traceback.format_exc()) from err
         finally:
             os.chdir(pwd)
