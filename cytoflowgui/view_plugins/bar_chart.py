@@ -90,9 +90,9 @@ operation's **Group By**) must be set as **Variable** or as a facet.
 
 import pandas as pd
 
-from traits.api import provides, Property
+from traits.api import provides, Property, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..workflow.views import BarChartWorkflowView, BarChartPlotParams
@@ -244,8 +244,8 @@ class BarChartPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('bar_chart')
 
-    @contributes_to(VIEW_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = VIEW_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     
 

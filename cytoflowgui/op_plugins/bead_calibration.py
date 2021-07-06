@@ -92,7 +92,7 @@ from natsort import natsorted
 
 from traits.api import provides, Event, Property, List, Str
 from traitsui.api import View, Item, VGroup, TextEditor, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..view_plugins import ViewHandler
@@ -227,8 +227,7 @@ class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('bead_calibration')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-    
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
+

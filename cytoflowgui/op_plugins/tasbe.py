@@ -161,9 +161,9 @@ translation) into one easy-use-interface.
         ex4 = color_op.apply(ex3)  
 '''
 
-from traits.api import provides, Property
+from traits.api import provides, Property, List
 from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller, CheckListEditor, TextEditor
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from cytoflow.operations.bead_calibration import BeadCalibrationOp
@@ -345,7 +345,7 @@ class TasbePlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('tasbe')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     

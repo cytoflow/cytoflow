@@ -96,12 +96,12 @@ Import FCS files and associate them with experimental conditions (metadata.)
 
 """
 
-from traits.api import (Button, Property, cached_property, 
+from traits.api import (Button, Property, cached_property, List,
                         Instance, provides, observe, Event)
 from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, 
                           HGroup, VGroup, Label)
 
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
                        
 from cytoflowgui.editors import VerticalListEditor, InstanceHandlerEditor
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
@@ -209,8 +209,8 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return None
         
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     
 

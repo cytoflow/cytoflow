@@ -61,9 +61,9 @@ non-fluorescent, and that the module found the population median.
     af_op.default_view().plot(ex) 
 
 '''
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import View, Item, VGroup, CheckListEditor, ButtonEditor, FileEditor
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..view_plugins import ViewHandler
@@ -135,7 +135,7 @@ class AutofluorescencePlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('autofluorescence')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
 

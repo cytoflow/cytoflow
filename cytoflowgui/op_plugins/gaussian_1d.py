@@ -101,10 +101,10 @@ estimating and applying a mixture model.
     gm_op.default_view().plot(ex2)
 '''
 
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import (View, Item, EnumEditor, VGroup, TextEditor, 
                           CheckListEditor, ButtonEditor)
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..view_plugins import ViewHandler
@@ -217,8 +217,7 @@ class GaussianMixture1DPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('gauss_1d')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
    

@@ -49,10 +49,10 @@ in **By**, then applies **Function** to the **Channel** in each group.
 """
 
 
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import (View, Item, TextEditor, VGroup, EnumEditor, CheckListEditor)
 from pyface.api import ImageResource
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
                        
 from ..workflow.operations import ChannelStatisticWorkflowOp
 from ..workflow.operations.channel_stat import summary_functions
@@ -109,7 +109,7 @@ class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('channel_stat')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
+

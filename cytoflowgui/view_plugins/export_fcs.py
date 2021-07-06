@@ -52,9 +52,9 @@ of the files that will be created.
 
 """
 
-from traits.api import provides, Event, observe
+from traits.api import provides, Event, observe, List
 from traitsui.api import (View, Item, VGroup, ButtonEditor, CheckListEditor)
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource, DirectoryDialog, OK
 
 from ..workflow.views import ExportFCSWorkflowView
@@ -139,6 +139,6 @@ class ExportFCSPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('export')
 
-    @contributes_to(VIEW_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = VIEW_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

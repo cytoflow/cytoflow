@@ -40,7 +40,7 @@ from pyface.api import (FileDialog, ImageResource, AboutDialog,
 from pyface.qt import QtGui
 
 from envisage.ui.tasks.api import TaskFactory
-from envisage.api import contributes_to, Plugin, ExtensionPoint
+from envisage.api import Plugin, ExtensionPoint
 
 from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
 from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
@@ -622,18 +622,18 @@ class FlowTaskPlugin(Plugin):
     # Protected interface.
     ###########################################################################
 
-    @contributes_to(PREFERENCES)
-    def _get_preferences(self):
+    preferences = List(contributes_to = PREFERENCES)
+    def _preferences_default(self):
         filename = os.path.join(os.path.dirname(__file__), 'preferences.ini')
         return [ 'file://' + filename ]
     
-    @contributes_to(PREFERENCES_PANES)
-    def _get_preferences_panes(self):
+    preferences_panes = List(contributes_to = PREFERENCES_PANES)
+    def _preferences_panes_default(self):
         from .preferences import CytoflowPreferencesPane
         return [CytoflowPreferencesPane]
 
-    @contributes_to(TASKS)
-    def _get_tasks(self):
+    tasks = List(contributes_to = TASKS)
+    def _tasks_default(self):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,

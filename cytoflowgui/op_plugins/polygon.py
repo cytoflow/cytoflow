@@ -81,9 +81,9 @@ polygon, double-click.
 
 '''
 
-from traits.api import provides
+from traits.api import provides, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
 from ..view_plugins import ViewHandler
@@ -179,8 +179,6 @@ class PolygonPlugin(Plugin, PluginHelpMixin):
     def get_icon(self):
         return ImageResource('polygon')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-
-
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

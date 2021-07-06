@@ -143,9 +143,10 @@ class BaseView(HasStrictTraits):
                                          "col_wrap must be None or > 1")
         
         title = kwargs.pop("title", None)
-        xlabel = kwargs.pop("xlabel", None)
+        xlabel = kwargs.pop("xlabel", None)       
         ylabel = kwargs.pop("ylabel", None)
         huelabel = kwargs.pop("huelabel", self.huefacet)
+        if huelabel == "": huelabel = self.huefacet
         
         sharex = kwargs.pop("sharex", True)
         sharey = kwargs.pop("sharey", True)
