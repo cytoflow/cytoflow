@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+#
+# Run this to update the launcher file with the current path to the application icon
+#
+
+APPDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [ -w "$APPDIR"/cytoflow.desktop ]; then
+	sed -i -e "s@^Icon=.*@Icon=$APPDIR/icon.png@" "$APPDIR"/cytoflow.desktop
+else
+	echo "$APPDIR"/cytoflow.desktop is not writable
+	exit 1
+fi
