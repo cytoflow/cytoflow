@@ -36,7 +36,7 @@ from pathlib import Path
 import pandas
         
 from traits.api import (HasStrictTraits, Instance, Str, Int, List, Bool, Enum, 
-                        Property, CStr, on_trait_change, Dict, Event,
+                        Property, CStr, observe, Dict, Event,
                         cached_property, CFloat, BaseCBool, TraitError)
                        
 from traitsui.api import (View, Item, TableEditor, Controller, InstanceEditor, 
@@ -308,7 +308,7 @@ class ExperimentDialogModel(HasStrictTraits):
                         tube.conditions[trait.name] = tube.trait_get()[trait.name]
     
     
-    @on_trait_change('tubes_items')
+    @observe('tubes:items')
     def _tubes_items(self, event):
         for tube in event.added:
             for trait in self.tube_traits:
@@ -331,7 +331,7 @@ class ExperimentDialogModel(HasStrictTraits):
             else:
                 self.counter[tube_hash] = 1
                  
-    @on_trait_change('tube_traits_items')
+    @observe('tube_traits:items')
     def _tube_traits_changed(self, event):
         for trait in event.added:
             if not trait.name:
@@ -368,8 +368,12 @@ class ExperimentDialogModel(HasStrictTraits):
             else:
                 self.counter[tube_hash] = 1
             
-    @on_trait_change('tube_traits:name')
-    def _on_trait_name_change(self, trait, _, old_name, new_name):
+    @observe('tube_traits:items:name')
+    #def _on_trait_name_change(self, trait, _, old_name, new_name):
+    def _on_trait_name_change(self, event):
+        trait = event.object
+        old_name = event.old
+        new_name = event.new
         for tube in self.tubes:
             trait_value = None
             
@@ -410,8 +414,13 @@ class ExperimentDialogModel(HasStrictTraits):
                 self.counter[tube_hash] = 1
                 
                 
-    @on_trait_change('tube_traits:type')
-    def _on_type_change(self, trait, name, old_type, new_type):
+    @observe('tube_traits:items:type')
+    #def _on_type_change(self, trait, name, old_type, new_type):
+    def _on_type_change(self, event):
+        trait = event.object
+        old_type = event.old
+        new_type = event.new
+
         if not trait.name:
             return
                 
@@ -634,13 +643,13 @@ class ExperimentDialogHandler(Controller):
             self.model.update_import_op(self.import_op)
         
             
-    @on_trait_change('add_variable')
-    def _on_add_variable(self):
+    @observe('add_variable')
+    def _on_add_variable(self, _):
         self.model.tube_traits.append(TubeTrait(model = self.model))
         
             
-    @on_trait_change('import_csv')
-    def _on_import(self):
+    @observe('import_csv')
+    def _on_import(self, _):
         """
         Import format: CSV, first column is filename, path relative to CSV.
         others are conditions, type is autodetected.  first row is header
@@ -679,6 +688,19 @@ class ExperimentDialogHandler(Controller):
             except Exception as e:
                 warning(None, "Had trouble loading file {}: {}".format(filename, str(e)))
                 continue
+            
+            # if we're the first tube loaded, create a dummy experiment
+            # and setup default metadata columns
+            if not self.model.dummy_experiment:
+                self.model.dummy_experiment = \
+                    ImportOp(tubes = [CytoflowTube(file = filename)]).apply(metadata_only = True)
+                                                       
+            # check the next tube against the dummy experiment
+            try:
+                check_tube(filename, self.model.dummy_experiment)
+            except util.CytoflowError as e:
+                error(None, e.__str__(), "Error importing tube")
+                return
 
             metadata['CF_File'] = Path(filename).stem
             new_tube = Tube(file = str(filename), parent = self.model, metadata = sanitize_metadata(metadata))
@@ -686,11 +708,12 @@ class ExperimentDialogHandler(Controller):
 
             for col in csv.columns[1:]:
                 new_tube.trait_set(**{util.sanitize_identifier(col) : row[col]})
+                
             
         
         
-    @on_trait_change('add_tubes')
-    def _on_add_tubes(self):
+    @observe('add_tubes')
+    def _on_add_tubes(self, _):
         """
         Handle "Add tubes..." button.  Add tubes to the experiment.
         """
@@ -733,8 +756,8 @@ class ExperimentDialogHandler(Controller):
                     tube.on_trait_change(self._try_multiedit, trait.name)
          
             
-    @on_trait_change('remove_tubes')
-    def _on_remove_tubes(self):
+    @observe('remove_tubes')
+    def _on_remove_tubes(self, _):
         conf = confirm(None,
                        "Are you sure you want to remove the selected tube(s)?",
                        "Remove tubes?")
@@ -746,7 +769,7 @@ class ExperimentDialogHandler(Controller):
             self.model.dummy_experiment = None
 
                 
-    @on_trait_change('model:tube_traits_items', post_init = True)
+    @observe('model:tube_traits:items', post_init = True)
     def _tube_traits_changed(self, event):
         for trait in event.added:
             if not trait.name:
@@ -771,8 +794,13 @@ class ExperimentDialogHandler(Controller):
                     tube.on_trait_change(self._try_multiedit, trait.name, remove = True)
                     
                     
-    @on_trait_change('model:tube_traits:name')
-    def _tube_trait_name_changed(self, trait, _, old_name, new_name):
+    @observe('model:tube_traits:items:name')
+    def _tube_trait_name_changed(self, event):
+    #def _tube_trait_name_changed(self, trait, _, old_name, new_name):
+        trait = event.object
+        old_name = event.old
+        new_name = event.new
+        
         if old_name:
             old_table_column = next((x for x in self.table_editor.columns if x.name == old_name))
             column_idx = self.table_editor.columns.index(old_table_column)
@@ -807,8 +835,13 @@ class ExperimentDialogHandler(Controller):
             else:
                 self.model.counter[tube_hash] = 1
                 
-    @on_trait_change('model:tube_traits:type')
-    def _tube_trait_type_changed(self, trait, _, old_type, new_type):
+    @observe('model:tube_traits:items:type')
+    def _tube_trait_type_changed(self, event):
+    #def _tube_trait_type_changed(self, trait, _, old_type, new_type):
+        trait = event.object
+        old_type = event.old
+        new_type = event.new
+        
         if not trait.name:
             return
         
