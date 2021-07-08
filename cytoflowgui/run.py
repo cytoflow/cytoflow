@@ -263,7 +263,6 @@ def run_gui():
                               filename = args.filename,
                               debug = args.debug)
 
-    from pyface.qt import QtGui
     QtGui.QApplication.instance().setStyle(QtGui.QStyleFactory.create('Fusion'))
 
     app.run()
