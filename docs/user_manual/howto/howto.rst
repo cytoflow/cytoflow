@@ -22,4 +22,5 @@ something that you find confusing, please feel free to submit a bug report
    :maxdepth: 2
    
    install
+   import
    
