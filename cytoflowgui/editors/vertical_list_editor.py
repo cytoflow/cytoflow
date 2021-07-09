@@ -37,7 +37,8 @@ class _VerticalListEditor(_ListEditor):
     """
     The difference between this class and the underlying ListEditor is that 
     this class doesn't use a scroll area.  Instead, as items are added, it
-    expands.
+    expands.  To enable this behavior, make sure you ask for the 'simple'
+    editor style, NOT 'custom'!
     """
     
     delete_mapper = Instance(QtCore.QSignalMapper)
