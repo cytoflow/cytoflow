@@ -10,8 +10,6 @@ something that you find confusing, please feel free to submit a bug report
 (or even better, a patch or pull request.)
 
 ..
-   Install
-   Import from a table
    Apply bleedthrough correction
    Use different gates for different subsets of data
    Add error bars to estimates
@@ -23,4 +21,7 @@ something that you find confusing, please feel free to submit a bug report
    
    install
    import
+   bleedthrough
+   beads
+   tasbe
    

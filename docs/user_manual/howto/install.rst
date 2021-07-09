@@ -5,7 +5,7 @@ HOWTO: Install Cytoflow
 =======================
 
 Windows
-^^^^^^^
+-------
 
 On Windows, you can use a graphical to install Cytoflow.
 
@@ -33,7 +33,7 @@ On Windows, you can use a graphical to install Cytoflow.
 
 
 MacOS
-^^^^^
+-----
 
 These instructions were developed using OSX Catalina.  I don't own a Mac or
 use one on a regular basis, so if these instructions could be improved, please
@@ -82,7 +82,7 @@ so they may not work on an A1 mac.
    
 
 Linux
-^^^^^
+-----
 
 These instructions were developed on Ubuntu 20.04 -- they should work on
 any modern Linux desktop system.  However, they do require some comfort with
