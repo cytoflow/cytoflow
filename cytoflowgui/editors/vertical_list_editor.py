@@ -35,7 +35,7 @@ from traitsui.editors.list_editor import ListItemProxy
 
 class _VerticalListEditor(_ListEditor):
     """
-    The difference between this class and the underying ListEditor is that 
+    The difference between this class and the underlying ListEditor is that 
     this class doesn't use a scroll area.  Instead, as items are added, it
     expands.
     """
