@@ -253,15 +253,8 @@ class BeadCalibrationOp(HasStrictTraits):
         # make the histogram
         for channel in channels:
             data = beads_exp.data[channel]
-            
-            # TODO - this assumes the data is on a linear scale.  check it!
             data_range = experiment.metadata[channel]['range']
-
-            if self.bead_brightness_cutoff is None:
-                cutoff = 0.7 * data_range
-            else:
-                cutoff = self.bead_brightness_cutoff
-                                            
+                                     
             # bin the data on a log scale
 
             hist_bins = np.logspace(1, math.log(data_range, 2), num = self.bead_histogram_bins, base = 2)
@@ -279,6 +272,14 @@ class BeadCalibrationOp(HasStrictTraits):
             
         # find peaks
         for channel in channels:
+            # TODO - this assumes the data is on a linear scale.  check it!
+            data_range = experiment.metadata[channel]['range']
+
+            if self.bead_brightness_cutoff is None:
+                cutoff = 0.7 * data_range
+            else:
+                cutoff = self.bead_brightness_cutoff
+                   
             hist = self._histograms[channel][0]
             hist_bins = self._histograms[channel][1]
             hist_smooth = self._histograms[channel][2]
