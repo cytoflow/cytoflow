@@ -188,16 +188,6 @@ class FlowTask(Task):
 
         
     def activated(self):
-        
-        # if we're coming back from the TASBE task, re-load the saved
-        # workflow
-        # FIXME
-#         if self.model.backup_workflow:
-#             self.model.workflow = self.model.backup_workflow
-#             self.model.backup_workflow = []
-#             return
-        
-        # else, set up a new workflow
         # add the import op
         if not self.model.workflow:
             self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import') 

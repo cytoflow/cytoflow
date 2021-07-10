@@ -156,7 +156,7 @@ class CytoflowApplication(TasksApplication):
         version.
          
         """
-        state = TasksApplicationState(version = 2)
+        state = TasksApplicationState(version = 3)
         filename = os.path.join(self.state_location, 'application_memento')
         if os.path.exists(filename):
             # Attempt to unpickle the saved application state.

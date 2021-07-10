@@ -151,7 +151,7 @@ class ExportTask(Task):
     do_export = Event
     
     def _default_layout_default(self):
-        return TaskLayout(right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.plot_params_pane", width = 350),
+        return TaskLayout(right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = 350),
                                             PaneItem("edu.mit.synbio.cytoflowgui.export_pane", width = 350)))
      
     def create_central_pane(self):
