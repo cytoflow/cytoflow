@@ -10,10 +10,8 @@ something that you find confusing, please feel free to submit a bug report
 (or even better, a patch or pull request.)
 
 ..
-   Apply bleedthrough correction
    Use different gates for different subsets of data
    Add error bars to estimates
-   Pre-process FCS files using the TASBE method
    Generate a publication-quality plot
 
 .. toctree::
@@ -24,4 +22,5 @@ something that you find confusing, please feel free to submit a bug report
    bleedthrough
    beads
    tasbe
-   
+   export_fcs
+   export
