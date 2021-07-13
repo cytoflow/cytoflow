@@ -14,7 +14,7 @@ Procedure
 
 #. Create the plot you want to save.  Here, I've got a set of histograms.
 
-   .. image:: export1.png
+   .. image:: images/export1.png
    
 #. Click the **Save Plot** button in the top toolbar: |EXPORT|
 
@@ -24,7 +24,7 @@ Procedure
    the same panel that shows up below the view parameters pane in the main
    application.)
    
-   .. image:: export3.png
+   .. image:: images/export3.png
    
 #. Adjust the display options to your liking.  One particular one to pay
    attention to is the **Context** setting, which changes the relative size of
@@ -32,12 +32,12 @@ Procedure
    Here, I've changed it to *talk* and set the plot to a horizontal layout
    instead of a vertical one.
    
-   .. image:: export4.png
+   .. image:: images/export4.png
    
 #. Set the *width*, *height*, and *resolution* of the final image.  (Width
    and height are in inches, and resolution is in DPI -- dots per inch.)
    
-   .. image:: export5.png
+   .. image:: images/export5.png
    
 #. Click **Export figure...** to open your system's usual **Save As**
    dialog box.  Pay *particular attention* to the file *type* -- it's
@@ -50,4 +50,4 @@ Procedure
 #. Once you're done, click **Return to Cytoflow** to return to the main
    application.
 
-.. |FCS| image:: images/export2.png
+.. |EXPORT| image:: images/export2.png
