@@ -26,7 +26,7 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from cytoflowgui.tests.test_base import ImportedDataTest
+from cytoflowgui.tests.test_base import ImportedDataTest, filter_traits
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.operations import GaussianMixture1DWorkflowOp
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
@@ -198,11 +198,30 @@ class TestGaussian1D(ImportedDataTest):
             os.unlink(filename)
              
         self.maxDiff = None
+        
+        self.assertEqual(filter_traits(self.op, status = lambda t: t is not True,
+                                                transient = lambda t: t is not True),
+                         filter_traits(new_op, status = lambda t: t is not True,
+                                               transient = lambda t: t is not True))
                       
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-         
-         
+        # self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+        #                      new_op.trait_get(self.op.copyable_trait_names()))
+
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                              
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

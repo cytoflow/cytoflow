@@ -45,6 +45,8 @@ import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt4']))
 import matplotlib
 matplotlib.use("Agg")
 
+from traits.api import HasTraits
+
 import unittest, multiprocessing, os, logging
 from logging.handlers import QueueHandler, QueueListener
 
@@ -75,6 +77,8 @@ def remote_main(parent_workflow_conn, log_q, running_event):
 class WorkflowTest(unittest.TestCase):
     
     def setUp(self):
+        
+        self.addTypeEqualityFunc(HasTraits, 'assertHasTraitsEqual')
         
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
@@ -108,6 +112,11 @@ class WorkflowTest(unittest.TestCase):
     def tearDown(self):
         self.workflow.shutdown_remote_process(self.remote_process)
         self.queue_listener.stop()
+        
+    def assertHasTraitsEqual(self, t1, t2, msg=None):
+        print('did it')
+        return True
+
         
 class ImportedDataTest(WorkflowTest):
     
@@ -709,3 +718,12 @@ class params_traits_comparator(object):
         for c in self.cls:
             c.__eq__ = self._eq[self.cls.index(c)]
             c.__hash__ = self._hash[self.cls.index(c)]
+            
+def filter_traits(obj, **metadata):
+    if type(obj) is list:
+        return [filter_traits(x) for x in obj]
+    elif type(obj) is dict:
+        return {x: filter_traits(obj[x]) for x in obj}
+    else:
+        return obj.clone_traits(**metadata)
+    
