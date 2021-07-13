@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 cytoflow.operations.binning
 ---------------------------
 '''
-from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
+from traits.api import (HasStrictTraits, Str, provides, Constant, Int)
 import numpy as np
 
 from cytoflow.views import IView, HistogramView
@@ -54,7 +54,7 @@ class BinningOp(HasStrictTraits):
         
     bin_width : Float
         The width of the bins. If :attr:`scale` is ``log``, :attr:`bin_width` 
-        is in log-10 units; if :attr:`scale` is ``logicle``, and error is 
+        is in log-10 units; if :attr:`scale` is ``logicle``, an error is 
         thrown because the units are ill-defined.
  
 
@@ -102,11 +102,11 @@ class BinningOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.binning')
     friendly_id = Constant("Binning")
     
-    name = CStr()
-    bin_count_name = CStr()
-    channel = Str()
+    name = Str
+    bin_count_name = Str
+    channel = Str
     num_bins = util.Removed(err_string = "'num_bins' was removed in 0.9")
-    bin_width = util.PositiveFloat(0, allow_zero = True)
+    bin_width = util.PositiveFloat(None, allow_zero = False, allow_none = True)
     scale = util.ScaleEnum
     
     _max_num_bins = Int(100)
@@ -159,7 +159,7 @@ class BinningOp(HasStrictTraits):
                                        "channel {} isn't in the experiment"
                                        .format(self.channel))
               
-        if not self.bin_width:
+        if self.bin_width is None:
             raise util.CytoflowOpError('bin_width',
                                        "must set bin width")
         

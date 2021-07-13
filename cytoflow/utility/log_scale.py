@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,10 +52,7 @@ class LogScale(ScaleMixin):
     _channel_threshold = Float(0.1)
 
     def get_mpl_params(self, ax):
-        if ax.axis_name == 'x':
-            return {"nonposx" : self.mode}
-        else: 
-            return {"nonposy" : self.mode}
+        return {"nonpositive" : self.mode}
         
     def _set_threshold(self, threshold):
         self._channel_threshold = threshold

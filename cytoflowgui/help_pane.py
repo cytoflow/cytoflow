@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,13 +19,13 @@
 
 import pathlib
 
-from traits.api import Instance, List, on_trait_change, Str, HTML
+from traits.api import Instance, List, observe, Str, HTML
 from traitsui.api import View, Item, HTMLEditor
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.qt import QtGui
 
-from cytoflowgui.view_plugins import IViewPlugin
-from cytoflowgui.op_plugins import IOperationPlugin
+from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
 from cytoflowgui.util import HintedWidget
 
 class HelpDockPane(TraitsDockPane):
@@ -48,8 +48,8 @@ class HelpDockPane(TraitsDockPane):
     
     html = HTML("<b>Welcome to Cytoflow!</b>")
     
-    traits_view = View(Item('html',
-                            editor = HTMLEditor(base_url = pathlib.Path(__file__).parent.joinpath('help').as_posix()),
+    traits_view = View(Item('pane.html',
+                            editor = HTMLEditor(base_url = pathlib.PurePath(__file__).parent.joinpath('help').joinpath('operations').as_posix()),
                             show_label = False))
     
     def create_contents(self, parent):
@@ -65,10 +65,19 @@ class HelpDockPane(TraitsDockPane):
         parent.setWidget(control)
 
         return control
-
     
-    @on_trait_change('help_id', post_init = True)
-    def _on_help_id_changed(self):
+    @observe('model:selected', post_init = True)
+    def _on_select_op(self, _):
+        if self.model.selected:
+            self.help_id = self.model.selected.operation.id
+            
+    @observe('model:selected:current_view', post_init = True)
+    def _on_select_view(self, _):
+        if self.model.selected:
+            self.help_id = self.model.selected.current_view.id
+    
+    @observe('help_id', post_init = True)
+    def _on_help_id_changed(self, _):
         for plugin in self.view_plugins:
             if self.help_id == plugin.view_id:
                 try:

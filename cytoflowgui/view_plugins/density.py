@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 Density Plot
 ------------
 
@@ -53,7 +53,8 @@ Plots a 2-dimensional density plot.
     Plot only a subset of the data in the experiment.
     
 .. plot::
-        
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
@@ -68,217 +69,112 @@ Plots a 2-dimensional density plot.
                      ychannel = 'Y2-A',
                      yscale = 'log').plot(ex)
 
-'''
+"""
 
-from traits.api import provides, Callable, Str, Instance, Bool
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
-from envisage.api import Plugin, contributes_to
+from traits.api import provides, List
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+from ..workflow.views import DensityWorkflowView, DensityPlotParams
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..subset_controllers import subset_handler_factory
 
-from cytoflow import DensityView
-import cytoflow.utility as util
+from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
+from .view_plugin_base import ViewHandler, PluginHelpMixin, Data2DPlotParamsView
 
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.view_plugins.i_view_plugin \
-    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, Data2DPlotParams)
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
-from cytoflowgui.util import IterWrapper
 
-DensityView.__repr__ = traits_repr
-
-class DensityHandler(ViewHandlerMixin, Controller):
-
-    def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('xchannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "X Channel"),
-                           Item('xscale',
-                                label = "X Scale"),
-                           Item('ychannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "Y Channel"),
-                           Item('yscale',
-                                label = "Y Scale"),
-                           Item('xfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Horizontal\nFacet"),
-                           Item('yfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Vertical\nFacet"),
-                           Item('huescale',
-                                label = "Color\nScale"),
-                           Item('plotfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Tab\nFacet"),
-                           label = "2D Histogram",
-                           show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.conditions")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
+class DensityParamsHandler(Controller):
+    view_params_view = \
+        View(Item('gridsize',
+                  editor = TextEditor(auto_set = False),
+                  label = "Grid size"),
+             Item('smoothed',
+                  label = "Smooth"),
+             Item('smoothed_sigma',
+                  editor = TextEditor(auto_set = False),
+                  label = "Smooth\nsigma",
+                  visible_when = "smoothed == True"),
+             Data2DPlotParamsView.content)
         
 
-class DensityPlotParams(Data2DPlotParams):
-    
-    gridsize = util.PositiveCInt(50, allow_zero = False)
-    smoothed = Bool(False)
-    smoothed_sigma = util.PositiveCFloat(1.0, allow_zero = False)
-    
-    def default_traits_view(self):
-        base_view = Data2DPlotParams.default_traits_view(self)
+class DensityHandler(ViewHandler):
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('xchannel',
+                         editor=EnumEditor(name='context_handler.channels'),
+                         label = "X Channel"),
+                    Item('xscale',
+                         label = "X Scale"),
+                    Item('ychannel',
+                         editor=EnumEditor(name='context_handler.channels'),
+                         label = "Y Channel"),
+                    Item('yscale',
+                         label = "Y Scale"),
+                    Item('xfacet',
+                         editor=ExtendableEnumEditor(name='context_handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Horizontal\nFacet"),
+                    Item('yfacet',
+                         editor=ExtendableEnumEditor(name='context_handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Vertical\nFacet"),
+                    Item('huescale',
+                         label = "Color\nScale"),
+                    Item('plotfacet',
+                         editor=ExtendableEnumEditor(name='context_handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Tab\nFacet"),
+                    label = "2D Histogram",
+                    show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
         
-        return View(Item('gridsize',
-                         editor = TextEditor(auto_set = False),
-                         label = "Grid size"),
-                    Item('smoothed',
-                         label = "Smooth"),
-                    Item('smoothed_sigma',
-                         editor = TextEditor(auto_set = False),
-                         label = "Smooth\nsigma",
-                         visible_when = "smoothed == True"),
-                    base_view.content)
-
-class DensityPluginView(PluginViewMixin, DensityView):
-    handler_factory = Callable(DensityHandler)
-    plot_params = Instance(DensityPlotParams, ())
-    plotfacet = Str
-
-    def enum_plots_wi(self, wi):
-        if not self.plotfacet:
-            return iter([])
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = DensityParamsHandler),
+                  style = 'custom',
+                  show_label = False))
         
-        if self.plotfacet and self.plotfacet not in wi.result.conditions:
-            raise util.CytoflowViewError("Plot facet {0} not in the experiment"
-                                    .format(self.huefacet))
-        values = np.sort(pd.unique(wi.result[self.plotfacet]))
-        return IterWrapper(iter(values), [self.plotfacet])
-
-    
-    def plot(self, experiment, plot_name = None, **kwargs):
-        
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-        
-        if self.plotfacet and plot_name is not None:
-            experiment = experiment.subset(self.plotfacet, plot_name)
-
-        DensityView.plot(self, experiment, **kwargs)
-        
-        if self.plotfacet and plot_name is not None:
-            plt.title("{0} = {1}".format(self.plotfacet, plot_name))
-            
-    def get_notebook_code(self, idx):
-        view = DensityView()
-        view.copy_traits(self, view.copyable_trait_names())
-        plot_params_str = traits_str(self.plot_params)
-
-        return dedent("""
-        {repr}.plot(ex_{idx}{plot}{plot_params})
-        """
-        .format(repr = repr(view),
-                idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
-                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class DensityPlugin(Plugin, PluginHelpMixin):
-
     id = 'edu.mit.synbio.cytoflowgui.view.density'
     view_id = 'edu.mit.synbio.cytoflow.view.density'
     short_name = "Density Plot"
 
     def get_view(self):
-        return DensityPluginView()
+        return DensityWorkflowView()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, DensityWorkflowView):
+            return DensityHandler(model = model, context = context)
+        elif isinstance(model, DensityPlotParams):
+            return DensityParamsHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('density')
 
-    @contributes_to(VIEW_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = VIEW_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
         
-### Serialization
-@camel_registry.dumper(DensityPluginView, 'density-view', version = 2)
-def _dump(view):
-    return dict(xchannel = view.xchannel,
-                xscale = view.xscale,
-                ychannel = view.ychannel,
-                yscale = view.yscale,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huescale = view.huescale,
-                plotfacet = view.plotfacet,
-                subset_list = view.subset_list,
-                plot_params = view.plot_params)
-    
-@camel_registry.dumper(DensityPluginView, 'density-view', version = 1)
-def _dump_v1(view):
-    return dict(xchannel = view.xchannel,
-                xscale = view.xscale,
-                ychannel = view.ychannel,
-                yscale = view.yscale,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huescale = view.huescale,
-                plotfacet = view.plotfacet,
-                subset_list = view.subset_list)
-    
-@camel_registry.dumper(DensityPlotParams, 'density-view-params', version = 1)
-def _dump_params(params):
-    return dict(
-                # BasePlotParams
-                title = params.title,
-                xlabel = params.xlabel,
-                ylabel = params.ylabel,
-                huelabel = params.huelabel,
-                col_wrap = params.col_wrap,
-                sns_style = params.sns_style,
-                sns_context = params.sns_context,
-                legend = params.legend,
-                sharex = params.sharex,
-                sharey = params.sharey,
-                despine = params.despine,
 
-                # DataplotParams
-                min_quantile = params.min_quantile,
-                max_quantile = params.max_quantile,
-                
-                # Data2DPlotParams
-                xlim = params.xlim,
-                ylim = params.ylim,
-                
-                # Density
-                gridsize = params.gridsize,
-                smoothed = params.smoothed,
-                smoothed_sigma = params.smoothed_sigma )
-    
-@camel_registry.loader('density-view', version = any)
-def _load(data, version):
-    return DensityPluginView(**data)
-
-@camel_registry.loader('density-view-params', version = any)
-def _load_params(data, version):
-    return DensityPlotParams(**data)

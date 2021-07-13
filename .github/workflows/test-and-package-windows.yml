@@ -1,0 +1,221 @@
+# (c) Massachusetts Institute of Technology 2015-2018
+# (c) Brian Teague 2018-2021
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+name: Test and package on Windows
+on: [push]
+jobs:     
+  test-on-windows:
+    name: Run nose2 on Windows runner
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}        
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2        
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+              
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2
+    
+    - name: Install package locally
+      run: |
+        python setup.py build_ext --inplace
+        
+    - name: Install nose2
+      run: |
+        pip install nose2
+        
+    - name: Run cytoflow tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        nose2 -v -c package/nose2.cfg cytoflow.tests
+
+#    - name: Run cytoflowgui tests
+#      env:
+#        OMP_NUM_THREADS: 1
+#      run: |
+#        source activate cytoflow
+#        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI        
+
+    
+  build-windows-conda-package:
+    name: Build windows conda package
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}
+    needs: test-on-windows
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+                
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build
+        
+    - name: Build conda package
+      run: |
+        conda render package/conda_recipes/cytoflow
+        conda build --quiet package/conda_recipes/cytoflow
+        
+    - name: Move conda package into the dist folder
+      run: |
+        mkdir dist
+        python package/move_conda_package.py
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-conda-package
+        retention-days: 1
+        path: dist/*
+
+  build-windows-wheels:
+    name: Build source dist, linux wheels
+    needs: test-on-windows
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+    
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2
+    
+    - name: Install package locally
+      run: |
+        python setup.py build_ext --inplace
+        
+    - name: Build wheel
+      run: |
+        python setup.py bdist_wheel
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.pyd$"` dist/
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-wheels
+        retention-days: 1
+        path: dist/*   
+        
+  build-windows-oneclick:
+    name: Build Windows one-click
+    needs: test-on-windows
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:        
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+        
+    - name: Show all the files
+      run: find .
+      
+    - name: Query git tag
+      id: tag
+      run: echo "::set-output name=tag::$(git describe --tags)"
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+                      
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2
+            
+    - name: Install package locally
+      run: |
+        python setup.py build_ext --inplace
+        
+    - name: Install packaging deps
+      run: |
+        conda install --yes --quiet 'sphinx==4.0.2' 'bleach==3.3.0'
+        pip install "pyinstaller==4.2"
+        
+    - name: Build embedded help docs
+      run: |
+        sphinx-build docs/user_manual/reference cytoflowgui/help
+        
+    - name: Build GUI binary
+      run: |
+        pyinstaller package/pyinstaller.spec
+        
+    - name: Build installer
+      run: |
+        "C:\Program Files (x86)\NSIS\makensis.exe" //NOCD package/installer.nsis
+        
+    - name: Rename installer and remove remaining files
+      run: |
+        cd dist
+        mv cytoflow-installer.exe cytoflow-installer-${{steps.tag.outputs.tag}}-win-amd64.exe
+        rm -rf cytoflow
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-oneclick
+        retention-days: 1
+        path: dist/*
+

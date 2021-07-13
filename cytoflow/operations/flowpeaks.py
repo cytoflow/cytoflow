@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ cytoflow.operations.flowpeaks
 import matplotlib.pyplot as plt
 from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Array, Function)
 
 import numpy as np
@@ -35,6 +35,8 @@ import scipy.optimize
 import scipy.ndimage
 
 import pandas as pd
+
+import copy
 
 from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
@@ -209,7 +211,7 @@ class FlowPeaksOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
     friendly_id = Constant("FlowPeaks Clustering")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     by = List(Str)
@@ -221,9 +223,7 @@ class FlowPeaksOp(HasStrictTraits):
     tol = util.PositiveFloat(0.5, allow_zero = False)
     merge_dist = util.PositiveFloat(5, allow_zero = False)
     
-    # parameters that control outlier selection, with sensible defaults
-    
-    
+    # estimate internals
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _means = Dict(Any, List, transient = True)
     _normals = Dict(Any, List(Function), transient = True)
@@ -255,6 +255,10 @@ class FlowPeaksOp(HasStrictTraits):
         if len(self.channels) == 0:
             raise util.CytoflowOpError('channels',
                                        "Must set at least one channel")
+
+        if len(self.channels) != len(set(self.channels)):
+            raise util.CytoflowOpError('channels', 
+                                       "Must not duplicate channels")
 
         for c in self.channels:
             if c not in experiment.data:
@@ -452,8 +456,9 @@ class FlowPeaksOp(HasStrictTraits):
             self._peaks[data_group] = peaks
             self._peak_clusters[data_group] = peak_clusters
 
-            ### merge peaks that are sufficiently close
+        ### merge peaks that are sufficiently close
             
+        cluster_peak = {}
         for data_group, data_subset in groupby:
             kmeans = self._kmeans[data_group]
             num_clusters = kmeans.n_clusters
@@ -565,8 +570,11 @@ class FlowPeaksOp(HasStrictTraits):
                         cluster_group[cluster] = gi
                         cluster_peaks[cluster] = p
     
-            self._cluster_peak[data_group] = cluster_peaks
+            cluster_peak[data_group] = cluster_peaks
             self._cluster_group[data_group] = cluster_group    
+            
+        # we set this atomically to support appropriate updating of the GUI
+        self._cluster_peak = cluster_peak
                                                  
          
     def apply(self, experiment):
@@ -1070,6 +1078,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
+        kwargs.setdefault('shading', 'auto')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
         xscale = kwargs['scale'][self.xchannel]
@@ -1077,15 +1086,18 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         yscale = kwargs['scale'][self.ychannel]
         ylim = kwargs['lim'][self.ychannel]
         
+        # can't modify colormaps in place
+        cmap = copy.copy(kwargs['cmap'])
+        
         under_color = kwargs.pop('under_color', None)
         if under_color is not None:
-            kwargs['cmap'].set_under(color = under_color)
+            cmap.set_under(color = under_color)
         else:
-            kwargs['cmap'].set_under(color = kwargs['cmap'](0.0))
+            cmap.set_under(color = cmap(0.0))
 
         bad_color = kwargs.pop('bad_color', None)
         if bad_color is not None:
-            kwargs['cmap'].set_bad(color = kwargs['cmap'](0.0))
+            cmap.set_bad(color = cmap(0.0))
         
         gridsize = kwargs.pop('gridsize', 50)
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))

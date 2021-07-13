@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -120,8 +120,8 @@ class RangeOp(HasStrictTraits):
     
     name = Str
     channel = Str
-    low = Float
-    high = Float
+    low = Float(None)
+    high = Float(None)
     
     _selection_view = Instance('RangeSelection', transient = True)
         
@@ -169,6 +169,14 @@ class RangeOp(HasStrictTraits):
             raise util.CytoflowOpError('channel',
                                        "Channel {0} not in the experiment"
                                        .format(self.channel))
+            
+        if self.low is None:
+            raise util.CytoflowOpError('low',
+                                       "must set 'low'")       
+                 
+        if self.high is None:
+            raise util.CytoflowOpError('high',
+                                       "must set 'high'")          
         
         if self.high <= self.low:
             raise util.CytoflowOpError('high',

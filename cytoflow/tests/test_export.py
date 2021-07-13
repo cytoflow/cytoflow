@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,20 +22,16 @@ Created on Dec 1, 2015
 
 @author: brian
 '''
-import unittest, os, tempfile, shutil
+import unittest, os, tempfile, shutil, pathlib
 import cytoflow as flow
+from .test_base import ImportedDataSmallTest
 
-class Test(unittest.TestCase):
+
+class Test(ImportedDataSmallTest):
 
     def setUp(self):
-        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
-        tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
-        import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                                  tubes = [tube1, tube2])
-        self.ex = import_op.apply()
-        
-        self.directory = tempfile.mkdtemp()
+        super().setUp()
+        self.directory = pathlib.Path(tempfile.mkdtemp())
         
     def tearDown(self):
         shutil.rmtree(self.directory)
@@ -44,12 +40,12 @@ class Test(unittest.TestCase):
         flow.ExportFCS(path = self.directory,
                        by = ['Dox']).export(self.ex)
                        
-        tube1 = flow.Tube(file = self.directory + '/Dox_10.0.fcs', 
-                          conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file = self.directory + '/Dox_1.0.fcs',
-                          conditions = {"Dox" : 1.0})
+        tube1 = flow.Tube(file = self.directory / 'Dox_10.0.fcs', 
+                          conditions = {"Dox" : 10.0, "Well": "A"})
+        tube2 = flow.Tube(file = self.directory / 'Dox_1.0.fcs',
+                          conditions = {"Dox" : 1.0, "Well": "B"})
         
-        ex_rt = flow.ImportOp(conditions = {"Dox" : "float"},
+        ex_rt = flow.ImportOp(conditions = {"Dox" : "float", "Well": "category"},
                               tubes = [tube1, tube2]).apply()
 
         self.assertTrue((self.ex.data == ex_rt.data).all().all())
@@ -75,7 +71,7 @@ class Test(unittest.TestCase):
         
         flow.ExportFCS(path = self.directory, by = ['Dox']).export(ex2)   
         
-        tube1 = flow.Tube(file = self.directory + '/Dox_1.0.fcs', 
+        tube1 = flow.Tube(file = self.directory / 'Dox_1.0.fcs', 
                           conditions = {"Dox" : 1.0})
         ex_rt = flow.ImportOp(conditions = {'Dox' : 'float'},
                               tubes = [tube1]).apply()

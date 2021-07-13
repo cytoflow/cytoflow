@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,24 +17,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .i_op_plugin import (IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, 
-                         shared_op_traits)
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler
 from .import_op import ImportPlugin
-
-# gates
+# 
+# # gates
 from .threshold import ThresholdPlugin
 from .range import RangePlugin
 from .range2d import Range2DPlugin
 from .polygon import PolygonPlugin
 from .quad import QuadPlugin
 
-# data-driven
+# statistics and transformations
+from .channel_stat import ChannelStatisticPlugin
+from .xform_stat import TransformStatisticPlugin
 from .ratio import RatioPlugin
+
+# # data-driven
 from .binning import BinningPlugin
 from .gaussian_1d import GaussianMixture1DPlugin
 from .gaussian_2d import GaussianMixture2DPlugin
-from .channel_stat import ChannelStatisticPlugin
-from .xform_stat import TransformStatisticPlugin
 from .density import DensityGatePlugin
 from .flowpeaks import FlowPeaksPlugin
 from .kmeans import KMeansPlugin
@@ -42,7 +44,6 @@ from .pca import PCAPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin
-from .bleedthrough_piecewise import BleedthroughPiecewisePlugin
 from .bead_calibration import BeadCalibrationPlugin
 from .autofluorescence import AutofluorescencePlugin
 from .color_translation import ColorTranslationPlugin

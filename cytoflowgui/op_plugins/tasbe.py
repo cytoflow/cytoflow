@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,7 +37,9 @@ translation) into one easy-use-interface.
         autofluorescence correction.
         
     .. plot:: 
-       :context: close-figs 
+       :context: close-figs
+       :include-source: False
+
     
         import cytoflow as flow
         import_op = flow.ImportOp()
@@ -67,7 +69,8 @@ translation) into one easy-use-interface.
     The FCS file containing the single-color control data.
     
     .. plot::
-       :context: close-figs 
+       :context: close-figs
+       :include-source: False
     
         bl_op = flow.BleedthroughLinearOp()
         bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
@@ -112,6 +115,7 @@ translation) into one easy-use-interface.
     
     .. plot::
        :context: close-figs 
+       :include-source: False
     
         bead_op = flow.BeadCalibrationOp()
         beads = "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"
@@ -145,6 +149,7 @@ translation) into one easy-use-interface.
 
     .. plot::
        :context: close-figs 
+       :include-source: False
     
         color_op = flow.ColorTranslationOp()
         color_op.controls = {("Pacific Blue-A", "FITC-A") : "tasbe/rby.fcs",
@@ -156,65 +161,51 @@ translation) into one easy-use-interface.
         ex4 = color_op.apply(ex3)  
 '''
 
-import warnings
-
-from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
-                          CheckListEditor, ButtonEditor, 
-                          HGroup, InstanceEditor)
-from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
-                        on_trait_change, File, Constant,
-                        Property, Instance, CInt, CFloat)
+from traits.api import provides, Property, List
+from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller, CheckListEditor, TextEditor
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
-import pandas as pd
-
-import cytoflow.utility as util
-
-from cytoflow.operations import IOperation
-from cytoflow.operations.autofluorescence import AutofluorescenceOp
-from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp
 from cytoflow.operations.bead_calibration import BeadCalibrationOp
-from cytoflow.operations.color_translation import ColorTranslationOp
-from cytoflow.views.i_selectionview import IView
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import ISubset, SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.vertical_list_editor import VerticalListEditor
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from ..view_plugins import ViewHandler
+from ..editors import ColorTextEditor, InstanceHandlerEditor, VerticalListEditor, SubsetListEditor
+from ..subset_controllers import subset_handler_factory
+from ..workflow.operations import TasbeWorkflowOp, TasbeWorkflowView
 
-AutofluorescenceOp.__repr__ = traits_repr
-BleedthroughLinearOp.__repr__ = traits_repr
-BeadCalibrationOp.__repr__ = traits_repr
-ColorTranslationOp.__repr__ = traits_repr
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
-class _BleedthroughControl(HasTraits):
-    channel = Str
-    file = File
-    
-    def __repr__(self):
-        return traits_repr(self)
+
+class BleedthroughControlHandler(Controller):
+    control_view = View(HGroup(Item('channel', style = 'readonly'),
+                               Item('file', 
+                                    editor = FileEditor(dialog_style = 'open'),
+                                    show_label = False),
+                               show_labels = False))
 
     
-    
-class _TranslationControl(HasTraits):
-    from_channel = Str
-    to_channel = Str
-    file = File
-    
-    def __repr__(self):
-        return traits_repr(self)
+class TranslationControlHandler(Controller):
+    control_view = View(HGroup(Item('from_channel', style = 'readonly', show_label = False),
+                               Item('', label = '->'),
+                               Item('to_channel', style = 'readonly', show_label = False),
+                               Item('file', 
+                                    editor = FileEditor(dialog_style = 'open'),
+                                    show_label = False),
+                               show_labels = False))
 
 
-class TasbeHandler(OpHandlerMixin, Controller):
+class UnitHandler(Controller):
+    unit_view = View(HGroup(Item('channel', style = 'readonly', show_label = False),
+                            Item('unit',
+                                 editor = EnumEditor(name = 'context_handler.beads_units'),
+                                 show_label = False)))
+    
+
+class TasbeHandler(OpHandler):
                 
     beads_name_choices = Property(transient = True)
-    beads_units = Property(depends_on = 'model.beads_name',
-                           transient = True)
+    beads_units = Property(observe = 'model.beads_name')
     
     def _get_beads_name_choices(self):
         return list(BeadCalibrationOp.BEADS.keys())
@@ -224,488 +215,137 @@ class TasbeHandler(OpHandlerMixin, Controller):
             return list(BeadCalibrationOp.BEADS[self.model.beads_name].keys())
         else:
             return []
-        
-    def bleedthrough_traits_view(self):
-        return View(HGroup(Item('channel', style = 'readonly'),
-                           Item('file', show_label = False),
-                           show_labels = False),
-                    handler = self)
-        
-    def translation_traits_view(self):
-        return View(HGroup(Item('from_channel', style = 'readonly', show_label = False),
-                           Item('', label = '->'),
-                           Item('to_channel', style = 'readonly', show_label = False),
-                           Item('file', show_label = False)),
-                    handler = self)
     
-    def default_traits_view(self):
-        return View(Item("channels",
-                         editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous_wi.channels'),
-                         style = 'custom'),
-                    VGroup(
-                        Item('blank_file'),
-                        label = "Autofluorescence"),
-                    VGroup(
-                        Item('bleedthrough_list',
-                                editor = VerticalListEditor(editor = InstanceEditor(view = self.bleedthrough_traits_view()),
-                                                            style = 'custom',
-                                                            mutable = False),
-                                style = 'custom'),
-                        label = "Bleedthrough Correction",
-                        show_border = False,
-                        show_labels = False),
-                    VGroup(
-                        Item('beads_name',
-                             editor = EnumEditor(name = 'handler.beads_name_choices'),
-                             label = "Beads",
-                             width = -125),
-                        Item('beads_file'),
-                        Item('beads_unit', 
-                             editor = EnumEditor(name = 'handler.beads_units')),
-                        Item('bead_peak_quantile',
-                             label = "Peak\nQuantile"),
-                        Item('bead_brightness_threshold',
-                             label = "Peak\nThreshold "),
-                        Item('bead_brightness_cutoff',
-                             label = "Peak\nCutoff"),
-                        label = "Bead Calibration",
-                        show_border = False),
-                    VGroup(
-                        Item('to_channel',
-                             editor = EnumEditor(name = 'channels')),
-                        Item('mixture_model',
-                             label = "Use mixture\nmodel?"),
-                           label = "Color Translation"),
-                    VGroup(
-                        Item('translation_list',
-                                editor = VerticalListEditor(editor = InstanceEditor(view = self.translation_traits_view()),
-                                                            style = 'custom',
-                                                            mutable = False),
-                                style = 'custom'),
-
-                        show_labels = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions",
-                                                      metadata = "context.previous_wi.metadata",
-                                                      when = "'experiment' not in vars() or not experiment")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('do_estimate',
-                         editor = ButtonEditor(value = True,
-                                               label = "Estimate!"),
-                         show_label = False),
-                    shared_op_traits)
-
-@provides(IOperation)
-class TasbePluginOp(PluginOpMixin):
-    handler_factory = Callable(TasbeHandler)
-    
-    id = Constant('edu.mit.synbio.cytoflowgui.op_plugins.bleedthrough_piecewise')
-    friendly_id = Constant("Quantitative Pipeline")
-    name = Constant("TASBE")
-    
-    channels = List(Str, estimate = True)
-    
-    blank_file = File(filter = ["*.fcs"], estimate = True)
-    
-    bleedthrough_list = List(_BleedthroughControl, estimate = True)
-
-    beads_name = Str(estimate = True)
-    beads_file = File(filter = ["*.fcs"], estimate = True)
-    beads_unit = Str(estimate = True)
-    
-    bead_peak_quantile = CInt(80, estimate = True)
-    bead_brightness_threshold = CFloat(100.0, estimate = True)
-    bead_brightness_cutoff = util.CFloatOrNone(None, estimate = True)
-    
-    to_channel = Str(estimate = True)
-    translation_list = List(_TranslationControl, estimate = True)
-    mixture_model = Bool(False, estimate = True)
-        
-    _af_op = Instance(AutofluorescenceOp, (), transient = True)
-    _bleedthrough_op = Instance(BleedthroughLinearOp, (), transient = True)
-    _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
-    _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
-    
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change("subset_list.str")
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
-    
-    @on_trait_change('channels[]', post_init = True)
-    def _channels_changed(self, obj, name, old, new):
-        for channel in self.channels:
-            if channel not in [control.channel for control in self.bleedthrough_list]:
-                self.bleedthrough_list.append(_BleedthroughControl(channel = channel))
-
-        to_remove = []    
-        for control in self.bleedthrough_list:
-            if control.channel not in self.channels:
-                to_remove.append(control)
-                
-        for control in to_remove:
-            self.bleedthrough_list.remove(control)
-             
-        for c in self.channels:
-            if c == self.to_channel:
-                continue
-            if channel not in [control.from_channel for control in self.translation_list]:
-                self.translation_list.append(_TranslationControl(from_channel = c,
-                                                                 to_channel = self.to_channel))
-            
-        to_remove = []
-        for control in self.translation_list:
-            if control.from_channel not in self.channels:
-                to_remove.append(control)
-                
-        for control in to_remove:
-            self.translation_list.remove(control)
-            
-        self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
-        self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))            
+    operation_traits_view = \
+        View(Item("channels",
+                  editor = CheckListEditor(cols = 2,
+                                           name = 'context_handler.previous_channels'),
+                  style = 'custom'),
+             VGroup(
+                 Item('blank_file',
+                      editor = FileEditor(dialog_style = 'open')),
+                 label = "Autofluorescence"),
+             VGroup(
+                 Item('bleedthrough_list',
+                      editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'control_view',
+                                                                                 handler_factory = BleedthroughControlHandler),
+                                                  style = 'custom',
+                                                  mutable = False),
+                      style = 'custom'),
+                 label = "Bleedthrough Correction",
+                 show_border = False,
+                 show_labels = False),
+             VGroup(
+                 Item('beads_name',
+                      editor = EnumEditor(name = 'handler.beads_name_choices'),
+                      label = "Beads",
+                      width = -125),
+                 Item('beads_file',
+                      editor = FileEditor(dialog_style = 'open')),
+                 Item('beads_unit', 
+                      editor = EnumEditor(name = 'handler.beads_units'),
+                      visible_when = 'do_color_translation == True'),
+                 Item('units_list',
+                      editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'unit_view',
+                                                                                 handler_factory = UnitHandler),
+                                                  style = 'custom',
+                                                  mutable = False),
+                      style = 'custom',
+                      label = "Bead\nunits",
+                      visible_when = 'do_color_translation == False'),
+                 Item('bead_peak_quantile',
+                      editor = TextEditor(auto_set = False,
+                                         evaluate = int,
+                                         format_func = lambda x: "" if x is None else str(x),
+                                         placeholder = "None"),
+                      label = "Peak\nQuantile"),
+                 Item('bead_brightness_threshold',
+                      editor = TextEditor(auto_set = False,
+                                          evaluate = float,
+                                          format_func = lambda x: "" if x is None else str(x),
+                                          placeholder = "None"),
+                      label = "Peak\nThreshold "),
+                 Item('bead_brightness_cutoff',
+                      editor = TextEditor(auto_set = False,
+                                          evaluate = float,
+                                          format_func = lambda x: "" if x is None else str(x),
+                                          placeholder = "None"),
+                      label = "Peak\nCutoff"),
+                 label = "Bead Calibration",
+                 show_border = False),
+             VGroup(
+                 Item('do_color_translation', label = 'Do color translation?'),
+                 Item('to_channel',
+                      editor = EnumEditor(name = 'channels'),
+                      visible_when = 'do_color_translation == True'),
+                 Item('mixture_model',
+                      label = "Use mixture\nmodel?",
+                      visible_when = 'do_color_translation == True'),
+                 label = "Color Translation"),
+             VGroup(
+                 Item('translation_list',
+                      editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'control_view',
+                                                                                 handler_factory = TranslationControlHandler),
+                                                  style = 'custom',
+                                                  mutable = False),
+                      style = 'custom',
+                      visible_when = 'do_color_translation == True'),
+                 show_labels = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory))),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('estimate_progress', style = 'readonly'),
+             Item('do_estimate',
+                  editor = ButtonEditor(value = True,
+                                        label = "Estimate!"),
+                  show_label = False),
+             shared_op_traits_view)
 
 
-    @on_trait_change('to_channel', post_init = True)
-    def _to_channel_changed(self, obj, name, old, new):
-        self.translation_list = []
-        if self.to_channel:
-            for c in self.channels:
-                if c == self.to_channel:
-                    continue
-                self.translation_list.append(_TranslationControl(from_channel = c,
-                                                                 to_channel = self.to_channel))
-        self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
-         
-    @on_trait_change("bleedthrough_list_items, bleedthrough_list.+", post_init = True)
-    def _bleedthrough_controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
-     
-    @on_trait_change("translation_list_items, translation_list.+", post_init = True)
-    def _translation_controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
-    
-    def estimate(self, experiment, subset = None):
-        if not self.subset:
-            warnings.warn("Are you sure you don't want to specify a subset "
-                          "used to estimate the model?",
-                          util.CytoflowOpWarning)
-            
-        if experiment is None:
-            raise util.CytoflowOpError("No valid result to estimate with")
+class TasbeViewHandler(ViewHandler):
+    view_traits_view = \
+        View(Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191")))
         
-        # TODO - don't actually need to apply these operations to data in estimate
-        experiment = experiment.clone()
-        
-        self._af_op.channels = self.channels
-        self._af_op.blank_file = self.blank_file
-        
-        try:
-            self._af_op.estimate(experiment, subset = self.subset)
-        except:
-            raise
-        finally:
-            self.changed = (Changed.ESTIMATE_RESULT, self)
-            
-        experiment = self._af_op.apply(experiment)
-        
-        self._bleedthrough_op.controls.clear()
-        for control in self.bleedthrough_list:
-            self._bleedthrough_op.controls[control.channel] = control.file
-
-        try:
-            self._bleedthrough_op.estimate(experiment, subset = self.subset)
-        except:
-            raise
-        finally:
-            self.changed = (Changed.ESTIMATE_RESULT, self)
-            
-        experiment = self._bleedthrough_op.apply(experiment)
-        
-        self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
-        self._bead_calibration_op.beads_file = self.beads_file
-        self._bead_calibration_op.bead_peak_quantile = self.bead_peak_quantile
-        self._bead_calibration_op.bead_brightness_threshold = self.bead_brightness_threshold
-        self._bead_calibration_op.bead_brightness_cutoff = self.bead_brightness_cutoff        
-        
-        self._bead_calibration_op.units.clear()
-        
-        # this is the old way
-#         for channel in self.channels:
-#             self._bead_calibration_op.units[channel] = self.beads_unit
-
-        # this way matches TASBE better
-        self._bead_calibration_op.units[self.to_channel] = self.beads_unit
-            
-        try:
-            self._bead_calibration_op.estimate(experiment)
-        except:
-            raise
-        finally:
-            self.changed = (Changed.ESTIMATE_RESULT, self)
-            
-        experiment = self._bead_calibration_op.apply(experiment)
-        
-        self._color_translation_op.mixture_model = self.mixture_model
-        
-        self._color_translation_op.controls.clear()
-        for control in self.translation_list:
-            self._color_translation_op.controls[(control.from_channel,
-                                                 control.to_channel)] = control.file
-            
-        try:                                     
-            self._color_translation_op.estimate(experiment, subset = self.subset)
-        except:
-            raise
-        finally:                                         
-            self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-        
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
-        
-        return False
-        
-        
-    def clear_estimate(self):
-        self._af_op = AutofluorescenceOp()
-        self._bleedthrough_op = BleedthroughLinearOp()
-        self._bead_calibration_op = BeadCalibrationOp()
-        self._color_translation_op = ColorTranslationOp()
-        
-        self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-        
-    def apply(self, experiment):
-        
-        if experiment is None:
-            raise util.CytoflowOpError("No experiment was specified")
-        
-        experiment = self._af_op.apply(experiment)
-        experiment = self._bleedthrough_op.apply(experiment)
-        experiment = self._bead_calibration_op.apply(experiment)
-        experiment = self._color_translation_op.apply(experiment)
-        
-        return experiment
-    
-    
-    def default_view(self, **kwargs):
-        return TasbePluginView(op = self, **kwargs)
-    
-    def get_notebook_code(self, idx):
-        self._af_op.channels = self.channels
-        self._af_op.blank_file = self.blank_file
-        
-        self._bleedthrough_op.controls.clear()
-        for control in self.bleedthrough_list:
-            self._bleedthrough_op.controls[control.channel] = control.file
-        
-        self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
-        self._bead_calibration_op.beads_file = self.beads_file
-        self._bead_calibration_op.bead_peak_quantile = self.bead_peak_quantile
-        self._bead_calibration_op.bead_brightness_threshold = self.bead_brightness_threshold
-        self._bead_calibration_op.bead_brightness_cutoff = self.bead_brightness_cutoff        
-        
-        self._bead_calibration_op.units.clear()
-        self._bead_calibration_op.units[self.to_channel] = self.beads_unit
-       
-        self._color_translation_op.mixture_model = self.mixture_model
-        
-        self._color_translation_op.controls.clear()
-        for control in self.translation_list:
-            self._color_translation_op.controls[(control.from_channel,
-                                                 control.to_channel)] = control.file      
-
-        return dedent("""
-        # the TASBE-style calibration is not a single Cytoflow module.  Instead, it
-        # is a specific sequence of four calibrations: autofluorescence correction,
-        # bleedthrough, bead calibration and color translation.
-        
-        # autofluorescence
-        op_{idx}_af = {af_repr}
-        
-        op_{idx}_af.estimate(ex_{prev_idx}{subset})
-        ex_{idx}_af = op_{idx}_af.apply(ex_{prev_idx})
-        
-        # bleedthrough
-        op_{idx}_bleedthrough = {bleedthrough_repr}
-        
-        op_{idx}_bleedthrough.estimate(ex_{idx}_af{subset})
-        ex_{idx}_bleedthrough = op_{idx}_bleedthrough.apply(ex_{idx}_af)
-        
-        # bead calibration
-        # beads: {beads}
-        op_{idx}_beads = {beads_repr}
-        
-        op_{idx}_beads.estimate(ex_{idx}_bleedthrough)
-        ex_{idx}_beads = op_{idx}_beads.apply(ex_{idx}_bleedthrough)
-        
-        # color translation
-        op_{idx}_color = {color_repr}
-        
-        op_{idx}_color.estimate(ex_{idx}_beads{subset})
-        ex_{idx} = op_{idx}_color.apply(ex_{idx}_beads)
-        """
-        .format(idx = idx,
-                prev_idx = idx - 1,
-                af_repr = repr(self._af_op),
-                bleedthrough_repr = repr(self._bleedthrough_op),
-                color_repr = repr(self._color_translation_op),
-                beads = self.beads_name,
-                beads_repr = repr(self._bead_calibration_op),
-                subset = ", subset = " + repr(self.subset) if self.subset else ""))
-
-class TasbeViewHandler(ViewHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191")))
-
-@provides(IView)
-class TasbePluginView(PluginViewMixin):
-    handler_factory = Callable(TasbeViewHandler)
-    op = Instance(TasbePluginOp)
-    
-    id = "edu.mit.synbio.cytoflowgui.op_plugins.tasbe"
-    friendly_id = "TASBE Calibration" 
-    
-    name = Constant("TASBE Calibration")
-    
-    def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result, plot_name = self.current_plot)
-        
-        
-    def enum_plots_wi(self, wi):
-        return iter(["Autofluorescence",
-                     "Bleedthrough",
-                     "Bead Calibration",
-                     "Color Translation"])
-        
-    def should_plot(self, changed, payload):
-        if changed == Changed.RESULT or changed == Changed.PREV_RESULT:
-            return False
-        
-        return True
-        
-    def plot(self, experiment, plot_name = None, **kwargs):
-
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment to plot")
-                    
-        if plot_name == "Autofluorescence":
-            self.op._af_op.default_view().plot(experiment, **kwargs)
-        elif plot_name == "Bleedthrough":
-            self.op._bleedthrough_op.default_view().plot(experiment, **kwargs)
-            return
-        elif plot_name == "Bead Calibration":
-            self.op._bead_calibration_op.default_view().plot(experiment, **kwargs)
-        elif plot_name == "Color Translation":
-            self.op._color_translation_op.default_view().plot(experiment, **kwargs)
-        else:
-            raise util.CytoflowViewError("Which plot do you want?  Must be one "
-                                         "of \"Autofluorescence\", "
-                                         "\"Bleedthrough\", \"Bead Calibration\", "
-                                         "or \"Color Translation\"")
-            
-            
-    def get_notebook_code(self, idx):
-        
-        return dedent("""
-        # Autofluorescence
-        op_{idx}_af.default_view().plot(ex_{prev_idx})
-        
-        # Bleedthrough
-        op_{idx}_bleedthrough.default_view().plot(ex_{idx}_af)
-        
-        # Bead calibration
-        op_{idx}_beads.default_view().plot(ex_{idx}_bleedthrough)
-        
-        # Color translation
-        op_{idx}_color.default_view().plot(ex_{idx}_beads)
-        """
-        .format(idx = idx,
-                prev_idx = idx - 1))
+    view_params_view = View()
 
 
 @provides(IOperationPlugin)
 class TasbePlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.tasbe'
-    operation_id = 'edu.mit.synbio.cytoflowgui.op_plugins.tasbe'
+    operation_id = 'edu.mit.synbio.cytoflowgui.workflow.operations.tasbe'
+    view_id = 'edu.mit.synbio.cytoflowgui.workflow.operations.tasbeview'
 
     short_name = "TASBE Calibration"
     menu_group = "Gates"
     
     def get_operation(self):
-        return TasbePluginOp()
+        return TasbeWorkflowOp()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, TasbeWorkflowOp):
+            return TasbeHandler(model = model, context = context)
+        elif isinstance(model, TasbeWorkflowView):
+            return TasbeViewHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('tasbe')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     
-### Serialization
-@camel_registry.dumper(TasbePluginOp, 'tasbe', version = 1)
-def _dump(op):
-    return dict(channels = op.channels,
-                blank_file = op.blank_file,
-                bleedthrough_list = op.bleedthrough_list,
-                beads_name = op.beads_name,
-                beads_file = op.beads_file,
-                beads_unit = op.beads_unit,
-                bead_peak_quantile = op.bead_peak_quantile,
-                bead_brightness_threshold = op.bead_brightness_threshold,
-                bead_brightness_cutoff = op.bead_brightness_cutoff,
-                to_channel = op.to_channel,
-                mixture_model = op.mixture_model,
-                translation_list = op.translation_list,
-                subset_list = op.subset_list)
-    
-@camel_registry.loader('tasbe', version = 1)
-def _load(data, version):
-    return TasbePluginOp(**data)
-
-@camel_registry.dumper(_BleedthroughControl, 'tasbe-bleedthrough-control', version = 1)
-def _dump_bleedthrough_control(bl):
-    return dict(channel = bl.channel,
-                file = bl.file)
-    
-@camel_registry.loader('tasbe-bleedthrough-control', version = 1)
-def _load_bleedthrough_control(data, version):
-    return _BleedthroughControl(**data)
-
-@camel_registry.dumper(_TranslationControl, 'tasbe-translation-control', version = 1)
-def _dump_translation_control(tl):
-    return dict(from_channel = tl.from_channel,
-                to_channel = tl.to_channel,
-                file = tl.file)
-    
-@camel_registry.loader('tasbe-translation-control', version = 1)
-def _load_translation_control(data, version):
-    return _TranslationControl(**data)
-
-@camel_registry.dumper(TasbePluginView, 'tasbe-view', version = 1)
-def _dump_view(view):
-    return dict(op = view.op)
-
-@camel_registry.loader('tasbe-view', version = 1)
-def _load_view(data, version):
-    return TasbePluginView(**data)

@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ class ExportFCS(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.table")
+    id = Constant("edu.mit.synbio.cytoflow.view.exportfcs")
     friendly_id = Constant("Table View") 
     
     base = Str
@@ -197,20 +197,20 @@ class ExportFCS(HasStrictTraits):
             raise util.CytoflowViewError('experiment', "No events in experiment")
         
         if not self.path:
-            raise util.CytoflowOpError('path',
+            raise util.CytoflowViewError('path',
                                        'Must specify an output directory')
         
         d = Path(self.path)
         
         if not d.is_dir():
-            raise util.CytoflowOpError('path',
+            raise util.CytoflowViewError('path',
                                        'Output directory {} must exist')
         
         # also tests for good experiment, self.by
         for filename in self.enum_files(experiment):
             p = d / filename
             if p.is_file():
-                raise util.CytoflowOpError('path',
+                raise util.CytoflowViewError('path',
                                            'File {} already exists'
                                            .format(p)) 
                 
@@ -236,7 +236,7 @@ class ExportFCS(HasStrictTraits):
                             '$ENDANALYSIS', '$BEGINDATA', '$ENDDATA',
                             '$BYTEORD', '$DATATYPE', '$MODE', '$NEXTDATA', 
                             '$TOT', '$PAR']
-        common_metadata = {k : v for k, v in common_metadata.items()
+        common_metadata = {str(k) : str(v) for k, v in common_metadata.items()
                            if re.search('^\$P\d+[BENRDSG]$', k) is None
                            and k not in exclude_keywords}
         

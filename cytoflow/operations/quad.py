@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -138,10 +138,10 @@ class QuadOp(HasStrictTraits):
     name = Str
     
     xchannel = Str
-    xthreshold = Float
+    xthreshold = Float(None)
     
     ychannel = Str
-    ythreshold = Float
+    ythreshold = Float(None)
     
     _selection_view = Instance('QuadSelection', transient = True)
 
@@ -202,10 +202,10 @@ class QuadOp(HasStrictTraits):
             raise util.CytoflowOpError('ychanel', 
                                        "ychannel isn't in the experiment")
         
-        if not self.xthreshold:
+        if self.xthreshold is None:
             raise util.CytoflowOpError('xthreshold', 'xthreshold must be set!')
         
-        if not self.ythreshold:
+        if self.ythreshold is None:
             raise util.CytoflowOpError('ythreshold', 'ythreshold must be set!')
 
         gate = pd.Series([None] * len(experiment))
@@ -331,14 +331,14 @@ class QuadSelection(Op2DView, ScatterplotView):
 
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
-        if self._ax and self.interactive:
+        if self._ax and self.interactive and self._cursor is None:
             self._cursor = util.Cursor(self._ax,
                                        horizOn = True,
                                        vertOn = True,
                                        color = 'blue',
                                        useblit = True) 
             self._cursor.connect_event('button_press_event', self._onclick)
-        elif self._cursor:
+        elif not self.interactive and self._cursor is not None:
             self._cursor.disconnect_events()
             self._cursor = None
             

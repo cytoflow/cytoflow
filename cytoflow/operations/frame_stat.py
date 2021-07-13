@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr, Any)
+                        Callable, Any)
 
 import cytoflow.utility as util
 
@@ -91,7 +91,7 @@ class FrameStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
     friendly_id = Constant("Statistics")
     
-    name = CStr
+    name = Str
     function = Callable
     statistic_name = Str
     by = List(Str)
@@ -164,8 +164,12 @@ class FrameStatisticOp(HasStrictTraits):
                      .format(group), 
                      util.CytoflowOpWarning)
         
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
-                                         names = self.by)
+        # this shouldn't be necessary, but see pandas bug #38053
+        if len(self.by) == 1:
+            idx = pd.Index(experiment[self.by[0]].unique(), name = self.by[0])
+        else:
+            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
+                                             names = self.by)
 
         stat = pd.Series(data = self.fill,
                          index = idx, 
@@ -177,7 +181,9 @@ class FrameStatisticOp(HasStrictTraits):
                 continue
             
             try:
-                stat.loc[group] = self.function(data_subset)
+                v = self.function(data_subset)
+                
+                stat.at[group] = v
 
             except Exception as e:
                 raise util.CytoflowOpError('function',

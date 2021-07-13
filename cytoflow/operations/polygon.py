@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ cytoflow.operations.polygon
 ---------------------------
 '''
 
-from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
+from traits.api import (HasStrictTraits, Str, List, Float, provides,
                         Instance, Bool, on_trait_change, Any,
                         Constant)
 
@@ -141,9 +141,9 @@ class PolygonOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.polygon')
     friendly_id = Constant("Polygon")
     
-    name = CStr()
-    xchannel = Str()
-    ychannel = Str()
+    name = Str
+    xchannel = Str
+    ychannel = Str
     vertices = List((Float, Float))
     
     xscale = util.ScaleEnum()
@@ -177,6 +177,12 @@ class PolygonOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
+            
+        # make sure name got set!
+        if not self.name:
+            raise util.CytoflowOpError('name',
+                                       "You have to set the Polygon gate's name "
+                                       "before applying it!")
 
         if self.name in experiment.data.columns:
             raise util.CytoflowOpError('name',
@@ -214,23 +220,14 @@ class PolygonOp(HasStrictTraits):
             return util.CytoflowOpError('vertices',
                                         "All vertices must be lists or tuples "
                                         "of length = 2") 
-        
-        # make sure name got set!
-        if not self.name:
-            raise util.CytoflowOpError('name',
-                                       "You have to set the Polygon gate's name "
-                                       "before applying it!")
-        
-        # make sure old_experiment doesn't already have a column named self.name
-        if(self.name in experiment.data.columns):
-            raise util.CytoflowOpError('name',
-                                       "Experiment already contains a column {0}"
-                                       .format(self.name))
             
         # there's a bit of a subtlety here: if the vertices were 
         # selected with an interactive plot, and that plot had scaled
         # axes, we need to apply that scale function to both the
-        # vertices and the data before looking for path membership
+        # vertices and the data before looking for path membership.
+        # if you set xscale and yscale via arguments to default_view, 
+        # the operations' get set as well (because PolygonSelection.xscale
+        # and PolygonSelection.yscale are delegates to PolygonSelection.op)
         xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
         yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
         

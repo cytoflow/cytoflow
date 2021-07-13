@@ -1,0 +1,291 @@
+- !workflow-item;4
+  channels:
+  - B1_A
+  - B1_H
+  - B1_W
+  - FSC_A
+  - FSC_H
+  - FSC_W
+  - HDR_T
+  - SSC_A
+  - SSC_H
+  - SSC_W
+  - V2_A
+  - V2_H
+  - V2_W
+  - Y2_A
+  - Y2_H
+  - Y2_W
+  conditions:
+    Dox: !pandas-series;2
+      data:
+      - 1.0
+      - 10.0
+      dtype: !numpy-dtype;1 float64
+      index: !pandas-int64index;1
+        name: null
+        values:
+        - 0
+        - 1
+    Well: !pandas-series;2
+      data:
+      - A
+      - B
+      dtype: !pandas-categorical-dtype;1
+        categories:
+        - A
+        - B
+        ordered: false
+      index: !pandas-int64index;1
+        name: null
+        values:
+        - 0
+        - 1
+  current_view: null
+  metadata:
+    B1_A: &id001
+      fcs_name: B1-A
+      range: 262144.0
+      type: channel
+    B1_H: &id002
+      fcs_name: B1-H
+      range: 262144.0
+      type: channel
+    B1_W: &id003
+      fcs_name: B1-W
+      range: 262144.0
+      type: channel
+    Dox: &id004
+      experiment: true
+      type: condition
+    FSC_A: &id005
+      fcs_name: FSC-A
+      range: 262144.0
+      type: channel
+    FSC_H: &id006
+      fcs_name: FSC-H
+      range: 262144.0
+      type: channel
+    FSC_W: &id007
+      fcs_name: FSC-W
+      range: 262144.0
+      type: channel
+    HDR_T: &id008
+      fcs_name: HDR-T
+      range: 262144.0
+      type: channel
+    SSC_A: &id009
+      fcs_name: SSC-A
+      range: 262144.0
+      type: channel
+    SSC_H: &id010
+      fcs_name: SSC-H
+      range: 262144.0
+      type: channel
+    SSC_W: &id011
+      fcs_name: SSC-W
+      range: 262144.0
+      type: channel
+    V2_A: &id012
+      fcs_name: V2-A
+      range: 262144.0
+      type: channel
+    V2_H: &id013
+      fcs_name: V2-H
+      range: 262144.0
+      type: channel
+    V2_W: &id014
+      fcs_name: V2-W
+      range: 262144.0
+      type: channel
+    Well: &id015
+      experiment: true
+      type: condition
+    Y2_A: &id016
+      fcs_name: Y2-A
+      range: 262144.0
+      type: channel
+    Y2_H: &id017
+      fcs_name: Y2-H
+      range: 262144.0
+      type: channel
+    Y2_W: &id018
+      fcs_name: Y2-W
+      range: 262144.0
+      type: channel
+    ignore_v: &id019 []
+    name_metadata: $PnS
+  operation: !import;3
+    channels_list:
+    - !import-channel;1
+      channel: B1-A
+      name: B1_A
+    - !import-channel;1
+      channel: FSC-A
+      name: FSC_A
+    - !import-channel;1
+      channel: HDR-T
+      name: HDR_T
+    - !import-channel;1
+      channel: SSC-A
+      name: SSC_A
+    - !import-channel;1
+      channel: V2-A
+      name: V2_A
+    - !import-channel;1
+      channel: Y2-A
+      name: Y2_A
+    conditions:
+      Dox: float
+      Well: category
+    events: null
+    name_metadata: null
+    tubes:
+    - !tube;1
+      conditions:
+        Dox: 1.0
+        Well: A
+      file: /home/brian/src/cytoflow/cytoflow/tests/data/Plate01/CFP_Well_A4.fcs
+    - !tube;1
+      conditions:
+        Dox: 1.0
+        Well: B
+      file: /home/brian/src/cytoflow/cytoflow/tests/data/Plate01/CFP_Well_B4.fcs
+    - !tube;1
+      conditions:
+        Dox: 10.0
+        Well: A
+      file: /home/brian/src/cytoflow/cytoflow/tests/data/Plate01/RFP_Well_A3.fcs
+    - !tube;1
+      conditions:
+        Dox: 10.0
+        Well: B
+      file: /home/brian/src/cytoflow/cytoflow/tests/data/Plate01/RFP_Well_A6.fcs
+  statistics: {}
+  views: []
+- !workflow-item;4
+  channels:
+  - B1_A
+  - B1_H
+  - B1_W
+  - FSC_A
+  - FSC_H
+  - FSC_W
+  - HDR_T
+  - SSC_A
+  - SSC_H
+  - SSC_W
+  - V2_A
+  - V2_H
+  - V2_W
+  - Y2_A
+  - Y2_H
+  - Y2_W
+  conditions:
+    Dox: !pandas-series;2
+      data:
+      - 1.0
+      - 10.0
+      dtype: !numpy-dtype;1 float64
+      index: !pandas-int64index;1
+        name: null
+        values:
+        - 0
+        - 1
+    Well: !pandas-series;2
+      data:
+      - A
+      - B
+      dtype: !pandas-categorical-dtype;1
+        categories:
+        - A
+        - B
+        ordered: false
+      index: !pandas-int64index;1
+        name: null
+        values:
+        - 0
+        - 1
+  current_view: null
+  metadata:
+    B1_A: *id001
+    B1_H: *id002
+    B1_W: *id003
+    Dox: *id004
+    FSC_A: *id005
+    FSC_H: *id006
+    FSC_W: *id007
+    HDR_T: *id008
+    SSC_A: *id009
+    SSC_H: *id010
+    SSC_W: *id011
+    V2_A: *id012
+    V2_H: *id013
+    V2_W: *id014
+    Well: *id015
+    Y2_A: *id016
+    Y2_H: *id017
+    Y2_W: *id018
+    ignore_v: *id019
+    name_metadata: $PnS
+  operation: !channel-statistic;1
+    by:
+    - Dox
+    - Well
+    channel: Y2_A
+    name: Stat
+    statistic_name: Geom.Mean
+    subset_list:
+    - !range-subset;1
+      high: 10.0
+      low: 1.0
+      name: Dox
+      values:
+      - 1.0
+      - 10.0
+    - !category-subset;1
+      name: Well
+      selected: []
+      values:
+      - A
+      - B
+  statistics:
+    ? !!python/tuple
+    - Stat
+    - Geom.Mean
+    : !pandas-series;2
+      data:
+      - 19.805600564796777
+      - 23.23839330528706
+      - 446.98192703265045
+      - 41.70339028788707
+      dtype: !numpy-dtype;1 float64
+      index: !pandas-multiindex;2
+        codes:
+        - - 0
+          - 0
+          - 1
+          - 1
+        - - 0
+          - 1
+          - 0
+          - 1
+        levels:
+        - !pandas-float64index;1
+          name: Dox
+          values:
+          - 1.0
+          - 10.0
+        - !pandas-categoricalindex;1
+          categories:
+          - A
+          - B
+          name: Well
+          ordered: false
+          values:
+          - A
+          - B
+        names:
+        - Dox
+        - Well
+  views: []

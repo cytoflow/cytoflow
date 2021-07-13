@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -219,7 +219,7 @@ class ImportOp(HasStrictTraits):
     data_set = Int(0)
 
     # are we subsetting?
-    events = util.CIntOrNone(None)
+    events = Int(None)
     coarse_events = util.Deprecated(new = 'events')
         
     # DON'T DO THIS
@@ -370,7 +370,7 @@ class ImportOp(HasStrictTraits):
                                                   experiment, 
                                                   data_set = self.data_set)
     
-                if self.events:
+                if self.events is not None:
                     if self.events <= len(tube_data):
                         tube_data = tube_data.loc[np.random.choice(tube_data.index,
                                                                    self.events,
@@ -405,9 +405,6 @@ class ImportOp(HasStrictTraits):
             tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
-                 
-#         import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_6.1.0.201711051306/pysrc')
-#         import pydevd;pydevd.settrace()
                         
         for channel in channels:
             # Storing it for later on, in the extra bits section

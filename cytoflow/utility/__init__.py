@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWar
 
 from .scale import scale_factory, IScale, set_default_scale, get_default_scale
 from .custom_traits import (PositiveInt, PositiveCInt, PositiveFloat, 
-                            PositiveCFloat, ScaleEnum, Deprecated, Removed, 
+                            PositiveCFloat, ScaleEnum, Deprecated, Removed,
                             FloatOrNone, CFloatOrNone, IntOrNone, CIntOrNone)
 
 from .matplotlib_widgets import PolygonSelector, SpanSelector, Cursor

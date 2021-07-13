@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,7 +71,8 @@ click-and-drag on the plot.
     Show only a subset of the data.
         
 .. plot::
-    
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
@@ -94,145 +95,104 @@ click-and-drag on the plot.
                    yscale = 'log').plot(ex)
 '''
 
-from traits.api import provides, Callable, Str, Instance, DelegatesTo, CFloat
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
-from envisage.api import Plugin, contributes_to
+from traits.api import provides, List
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
-from cytoflow.operations import IOperation
-from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
-from cytoflow.views.i_selectionview import ISelectionView
+from ..view_plugins import ViewHandler
+from ..view_plugins.scatterplot import ScatterplotParamsHandler
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..workflow.operations import Range2DWorkflowOp, Range2DSelectionView
+from ..subset_controllers import subset_handler_factory
 
-from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.view_plugins.scatterplot import ScatterplotPlotParams
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
-
-Range2DOp.__repr__ = traits_repr
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
 
-class Range2DHandler(OpHandlerMixin, Controller):
-    
-    def default_traits_view(self):
-        return View(Item('name',
-                         editor = TextEditor(auto_set = False)),
-                    Item('xchannel',
-                         editor=EnumEditor(name='context.previous_wi.channels'),
-                         label = "X Channel"),
-                    Item('xlow', 
-                         editor = TextEditor(auto_set = False),
-                         label = "X Low"),
-                    Item('xhigh', 
-                         editor = TextEditor(auto_set = False),
-                         label = "X High"),
+class Range2DHandler(OpHandler):
+    operation_traits_view = \
+        View(Item('name',
+                  editor = TextEditor(auto_set = False)),
+             Item('xchannel',
+                  editor=EnumEditor(name='context_handler.previous_channels'),
+                  label = "X Channel"),
+             Item('xlow', 
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),                  
+                  label = "X Low"),
+             Item('xhigh', 
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),                  
+                  label = "X High"),
+             Item('ychannel',
+                  editor=EnumEditor(name='context_handler.previous_channels'),               
+                  label = "Y Channel"),
+             Item('ylow', 
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),
+                  label = "Y Low"),
+             Item('yhigh', 
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),
+                  label = "Y High"),
+             shared_op_traits_view) 
+        
+        
+class Range2DViewHandler(ViewHandler):
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('xchannel', 
+                         label = "X Channel", 
+                         style = 'readonly'),
+                    Item('xscale',
+                         label = "X Scale"),
                     Item('ychannel',
-                         editor=EnumEditor(name='context.previous_wi.channels'),
-                         label = "Y Channel"),
-                    Item('ylow', 
-                         editor = TextEditor(auto_set = False),
-                         label = "Y Low"),
-                    Item('yhigh', 
-                         editor = TextEditor(auto_set = False),
-                         label = "Y High"),
-                    shared_op_traits) 
-        
-class RangeView2DHandler(ViewHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('xchannel', 
-                                label = "X Channel", 
-                                style = 'readonly'),
-                           Item('xscale',
-                                label = "X Scale"),
-                           Item('ychannel',
-                                label = "Y Channel",
-                                style = 'readonly'),
-                           Item('yscale',
-                                label = "Y Scale"),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
-                           label = "2D Range Setup View",
-                           show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
+                         label = "Y Channel",
+                         style = 'readonly'),
+                    Item('yscale',
+                         label = "Y Scale"),
+                    Item('huefacet',
+                         editor=ExtendableEnumEditor(name='context_handler.previous_conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label="Color\nFacet"),
+                    label = "2D Range Setup View",
+                    show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
 
-@provides(ISelectionView)
-class Range2DSelectionView(PluginViewMixin, RangeSelection2D):
-    handler_factory = Callable(RangeView2DHandler, transient = True)
-    op = Instance(IOperation, fixed = True)
-    xlow = DelegatesTo('op', status = True)
-    xhigh = DelegatesTo('op', status = True)
-    ylow = DelegatesTo('op', status = True)
-    yhigh = DelegatesTo('op', status = True)
-    plot_params = Instance(ScatterplotPlotParams, ())
-    name = Str
-    
-    def should_plot(self, changed, payload):
-        if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
-            return True
-        else:
-            return False
-    
-    def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result, **self.plot_params.trait_get())
-        
-    def get_notebook_code(self, idx):
-        view = RangeSelection2D()
-        view.copy_traits(self, view.copyable_trait_names())
-        plot_params_str = traits_str(self.plot_params)
-        
-        return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot_params})
-        """
-        .format(idx = idx, 
-                traits = traits_str(view),
-                prev_idx = idx - 1,
-                plot_params = ", " + plot_params_str if plot_params_str else ""))
-    
-    
-class Range2DPluginOp(Range2DOp, PluginOpMixin):
-    handler_factory = Callable(Range2DHandler, transient = True)
-    xlow = CFloat
-    xhigh = CFloat
-    ylow = CFloat
-    yhigh = CFloat
-    
-    def default_view(self, **kwargs):
-        return Range2DSelectionView(op = self, **kwargs)
-    
-    def get_notebook_code(self, idx):
-        op = Range2DOp()
-        op.copy_traits(self, op.copyable_trait_names())
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = ScatterplotParamsHandler),
+                  style = 'custom',
+                  show_label = False))
 
-        return dedent("""
-        op_{idx} = {repr}
-                
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin, PluginHelpMixin):
@@ -242,52 +202,24 @@ class Range2DPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.range2d'
     operation_id = 'edu.mit.synbio.cytoflow.operations.range2d'
+    view_id = 'edu.mit.synbio.cytoflow.views.range2d'
 
     short_name = "Range 2D"
     menu_group = "Gates"
     
     def get_operation(self):
-        return Range2DPluginOp()
+        return Range2DWorkflowOp()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, Range2DWorkflowOp):
+            return Range2DHandler(model = model, context = context)
+        elif isinstance(model, Range2DSelectionView):
+            return Range2DViewHandler(model = model, context = context)
 
     def get_icon(self):
         return ImageResource('range2d')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-### Serialization
-@camel_registry.dumper(Range2DPluginOp, 'range2d', version = 1)
-def _dump(op):
-    return dict(name = op.name,
-                xchannel = op.xchannel,
-                xlow = op.xlow,
-                xhigh = op.xhigh,
-                ychannel = op.ychannel,
-                ylow = op.ylow,
-                yhigh = op.yhigh)
-    
-@camel_registry.loader('range2d', version = 1)
-def _load(data, version):
-    return Range2DPluginOp(**data)
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
 
-@camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 2)
-def _dump_view(view):
-    return dict(op = view.op,
-                xscale = view.xscale,
-                yscale = view.yscale,
-                huefacet = view.huefacet,
-                subset_list = view.subset_list,
-                plot_params = view.plot_params)
-    
-@camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 1)
-def _dump_view_v1(view):
-    return dict(op = view.op,
-                xscale = view.xscale,
-                yscale = view.yscale,
-                huefacet = view.huefacet,
-                subset_list = view.subset_list)
-    
-@camel_registry.loader('range2d-view', version = any)
-def _load_view(data, version):
-    return Range2DSelectionView(**data)

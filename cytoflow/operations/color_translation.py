@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -187,11 +187,12 @@ class ColorTranslationOp(HasStrictTraits):
         tubes = {}
         
         translation = {x[0] : x[1] for x in list(self.controls.keys())}
+        coefficients = {}
         
         for from_channel, to_channel in translation.items():
             
             if from_channel not in experiment.channels:
-                raise util.CytoflowOpError('translatin',
+                raise util.CytoflowOpError('translation',
                                            "Channel {0} not in the experiment"
                                            .format(from_channel))
                 
@@ -304,9 +305,11 @@ class ColorTranslationOp(HasStrictTraits):
                  
                  
             opt = scipy.optimize.least_squares(f, x0)
-            self._coefficients[(from_channel, to_channel)] = opt.x
+            coefficients[(from_channel, to_channel)] = opt.x
             self._trans_fn[(from_channel, to_channel)] = lambda data, x = opt.x: trans_fn(data, x)
 
+        # set atomically to support GUI
+        self._coefficients = coefficients
 
     def apply(self, experiment):
         """Applies the color translation to an experiment
@@ -448,7 +451,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
 
             if self.op.mixture_model:    
                 plt.subplot(num_plots, 2, plt_idx * 2 + 2)
-                plt.xscale('log', nonposx='mask')
+                plt.xscale('log', nonpositive='mask')
                 hist_bins = np.logspace(1, math.log(data[from_channel].max(), 2), num = 128, base = 2)
                 _ = plt.hist(data[from_channel],
                              bins = hist_bins,
@@ -463,8 +466,8 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             
             num_cols = 2 if self.op.mixture_model else 1
             plt.subplot(num_plots, num_cols, plt_idx * num_cols + 1)
-            plt.xscale('log', nonposx = 'mask')
-            plt.yscale('log', nonposy = 'mask')
+            plt.xscale('log', nonpositive = 'mask')
+            plt.yscale('log', nonpositive = 'mask')
             plt.xlabel(from_channel)
             plt.ylabel(to_channel)
             plt.xlim(from_min, from_max)

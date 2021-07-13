@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -144,6 +144,10 @@ class AutofluorescenceOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment', 
                                        "No experiment specified")
         
+        if not self.blank_file:
+            raise util.CytoflowOpError('blank_file',
+                                       "No blank tube specified")
+        
         if not self.channels:
             raise util.CytoflowOpError('channels', "No channels specified")
 
@@ -197,6 +201,8 @@ class AutofluorescenceOp(HasStrictTraits):
                                            "Subset string '{0}' returned no events"
                                       .format(subset))
         
+        af_median = {}
+        af_stdev = {}
         for channel in self.channels:
             self._af_histogram[channel] = np.histogram(blank_exp[channel], bins = 250)
             
@@ -206,8 +212,12 @@ class AutofluorescenceOp(HasStrictTraits):
             blank_exp[channel] = blank_exp[channel].clip(channel_min,
                                                          channel_max)
             
-            self._af_median[channel] = np.median(blank_exp[channel])
-            self._af_stdev[channel] = np.std(blank_exp[channel])    
+            af_median[channel] = np.median(blank_exp[channel])
+            af_stdev[channel] = np.std(blank_exp[channel])    
+
+        # set atomically to support GUI
+        self._af_stdev = af_stdev            
+        self._af_median = af_median
                 
     def apply(self, experiment):
         """

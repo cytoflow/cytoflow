@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,7 +65,8 @@ the peak finding work by tweaking , please submit a bug report!
 
     
 .. plot::
-    
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
@@ -87,51 +88,96 @@ the peak finding work by tweaking , please submit a bug report!
     ex = bead_op.apply(ex)  
 '''
 
-from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
-                          ButtonEditor, HGroup, InstanceEditor, TextEditor)
-from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, HasTraits, File, Event, 
-                        on_trait_change, Property, Dict, CInt, CFloat, Float)
+from natsort import natsorted
+
+from traits.api import provides, Event, Property, List, Str
+from traitsui.api import View, Item, VGroup, TextEditor, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
-import cytoflow.utility as util
+from ..view_plugins import ViewHandler
+from ..editors import ColorTextEditor, InstanceHandlerEditor, VerticalListEditor
+from ..workflow.operations import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, BeadCalibrationUnit
 
-from cytoflow.operations.bead_calibration import BeadCalibrationOp, BeadCalibrationDiagnostic
-from cytoflow.views.i_selectionview import IView
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.vertical_list_editor import VerticalListEditor
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
-BeadCalibrationOp.__repr__ = traits_repr    
-
-class _Unit(HasTraits):
-    channel = Str
-    unit = Str
+class UnitHandler(Controller):
+    unit_view = View(HGroup(Item('channel',
+                                 editor = EnumEditor(name = 'context_handler.channels')),
+                            Item('unit',
+                                 editor = EnumEditor(name = 'context_handler.beads_units'),
+                                 show_label = False)))
     
-    def __repr__(self):
-        return traits_repr(self)
 
-
-class BeadCalibrationHandler(OpHandlerMixin, Controller):
+class BeadCalibrationHandler(OpHandler):
     
     add_channel = Event
     remove_channel = Event
+    channels = Property(List(Str), observe = 'context.channels')
     
-    beads_name_choices = Property()
-    beads_units = Property(depends_on = 'model.beads_name')
+    beads_name_choices = Property
+    beads_units = Property(observe = 'model.beads_name')
     
+    operation_traits_view = \
+        View(VGroup(
+             Item('beads_name',
+                  editor = EnumEditor(name = 'handler.beads_name_choices'),
+                  label = "Beads"),
+             Item('beads_file',
+                  editor = FileEditor(dialog_style = 'open'))),
+             VGroup(Item('units_list',
+                         editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'unit_view',
+                                                                                    handler_factory = UnitHandler),
+                                                     style = 'custom',
+                                                     mutable = False),
+                         style = 'custom'),
+             Item('handler.add_channel',
+                  editor = ButtonEditor(value = True,
+                                        label = "Add a channel")),
+             Item('handler.remove_channel',
+                  editor = ButtonEditor(value = True,
+                                        label = "Remove a channel")),
+             label = "Controls",
+             show_labels = False),
+             Item('bead_peak_quantile',
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = int,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),
+                  label = "Peak\nQuantile"),
+             Item('bead_brightness_threshold',
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),
+                  label = "Peak\nThreshold "),
+             Item('bead_brightness_cutoff',
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),
+                  label = "Peak\nCutoff"),
+             Item('do_estimate',
+                  editor = ButtonEditor(value = True,
+                                        label = "Estimate!"),
+                  show_label = False),
+             shared_op_traits_view)
+        
     # MAGIC: called when add_control is set
     def _add_channel_fired(self):
-        self.model.units_list.append(_Unit())
+        self.model.units_list.append(BeadCalibrationUnit())
         
     def _remove_channel_fired(self):
         if self.model.units_list:
-            self.model.units_list.pop()    
+            self.model.units_list.pop()   
+            
+    def _get_channels(self):
+        if self.context and self.context.channels:
+            return natsorted(self.context.channels)
+        else:
+            return [] 
     
     def _get_beads_name_choices(self):
         return list(self.model.BEADS.keys())
@@ -141,234 +187,47 @@ class BeadCalibrationHandler(OpHandlerMixin, Controller):
             return list(self.model.BEADS[self.model.beads_name].keys())
         else:
             return []
-    
-    def unit_traits_view(self):
-        return View(HGroup(Item('channel',
-                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
-                           Item('unit',
-                                editor = EnumEditor(name = 'handler.beads_units'),
-                                show_label = False)),
-                    handler = self)
-    
-    def default_traits_view(self):
-        return View(VGroup(
-                    Item('beads_name',
-                         editor = EnumEditor(name = 'handler.beads_name_choices'),
-                         label = "Beads",
-                         width = -125),
-                    Item('beads_file',
-                         width = -125)),
-                    VGroup(Item('units_list',
-                                editor = VerticalListEditor(editor = InstanceEditor(view = self.unit_traits_view()),
-                                                            style = 'custom',
-                                                            mutable = False),
-                                style = 'custom'),
-                    Item('handler.add_channel',
-                         editor = ButtonEditor(value = True,
-                                               label = "Add a channel")),
-                    Item('handler.remove_channel',
-                         editor = ButtonEditor(value = True,
-                                               label = "Remove a channel")),
-                    label = "Controls",
-                    show_labels = False),
-                    Item('bead_peak_quantile',
-                         editor = TextEditor(auto_set = False),
-                         label = "Peak\nQuantile"),
-                    Item('bead_brightness_threshold',
-                         editor = TextEditor(auto_set = False),
-                         label = "Peak\nThreshold "),
-                    Item('bead_brightness_cutoff',
-                         editor = TextEditor(auto_set = False,
-                                             format_func = lambda x: "" if x == None else str(x)),
-                         label = "Peak\nCutoff"),
-                    Item('do_estimate',
-                         editor = ButtonEditor(value = True,
-                                               label = "Estimate!"),
-                         show_label = False),
-                    shared_op_traits)
 
-class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
-    handler_factory = Callable(BeadCalibrationHandler)
 
-    beads_name = Str(estimate = True)   
-    beads = Dict(Str, List(Float), transient = True)
- 
-    beads_file = File(filter = ["*.fcs"], estimate = True)
-    units_list = List(_Unit, estimate = True)
-    units = Dict(Str, Str, transient = True)
-
-    bead_peak_quantile = CInt(80, estimate = True)
-    bead_brightness_threshold = CFloat(100.0, estimate = True)
-    bead_brightness_cutoff = util.CFloatOrNone(None, estimate = True)
-
-    @on_trait_change('units_list_items,units_list.+', post_init = True)
-    def _controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
-    
-    def default_view(self, **kwargs):
-        return BeadCalibrationPluginView(op = self, **kwargs)
-    
-    def apply(self, experiment):
-
-        if not self.beads_name:
-            raise util.CytoflowOpError("Specify which beads to calibrate with.")
-                
-        for i, unit_i in enumerate(self.units_list):
-            for j, unit_j in enumerate(self.units_list):
-                if unit_i.channel == unit_j.channel and i != j:
-                    raise util.CytoflowOpError("Channel {0} is included more than once"
-                                               .format(unit_i.channel))
-                                               
-        self.units = {}
-        for unit in self.units_list:
-            self.units[unit.channel] = unit.unit
-                    
-        self.beads = self.BEADS[self.beads_name]
-        return BeadCalibrationOp.apply(self, experiment)
-    
-    def estimate(self, experiment):
-        if not self.beads_name:
-            raise util.CytoflowOpError("Specify which beads to calibrate with.")
-                
-        for i, unit_i in enumerate(self.units_list):
-            for j, unit_j in enumerate(self.units_list):
-                if unit_i.channel == unit_j.channel and i != j:
-                    raise util.CytoflowOpError("Channel {0} is included more than once"
-                                               .format(unit_i.channel))
-                                               
-        self.units = {}
-        for unit in self.units_list:
-            self.units[unit.channel] = unit.unit
-                    
-        self.beads = self.BEADS[self.beads_name]
-        try:
-            BeadCalibrationOp.estimate(self, experiment)
-        except:
-            raise
-        finally:
-            self.changed = (Changed.ESTIMATE_RESULT, self)
-
-    
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
+class BeadCalibrationViewHandler(ViewHandler):
+    view_traits_view = \
+        View(Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191")))
         
-        return False
-        
-    def clear_estimate(self):
-        self._calibration_functions.clear()
-        self._peaks.clear()
-        self._mefs.clear()
-        self._histograms.clear()
-        self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-    def get_notebook_code(self, idx):
-        op = BeadCalibrationOp()
-        op.copy_traits(self, op.copyable_trait_names())
+    view_params_view = View()
 
-        for unit in self.units_list:
-            op.units[unit.channel] = unit.unit
-                    
-        op.beads = self.BEADS[self.beads_name]
-        
-
-        return dedent("""
-        # Beads: {beads}
-        op_{idx} = {repr}
-        
-        op_{idx}.estimate(ex_{prev_idx})
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(beads = self.beads_name,
-                repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1))
-
-class BeadCalibrationViewHandler(ViewHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191")))
-
-@provides(IView)
-class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
-    handler_factory = Callable(BeadCalibrationViewHandler)
-    
-    def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result)
-        
-    def should_plot(self, changed, payload):
-        if changed == Changed.ESTIMATE_RESULT:
-            return True
-        
-        return False
-    
-    def get_notebook_code(self, idx):
-        view = BeadCalibrationDiagnostic()
-        view.copy_traits(self, view.copyable_trait_names())
-        
-        return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
-        """
-        .format(traits = traits_str(view),
-                idx = idx,
-                prev_idx = idx - 1))
-    
 
 @provides(IOperationPlugin)
 class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.beads_calibrate'
     operation_id = 'edu.mit.synbio.cytoflow.operations.beads_calibrate'
+    view_id = 'edu.mit.synbio.cytoflow.view.beadcalibrationdiagnosticview'
 
     short_name = "Bead Calibration"
     menu_group = "Calibration"
     
     def get_operation(self):
-        return BeadCalibrationPluginOp()
+        return BeadCalibrationWorkflowOp()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, BeadCalibrationWorkflowOp):
+            return BeadCalibrationHandler(model = model, context = context)
+        elif isinstance(model, BeadCalibrationWorkflowView):
+            return BeadCalibrationViewHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('bead_calibration')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-    
-### Serialization
-@camel_registry.dumper(BeadCalibrationPluginOp, 'bead-calibration', version = 1)
-def _dump(bead_op):
-    return dict(beads_name = bead_op.beads_name,
-                beads_file = bead_op.beads_file,
-                units_list = bead_op.units_list,
-                bead_peak_quantile = bead_op.bead_peak_quantile,
-                bead_brightness_threshold = bead_op.bead_brightness_threshold,
-                bead_brightness_cutoff = bead_op.bead_brightness_cutoff)
-    
-@camel_registry.loader('bead-calibration', version = 1)
-def _load(data, version):
-    return BeadCalibrationPluginOp(**data)
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
 
-@camel_registry.dumper(_Unit, 'bead-unit', version = 1)
-def _dump_unit(unit):
-    return dict(channel = unit.channel,
-                unit = unit.unit)
-    
-@camel_registry.loader('bead-unit', version = 1)
-def _load_unit(data, version):
-    return _Unit(**data)
-
-@camel_registry.dumper(BeadCalibrationPluginView, 'bead-calibration-view', version = 1)
-def _dump_view(view):
-    return dict(op = view.op)
-
-@camel_registry.loader('bead-calibration-view', version = 1)
-def _load_view(data, version):
-    return BeadCalibrationPluginView(**data)

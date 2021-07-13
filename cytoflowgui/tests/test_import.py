@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,37 +23,46 @@ Created on Jan 4, 2018
 @author: brian
 '''
 import unittest, tempfile, os
+import pandas as pd
 
-import matplotlib
-matplotlib.use('Agg')
-
-from cytoflowgui.tests.test_base import ImportedDataTest, TasbeTest, wait_for
-from cytoflowgui.serialization import save_yaml, load_yaml
-from cytoflowgui.op_plugins.import_op import ImportPluginOp, Channel
-from cytoflowgui.op_plugins import ImportPlugin
+from cytoflowgui.tests.test_base import ImportedDataTest, TasbeTest
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.operations import ImportWorkflowOp, ImportChannel
 
 
 class TestImport(ImportedDataTest):
+    
+    def setUp(self):
+        super().setUp()
+        
+        self.wi = self.workflow.workflow[0]
+        self.op = self.wi.operation
 
     def testCoarse(self):
-        wi = self.workflow.workflow[0]
-        op = wi.operation
         
-        op.events = 1000
-        self.assertTrue(wait_for(wi, 'status', lambda v: v != 'valid', 30))
-        op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.events = 1000
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is None"))
+
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.do_estimate = True
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
         self.assertTrue(self.workflow.remote_eval('len(self.workflow[0].result) == 6000'))
-        self.assertEqual(op.ret_events, 6000)
+        self.assertEqual(self.op.ret_events, 6000)
          
     def testChannelRename(self):
-        wi = self.workflow.workflow[0]
-        op = wi.operation
          
-        op.channels_list = [Channel(channel = 'SSC-A', name = 'SSC_A')]
-        self.assertTrue(wait_for(wi, 'status', lambda v: v != 'valid', 30))
-        op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.channels_list = [ImportChannel(channel = 'SSC-A', name = 'SSC_A')]
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is None"))
+
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.do_estimate = True
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
        
  
     def testSerialize(self):
@@ -81,7 +90,7 @@ class TestImport(ImportedDataTest):
         try:
             os.close(fh)
              
-            save_yaml(op, filename, lock_versions = {ImportPluginOp : 1})
+            save_yaml(op, filename, lock_versions = {ImportWorkflowOp : 1})
             new_op = load_yaml(filename)
              
         finally:
@@ -99,7 +108,7 @@ class TestImport(ImportedDataTest):
         try:
             os.close(fh)
              
-            save_yaml(op, filename, lock_versions = {ImportPluginOp : 2})
+            save_yaml(op, filename, lock_versions = {ImportWorkflowOp : 2})
             new_op = load_yaml(filename)
              
         finally:
@@ -117,7 +126,7 @@ class TestImport(ImportedDataTest):
          
         exec(code)
         nb_data = locals()['ex_0'].data
-        remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
+        remote_data = self.workflow.remote_eval("self.workflow[0].result.data")
         self.assertTrue((nb_data == remote_data).all().all())
          
 class TestImportTasbe(TasbeTest):
@@ -128,8 +137,9 @@ class TestImportTasbe(TasbeTest):
          
         exec(code)
         nb_data = locals()['ex_0'].data
-        remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        self.assertTrue((nb_data == remote_data).all().all())
+        remote_data = self.workflow.remote_eval("self.workflow[0].result.data")
+        
+        pd.testing.assert_frame_equal(nb_data, remote_data)
 
 
 if __name__ == "__main__":

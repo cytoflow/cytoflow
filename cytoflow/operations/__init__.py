@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ from .quad import QuadOp
 # data-driven
 from .ratio import RatioOp
 from .density import DensityGateOp
-from .gaussian_1d import GaussianMixture1DOp
-from .gaussian_2d import GaussianMixture2DOp
 from .gaussian import GaussianMixtureOp
 from .kmeans import KMeansOp
 from .flowpeaks import FlowPeaksOp

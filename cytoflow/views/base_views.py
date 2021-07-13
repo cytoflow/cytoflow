@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,9 +26,9 @@ from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-import numpy as np
 import seaborn as sns
 import pandas as pd
+from natsort import natsorted
 
 from warnings import warn
 
@@ -85,6 +85,11 @@ class BaseView(HasStrictTraits):
         sharex, sharey : bool
             If there are multiple subplots, should they share axes?  Defaults
             to `True`.
+
+        row_order, col_order, hue_order : list
+            Override the row/column/hue facet value order with the given list.
+            If a value is not given in the ordering, it is not plotted.
+            Defaults to a "natural ordering" of all the values.
             
         height : float
             The height of *each row* in inches.  Default = 3.0
@@ -138,9 +143,10 @@ class BaseView(HasStrictTraits):
                                          "col_wrap must be None or > 1")
         
         title = kwargs.pop("title", None)
-        xlabel = kwargs.pop("xlabel", None)
+        xlabel = kwargs.pop("xlabel", None)       
         ylabel = kwargs.pop("ylabel", None)
         huelabel = kwargs.pop("huelabel", self.huefacet)
+        if huelabel == "": huelabel = self.huefacet
         
         sharex = kwargs.pop("sharex", True)
         sharey = kwargs.pop("sharey", True)
@@ -169,15 +175,18 @@ class BaseView(HasStrictTraits):
                      util.CytoflowViewWarning)
                 
             
+        col_order = kwargs.pop("col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else None))
+        row_order = kwargs.pop("row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else None))
+        hue_order = kwargs.pop("hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet else None))
         g = sns.FacetGrid(data, 
                           height = height,
                           aspect = aspect,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
-                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_order = col_order,
+                          row_order = row_order,
+                          hue_order = hue_order,
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,
@@ -242,7 +251,9 @@ class BaseView(HasStrictTraits):
             if cmap and norm:
                 plot_ax = plt.gca()
                 cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-                mpl.colorbar.ColorbarBase(cax, cmap, norm)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = norm)
                 plt.sca(plot_ax)
             elif self.huefacet:
         
@@ -298,6 +309,12 @@ class BaseView(HasStrictTraits):
 class BaseDataView(BaseView):
     """
     The base class for data views (as opposed to statistics views).
+    
+    Attributes
+    ----------
+    subset : str
+        An expression that specifies the subset of the statistic to plot.
+        Passed unmodified to :meth:`pandas.DataFrame.query`.
     """
 
     subset = Str
@@ -571,6 +588,10 @@ class BaseNDView(BaseDataView):
         if len(self.channels) == 0:
             raise util.CytoflowOpError('channels',
                                        "Must set at least one channel")
+            
+        if len(self.channels) != len(set(self.channels)):
+            raise util.CytoflowOpError('channels', 
+                                       "Must not duplicate channels")
 
         for c in self.channels:
             if c not in experiment.data:
@@ -607,7 +628,7 @@ class BaseNDView(BaseDataView):
 @provides(IView)
 class BaseStatisticsView(BaseView):
     """
-    The base class for statisticxs views (as opposed to data views).
+    The base class for statistics views (as opposed to data views).
     
     Attributes
     ----------
@@ -617,6 +638,7 @@ class BaseStatisticsView(BaseView):
         
     subset : str
         An expression that specifies the subset of the statistic to plot.
+        Passed unmodified to :meth:`pandas.DataFrame.query`.
 
     """
     
@@ -629,6 +651,13 @@ class BaseStatisticsView(BaseView):
     def enum_plots(self, experiment, data):
         """
         Enumerate the named plots we can make from this set of statistics.
+        
+        Returns
+        -------
+        iterator
+            An iterator across the possible plot names. The iterator ALSO has an instance
+            attribute called :attribute::`by`, which holds a list of the facets that are
+            not yet set (and thus need to be specified in the plot name.)
         """
         
         if experiment is None:
@@ -679,6 +708,13 @@ class BaseStatisticsView(BaseView):
         
         This function takes care of checking for facet name validity and 
         subsetting, then passes the dataframe to `BaseView.plot`
+        
+        Parameters
+        ----------
+        plot_name : str
+            If this :class:`IView` can make multiple plots, ``plot_name`` is
+            the name of the plot to make.  Must be one of the values retrieved
+            from :meth:`enum_plots`.
 
         """
         

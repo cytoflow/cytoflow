@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,7 +49,8 @@ the diagnostic plots look good.
     using the Python module interface.
     
 .. plot::
-    
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "tasbe/mkate.fcs")]
@@ -65,67 +66,42 @@ the diagnostic plots look good.
     ex = color_op.apply(ex)  
 '''
 
-import warnings
+from natsort import natsorted
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
-                         ButtonEditor, HGroup, InstanceEditor
-from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, Tuple, List, Str, HasTraits,
-                        File, Event, Dict, on_trait_change, Bool, Constant,
-                        Property)
+from traits.api import provides, Event, Property, List, Str
+from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
-import cytoflow.utility as util
+from ..view_plugins import ViewHandler
+from ..editors import ColorTextEditor, InstanceHandlerEditor, VerticalListEditor, SubsetListEditor
+from ..workflow.operations import ColorTranslationWorkflowOp, ColorTranslationWorkflowView, ColorTranslationControl
+from ..subset_controllers import subset_handler_factory
 
-from cytoflow.operations.color_translation import ColorTranslationOp, ColorTranslationDiagnostic
-from cytoflow.views.i_selectionview import IView
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import ISubset, SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.vertical_list_editor import VerticalListEditor
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
-ColorTranslationOp.__repr__ = traits_repr
-
-class _Control(HasTraits):
-    from_channel = Str
-    to_channel = Str
-    file = File
+class ControlHandler(Controller):
+    control_view = View(HGroup(Item('from_channel',
+                                    editor = EnumEditor(name = 'context_handler.channels')),
+                               Item('to_channel',
+                                    editor = EnumEditor(name = 'context_handler.channels')),
+                               Item('file',
+                                    editor = FileEditor(dialog_style = 'open'),
+                                    show_label = False)))
     
-    
-    def __repr__(self):
-        return traits_repr(self)
 
-
-class ColorTranslationHandler(OpHandlerMixin, Controller):
-    
+class ColorTranslationHandler(OpHandler):
     add_control = Event
     remove_control = Event
     
-    # MAGIC: called when add_control is set
-    def _add_control_fired(self):
-        self.model.controls_list.append(_Control())
-        
-    def _remove_control_fired(self):
-        if self.model.controls_list:
-            self.model.controls_list.pop()
-    
-    def control_traits_view(self):
-        return View(HGroup(Item('from_channel',
-                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
-                           Item('to_channel',
-                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
-                           Item('file',
-                                show_label = False)),
-                    handler = self)
-    
-    def default_traits_view(self):
-        return View(VGroup(Item('controls_list',
-                                editor = VerticalListEditor(editor = InstanceEditor(view = self.control_traits_view()),
+    channels = Property(List(Str), observe = 'context.channels')
+
+    operation_traits_view = \
+        View(VGroup(Item('controls_list',
+                                editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'control_view',
+                                                                                           handler_factory = ControlHandler),
                                                             style = 'custom',
                                                             mutable = False),
                                 style = 'custom'),
@@ -137,156 +113,53 @@ class ColorTranslationHandler(OpHandlerMixin, Controller):
                                                label = "Remove a control")),
                     label = "Controls",
                     show_labels = False),
-                    Item('mixture_model',
-                         label = "Use mixture\nmodel?"),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions",
-                                                          metadata = "context.previous_wi.metadata",
-                                                          when = "'experiment' not in vars() or not experiment")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('do_estimate',
-                         editor = ButtonEditor(value = True,
-                                               label = "Estimate!"),
-                         show_label = False),
-                    shared_op_traits)
-
-class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
-    handler_factory = Callable(ColorTranslationHandler)
-
-    add_control = Event
-    remove_control = Event
-
-    controls = Dict(Tuple(Str, Str), File, transient = True)
-    controls_list = List(_Control, estimate = True)
-    mixture_model = Bool(False, estimate = True)
-    translation = Constant(None)
+             Item('mixture_model',
+                  label = "Use mixture\nmodel?"),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory))),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('do_estimate',
+                  editor = ButtonEditor(value = True,
+                                        label = "Estimate!"),
+                  show_label = False),
+             shared_op_traits_view)
         
-    @on_trait_change('controls_list_items, controls_list:+', post_init = True)
-    def _controls_changed(self):
-        self.changed = (Changed.ESTIMATE, ('controls_list', self.controls_list))
-
-    # bits to support the subset editor
-    
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
         
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change('subset_list.str')
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
-    
-    def default_view(self, **kwargs):
-        return ColorTranslationPluginView(op = self, **kwargs)
-    
-    def estimate(self, experiment):
-        for i, control_i in enumerate(self.controls_list):
-            for j, control_j in enumerate(self.controls_list):
-                if control_i.from_channel == control_j.from_channel and i != j:
-                    raise util.CytoflowOpError("Channel {0} is included more than once"
-                                               .format(control_i.from_channel))
-                    
-        # check for experiment metadata used to estimate operations in the
-        # history, and bail if we find any
-        for op in experiment.history:
-            if hasattr(op, 'by'):
-                for by in op.by:
-                    if 'experiment' in experiment.metadata[by]:
-                        raise util.CytoflowOpError('experiment',
-                                                   "Prior to applying this operation, "
-                                                   "you must not apply any operation with 'by' "
-                                                   "set to an experimental condition.")
-                                               
-        self.controls = {}
-        for control in self.controls_list:
-            self.controls[(control.from_channel, control.to_channel)] = control.file
+    # MAGIC: called when add_control is set
+    def _add_control_fired(self):
+        self.model.controls_list.append(ColorTranslationControl())
+        
+    def _remove_control_fired(self):
+        if self.model.controls_list:
+            self.model.controls_list.pop()
             
-        if not self.subset:
-            warnings.warn("Are you sure you don't want to specify a subset "
-                          "used to estimate the model?",
-                          util.CytoflowOpWarning)
-                    
-        try:
-            ColorTranslationOp.estimate(self, experiment, subset = self.subset)
-        except:
-            raise
-        finally:
-            self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-    
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
-        
-        return False
-        
-    def clear_estimate(self):
-        self._coefficients.clear()        
-        self._trans_fn.clear()
-        self._sample.clear()
-        self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-        
-    def get_notebook_code(self, idx):
-        op = ColorTranslationOp()
-        op.copy_traits(self, op.copyable_trait_names())
+    # MAGIC: returns the value of the 'channels' property
+    def _get_channels(self):
+        if self.context and self.context.channels:
+            return natsorted(self.context.channels)
+        else:
+            return [] 
 
-        for control in self.controls_list:
-            op.controls[(control.from_channel, control.to_channel)] = control.file        
 
-        return dedent("""
-        op_{idx} = {repr}
+class ColorTranslationViewHandler(ViewHandler):
+    view_traits_view = \
+        View(Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191")))
         
-        op_{idx}.estimate(ex_{prev_idx}{subset})
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1,
-                subset = ", subset = " + repr(self.subset) if self.subset else ""))
-
-class ColorTranslationViewHandler(ViewHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191")))
-
-@provides(IView)
-class ColorTranslationPluginView(PluginViewMixin, ColorTranslationDiagnostic):
-    handler_factory = Callable(ColorTranslationViewHandler)
-    
-    def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result)
-        
-    def should_plot(self, changed, payload):
-        if changed == Changed.ESTIMATE_RESULT:
-            return True
-        
-        return False
-    
-    def get_notebook_code(self, idx):
-        view = ColorTranslationDiagnostic()
-        view.copy_traits(self, view.copyable_trait_names())
-        view.subset = self.subset
-        
-        return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
-        """
-        .format(traits = traits_str(view),
-                idx = idx,
-                prev_idx = idx - 1))
+    view_params_view = View()
 
 
 @provides(IOperationPlugin)
@@ -294,45 +167,24 @@ class ColorTranslationPlugin(Plugin, PluginHelpMixin):
  
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.color_translation'
     operation_id = 'edu.mit.synbio.cytoflow.operations.color_translation'
+    view_id = 'edu.mit.synbio.cytoflow.view.colortranslationdiagnostic'
 
     short_name = "Color Translation"
     menu_group = "Gates"
     
     def get_operation(self):
-        return ColorTranslationPluginOp()
+        return ColorTranslationWorkflowOp()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, ColorTranslationWorkflowOp):
+            return ColorTranslationHandler(model = model, context = context)
+        elif isinstance(model, ColorTranslationWorkflowView):
+            return ColorTranslationViewHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('color_translation')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     
-### Serialization
-@camel_registry.dumper(ColorTranslationPluginOp, 'color-translation', version = 1)
-def _dump(op):
-    return dict(controls_list = op.controls_list,
-                mixture_model = op.mixture_model,
-                subset_list = op.subset_list)
-    
-@camel_registry.loader('color-translation', version = 1)
-def _load(data, version):
-    return ColorTranslationPluginOp(**data)
-
-@camel_registry.dumper(_Control, 'color-translation-control', version = 1)
-def _dump_control(c):
-    return dict(from_channel = c.from_channel,
-                to_channel = c.to_channel,
-                file = c.file)
-    
-@camel_registry.loader('color-translation-control', version = 1)
-def _load_control(data, version):
-    return _Control(**data)
-
-@camel_registry.dumper(ColorTranslationPluginView, 'color-translation-view', version = 1)
-def _dump_view(view):
-    return dict(op = view.op)
-
-@camel_registry.loader('color-translation-view', version = 1)
-def _load_view(data, ver):
-    return ColorTranslationPluginView(**data)

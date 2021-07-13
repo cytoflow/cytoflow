@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -154,17 +154,16 @@ class ScaleEnum(BaseEnum):
     def __init__ ( self, *args, **metadata ):
         """ Returns an Enum trait with values from the registered scales
         """
-        self.name = ''
+        self.name = None
         self.values = list(scale._scale_mapping.keys())
-        #self.init_fast_validate(ValidateTrait.enum, self.values )
         super(BaseEnum, self).__init__(scale._scale_default, **metadata )
         
-    #def get_default_value(self):
-    #    # this is so silly.  get_default_value is ... called once?  as traits
-    #    # sets up?  idunno.  anyways, instead of returning _scale_default, we
-    #    # need to return a reference to a function that returns _scale_Default.
-    #    
-    #    return (7, (self._get_default_value, (), None))
+    def get_default_value(self):
+        # this is so silly.  get_default_value is ... called once?  as traits
+        # sets up?  idunno.  anyways, instead of returning _scale_default, we
+        # need to return a reference to a function that returns _scale_default.
+        
+        return (7, (self._get_default_value, (), None))
     
     def _get_default_value(self):
         return scale._scale_default

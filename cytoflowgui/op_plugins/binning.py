@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ which the event is located.
     *log* (in which case, **Bin Width** is in log10-units.)
 
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()
@@ -63,146 +64,96 @@ which the event is located.
     bin_op.default_view().plot(ex2) 
 '''
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
-from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Str, Instance, DelegatesTo
+from traits.api import provides, List
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
-from cytoflow.operations import IOperation
-from cytoflow.operations.binning import BinningOp, BinningView
-from cytoflow.views.i_selectionview import IView
-import cytoflow.utility as util
+from ..view_plugins import ViewHandler
+from ..view_plugins.histogram import HistogramParamsHandler
+from ..editors import SubsetListEditor, ColorTextEditor, InstanceHandlerEditor
+from ..workflow.operations import BinningWorkflowOp, BinningWorkflowView
+from ..subset_controllers import subset_handler_factory
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
-BinningOp.__repr__ = traits_repr
+class BinningHandler(OpHandler):
+    operation_traits_view = \
+        View(Item('name',
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
+             Item('channel',
+                  editor=EnumEditor(name='context_handler.previous_channels'),
+                  label = "Channel"),
+             Item('scale',
+                  editor = EnumEditor(values = ['linear', 'log'])),
+             Item('bin_width',
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None"),
+                  label = "Bin Width"),
+             shared_op_traits_view)
 
-class BinningHandler(Controller, OpHandlerMixin):
-    def default_traits_view(self):
-        return View(Item('name',
-                         editor = TextEditor(auto_set = False)),
-                    Item('channel',
-                         editor=EnumEditor(name='context.previous_wi.channels'),
-                         label = "Channel"),
-                    Item('scale',
-                         editor = EnumEditor(values = ['linear', 'log'])),
-                    Item('bin_width',
-                         editor = TextEditor(auto_set = False),
-                         label = "Bin Width"),
-                    shared_op_traits)
 
-class BinningPluginOp(PluginOpMixin, BinningOp):
-    handler_factory = Callable(BinningHandler)
-    bin_width = util.PositiveCFloat(0, allow_zero = True)
-    
-    def default_view(self, **kwargs):
-        return BinningPluginView(op = self, **kwargs)
-    
-    def get_notebook_code(self, idx):
-        op = BinningOp()
-        op.copy_traits(self, op.copyable_trait_names())
+class BinningViewHandler(ViewHandler):
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('channel',
+                         style = 'readonly'),
+                    label = "Binning Default Plot",
+                    show_border = False)),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191")))
 
-        return dedent("""
-        op_{idx} = {repr}
-                
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1))
-
-class BinningViewHandler(Controller, ViewHandlerMixin):
-    def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('channel',
-                                style = 'readonly'),
-                           Item('huefacet',
-                                style = 'readonly'),
-                           label = "Binning Default Plot",
-                           show_border = False)),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "handler.context.previous_wi.conditions")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191")))
-
-@provides(IView)
-class BinningPluginView(PluginViewMixin, BinningView):
-    handler_factory = Callable(BinningViewHandler)
-    op = Instance(IOperation, fixed = True)
-    huefacet = Str(status = True)
-    huescale = DelegatesTo('op', 'scale', status = True)
-    
-    def plot_wi(self, wi):
-        if wi.result is not None:
-            self.plot(wi.result)
-        else:
-            self.plot(wi.previous_wi.result)
-            
-    def get_notebook_code(self, idx):
-        view = BinningView()
-        view.copy_traits(self, view.copyable_trait_names())
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = HistogramParamsHandler),
+                  style = 'custom',
+                  show_label = False))
         
-        return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx})
-        """
-        .format(idx = idx,
-                traits = traits_str(view)))
-
 
 @provides(IOperationPlugin)
 class BinningPlugin(Plugin, PluginHelpMixin):
  
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.binning'
     operation_id = 'edu.mit.synbio.cytoflow.operations.binning'
+    view_id = 'edu.mit.synbio.cytoflow.views.binning'
 
     short_name = "Binning"
     menu_group = "Gates"
     
     def get_operation(self):
-        return BinningPluginOp()
+        return BinningWorkflowOp()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, BinningWorkflowOp):
+            return BinningHandler(model = model, context = context)
+        elif isinstance(model, BinningWorkflowView):
+            return BinningViewHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('binning')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-### Serialization
-@camel_registry.dumper(BinningPluginOp, 'binning', version = 1)
-def _dump(op):
-    return dict(name = op.name,
-                channel = op.channel,
-                scale = op.scale,
-                bin_width = op.bin_width)
-    
-@camel_registry.loader('binning', version = 1)
-def _load(data, version):
-    return BinningPluginOp(**data)
-
-@camel_registry.dumper(BinningPluginView, 'binning-view', version = 1)
-def _dump_view(view):
-    return dict(op = view.op,
-                subset_list = view.subset_list)
-
-@camel_registry.loader('binning-view', version = 1)
-def _load_view(data, version):
-    return BinningPluginView(**data)
-
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

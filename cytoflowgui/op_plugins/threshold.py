@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 '''
 Threshold Gate
@@ -49,6 +50,7 @@ Draw a threshold gate.  To set a new threshold, click on the plot.
     Show only a subset of the data.
    
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()
@@ -67,165 +69,104 @@ Draw a threshold gate.  To set a new threshold, click on the plot.
     
 '''
 
-from traits.api import provides, Callable, Instance, Str, CFloat, DelegatesTo
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
-from envisage.api import Plugin, contributes_to
+
+from traits.api import provides, List
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
+from envisage.api import Plugin
 from pyface.api import ImageResource
 
-from cytoflow.operations import IOperation
-from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
+from ..view_plugins import ViewHandler
+from ..view_plugins.histogram import HistogramParamsHandler
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..workflow.operations import ThresholdWorkflowOp, ThresholdSelectionView
+from ..subset_controllers import subset_handler_factory
 
-from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.view_plugins.histogram import HistogramPlotParams
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_str, traits_repr, dedent
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
-ThresholdOp.__repr__ = traits_repr
 
-class ThresholdHandler(OpHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(Item('name',
-                         editor = TextEditor(auto_set = False)),
-                    Item('channel',
-                         editor=EnumEditor(name='context.previous_wi.channels'),
-                         label = "Channel"),
-                    Item('threshold',
-                         editor = TextEditor(auto_set = False)),
-                    shared_op_traits) 
+class ThresholdHandler(OpHandler):
+    operation_traits_view = \
+        View(Item('name',
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
+             Item('channel',
+                  editor=EnumEditor(name='context_handler.previous_channels'),
+                  label = "Channel"),
+             Item('threshold',
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None")),
+             shared_op_traits_view) 
         
-class ThresholdViewHandler(ViewHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('channel', 
-                                label = "Channel",
-                                style = "readonly"),
-                           Item('threshold', 
-                                label = "Threshold",
-                                style = "readonly"),
-                           Item('scale'),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
-                           label = "Threshold Setup View",
-                           show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
-
-class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
-    handler_factory = Callable(ThresholdViewHandler, transient = True)    
-    op = Instance(IOperation, fixed = True)
-    threshold = DelegatesTo('op', status = True)
-    plot_params = Instance(HistogramPlotParams, ())
-    name = Str
-    
-    def should_plot(self, changed, payload):
-        if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
-            return True
-        else:
-            return False
         
-    def plot_wi(self, wi):        
-        self.plot(wi.previous_wi.result, **self.plot_params.trait_get())
+class ThresholdViewHandler(ViewHandler):
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('channel', 
+                         label = "Channel",
+                         style = "readonly"),
+                    Item('threshold', 
+                         label = "Threshold",
+                         style = "readonly"),
+                    Item('scale'),
+                    Item('huefacet',
+                         editor=ExtendableEnumEditor(name='context_handler.previous_conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label="Color\nFacet"),
+                    label = "Threshold Setup View",
+                    show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
         
-    def get_notebook_code(self, idx):
-        view = ThresholdSelection()
-        view.copy_traits(self, view.copyable_trait_names())
-        plot_params_str = traits_str(self.plot_params)
-        
-        return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot_params})
-        """
-        .format(idx = idx, 
-                traits = traits_str(view),
-                prev_idx = idx - 1,
-                plot_params = ", " + plot_params_str if plot_params_str else ""))
-    
-class ThresholdPluginOp(PluginOpMixin, ThresholdOp):
-    handler_factory = Callable(ThresholdHandler, transient = True)
-    threshold = CFloat
-     
-    def default_view(self, **kwargs):
-        return ThresholdSelectionView(op = self, **kwargs)
-    
-    def get_notebook_code(self, idx):
-        op = ThresholdOp()
-        op.copy_traits(self, op.copyable_trait_names())
-
-        return dedent("""
-        op_{idx} = {repr}
-                
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1))
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = HistogramParamsHandler),
+                  style = 'custom',
+                  show_label = False))
 
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin, PluginHelpMixin):
-    
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.threshold'
     operation_id = 'edu.mit.synbio.cytoflow.operations.threshold'
+    view_id = 'edu.mit.synbio.cytoflow.views.threshold'
 
     short_name = "Threshold"
     menu_group = "Gates"
     
     def get_operation(self):
-        return ThresholdPluginOp()
+        return ThresholdWorkflowOp()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, ThresholdWorkflowOp):
+            return ThresholdHandler(model = model, context = context)
+        elif isinstance(model, ThresholdSelectionView):
+            return ThresholdViewHandler(model = model, context = context)
 
     def get_icon(self):
         return ImageResource('threshold')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-### Serialization
-@camel_registry.dumper(ThresholdPluginOp, 'threshold', version = 1)
-def _dump(op):
-    return dict(name = op.name,
-                channel = op.channel,
-                threshold = op.threshold)
-    
-@camel_registry.loader('threshold', version = 1)
-def _load(data, version):
-    return ThresholdPluginOp(**data)
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
 
-@camel_registry.dumper(ThresholdSelectionView, 'threshold-view', version = 2)
-def _dump_view(view):
-    return dict(op = view.op,
-                scale = view.scale,
-                huefacet = view.huefacet,
-                subset_list = view.subset_list,
-                plot_params = view.plot_params)
-    
-@camel_registry.dumper(ThresholdSelectionView, 'threshold-view', version = 1)
-def _dump_view_v1(view):
-    return dict(op = view.op,
-                scale = view.scale,
-                huefacet = view.huefacet,
-                subset_list = view.subset_list)
-    
-@camel_registry.loader('threshold-view', version = any)
-def _load_view(data, version):
-    return ThresholdSelectionView(**data)

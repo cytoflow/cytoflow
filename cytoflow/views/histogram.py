@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -87,8 +87,7 @@ class HistogramView(Base1DView):
             
         density: bool
             If `True`, re-scale the histogram to form a probability density
-            function, so the area under the histogram is 1.  Only seems to 
-            work if `scale` is `linear`.
+            function, so the area under the histogram is 1.
             
         orientation : {'horizontal', 'vertical'}
             The orientation of the histogram.  `horizontal` gives a histogram
@@ -111,7 +110,13 @@ class HistogramView(Base1DView):
 
         
         """
-        
+        ylabel = 'Density' if kwargs.get('density', False) else 'Count'
+        if kwargs.get('orientation', 'vertical') == 'vertical':
+            kwargs.setdefault('xlabel', self.channel)
+            kwargs.setdefault('ylabel', ylabel)
+        else:  # flip axis labels
+            kwargs.setdefault('xlabel', ylabel)
+            kwargs.setdefault('ylabel', self.channel)
         super().plot(experiment, **kwargs)
 
     def _grid_plot(self, experiment, grid, **kwargs):
@@ -189,7 +194,14 @@ class HistogramView(Base1DView):
                 x = x[x < bins[-1]]
                 new_args.append(x)
                 
-            n, _, _ = plt.hist(*new_args, **kwargs)
+            if scale.name != "linear" and kwargs.get("density"):
+                kwargs["density"] = False
+                counts, _ = np.histogram(new_args, bins=kwargs["bins"])
+                kwargs["weights"] = counts / np.sum(counts)
+                n, _, _ = plt.hist(kwargs["bins"][:-1], **kwargs)
+            else:
+                n, _, _ = plt.hist(*new_args, **kwargs)
+
             count_max.append(max(n))
                     
         grid.map(hist_lims, self.channel, **kwargs)

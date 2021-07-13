@@ -11,5 +11,6 @@ python-dateutil>=2.5.0
 statsmodels
 fcsparser
 seaborn
+natsort
 
 mock

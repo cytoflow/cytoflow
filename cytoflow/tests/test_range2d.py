@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,20 +23,13 @@ Created on Dec 1, 2015
 @author: brian
 '''
 import unittest
-import os
-
 import cytoflow as flow
+from .test_base import ImportedDataSmallTest
 
-class Test(unittest.TestCase):
 
+class Test(ImportedDataSmallTest):
     def setUp(self):
-        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
-        tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
-        import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                                  tubes = [tube1, tube2])
-        self.ex = import_op.apply()
-
+        super().setUp()
         self.gate = flow.Range2DOp(name = "Range2D",
                                    xchannel = "V2-A",
                                    ychannel = "Y2-A",

@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,47 +53,22 @@ in **By**, then applies **Function** to the statistic in each group.
 
 import numpy as np
 import pandas as pd
-import scipy.stats
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
-                         CheckListEditor, TextEditor
-from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Property, on_trait_change,
-                        Str)
+from traits.api import provides, Property, List
+from traitsui.api import (View, Item, TextEditor, VGroup, EnumEditor, CheckListEditor)
 from pyface.api import ImageResource
+from envisage.api import Plugin
+                       
+from ..workflow.operations import TransformStatisticWorkflowOp
+from ..workflow.operations.xform_stat import transform_functions
+from ..editors import SubsetListEditor, InstanceHandlerEditor
+from ..subset_controllers import subset_handler_factory
 
-from cytoflow.operations.xform_stat import TransformStatisticOp
-import cytoflow.utility as util
-
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import SubsetListEditor, ISubset
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr
-
-TransformStatisticOp.__repr__ = traits_repr
-
-mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
-geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
-
-transform_functions = {"Mean" : np.mean,
-                       "Geom.Mean" : util.geom_mean,
-                       "Median" : np.median,
-                       "Count" : len,
-                       "Std.Dev" : np.std,
-                       "Geom.SD" : util.geom_sd_range,
-                       "SEM" : scipy.stats.sem,
-                       "Geom.SEM" : util.geom_sem_range,
-                       "Mean 95% CI" : mean_95ci,
-                       "Geom.Mean 95% CI" : geomean_95ci,
-                       "Sum" : np.sum,
-                       "Proportion" : lambda a: pd.Series(a / a.sum()),
-                       "Percentage" : lambda a: pd.Series(a / a.sum()) * 100.0,
-                       "Fold" : lambda a: pd.Series(a / a.min())
-                       }
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
+from .op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
 
 
-class TransformStatisticHandler(OpHandlerMixin, Controller):
+class TransformStatisticHandler(OpHandler):
     
 #     prev_statistics = Property(depends_on = "info.ui.context")
     indices = Property(depends_on = "context.previous_wi.statistics, "
@@ -139,7 +114,7 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                 and self.model 
                 and self.model.statistic
                 and self.model.statistic in self.context.previous_wi.statistics):
-            return []
+            return {}
         
         stat = self.context.previous_wi.statistics[self.model.statistic]
         index = stat.index
@@ -157,108 +132,32 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
             
         return ret
     
-    def default_traits_view(self):
-        return View(Item('name',
-                         editor = TextEditor(auto_set = False)),
-                    Item('statistic',
-                         editor=EnumEditor(name='handler.previous_statistics_names'),
-                         label = "Statistic"),
-                    Item('statistic_name',
-                         editor = EnumEditor(values = sorted(transform_functions.keys())),
-                         label = "Function"),
-                    Item('by',
-                         editor = CheckListEditor(cols = 2,
-                                                  name = 'handler.indices'),
-                         
-                         label = 'Group\nBy',
-                         style = 'custom'),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "handler.levels")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    shared_op_traits)
+    operation_traits_view = \
+        View(Item('name',
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
+             Item('statistic',
+                  editor=EnumEditor(name='context_handler.previous_statistics_names'),
+                  label = "Statistic"),
+             Item('statistic_name',
+                  editor = EnumEditor(values = sorted(transform_functions.keys())),
+                  label = "Function"),
+             Item('by',
+                  editor = CheckListEditor(cols = 2,
+                                           name = 'handler.indices'),
+                  
+                  label = 'Group\nBy',
+                  style = 'custom'),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "handler.levels", 
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory))),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             shared_op_traits_view)
 
-class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
-    handler_factory = Callable(TransformStatisticHandler)
-
-    # functions aren't picklable, so send the name instead
-    function = Callable(transient = True)
-    
-    # bits to support the subset editor
-    
-    subset_list = List(ISubset)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change('subset_list.str')
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.OPERATION, ('subset_list', self.subset_list))
-    
-    
-    def apply(self, experiment):
-        if not self.statistic_name:
-            raise util.CytoflowOpError("Transform function not set")
-        
-        self.function = transform_functions[self.statistic_name]
-        
-        return TransformStatisticOp.apply(self, experiment)
-
-
-    def get_notebook_code(self, idx):
-        op = TransformStatisticOp()
-        op.copy_traits(self, op.copyable_trait_names())
-        
-        fn_import = {"Mean" : "from numpy import mean",
-                     "Median" : "from numpy import median",
-                     "Geom.Mean" : None,
-                     "Count" : None,
-                     "Std.Dev" : "from numpy import std",
-                     "Geom.SD" : None,
-                     "SEM" : "from scipy.stats import sem",
-                     "Geom.SEM" : None,
-                     "Mean 95% CI" : None,
-                     "Geom.Mean 95% CI" : None,
-                     "Sum" : "from numpy import sum",
-                     "Proportion" : "from pandas import Series",
-                     "Percentage" : "from pandas import Series",
-                     "Fold" : "from pandas import Series"
-                  }
-        
-        fn_name = {"Mean" : "mean",
-                   "Median" : "median",
-                   "Geom.Mean" : "geom_mean",
-                   "Count" : "len",
-                   "Std.Dev" : "std",
-                   "Geom.SD" : "geom_sd_range",
-                   "SEM" : "sem",
-                   "Geom.SEM" : "geom_sem_range",
-                   "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
-                   "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)",
-                   "Sum" : "sum",
-                   "Proportion" : "lambda a: Series(a / a.sum())",
-                   "Percentage" : "lambda a: Series(a / a.sum()) * 100.0",
-                   "Fold" : "lambda a: Series(a / a.min())"
-                   }
-        
-        op.function = transform_functions[self.statistic_name]
-        try:
-            op.function.__name__ = fn_name[self.statistic_name]
-        except AttributeError:
-            # can't reassign the name of "len", for example
-            pass
-        
-        return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})" \
-            .format(import_statement = (fn_import[self.statistic_name]
-                                        if fn_import[self.statistic_name] is not None
-                                        else ""),
-                repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1)
 
 
 @provides(IOperationPlugin)
@@ -266,30 +165,20 @@ class TransformStatisticPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.transform_statistic'
     operation_id = 'edu.mit.synbio.cytoflow.operations.transform_statistic'
+    view_id = None
 
     short_name = "Transform Statistic"
     menu_group = "Gates"
     
     def get_operation(self):
-        return TransformStatisticPluginOp()
+        return TransformStatisticWorkflowOp()
+    
+    def get_handler(self, model, context):
+        return TransformStatisticHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('xform_stat')
     
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
-    
-### Serialization
-@camel_registry.dumper(TransformStatisticPluginOp, 'transform-statistic', version = 1)
-def _dump(op):
-    return dict(name = op.name,
-                statistic = op.statistic,
-                statistic_name = op.statistic_name,
-                by = op.by,
-                subset_list = op.subset_list)
-    
-@camel_registry.loader('transform-statistic', version = 1)
-def _load(data, version):
-    data['statistic'] = tuple(data['statistic'])
-    return TransformStatisticPluginOp(**data)
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]

@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ cytoflow.operations.pca
 '''
 
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, Bool, provides)
 
 import numpy as np
@@ -155,7 +155,7 @@ class PCAOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.pca')
     friendly_id = Constant("Principal Component Analysis")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(2, allow_zero = False)
@@ -187,6 +187,10 @@ class PCAOp(HasStrictTraits):
         if len(self.channels) == 0:
             raise util.CytoflowOpError('channels',
                                        "Must set at least one channel")
+            
+        if len(self.channels) != len(set(self.channels)):
+            raise util.CytoflowOpError('channels', 
+                                       "Must not duplicate channels")
 
         for c in self.channels:
             if c not in experiment.data:
@@ -242,6 +246,7 @@ class PCAOp(HasStrictTraits):
             else:
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
                     
+        pca = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError('by',
@@ -256,13 +261,15 @@ class PCAOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
              
-            self._pca[group] = pca = \
+            pca[group] = \
                 sklearn.decomposition.PCA(n_components = self.num_components,
                                           whiten = self.whiten,
                                           random_state = 0)
             
-            pca.fit(x)
-                                                 
+            pca[group].fit(x)
+        
+        # set this atomically to support GUI
+        self._pca = pca                      
          
     def apply(self, experiment):
         """

@@ -1,7 +1,7 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ Import FCS files and associate them with experimental conditions (metadata.)
 
 ..  object:: The sample editor dialog
 
-    .. image:: _images/import.png
+    .. image:: images/import.png
 
     Allows you to specify FCS files in the experiment, and
     the experimental conditions that each tube (or well) was subject to.
@@ -95,73 +95,69 @@ Import FCS files and associate them with experimental conditions (metadata.)
         to other types and Cytoflow will attempt to convert them.
 
 """
-from textwrap import dedent
 
+from traits.api import (Button, Property, cached_property, List,
+                        Instance, provides, observe, Event)
 from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, 
-                          InstanceEditor, HGroup, VGroup, Label)
-from traits.api import (Button, Property, cached_property, provides, Callable, 
-                        HasTraits, String, List, on_trait_change, Instance,
-                        Bool, Dict, Str, Enum)
+                          HGroup, VGroup, Label)
 
-from envisage.api import Plugin, contributes_to
-
-import cytoflow.utility as util
-from cytoflow import Tube, ImportOp
-from cytoflow.operations.i_operation import IOperation
+from envisage.api import Plugin
                        
-from cytoflowgui.vertical_list_editor import VerticalListEditor
-from cytoflowgui.serialization import camel_registry, traits_repr
-from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler, ValidPythonIdentifier
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.workflow import Changed
+from cytoflowgui.editors import VerticalListEditor, InstanceHandlerEditor
+from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 
-ImportOp.__repr__ = Tube.__repr__ = traits_repr
+from ..workflow.operations import ImportWorkflowOp
 
-class Channel(HasTraits):
-    channel = String
-    name = ValidPythonIdentifier
-    
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
+from .op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
+
+
+class ChannelHandler(Controller):
     default_view = View(HGroup(Item('channel', style = 'readonly', show_label = False),
                                Item(label = '-->'),
                                Item('name',
                                     editor = TextEditor(auto_set = False), 
                                     show_label = False)))
-
-
-class ImportHandler(OpHandlerMixin, Controller):
     
+
+class ImportHandler(OpHandler):
     setup_event = Button(label="Set up experiment...")
-    reset_channels = Button(label = "Reset channel names")
+    reset_channels_event = Event()
     samples = Property(depends_on = 'model.tubes', status = True)
     dialog_model = Instance(ExperimentDialogModel)
         
-    def default_traits_view(self):
-        return View(VGroup(Label(label = "Channels",
-                                   visible_when = 'model.tubes' ),
-                           Item('object.channels_list',
-                                editor = VerticalListEditor(editor = InstanceEditor(),
-                                                            style = 'custom',
-                                                            mutable = False,
-                                                            deletable = True),
-                                show_label = False),
-                           Item('handler.reset_channels',
-                           show_label = False),
-                    visible_when = 'object.channels_list'),
-                    Item('object.events',
-                         editor = TextEditor(auto_set = False,
-                                             format_func = lambda x: "" if x == None else str(x)),
-                         label="Events per\nsample"),
-                    Item('handler.samples', label='Samples', style='readonly'),
-                    Item('ret_events', label='Events', style='readonly'),
-                    Item('handler.setup_event', show_label=False),
-                    Item('do_estimate',
-                         editor = ButtonEditor(value = True,
-                                               label = "Import!"),
+    operation_traits_view = \
+        View(VGroup(Label(label = "Channels",
+                          visible_when = 'model.tubes' ),
+                    Item('object.channels_list',
+                         editor = VerticalListEditor(editor = InstanceHandlerEditor(handler_factory = ChannelHandler,
+                                                                                    view = "default_view"),
+                                                     style = 'custom',
+                                                     mutable = False,
+                                                     deletable = True),
                          show_label = False),
-                    shared_op_traits)
-        
-    def _setup_event_fired(self):
+                    Item('handler.reset_channels_event',
+                         editor = ButtonEditor(value = True,
+                                               label = "Reset channel names"),
+                    show_label = False),
+             visible_when = 'object.channels_list'),
+             Item('object.events',
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None",
+                                      format_func = lambda x: "" if x is None else str(x)),
+                  label="Events per\nsample"),
+             Item('handler.samples', label='Samples', style='readonly'),
+             Item('ret_events', label='Events', style='readonly'),
+             Item('handler.setup_event',
+                  editor = ButtonEditor(value = True, label = "Set up experiment..."),
+                  show_label=False),
+             Item('object.do_estimate',
+                  editor = ButtonEditor(value = True, label = "Import!"),
+                  show_label = False),
+             shared_op_traits_view)
+     
+    @observe('setup_event')   
+    def _on_setup(self, event):
         """
         Import data; save as self.result
         """
@@ -170,18 +166,17 @@ class ImportHandler(OpHandlerMixin, Controller):
                                           import_op = self.model)
         
         handler.edit_traits(kind = 'livemodal') 
-                
-    def _reset_channels_fired(self):
+    
+    @observe('reset_channels_event')    
+    def _on_reset_channels(self, _):
         self.model.reset_channels()
-        
         
     @cached_property
     def _get_samples(self):
         return len(self.model.tubes)
     
-    
-    @on_trait_change('model.events', post_init = True)
-    def _events_changed(self):
+    @observe('model.events', post_init = True)
+    def _events_changed(self, _):
         if not self.dialog_model:
             return
         
@@ -195,152 +190,27 @@ class ImportHandler(OpHandlerMixin, Controller):
         self.model.ret_events = ret_events
         
 
-@provides(IOperation)
-class ImportPluginOp(PluginOpMixin, ImportOp):
-    handler_factory = Callable(ImportHandler, transient = True)
-    
-    original_channels = List(Str, estimate = True)
-    channels_list = List(Channel, estimate = True)
-    events = util.CIntOrNone(None, estimate = True)
-    tubes = List(Tube, estimate = True)
-    channels = Dict(Str, Str, transient = True)
-    name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
-    
-    ret_events = util.PositiveInt(0, allow_zero = True, status = True)
-    do_import = Bool(False)
-    
-    def reset_channels(self):
-        self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
-    
-
-    @on_trait_change('channels_list_items, channels_list.+')
-    def _channels_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('channels_list', self.channels_list))
-
-
-    @on_trait_change('tubes_items, tubes:+')
-    def _tubes_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('tubes', self.tubes))        
-
-
-    def estimate(self, _):
-        self.do_import = False
-        self.do_import = True
-        
-        
-    def apply(self, experiment = None, metadata_only = False, force = False):
-        if self.do_import or force:
-            self.channels = {c.channel : c.name for c in self.channels_list}
-            ret = super().apply(experiment = experiment, metadata_only = metadata_only)
-            
-            self.ret_events = len(ret.data)
-            return ret
-        else:
-            if not self.tubes:
-                raise util.CytoflowOpError(None, 'Click "Set up experiment", '
-                                                 'then "Import!"')
-            raise util.CytoflowOpError(None, "Press 'Import!'")
-        
-        
-    def clear_estimate(self):
-        self.do_import = False
-
-    
-    def get_notebook_code(self, idx):
-        op = ImportOp()
-        op.copy_traits(self, op.copyable_trait_names())
-        op.channels = {c.channel : c.name for c in self.channels_list}
-        
-        return dedent("""
-            op_{idx} = {repr}
-            
-            ex_{idx} = op_{idx}.apply()"""
-            .format(repr = repr(op),
-                    idx = idx))
-        
-
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.import'
     operation_id = 'edu.mit.synbio.cytoflow.operations.import'
+    view_id = None
 
     short_name = "Import data"
     menu_group = "TOP"
     
     def get_operation(self):
-        return ImportPluginOp()
+        return ImportWorkflowOp()
+    
+    def get_handler(self, model, context):
+        return ImportHandler(model = model, context = context)
     
     def get_icon(self):
         return None
         
-    @contributes_to(OP_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = OP_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     
-### Serialization
-    
-@camel_registry.dumper(ImportPluginOp, 'import', version = 3)
-def _dump_op(op):
-    return dict(tubes = op.tubes,
-                conditions = op.conditions,
-                channels_list = op.channels_list,
-                events = op.events,
-                name_metadata = op.name_metadata)
-    
-
-
-@camel_registry.dumper(ImportPluginOp, 'import', version = 2)
-def _dump_op_v2(op):
-    return dict(tubes = op.tubes,
-                conditions = op.conditions,
-                channels = op.channels,
-                events = op.events,
-                name_metadata = op.name_metadata)
-
-@camel_registry.dumper(ImportPluginOp, 'import', version = 1)
-def _dump_op_v1(op):
-    return dict(tubes = op.tubes,
-                conditions = op.conditions,
-                channels = op.channels,
-                events = op.events,
-                name_metadata = op.name_metadata,
-                ret_events = op.ret_events)
-    
-
-@camel_registry.loader('import', version = 1)
-@camel_registry.loader('import', version = 2)
-def _load_op(data, version):
-    data.pop('ret_events', None)
-    channels = data.pop('channels', [])
-    data['channels_list'] = [Channel(channel = k, name = v )
-                             for k, v in channels.items()]
-    return ImportPluginOp(**data)
-
-
-@camel_registry.loader('import', version = 3)
-def _load_op_v3(data, version):
-    return ImportPluginOp(**data)
-
-
-@camel_registry.dumper(Tube, 'tube', version = 1)
-def _dump_tube(tube):
-    return dict(file = tube.file,
-                conditions = tube.conditions)
-
-
-@camel_registry.loader('tube', version = 1)
-def _load_tube(data, version):
-    return Tube(**data)
-
-
-@camel_registry.dumper(Channel, 'import-channel', version = 1)
-def _dump_channel(channel):
-    return dict(channel = channel.channel,
-                name = channel.name)
-     
-     
-@camel_registry.loader('import-channel', version = 1)
-def _load_channel(data, version):
-    return Channel(**data)
 

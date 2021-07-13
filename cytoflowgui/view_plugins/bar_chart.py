@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -63,7 +63,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
     Plot only a subset of the statistic.
     
 .. plot::
-        
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
@@ -87,158 +88,142 @@ operation's **Group By**) must be set as **Variable** or as a facet.
                       huefacet = "Threshold").plot(ex3)
 """
 
-from traits.api import provides, Callable, Property, Instance
-from traitsui.api import View, Item, VGroup, Controller, EnumEditor, TextEditor
-from envisage.api import Plugin, contributes_to
-from pyface.api import ImageResource
-
 import pandas as pd
 
-from cytoflow import BarChartView
-import cytoflow.utility as util
+from traits.api import provides, Property, List
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
+from envisage.api import Plugin
+from pyface.api import ImageResource
 
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.view_plugins.i_view_plugin \
-    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, Stats1DPlotParams)
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+from ..workflow.views import BarChartWorkflowView, BarChartPlotParams
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..subset_controllers import subset_handler_factory
 
-BarChartView.__repr__ = traits_repr
+from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
+from .view_plugin_base import ViewHandler, PluginHelpMixin, Stats1DPlotParamsView
+
+
+class BarChartParamsHandler(Controller):
+    view_params_view = \
+        View(Item('errwidth',
+                  editor = TextEditor(auto_set = False,
+                                      format_func = lambda x: "" if x == None else str(x)),
+                 label = "Error bar\nwidth"),
+             Item('capsize',
+                  editor = TextEditor(auto_set = False,
+                                      format_func = lambda x: "" if x == None else str(x)),
+                  label = "Cap width"),
+             Stats1DPlotParamsView.content)
+
         
-class BarChartHandler(ViewHandlerMixin, Controller):
-    
+class BarChartHandler(ViewHandler):
+  
     indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
     levels = Property(depends_on = "context.statistics, model.statistic")
 
-    def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('statistic',
-                                editor=EnumEditor(name='handler.numeric_statistics_names'),
-                                label = "Statistic"),
-                           Item('variable',
-                                editor=EnumEditor(name='handler.indices'),
-                                label = "Variable"),
-                           Item('scale', label = "Scale"),
-                           Item('xfacet',
-                                editor=ExtendableEnumEditor(name='handler.indices',
-                                                            extra_items = {"None" : ""}),
-                                label = "Horizontal\nFacet"),
-                           Item('yfacet',
-                                editor=ExtendableEnumEditor(name='handler.indices',
-                                                            extra_items = {"None" : ""}),
-                                label = "Vertical\nFacet"),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.indices',
-                                                            extra_items = {"None" : ""}),
-                                label="Hue\nFacet"),
-                           Item('error_statistic',
-                                editor=ExtendableEnumEditor(name='handler.statistics_names',
-                                                            extra_items = {"None" : ("", "")}),
-                                label = "Error\nStatistic"),
-                             label = "Bar Chart",
-                             show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "handler.levels")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('statistic',
+                         editor=EnumEditor(name='context_handler.numeric_statistics_names'),
+                         label = "Statistic"),
+                    Item('variable',
+                         editor=EnumEditor(name='handler.indices'),
+                         label = "Variable"),
+                    Item('scale', label = "Scale"),
+                    Item('xfacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label = "Horizontal\nFacet"),
+                    Item('yfacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label = "Vertical\nFacet"),
+                    Item('huefacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label="Hue\nFacet"),
+                    Item('error_statistic',
+                         editor=ExtendableEnumEditor(name='context_handler.statistics_names',
+                                                     extra_items = {"None" : ("", "")}),
+                         label = "Error\nStatistic"),
+                      label = "Bar Chart",
+                      show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "handler.levels",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
+        
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = BarChartParamsHandler),
+                  style = 'custom',
+                  show_label = False))
         
     # MAGIC: gets the value for the property indices
     def _get_indices(self):
         if not (self.context and self.context.statistics 
                 and self.model.statistic in self.context.statistics):
             return []
-        
+         
         stat = self.context.statistics[self.model.statistic]
         data = pd.DataFrame(index = stat.index)
-        
+         
         if self.model.subset:
             data = data.query(self.model.subset)
-            
+             
         if len(data) == 0:
             return []       
-        
+         
         names = list(data.index.names)
         for name in names:
             unique_values = data.index.get_level_values(name).unique()
             if len(unique_values) == 1:
                 data.index = data.index.droplevel(name)
-        
+         
         return list(data.index.names)
-    
+     
     # MAGIC: gets the value for the property 'levels'
     # returns a Dict(Str, pd.Series)
-    
+     
     def _get_levels(self):        
         if not (self.context and self.context.statistics 
                 and self.model.statistic in self.context.statistics):
-            return []
-        
+            return {}
+         
         stat = self.context.statistics[self.model.statistic]
         index = stat.index
-        
+         
         names = list(index.names)
         for name in names:
             unique_values = index.get_level_values(name).unique()
             if len(unique_values) == 1:
                 index = index.droplevel(name)
-
+ 
         names = list(index.names)
         ret = {}
         for name in names:
             ret[name] = pd.Series(index.get_level_values(name)).sort_values()
             ret[name] = pd.Series(ret[name].unique())
-            
+             
         return ret
-    
-class BarChartPlotParams(Stats1DPlotParams):
-    
-    errwidth = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
-    capsize = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
-    
-    def default_traits_view(self):
-        base_view = Stats1DPlotParams.default_traits_view(self)
-        
-        return View(Item('errwidth',
-                         editor = TextEditor(auto_set = False,
-                                             format_func = lambda x: "" if x == None else str(x)),
-                        label = "Error bar\nwidth"),
-                    Item('capsize',
-                         editor = TextEditor(auto_set = False,
-                                             format_func = lambda x: "" if x == None else str(x)),
-                         label = "Cap width"),
-                    base_view.content)
+     
 
-    
-class BarChartPluginView(PluginViewMixin, BarChartView):
-    handler_factory = Callable(BarChartHandler)
-    plot_params = Instance(BarChartPlotParams, ())
-    
-    def get_notebook_code(self, idx):
-        view = BarChartView()
-        view.copy_traits(self, view.copyable_trait_names())
-        plot_params_str = traits_str(self.plot_params)
-
-        return dedent("""
-        {repr}.plot(ex_{idx}{plot}{plot_params})
-        """
-        .format(repr = repr(view),
-                idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
-                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin, PluginHelpMixin):
@@ -248,77 +233,19 @@ class BarChartPlugin(Plugin, PluginHelpMixin):
     short_name = "Bar Chart"
     
     def get_view(self):
-        return BarChartPluginView()
+        return BarChartWorkflowView()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, BarChartWorkflowView):
+            return BarChartHandler(model = model, context = context)
+        elif isinstance(model, BarChartPlotParams):
+            return BarChartParamsHandler(model = model, context = context)
 
     def get_icon(self):
         return ImageResource('bar_chart')
 
-    @contributes_to(VIEW_PLUGIN_EXT)
-    def get_plugin(self):
-        return self
+    plugin = List(contributes_to = VIEW_PLUGIN_EXT)
+    def _plugin_default(self):
+        return [self]
     
-### Serialization
-@camel_registry.dumper(BarChartPluginView, 'bar-chart', version = 2)
-def _dump(view):
-    return dict(statistic = view.statistic,
-                variable = view.variable,
-                scale = view.scale,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huefacet = view.huefacet,
-                huescale = view.huescale,
-                error_statistic = view.error_statistic,
-                subset_list = view.subset_list,
-                plot_params = view.plot_params)
-    
-@camel_registry.dumper(BarChartPluginView, 'bar-chart', version = 1)
-def _dump_v1(view):
-    return dict(statistic = view.statistic,
-                variable = view.variable,
-                yscale = view.yscale,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huefacet = view.huefacet,
-                error_statistic = view.error_statistic,
-                subset_list = view.subset_list)
-    
-@camel_registry.dumper(BarChartPlotParams, 'barchart-params', version = 1)
-def _dump_params(params):
-    return dict(
-                # BasePlotParams
-                title = params.title,
-                xlabel = params.xlabel,
-                ylabel = params.ylabel,
-                huelabel = params.huelabel,
-                col_wrap = params.col_wrap,
-                sns_style = params.sns_style,
-                sns_context = params.sns_context,
-                legend = params.legend,
-                sharex = params.sharex,
-                sharey = params.sharey,
-                despine = params.despine,
-                
-                # Base1DStatisticsView
-                orientation = params.orientation,
-                lim = params.lim,
-                
-                # BarChartView
-                errwidth = params.errwidth,
-                capsize = params.capsize)
-    
-@camel_registry.loader('bar-chart', version = 1)
-def _load_v1(data, version):
-    data['scale'] = data.pop('yscale')
-    data['statistic'] = tuple(data['statistic'])
-    data['error_statistic'] = tuple(data['error_statistic'])
-
-    return BarChartPluginView(**data)
-
-@camel_registry.loader('bar-chart', version = 2)
-def _load_v2(data, version):
-    return BarChartPluginView(**data)
-
-@camel_registry.loader('barchart-params', version = any)
-def _load_params(data, version):
-    return BarChartPlotParams(**data)
 

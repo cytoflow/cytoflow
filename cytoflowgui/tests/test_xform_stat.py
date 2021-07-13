@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,19 +24,17 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd
 
-import matplotlib
-matplotlib.use("Agg")
-
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
-from cytoflowgui.op_plugins import ChannelStatisticPlugin, TransformStatisticPlugin
-from cytoflowgui.op_plugins.xform_stat import transform_functions
-from cytoflowgui.subset import BoolSubset, CategorySubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.tests.test_base import ImportedDataTest
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import ChannelStatisticWorkflowOp, TransformStatisticWorkflowOp
+from cytoflowgui.workflow.operations.xform_stat import transform_functions
+from cytoflowgui.workflow.subset import CategorySubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 # we need these to exec() code in testNotebook
-from cytoflow import ci, geom_mean
+from cytoflow import ci, geom_mean 
 from numpy import mean, median, std
 from scipy.stats import sem
 from pandas import Series
@@ -44,10 +42,9 @@ from pandas import Series
 class TestXformStat(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
-        plugin = ChannelStatisticPlugin()
-        op = plugin.get_operation()
+        op = ChannelStatisticWorkflowOp()
         
         op.name = "Count"
         op.channel = "Y2-A"
@@ -56,10 +53,8 @@ class TestXformStat(ImportedDataTest):
         
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
         
-        plugin = TransformStatisticPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = TransformStatisticWorkflowOp()
         
         op.name = "Mean"
         op.statistic = ("Count", "Count")
@@ -67,34 +62,33 @@ class TestXformStat(ImportedDataTest):
         op.by = ["Dox"]
         op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
                 
-        self.wi = wi = WorkflowItem(operation = op)        
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
 
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(wi, 'status', "valid")
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
    
 
     def testChangeBy(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.by = ["Dox", "Well"]
-
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testAllFunctions(self):
         for fn in transform_functions:
+            self.workflow.wi_sync(self.wi, 'status', 'waiting')
             self.op.statistic_name = fn
-            self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
-            self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-
+            self.workflow.wi_waitfor(self.wi, 'status', 'valid')
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -115,18 +109,19 @@ class TestXformStat(ImportedDataTest):
          
     def testNotebook(self):
         for fn in transform_functions:
+            self.workflow.wi_sync(self.wi, 'status', 'waiting')
             self.op.statistic_name = fn
-            self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
-            self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+            self.workflow.wi_waitfor(self.wi, 'status', 'valid')
             
             code = "from cytoflow import *\n"
             for i, wi in enumerate(self.workflow.workflow):
                 code = code + wi.operation.get_notebook_code(i)
              
             exec(code)
-            nb_data = locals()['ex_1'].data
+            nb_data = locals()['ex_4'].data
             remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-            self.assertTrue((nb_data == remote_data).all().all())
+        
+            pd.testing.assert_frame_equal(nb_data, remote_data)
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestXformStat.testNotebook']

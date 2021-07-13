@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -142,12 +142,12 @@ class Range2DOp(HasStrictTraits):
     name = Str
     
     xchannel = Str
-    xlow = Float
-    xhigh = Float
+    xlow = Float(None)
+    xhigh = Float(None)
     
     ychannel = Str
-    ylow = Float
-    yhigh = Float
+    ylow = Float(None)
+    yhigh = Float(None)
     
     _selection_view = Instance('RangeSelection2D', transient = True)
 
@@ -207,6 +207,14 @@ class Range2DOp(HasStrictTraits):
         if not self.ychannel in experiment.channels:
             raise util.CytoflowOpError('ychannel',
                                        "ychannel isn't in the experiment")
+            
+        if self.xlow is None:
+            raise util.CytoflowOpError('xlow',
+                                       "must set 'xlow'")       
+                 
+        if self.xhigh is None:
+            raise util.CytoflowOpError('xhigh',
+                                       "must set 'xhigh'")  
         
         if self.xhigh <= experiment[self.xchannel].min():
             raise util.CytoflowOpError('xhigh',
@@ -216,6 +224,14 @@ class Range2DOp(HasStrictTraits):
             raise util.CytoflowOpError('xlow',
                                        "x channel range low must be < {0}"
                                        .format(experiment[self.xchannel].max()))
+            
+        if self.ylow is None:
+            raise util.CytoflowOpError('ylow',
+                                       "must set 'ylow'")       
+                 
+        if self.yhigh is None:
+            raise util.CytoflowOpError('yhigh',
+                                       "must set 'yhigh'")  
             
         if self.yhigh <= experiment[self.ychannel].min():
             raise util.CytoflowOpError('yhigh',

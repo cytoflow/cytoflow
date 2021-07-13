@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 from envisage.ui.tasks.api import PreferencesPane
 from apptools.preferences.api import PreferencesHelper
-from traits.api import Bool, Dict, Str, Unicode
+from traits.api import Bool, Dict, Str
 from traitsui.api import EnumEditor, HGroup, VGroup, Item, Label, View
 
 class CytoflowPreferences(PreferencesHelper):
@@ -54,7 +54,7 @@ class CytoflowPreferencesPane(PreferencesPane):
 
     #### 'AttractorsPreferencesPane' interface ################################
 
-    task_map = Dict(Str, Unicode)
+    task_map = Dict(Str, Str)
 
     view = View(
         VGroup(HGroup(Item('always_use_default_layout'),

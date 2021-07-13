@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -116,7 +116,12 @@ class Kde1DView(Base1DView):
   
         
         """
-        
+        if kwargs.get('orientation', 'vertical') == 'vertical':
+            kwargs.setdefault('xlabel', self.channel)
+            kwargs.setdefault('ylabel', 'Density')
+        else:  # flip axis labels
+            kwargs.setdefault('xlabel', 'Density')
+            kwargs.setdefault('ylabel', self.channel)
         super().plot(experiment, **kwargs)
                 
     def _grid_plot(self, experiment, grid, **kwargs):
@@ -171,7 +176,7 @@ def _univariate_kdeplot(data, scale=None, shade=False, kernel="gaussian",
     
     support = _kde_support(scaled_data, bw, gridsize, cut, clip)[:, np.newaxis]
 
-    kde = KernelDensity(kernel = kernel, bandwidth = bw).fit(scaled_data[:, np.newaxis])
+    kde = KernelDensity(kernel = kernel, bandwidth = bw).fit(scaled_data.to_numpy()[:, np.newaxis])
     log_density = kde.score_samples(support)
 
     x = scale.inverse(support[:, 0])

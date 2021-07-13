@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,9 +22,10 @@ cytoflow.operations.bleedthrough_linear
 ---------------------------------------
 '''
 import os, math
+from natsort import natsorted
 
-from traits.api import HasStrictTraits, Str, File, Dict, Instance, \
-                       Constant, Tuple, Float, Any, provides
+from traits.api import (HasStrictTraits, Str, File, Dict, Instance,
+                        Constant, Tuple, Float, Any, provides)
     
 import numpy as np
 import pandas as pd
@@ -177,9 +178,10 @@ class BleedthroughLinearOp(HasStrictTraits):
                                            "Can't find file {0} for channel {1}."
                                            .format(self.controls[channel], channel))
                 
-        self.spillover.clear()
+        self.spillover = {}
         self._sample.clear()
                 
+        spillover = {}
         for channel in channels:
             
             # make a little Experiment
@@ -254,7 +256,10 @@ class BleedthroughLinearOp(HasStrictTraits):
                                                    tube_data[to_channel],
                                                    0)
                  
-                self.spillover[(from_channel, to_channel)] = popt[0]
+                spillover[(from_channel, to_channel)] = popt[0]
+                
+        # set this atomically - to support GUI
+        self.spillover = spillover
                 
     def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
@@ -308,21 +313,24 @@ class BleedthroughLinearOp(HasStrictTraits):
         
         # the completely arbitrary ordering of the channels
         channels = list(set([x for (x, _) in list(self.spillover.keys())]))
-        
+         
         # build the spillover matrix from the spillover dictionary
         a = [  [self.spillover[(y, x)] if x != y else 1.0 for x in channels]
                for y in channels]
-        
+         
         # invert it.  use the pseudoinverse in case a is singular
         a_inv = np.linalg.pinv(a)
-        
+         
         # compute the corrected channels
         new_channels = np.dot(experiment.data[channels], a_inv)
-        
+         
         # and assign to the new experiment
         for i, c in enumerate(channels):
             new_experiment[c] = pd.Series(new_channels[:, i])
-        
+            
+        # make sure the new experiment has the same column order as the old one
+        new_experiment.data = new_experiment.data[list(experiment.data.columns)]
+         
         for channel in channels:
             # add the spillover values to the channel's metadata
             new_experiment.metadata[channel]['linear_bleedthrough'] = \
@@ -330,7 +338,7 @@ class BleedthroughLinearOp(HasStrictTraits):
                      for x in channels if x != channel}
             new_experiment.metadata[channel]['bleedthrough_channels'] = list(channels)
             new_experiment.metadata[channel]['bleedthrough_fn'] = lambda x, a_inv = a_inv: np.dot(x, a_inv)
-     
+      
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))   
         return new_experiment
     
@@ -374,8 +382,8 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview")
-    friendly_id = Constant("Autofluorescence Diagnostic") 
+    id = Constant("edu.mit.synbio.cytoflow.view.linearbleedthroughdiagnostic")
+    friendly_id = Constant("Linear Bleedthrough Diagnostic") 
     
     subset = Str
     
@@ -403,11 +411,12 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
         
-        fig, axes2d = plt.subplots(nrows=3, ncols=3)    
+        channels = natsorted(list(set([x for (x, _) in list(self.op.spillover.keys())])))
+        num_channels = len(channels)
+        _, axes2d = plt.subplots(nrows=num_channels, ncols=num_channels)    
         
         # the completely arbitrary ordering of the channels
-        channels = list(set([x for (x, _) in list(self.op.spillover.keys())]))
-        num_channels = len(channels)
+        # num_channels = len(channels)
 
         for to_idx, row in enumerate(axes2d):
             for from_idx, ax in enumerate(row):

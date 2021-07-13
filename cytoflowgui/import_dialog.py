@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ from pathlib import Path
 import pandas
         
 from traits.api import (HasStrictTraits, Instance, Str, Int, List, Bool, Enum, 
-                        Property, BaseCStr, CStr, on_trait_change, Dict, Event,
+                        Property, CStr, on_trait_change, Dict, Event,
                         cached_property, CFloat, BaseCBool, TraitError)
                        
 from traitsui.api import (View, Item, TableEditor, Controller, InstanceEditor, 
@@ -56,9 +56,10 @@ from traitsui.table_column import ObjectColumn
 from cytoflow import Tube as CytoflowTube
 from cytoflow import Experiment, ImportOp
 from cytoflow.operations.import_op import check_tube, parse_tube
+from cytoflowgui.workflow.operations.import_op import ValidPythonIdentifier
 import cytoflow.utility as util
 
-from cytoflowgui.vertical_list_editor import VerticalListEditor
+from cytoflowgui.editors import VerticalListEditor
 
 def not_true ( value ):
     return (value is not True)
@@ -168,12 +169,12 @@ class ExperimentColumn(ObjectColumn):
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
         if not self.is_editable(obj):
-            return 'lightgrey'
+            return 'light grey'
         
         if obj.parent.is_tube_unique(obj) and obj.all_conditions_set:
             return super(ObjectColumn, self).get_cell_color(object)
         else:
-            return 'lightpink'
+            return 'pink'
         
     def _get_label(self):
         """ Gets the label of the column.
@@ -183,16 +184,7 @@ class ExperimentColumn(ObjectColumn):
         return self.name
     
 
-class ValidPythonIdentifier(BaseCStr):
 
-    info_text = 'a valid python identifier'
-     
-    def validate(self, obj, name, value):
-        value = super(ValidPythonIdentifier, self).validate(obj, name, value)
-        if util.sanitize_identifier(value) == value:
-            return value 
-         
-        self.error(obj, name, value)
 
                  
 def eval_bool(x):
@@ -519,7 +511,7 @@ class ExperimentDialogHandler(Controller):
     
     
     # bits for model initialization
-    import_op = Instance('cytoflowgui.op_plugins.import_op.ImportPluginOp')
+    import_op = Instance('cytoflowgui.workflow.operations.import_op.ImportWorkflowOp')
         
     # events
     add_tubes = Event
@@ -555,7 +547,7 @@ class ExperimentDialogHandler(Controller):
                                               selection_mode = 'rows',
                                               selected = 'handler.selected_tubes',
                                               columns = [ObjectColumn(name = 'index',
-                                                                      read_only_cell_color = 'lightgrey',
+                                                                      read_only_cell_color = 'light grey',
                                                                       editable = False)]),
                          enabled_when = "object.tubes",
                          show_label = False),

@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,12 +28,12 @@ import unittest
 import cytoflow as flow
 import cytoflow.utility as util
 
-from test_base import ImportedDataTest  # @UnresolvedImport
+from .test_base import ImportedDataTest
 
 class Test1DStats(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        ImportedDataTest.setUp(self, thin=0)
         self.ex = flow.ThresholdOp(name = "T",
                                    channel = "Y2-A",
                                    threshold = 500).apply(self.ex)
@@ -153,9 +153,11 @@ class Test1DStats(ImportedDataTest):
         self.view.plot(self.ex, linestyle = 'solid', linewidth = 5)
         
     def testMarker(self):
+        import matplotlib.pyplot
         for mk in ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
                        "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]:
             self.view.plot(self.ex, marker = mk)
+            matplotlib.pyplot.close('all')
             
     def testMarkerSize(self):
         self.view.plot(self.ex, markersize = 10)

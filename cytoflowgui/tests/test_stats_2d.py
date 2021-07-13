@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,271 +25,118 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
-import matplotlib
-matplotlib.use("Agg")
-
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest, Base2DStatisticsViewTest, params_traits_comparator
+from cytoflowgui.workflow.views.stats_2d import Stats2DWorkflowView, Stats2DPlotParams, LINE_STYLES
+from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
-from cytoflowgui.view_plugins.stats_2d import Stats2DPlugin, Stats2DPlotParams, LINE_STYLES
-from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
-from cytoflowgui.subset import CategorySubset
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
-class TestStats2D(ImportedDataTest):
+class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
+        
+        stats_plugin = ChannelStatisticPlugin()
 
-        plugin = ChannelStatisticPlugin()
-        
-        op = plugin.get_operation()
-        op.name = "MeanByDox"
-        op.channel = "Y2-A"
-        op.statistic_name = "Mean"
-        op.by = ['Dox', 'Well']
+        stats_op_3 = stats_plugin.get_operation()
+        stats_op_3.name = "MeanByDoxIP2"
+        stats_op_3.channel = "B1-A"
+        stats_op_3.statistic_name = "Geom.Mean"
+        stats_op_3.by = ['Dox', 'IP']
+        stats_op_3.subset_list.append(CategorySubset(name = "Well",
+                                                     values = ['A', 'B']))
+        stats_op_3.subset_list.append(RangeSubset(name = "Dox",
+                                                  values = [1.0, 10.0, 100.0]))
+        stats_op_3.subset_list.append(RangeSubset(name = "IP",
+                                                  values = [1.0, 10.0]))
 
-        wi = WorkflowItem(operation = op)        
-        self.workflow.workflow.append(wi)
+        stats_wi_3 = WorkflowItem(operation = stats_op_3,
+                                  status = "waiting",
+                                  view_error = "Not yet plotted")
+        self.workflow.workflow.append(stats_wi_3)
+        self.workflow.wi_waitfor(stats_wi_3, 'status', 'valid')
         
+        stats_op_4 = stats_plugin.get_operation()
+        stats_op_4.name = "SDByDoxIP2"
+        stats_op_4.channel = "B1-A"
+        stats_op_4.statistic_name = "Geom.SD"
+        stats_op_4.by = ['Dox', 'IP']
+        stats_op_4.subset_list.append(CategorySubset(name = "Well",
+                                                     values = ['A', 'B']))
+        stats_op_4.subset_list.append(RangeSubset(name = "Dox",
+                                                  values = [1.0, 10.0, 100.0]))
+        stats_op_4.subset_list.append(RangeSubset(name = "IP",
+                                                  values = [1.0, 10.0]))
         
-        op = plugin.get_operation()
-        op.name = "MeanByDox"
-        op.channel = "Y2-A"
-        op.statistic_name = "Std.Dev"
-        op.by = ['Dox', 'Well']
-
-        wi = WorkflowItem(operation = op)        
-        self.workflow.workflow.append(wi)
-        
-        op = plugin.get_operation()
-        op.name = "MeanByDox"
-        op.channel = "Y2-A"
-        op.statistic_name = "Geom.SD"
-        op.by = ['Dox', 'Well']
-
-        wi = WorkflowItem(operation = op)        
-        self.workflow.workflow.append(wi)
-        
-        op = plugin.get_operation()
-        op.name = "MeanByDox"
-        op.channel = "Y2-A"
-        op.statistic_name = "Geom.Mean"
-        op.by = ['Dox', 'Well']
-        op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
+        stats_wi_4 = WorkflowItem(operation = stats_op_4,
+                                  status = "waiting",
+                                  view_error = "Not yet plotted")
+        self.workflow.workflow.append(stats_wi_4)
+        self.workflow.wi_waitfor(stats_wi_4, 'status', 'valid')
                 
-        self.wi = wi = WorkflowItem(operation = op)        
-        self.workflow.workflow.append(wi)
-        
-        self.workflow.selected = wi
+        self.wi = wi = self.workflow.workflow[-1]      
 
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 10))
-        
-        plugin = Stats2DPlugin()
-        self.view = view = plugin.get_view()
-        view.xstatistic = ("MeanByDox", "Mean")
-        view.ystatistic = ("MeanByDox", "Geom.Mean")
-        view.variable = "Dox"
-        view.huefacet = "Well"
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-  
+        self.view = view = Stats2DWorkflowView()
         wi.views.append(view)
         wi.current_view = view
-        self.workflow.selected = wi
         
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        super().setUpView()
 
+        self.workflow.selected = wi
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testPlot(self):
         pass
-     
- 
-    def testLogScale(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-  
-        self.view.xscale = "log"
-          
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
- 
-    def testLogicleScale(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-  
-        self.view.xscale = "logicle"
-          
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
-    def testXfacet(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.huefacet = ""
-        self.view.xfacet = "Well"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
- 
-         
-    def testYfacet(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.huefacet = ""
-        self.view.yfacet = "Well"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-        
-        
-    def testErrorBars(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.x_error_statistic = ("MeanByDox", "Std.Dev")
-        self.view.y_error_statistic = ("MeanByDox", "Geom.SD")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-        
-        
-    def testXErrorBars(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.x_error_statistic = ("MeanByDox", "Std.Dev")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-        
-        
-    def testYErrorBars(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.y_error_statistic = ("MeanByDox", "Geom.SD")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-        
-    def testPlotArgs(self):
+    def testPlotParams(self):
 
-        # BasePlotParams
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.title = "Title"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.xlabel = "X label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.ylabel = "Y label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        super().testPlotParams()
         
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.huelabel = "Hue label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.xfacet = "Well"
-        self.view.huefacet = ""
-        self.view.plot_params.col_wrap = 2
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-         
-        for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
-            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-            self.view.plot_params.sns_style = style
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-            
-        for context in ['poster', 'talk', 'poster', 'notebook', 'paper']:
-            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-            self.view.plot_params.sns_context = context
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.legend = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.sharex = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.sharey = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.despine = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
-        
-        # Data2DPlotParams
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.xlim = (0, 1000)
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-        self.view.plot_params.ylim = (0, 1000)
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
-        ## stats2d-specific params
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.alpha = 0.5
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.marker = "+"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
                                     
-        for m in SCATTERPLOT_MARKERS:
-            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        for m in SCATTERPLOT_MARKERS[::-1]:
+            self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
             self.view.plot_params.marker = m
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+            self.workflow.wi_waitfor(self.wi, 'view_error', '')
             
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.linestyle = "dashed"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
             
-        for el in LINE_STYLES:
-            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        for el in LINE_STYLES[::-1]:
+            self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
             self.view.plot_params.linestyle = el
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+            self.workflow.wi_waitfor(self.wi, 'view_error', '')
             
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.capsize = 5
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
- 
     def testSerialize(self):
-        Stats2DPlotParams.__eq__ = traits_eq
-        Stats2DPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-               
-            save_yaml(self.view, filename)
-            new_view = load_yaml(filename)
-               
-        finally:
-            os.unlink(filename)
-               
-        self.maxDiff = None
-                        
-        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_view.trait_get(self.view.copyable_trait_names()))
-           
-           
+        with params_traits_comparator(Stats2DPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename)
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})),
+                                 new_view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

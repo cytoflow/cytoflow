@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,8 +26,9 @@ import re
 from warnings import warn
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon, Rectangle
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, Bool, 
                         Constant, List, provides)
 
 import sklearn.mixture
@@ -63,6 +64,14 @@ class GaussianMixtureOp(HasStrictTraits):
     component ``i``.  If :attr:`num_components` is ``1``, :attr:`sigma` must be 
     greater than 0.
     
+    .. note::
+       The :attr:`sigma` attribute does NOT affect how events are assigned to 
+       components in the new ``name`` variable. That is to say, if an event
+       is more than :attr:`sigma` standard deviations from ALL of the 
+       components, you might expect it would be labeled as ``{name}_None``. 
+       It is *not*. An event is only labeled ``{name}_None`` if it has a 
+       value that is outside of the channels' scales.
+    
     Optionally, if :attr:`posteriors` is ``True``, :meth:`apply` creates a new 
     ``double`` metadata variables named ``{name}_1_posterior`` ... 
     ``{name}_n_posterior`` where ``n`` is the number of components.  The column 
@@ -92,10 +101,11 @@ class GaussianMixtureOp(HasStrictTraits):
     num_components : Int (default = 1)
         How many components to fit to the data?  Must be a positive integer.
 
-    sigma : Float (default = 0.0)
-        How many standard deviations on either side of the mean to include
-        in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
-        :attr:`num_components` is ``1``, must be ``> 0``.
+    sigma : Float
+        If not None, use this operation as a "gate": for each component, create 
+        a new boolean variable ``{name}_i`` and if the event is within
+        :attr:`sigma` standard deviations, set that variable to ``True``.
+        If :attr:`num_components` is ``1``, must be ``> 0``.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -192,11 +202,11 @@ class GaussianMixtureOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian')
     friendly_id = Constant("Gaussian Mixture Model")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(1, allow_zero = False)
-    sigma = util.PositiveFloat(allow_zero = True)
+    sigma = util.PositiveFloat(None, allow_zero = False, allow_none = True)
     by = List(Str)
     
     posteriors = Bool(False)
@@ -226,6 +236,10 @@ class GaussianMixtureOp(HasStrictTraits):
         if len(self.channels) == 0:
             raise util.CytoflowOpError('channels',
                                        "Must set at least one channel")
+
+        if len(self.channels) != len(set(self.channels)):
+            raise util.CytoflowOpError('channels', 
+                                       "Must not duplicate channels")
 
         for c in self.channels:
             if c not in experiment.data:
@@ -377,7 +391,7 @@ class GaussianMixtureOp(HasStrictTraits):
                                        "Experiment already has a column named {0}"
                                        .format(self.name))
             
-        if self.sigma > 0:
+        if self.sigma is not None:
             for i in range(1, self.num_components + 1):
                 cname = "{}_{}".format(self.name, i)
                 if cname in experiment.data.columns:
@@ -431,7 +445,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
  
-        if self.sigma > 0:
+        if self.sigma is not None:
             event_gate = {i : pd.Series([False] * len(experiment), dtype = "double")
                            for i in range(self.num_components)}
  
@@ -508,7 +522,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 
             # if we're doing sigma-based gating, for each component check
             # to see if the event is in the sigma gate.
-            if self.sigma > 0.0:
+            if self.sigma is not None:
                 for c in range(self.num_components):
                     s = np.linalg.pinv(gmm.covariances_[c])
                     mu = gmm.means_[c]
@@ -536,21 +550,21 @@ class GaussianMixtureOp(HasStrictTraits):
                     
             for c in range(self.num_components):
                 if len(self.by) == 0:
-                    g = [c + 1]
+                    g = tuple([c + 1])
                 elif hasattr(group, '__iter__') and not isinstance(group, (str, bytes)):
                     g = tuple(list(group) + [c + 1])
                 else:
                     g = tuple([group] + [c + 1])
 
-                prop_stat.loc[g] = gmm.weights_[c]
+                prop_stat.at[g] = gmm.weights_[c]
                 
                 for cidx1, channel1 in enumerate(self.channels):
                     g2 = tuple(list(g) + [channel1])
-                    mean_stat.loc[g2] = self._scale[channel1].inverse(gmm.means_[c, cidx1])
+                    mean_stat.at[g2] = self._scale[channel1].inverse(gmm.means_[c, cidx1])
                     
                     s, corr = util.cov2corr(gmm.covariances_[c])
                     sigma_stat[g2] = (self._scale[channel1].inverse(s[cidx1]))
-                    interval_stat.loc[g2] = (self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1]),
+                    interval_stat.at[g2] = (self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1]),
                                              self._scale[channel1].inverse(gmm.means_[c, cidx1] + s[cidx1]))
             
                     for cidx2, channel2 in enumerate(self.channels):
@@ -564,7 +578,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             new_experiment.add_condition(self.name, "category", event_assignments)
             
-        if self.sigma > 0:
+        if self.sigma is not None:
             for c in range(self.num_components):
                 gate_name = "{}_{}".format(self.name, c + 1)
                 new_experiment.add_condition(gate_name, "bool", event_gate[c])              
@@ -719,8 +733,12 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                                      
             for k in range(0, len(axes.patches)):
                 patch = axes.patches[k]
-                xy = patch.get_xy()
-                patch_area += poly_area([scale(p[1]) for p in xy], [p[0] for p in xy])
+                if isinstance(patch, Polygon):
+                    xy = patch.get_xy()
+                    patch_area += poly_area([scale(p[1]) for p in xy], [p[0] for p in xy])
+                elif isinstance(patch, Rectangle):
+                    for xy in patch.get_path().to_polygons():
+                        patch_area += poly_area([p[1] for p in xy], [p[0] for p in xy])
             
             plt_min, plt_max = plt.gca().get_ylim()
             y = scale.inverse(np.linspace(scale(scale.clip(plt_min)), 
@@ -736,8 +754,12 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                                      
             for k in range(0, len(axes.patches)):
                 patch = axes.patches[k]
-                xy = patch.get_xy()
-                patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
+                if isinstance(patch, Polygon):
+                    xy = patch.get_xy()
+                    patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
+                elif isinstance(patch, Rectangle):
+                    for xy in patch.get_path().to_polygons():
+                        patch_area += poly_area([p[0] for p in xy], [p[1] for p in xy])
             
             plt_min, plt_max = plt.gca().get_xlim()
             x = scale.inverse(np.linspace(scale(scale.clip(plt_min)), 

@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ passing the event information to the remote canvas which in turn runs the
 matplotlib event handlers.
 """
 
-import time, threading, logging, sys, traceback
+import threading, logging, sys, traceback
 
 import matplotlib.pyplot
 from matplotlib.figure import Figure
@@ -61,7 +61,7 @@ backend_version = "0.0.3"
 
 from matplotlib.backend_bases import FigureManagerBase
 
-DEBUG = 0
+logger = logging.getLogger(__name__)
 
 class Msg(object):
     DRAW = "DRAW"
@@ -84,11 +84,11 @@ def log_exception():
     err_loc = traceback.format_tb(tb)[-1]
     err_ctx = threading.current_thread().name
     
-    logging.debug("Exception in {0}:\n{1}"
+    logger.debug("Exception in {0}:\n{1}"
                   .format(err_ctx, "".join( traceback.format_exception(exc_type, exc_value, tb) )))
     
     
-    logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
+    logger.error("Error: {0}\nLocation: {1}Thread: {2}" \
                   .format(err_string, err_loc, err_ctx) )
     
 class FigureCanvasAggRemote(FigureCanvasAgg):
@@ -142,7 +142,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 return
             
             if msg != Msg.MOUSE_MOVE_EVENT:
-                logging.debug("FigureCanvasAggRemote.listen_for_remote :: {}"
+                logger.debug("FigureCanvasAggRemote.listen_for_remote :: {}"
                               .format(msg, payload))
                 
             try:              
@@ -196,7 +196,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             
     def send_to_remote(self):
         while self.update_remote.wait():
-            logging.debug("FigureCanvasAggRemote.send_to_remote")
+            logger.debug("FigureCanvasAggRemote.send_to_remote")
                 
             self.update_remote.clear()
             
@@ -222,7 +222,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
 
         
     def draw(self, *args, **kwargs):
-        logging.debug("FigureCanvasAggRemote.draw()")
+        logger.debug("FigureCanvasAggRemote.draw()")
             
         with self.buffer_lock:
             FigureCanvasAgg.draw(self)
@@ -241,10 +241,10 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         """
         # If bbox is None, blit the entire canvas. Otherwise
         # blit only the area defined by the bbox.
-        logging.debug("FigureCanvasAggRemote.blit()")
+        logger.debug("FigureCanvasAggRemote.blit()")
         
         if bbox is None and self.figure:
-            logging.info("bbox was none")
+            logger.info("bbox was none")
             return
 
         with self.blit_lock:
@@ -281,7 +281,7 @@ def new_figure_manager(num, *args, **kwargs):
     global remote_canvas
     global singleton_lock
         
-    logging.debug("mpl_multiprocess_backend.new_figure_manager()")
+    logger.debug("mpl_multiprocess_backend.new_figure_manager()")
     
     # get the pipe connection
     parent_conn = kwargs.pop('parent_conn')
@@ -317,11 +317,11 @@ def new_figure_manager(num, *args, **kwargs):
 
 
 def draw_if_interactive():
-    logging.debug("mpl_multiprocess_backend.draw_if_interactive")
+    logger.debug("mpl_multiprocess_backend.draw_if_interactive")
     remote_canvas.draw()
     
 def show():
-    logging.debug("mpl_multiprocess_backend.show")
+    logger.debug("mpl_multiprocess_backend.show")
     remote_canvas.draw()
 
 # make sure pyplot uses the remote canvas

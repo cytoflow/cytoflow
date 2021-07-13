@@ -28,3 +28,11 @@
 Logicle_wrap.cpp
 _Logicle.cpython-34m.so
 
+# coverage analysis
+/htmlcov/
+.coverage
+
+# auto-built API docs
+/docs/dev_manual/api/*
+!/docs/dev_manual/api/api.rst
+
