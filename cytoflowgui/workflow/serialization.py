@@ -140,6 +140,18 @@ def _load_multiindex_v2(data, version):
     return pandas.MultiIndex(levels = data['levels'],
                              codes = data['codes'],
                              names = data['names'])
+    
+@camel_registry.dumper(pandas.Index, 'pandas-index', version = 1)
+def _dump_index(d):
+    return dict(name = d.name,
+                values = d.values.tolist(),
+                dtype = str(d.dtype))
+    
+@camel_registry.loader('pandas-index', version = 1)
+def _load_index(data, version):
+    return pandas.Index(name = data['name'],
+                        data = data['values'],
+                        dtype = data['dtype'])
 
 @camel_registry.dumper(pandas.Int64Index, 'pandas-int64index', version = 1)
 def _dump_int64index(d):
