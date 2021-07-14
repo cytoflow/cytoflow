@@ -26,9 +26,9 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
+from cytoflowgui.tests.test_base import TasbeTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations.tasbe import TasbeWorkflowOp, BleedthroughControl, TranslationControl, BeadUnit
+from cytoflowgui.workflow.operations.tasbe import TasbeWorkflowOp, TasbeWorkflowView, BleedthroughControl, TranslationControl, BeadUnit
 from cytoflowgui.workflow.subset import BoolSubset
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
@@ -36,7 +36,13 @@ class TestTASBE(TasbeTest):
     
     def setUp(self):
         super().setUp()      
-        
+
+        self.addTypeEqualityFunc(TasbeWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(TasbeWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(BleedthroughControl, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(TranslationControl, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(BeadUnit, 'assertHasTraitsEqual')
+
         self.op = op = TasbeWorkflowOp()
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         
@@ -141,27 +147,34 @@ class TestTASBE(TasbeTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(BleedthroughControl, TranslationControl, BeadUnit):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.op, filename)
-                new_op = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.op, filename)
+            new_op = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
-            
-            # o = self.op.trait_get(self.op.copyable_trait_names())
-            # n = new_op.trait_get(self.op.copyable_trait_names())
-            #
-            # import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.3.0.202104101217/pysrc')
-            # import pydevd;pydevd.settrace()
-            
-            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                                 new_op.trait_get(self.op.copyable_trait_names()))
+        self.maxDiff = None
 
+        self.assertEqual(self.op, new_op)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                                     
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

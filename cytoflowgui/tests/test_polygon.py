@@ -27,7 +27,8 @@ import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import PolygonWorkflowOp
+from cytoflowgui.workflow.operations import PolygonWorkflowOp, PolygonSelectionView
+from cytoflowgui.workflow.views import ScatterplotPlotParams
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 
@@ -36,6 +37,10 @@ class TestPolygon(ImportedDataTest):
 
     def setUp(self):
         super().setUp()
+
+        self.addTypeEqualityFunc(PolygonWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(PolygonSelectionView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(ScatterplotPlotParams, 'assertHasTraitsEqual')
 
         self.op = op = PolygonWorkflowOp()
         op.name = "Poly"
@@ -144,10 +149,23 @@ class TestPolygon(ImportedDataTest):
              
         self.maxDiff = None
                       
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-         
-         
+        self.assertEqual(self.op, new_op,)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                                     
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

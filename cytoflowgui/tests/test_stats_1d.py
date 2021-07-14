@@ -26,7 +26,7 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.views.stats_1d import Stats1DWorkflowView, Stats1DPlotParams, LINE_STYLES
 from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
@@ -37,6 +37,9 @@ class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
     
     def setUp(self):
         super().setUp()
+        
+        self.addTypeEqualityFunc(Stats1DWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(Stats1DPlotParams, 'assertHasTraitsEqual')
 
         self.wi = wi = self.workflow.workflow[-1]
         self.view = view = Stats1DWorkflowView()
@@ -93,37 +96,49 @@ class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
  
     def testSerialize(self):
-        with params_traits_comparator(Stats1DPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename)
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})),
-                                 new_view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})))
-
+        self.assertEqual(self.view, new_view)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                
     def testSerializeWorkflowItemV1(self):
-        with params_traits_comparator(Stats1DPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename, lock_versions = {WorkflowItem: 1,
-                                                                pd.Series : 1})
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.wi, filename, lock_versions = {WorkflowItem: 1,
+                                                            pd.Series : 1})
+            new_wi = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})),
-                                 new_view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})))
+        self.assertEqual(self.wi, new_wi)
+
 
     def testNotebook(self):
         code = "from cytoflow import *\n"

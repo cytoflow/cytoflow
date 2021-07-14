@@ -26,9 +26,9 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
+from cytoflowgui.tests.test_base import TasbeTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import BeadCalibrationWorkflowOp, BeadCalibrationUnit
+from cytoflowgui.workflow.operations import BeadCalibrationWorkflowOp, BeadCalibrationUnit, BeadCalibrationWorkflowView
 from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 import cytoflowgui.op_plugins.bead_calibration  # @UnusedImport
 
@@ -36,6 +36,10 @@ class TestBeadCalibration(TasbeTest):
     
     def setUp(self):
         super().setUp()
+        
+        self.addTypeEqualityFunc(BeadCalibrationWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(BeadCalibrationWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(BeadCalibrationUnit, 'assertHasTraitsEqual')
  
         self.op = op = BeadCalibrationWorkflowOp()
         
@@ -121,21 +125,34 @@ class TestBeadCalibration(TasbeTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(BeadCalibrationUnit):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.op, filename)
-                new_op = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.op, filename)
+            new_op = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                                 new_op.trait_get(self.op.copyable_trait_names()))
-
+        self.assertEqual(self.op, new_op)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+           
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

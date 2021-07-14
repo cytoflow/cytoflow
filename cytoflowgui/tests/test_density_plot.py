@@ -24,7 +24,7 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest
 from cytoflowgui.workflow.views import DensityWorkflowView, DensityPlotParams
 from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
@@ -32,6 +32,9 @@ class TestDensityPlot(ImportedDataTest, Base2DViewTest):
 
     def setUp(self):
         super().setUp()
+        
+        self.addTypeEqualityFunc(DensityWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(DensityPlotParams, 'assertHasTraitsEqual')
 
         self.wi = wi = self.workflow.workflow[-1]
         self.view = view = DensityWorkflowView()
@@ -128,21 +131,34 @@ class TestDensityPlot(ImportedDataTest, Base2DViewTest):
                             
         
     def testSerialize(self):
-        with params_traits_comparator(DensityPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename)
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                                 new_view.trait_get(self.view.copyable_trait_names()))
-
+        self.assertEqual(self.view, new_view)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+           
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

@@ -24,9 +24,9 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-from cytoflowgui.tests.test_base import ImportedDataTest, Base1DViewTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, Base1DViewTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import RangeWorkflowOp
+from cytoflowgui.workflow.operations import RangeWorkflowOp, RangeSelectionView
 from cytoflowgui.workflow.views import ViolinPlotWorkflowView, ViolinPlotParams
 from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
@@ -34,6 +34,11 @@ class TestViolin(ImportedDataTest, Base1DViewTest):
 
     def setUp(self):
         super().setUp()
+
+        self.addTypeEqualityFunc(ViolinPlotWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(ViolinPlotParams, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(RangeWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(RangeSelectionView, 'assertHasTraitsEqual')
         
         self.op = op = RangeWorkflowOp()
         op.name = "Range"
@@ -86,21 +91,34 @@ class TestViolin(ImportedDataTest, Base1DViewTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(ViolinPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename)
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                                 new_view.trait_get(self.view.copyable_trait_names()))
+        self.assertEqual(self.view, new_view)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
 
+        self.assertEqual(self.wi, new_wi)
+                                     
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

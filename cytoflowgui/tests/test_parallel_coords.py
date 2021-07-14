@@ -24,7 +24,7 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest
 from cytoflowgui.workflow.views import ParallelCoordinatesWorkflowView, ParallelCoordinatesPlotParams, ParallelCoordinatesChannel as Channel
 from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
@@ -32,6 +32,11 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
 
     def setUp(self):
         super().setUp()
+        
+        self.addTypeEqualityFunc(ParallelCoordinatesWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(ParallelCoordinatesPlotParams, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(Channel, 'assertHasTraitsEqual')
+
 
         self.wi = wi = self.workflow.workflow[-1]
         
@@ -95,23 +100,34 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
         exec(code)
 
     def testSerialize(self):
-        with params_traits_comparator(Channel), \
-                params_traits_comparator(ParallelCoordinatesPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename)
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                                 new_view.trait_get(self.view.copyable_trait_names()))
-
-
+        self.assertEqual(self.view, new_view)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestParallelCoords.testPlotArgs']
     unittest.main()

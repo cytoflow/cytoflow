@@ -45,14 +45,14 @@ import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt4']))
 import matplotlib
 matplotlib.use("Agg")
 
-from traits.api import HasTraits
+from traits.api import HasTraits, TraitListObject, TraitDictObject
 
 import unittest, multiprocessing, os, logging
 from logging.handlers import QueueHandler, QueueListener
 
 from cytoflowgui.workflow import LocalWorkflow, RemoteWorkflow
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import ImportPlugin, ThresholdPlugin, ChannelStatisticPlugin
+from cytoflowgui.workflow.operations import ImportWorkflowOp, ChannelStatisticWorkflowOp, ThresholdWorkflowOp, ThresholdSelectionView
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 from cytoflowgui.workflow.serialization import traits_eq, traits_hash
 from cytoflowgui.utility import CallbackHandler
@@ -79,7 +79,10 @@ class WorkflowTest(unittest.TestCase):
     def setUp(self):
         
         self.addTypeEqualityFunc(HasTraits, 'assertHasTraitsEqual')
-        
+        self.addTypeEqualityFunc(WorkflowItem, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(TraitListObject, 'assertTraitListEqual')
+        self.addTypeEqualityFunc(TraitDictObject, 'assertTraitDictEqual')
+                
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
         running_event = multiprocessing.Event()
@@ -114,8 +117,26 @@ class WorkflowTest(unittest.TestCase):
         self.queue_listener.stop()
         
     def assertHasTraitsEqual(self, t1, t2, msg=None):
-        print('did it')
-        return True
+        metadata = {'transient' : lambda t: t is not True,
+                    'status' : lambda t: t is not True}
+        
+        d1 = t1.trait_get(t1.copyable_trait_names(**metadata))
+        d2 = t2.trait_get(t1.copyable_trait_names(**metadata))
+        self.assertEqual(set(d1.keys()), set(d2.keys()))
+        for k in d1.keys():
+            self.assertEqual(d1[k], d2[k])
+            
+    def assertTraitListEqual(self, t1, t2, msg=None):
+        self.assertEqual(len(t1), len(t2))
+        
+        for o1, o2 in zip(t1, t2):
+            self.assertEqual(o1, o2)
+    
+    def assertTraitDictEqual(self, t1, t2, msg=None):
+        self.assertEqual(set(t1.keys()), set(t2.keys()))
+        
+        for k in t1.keys():
+            self.assertEqual(t1[k], t2[k])
 
         
 class ImportedDataTest(WorkflowTest):
@@ -123,8 +144,10 @@ class ImportedDataTest(WorkflowTest):
     def setUp(self):
         super().setUp()
         
-        import_plugin = ImportPlugin()
-        import_op = import_plugin.get_operation()
+        self.addTypeEqualityFunc(ImportWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(ChannelStatisticWorkflowOp, 'assertHasTraitsEqual')
+        
+        import_op = ImportWorkflowOp()
 
         from cytoflow import Tube
         
@@ -162,9 +185,7 @@ class ImportedDataTest(WorkflowTest):
         self.workflow.wi_waitfor(wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
 
-        stats_plugin = ChannelStatisticPlugin()
-
-        stats_op_1 = stats_plugin.get_operation()
+        stats_op_1 = ChannelStatisticWorkflowOp()
         stats_op_1.name = "MeanByDoxIP"
         stats_op_1.channel = "Y2-A"
         stats_op_1.statistic_name = "Geom.Mean"
@@ -182,7 +203,7 @@ class ImportedDataTest(WorkflowTest):
         self.workflow.workflow.append(stats_wi_1)
         self.workflow.wi_waitfor(stats_wi_1, 'status', 'valid')
         
-        stats_op_2 = stats_plugin.get_operation()
+        stats_op_2 = ChannelStatisticWorkflowOp()
         stats_op_2.name = "SDByDoxIP"
         stats_op_2.channel = "Y2-A"
         stats_op_2.statistic_name = "Geom.SD"
@@ -206,8 +227,10 @@ class TasbeTest(WorkflowTest):
     def setUp(self):
         super().setUp()
         
-        plugin = ImportPlugin()
-        op = plugin.get_operation()
+        self.addTypeEqualityFunc(ThresholdWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(ThresholdSelectionView, 'assertHasTraitsEqual')
+        
+        op = ImportWorkflowOp()
 
         from cytoflow import Tube
              
@@ -225,8 +248,7 @@ class TasbeTest(WorkflowTest):
         self.workflow.wi_waitfor(wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
         
-        plugin = ThresholdPlugin()
-        op = plugin.get_operation()
+        op = ThresholdWorkflowOp()
                 
         op.name = "Morpho"
         op.channel = "FSC-A"
@@ -701,29 +723,5 @@ class Base2DStatisticsViewTest(BaseStatisticsViewTest):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.ylim = (0, 1000)
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
-        
 
-class params_traits_comparator(object):
-    def __init__(self, *cls):
-        self.cls = cls
-        self._eq = [c.__eq__ for c in cls] 
-        self._hash = [c.__hash__ for c in cls]
-
-    def __enter__(self):
-        for c in self.cls:
-            c.__eq__ = traits_eq
-            c.__hash__ = traits_hash
-
-    def __exit__(self, *args):
-        for c in self.cls:
-            c.__eq__ = self._eq[self.cls.index(c)]
-            c.__hash__ = self._hash[self.cls.index(c)]
-            
-def filter_traits(obj, **metadata):
-    if type(obj) is list:
-        return [filter_traits(x) for x in obj]
-    elif type(obj) is dict:
-        return {x: filter_traits(obj[x]) for x in obj}
-    else:
-        return obj.clone_traits(**metadata)
     

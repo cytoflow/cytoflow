@@ -27,7 +27,8 @@ import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import RangeWorkflowOp
+from cytoflowgui.workflow.operations import RangeWorkflowOp, RangeSelectionView
+from cytoflowgui.workflow.views import HistogramPlotParams
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
@@ -35,6 +36,10 @@ class TestRange(ImportedDataTest):
 
     def setUp(self):
         super().setUp()
+
+        self.addTypeEqualityFunc(RangeWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(RangeSelectionView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(HistogramPlotParams, 'assertHasTraitsEqual')
 
         self.op = op = RangeWorkflowOp()
         op.name = "Range"
@@ -112,10 +117,23 @@ class TestRange(ImportedDataTest):
              
         self.maxDiff = None
                       
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-         
-         
+        self.assertEqual(self.op, new_op)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                                     
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

@@ -24,7 +24,7 @@ Created on Jan 4, 2018
 '''
 import unittest, os, tempfile
 
-from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest
 from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS, ScatterplotWorkflowView, ScatterplotPlotParams
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
@@ -32,6 +32,9 @@ class TestScatterplot(ImportedDataTest, Base2DViewTest):
 
     def setUp(self):
         super().setUp()
+
+        self.addTypeEqualityFunc(ScatterplotWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(ScatterplotPlotParams, 'assertHasTraitsEqual')
 
         self.wi = wi = self.workflow.workflow[-1]
         self.view = view = ScatterplotWorkflowView()
@@ -66,22 +69,34 @@ class TestScatterplot(ImportedDataTest, Base2DViewTest):
             self.workflow.wi_waitfor(self.wi, 'view_error', '')
             
     def testSerialize(self):
-        with params_traits_comparator(ScatterplotPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename)
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                                 new_view.trait_get(self.view.copyable_trait_names()))
-
-
+        self.assertEqual(self.view, new_view)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestScatterplot.testSerialize']
     unittest.main()

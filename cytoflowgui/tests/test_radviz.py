@@ -24,7 +24,7 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest
 from cytoflowgui.workflow.views import RadvizWorkflowView, RadvizPlotParams, RadvizChannel as Channel
 from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.workflow.serialization import save_yaml, load_yaml
@@ -33,6 +33,11 @@ class TestRadviz(ImportedDataTest, BaseDataViewTest):
 
     def setUp(self):
         super().setUp()
+        
+        self.addTypeEqualityFunc(RadvizWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(RadvizPlotParams, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(Channel, 'assertHasTraitsEqual')
+
 
         self.wi = wi = self.workflow.workflow[0]
         self.wi.operation.events = 500
@@ -112,21 +117,34 @@ class TestRadviz(ImportedDataTest, BaseDataViewTest):
         exec(code)
 
     def testSerialize(self):
-        with params_traits_comparator(Channel), params_traits_comparator(RadvizPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename)
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                                 new_view.trait_get(self.view.copyable_trait_names()))
-
+        self.assertEqual(self.view, new_view)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestRadviz.testBase']

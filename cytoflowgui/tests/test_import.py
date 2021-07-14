@@ -64,7 +64,6 @@ class TestImport(ImportedDataTest):
         self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
        
- 
     def testSerialize(self):
         wi = self.workflow.workflow[0]
         op = wi.operation
@@ -80,8 +79,8 @@ class TestImport(ImportedDataTest):
              
         self.maxDiff = None
         new_op.ret_events = op.ret_events
-        self.assertDictEqual(op.trait_get(op.copyable_trait_names()),
-                             new_op.trait_get(op.copyable_trait_names()))
+        
+        self.assertEqual(op, new_op)
           
     def testSerializeV1(self):
         wi = self.workflow.workflow[0]
@@ -98,8 +97,8 @@ class TestImport(ImportedDataTest):
              
         self.maxDiff = None
         new_op.ret_events = op.ret_events
-        self.assertDictEqual(op.trait_get(op.copyable_trait_names()),
-                             new_op.trait_get(op.copyable_trait_names()))
+        
+        self.assertEqual(self.op, new_op)
  
     def testSerializeV2(self):
         wi = self.workflow.workflow[0]
@@ -116,9 +115,24 @@ class TestImport(ImportedDataTest):
              
         self.maxDiff = None
         new_op.ret_events = op.ret_events
-        self.assertDictEqual(op.trait_get(op.copyable_trait_names()),
-                             new_op.trait_get(op.copyable_trait_names()))
-         
+        
+        self.assertEqual(self.op, new_op)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                                     
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

@@ -26,7 +26,7 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.operations import PCAWorkflowOp, PCAChannel
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
@@ -36,6 +36,9 @@ class TestPCA(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
+
+        self.addTypeEqualityFunc(PCAWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(PCAChannel, 'assertHasTraitsEqual')
 
         self.op = op = PCAWorkflowOp()
         
@@ -145,21 +148,34 @@ class TestPCA(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testSerializeOp(self):
-        with params_traits_comparator(PCAChannel):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.op, filename)
-                new_op = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.op, filename)
+            new_op = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                                 new_op.trait_get(self.op.copyable_trait_names()))
-
+        self.assertEqual(self.op, new_op)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                                     
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

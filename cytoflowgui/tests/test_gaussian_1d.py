@@ -26,9 +26,10 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from cytoflowgui.tests.test_base import ImportedDataTest, filter_traits
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import GaussianMixture1DWorkflowOp
+from cytoflowgui.workflow.operations import GaussianMixture1DWorkflowOp, GaussianMixture1DWorkflowView
+from cytoflowgui.workflow.views import HistogramPlotParams
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
@@ -36,6 +37,10 @@ class TestGaussian1D(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
+        
+        self.addTypeEqualityFunc(GaussianMixture1DWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(GaussianMixture1DWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(HistogramPlotParams, 'assertHasTraitsEqual')
 
         self.op = op = GaussianMixture1DWorkflowOp()
         
@@ -199,14 +204,8 @@ class TestGaussian1D(ImportedDataTest):
              
         self.maxDiff = None
         
-        self.assertEqual(filter_traits(self.op, status = lambda t: t is not True,
-                                                transient = lambda t: t is not True),
-                         filter_traits(new_op, status = lambda t: t is not True,
-                                               transient = lambda t: t is not True))
+        self.assertEqual(self.op, new_op)
                       
-        # self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-        #                      new_op.trait_get(self.op.copyable_trait_names()))
-
     def testSerializeWorkflowItem(self):
         fh, filename = tempfile.mkstemp()
         try:
@@ -219,9 +218,9 @@ class TestGaussian1D(ImportedDataTest):
             os.unlink(filename)
              
         self.maxDiff = None
-        
+
         self.assertEqual(self.wi, new_wi)
-                              
+                                                    
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

@@ -40,7 +40,7 @@ class TestChannelStat(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
-
+        
         # the last operation in ImportedDataTest.setUp is a ChannelStatistic op
         self.wi = wi = self.workflow.workflow[-1]
         self.op = self.wi.operation
@@ -88,10 +88,23 @@ class TestChannelStat(ImportedDataTest):
              
         self.maxDiff = None
                       
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-         
-         
+        self.assertEqual(self.op, new_op)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+           
     def testNotebook(self):
         for fn in summary_functions:
             self.workflow.wi_sync(self.wi, 'status', 'waiting')

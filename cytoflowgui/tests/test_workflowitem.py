@@ -25,11 +25,11 @@ Created on Jan 5, 2018
 
 import os, tempfile, pandas
 
-from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
-from cytoflowgui.workflow.operations import ImportWorkflowOp, ChannelStatisticWorkflowOp
+from cytoflowgui.workflow.operations import ChannelStatisticWorkflowOp
 
 class TestWorkflowItem(ImportedDataTest):
     
@@ -59,42 +59,36 @@ class TestWorkflowItem(ImportedDataTest):
         self.workflow.selected = wi
                 
     def testSerializeMultiIndexV1(self):
-        with params_traits_comparator(WorkflowItem, ImportWorkflowOp, ChannelStatisticWorkflowOp):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
-                 
-                save_yaml(self.workflow.workflow, filename, lock_versions = {pandas.MultiIndex : 1})
-                new_workflow = load_yaml(filename)
-                 
-            finally:
-                os.unlink(filename)
-                 
-            self.maxDiff = None
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.workflow.workflow, filename, lock_versions = {pandas.MultiIndex : 1})
+            new_workflow = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
 
-            for i in range(len(new_workflow)):
-                self.assertDictEqual(self.workflow.workflow[i].trait_get(self.workflow.workflow[i].copyable_trait_names(status = lambda t: t is not True)),
-                                     new_workflow[i].trait_get(self.workflow.workflow[i].copyable_trait_names(status = lambda t: t is not True)))
-
-        
+        for i in range(len(new_workflow)):
+            self.assertHasTraitsEqual(self.workflow.workflow[i], new_workflow[i])
         
     def testSerialize(self):
-        with params_traits_comparator(WorkflowItem, ImportWorkflowOp, ChannelStatisticWorkflowOp):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
-                 
-                save_yaml(self.workflow.workflow, filename)
-                new_workflow = load_yaml(filename)
-                 
-            finally:
-                os.unlink(filename)
-                 
-            self.maxDiff = None
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.workflow.workflow, filename)
+            new_workflow = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
 
-            for i in range(len(new_workflow)):
-                self.assertDictEqual(self.workflow.workflow[i].trait_get(self.workflow.workflow[i].copyable_trait_names(status = lambda t: t is not True)),
-                                     new_workflow[i].trait_get(self.workflow.workflow[i].copyable_trait_names(status = lambda t: t is not True)))
+        for i in range(len(new_workflow)):
+            self.assertEqual(self.workflow.workflow[i], new_workflow[i])
              
              
 # TODO - TEST THIS

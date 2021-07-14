@@ -38,6 +38,9 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
     def setUp(self):
         super().setUp()
         
+        self.addTypeEqualityFunc(Stats2DWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(Stats2DPlotParams, 'assertHasTraitsEqual')
+        
         stats_plugin = ChannelStatisticPlugin()
 
         stats_op_3 = stats_plugin.get_operation()
@@ -122,21 +125,34 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(Stats2DPlotParams):
-            fh, filename = tempfile.mkstemp()
-            try:
-                os.close(fh)
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
 
-                save_yaml(self.view, filename)
-                new_view = load_yaml(filename)
-            finally:
-                os.unlink(filename)
+            save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+        finally:
+            os.unlink(filename)
 
-            self.maxDiff = None
+        self.maxDiff = None
 
-            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})),
-                                 new_view.trait_get(self.view.copyable_trait_names(**{"status" : lambda t: t is not True})))
-
+        self.assertEqual(self.view, new_view)
+                      
+    def testSerializeWorkflowItem(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
