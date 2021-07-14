@@ -1,6 +1,6 @@
 .. _user_facets:
 
-Using *facets* to compare data sets
+Guide: Using *facets* to compare data sets
 ===================================
 
 ``Cytoflow`` uses an idea called *facets* to help you analyze data. It's taken from

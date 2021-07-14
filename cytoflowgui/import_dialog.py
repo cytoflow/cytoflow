@@ -764,6 +764,7 @@ class ExperimentDialogHandler(Controller):
         if conf == YES:
             for tube in self.selected_tubes:
                 self.model.tubes.remove(tube)
+            self.selected_tubes = []
                 
         if not self.model.tubes:
             self.model.dummy_experiment = None

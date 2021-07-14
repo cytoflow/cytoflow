@@ -1,14 +1,11 @@
 .. _user_quickstart:
 
-Quickstart
-==========
+Tutorial: Quickstart
+====================
 
 *Welcome to Cytoflow!*  This document will demonstrate importing
 some data and running a very basic analysis using the GUI.  It
-follows the same analysis as the `introductory Jupyter notebook`_
-and should help you get started with the following steps:
-
-.. _introductory Jupyter notebook: https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb
+ should help you get started with the following steps:
 
 * Importing data
 * Basic visualizations
@@ -17,7 +14,7 @@ and should help you get started with the following steps:
 
 If you'd like to follow along, you can do so by downloading one of the
 **cytoflow-#####-examples-basic.zip** files from the 
-`Cytoflow releases page <https://github.com/bpteague/cytoflow/releases>`_
+`Cytoflow releases page <https://github.com/cytoflow/cytoflow/releases>`_
 on GitHub.
 
 

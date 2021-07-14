@@ -1,6 +1,6 @@
 .. _user_mean:
 
-Which measure of center should I use?
+Guide: Which measure of center should I use?
 =====================================
 
 When analyzing flow cytometry data, we often want to know the *center* of a 

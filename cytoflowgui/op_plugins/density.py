@@ -183,7 +183,7 @@ class DensityGatePlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.density'
     view_id = 'edu.mit.synbio.cytoflow.view.densitygateview'
 
-    short_name = "2D Mixture Model"
+    short_name = "Density Gate"
     menu_group = "Gates"
     
     def get_operation(self):

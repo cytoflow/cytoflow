@@ -1,6 +1,6 @@
 .. _user_statistics:
 
-Using statistics to summarize data
+Guide: Using statistics to summarize data
 ==================================
  
 Summarizing data is a key step in flow cytometry. Even simple, "traditional"
