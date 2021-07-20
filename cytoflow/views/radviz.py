@@ -211,6 +211,12 @@ class RadvizView(BaseNDView):
    
         return {}
     
+    def _update_legend(self, legend):
+        for lh in legend.legendHandles:
+            lh.set_alpha(0.5)
+            lh.set_sizes([10.0])
+            
+    
 def _radviz_plot(*channels, ax_annotations, scale, lim, order, **kwargs):
 
     color = kwargs.pop('color')

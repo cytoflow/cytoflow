@@ -22,7 +22,7 @@ cytoflow.utility.log_scale
 --------------------------
 '''
 
-from traits.api import (Instance, Str, Dict, provides, Constant, Enum, Float, 
+from traits.api import (Instance, Str, provides, Constant, Enum, Float, 
                         Property, Tuple, Array) 
                        
 import numpy as np

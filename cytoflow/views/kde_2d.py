@@ -144,6 +144,10 @@ class Kde2DView(Base2DView):
                     yscale = yscale,
                     legend_data = legend_data)
         
+    def _update_legend(self, legend):
+        for lh in legend.legendHandles:
+            lh.set_alpha(0.5)
+        
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
                        bw="scott", gridsize=50, cut=3, clip=None, legend=True, 
@@ -221,12 +225,9 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
     if hasattr(y, "name") and legend:
         ax.set_ylabel(y.name)
         
-    if label is not None:
-        ax.set_title(label)
-        
     # Add legend data
-    if 'label' in kwargs:
-        legend_data[kwargs['label']] = plt.Rectangle((0, 0), 1, 1, fc = color)
+    if label:
+        legend_data[label] = plt.Rectangle((0, 0), 1, 1, fc = color)
 
     return ax        
 

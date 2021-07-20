@@ -295,9 +295,9 @@ class BaseView(HasStrictTraits):
             
         g.set_axis_labels(xlabel, ylabel)
  
+        # g.tight_layout(rect = [.03, .03, .97, .97])
         g.tight_layout()
-              
-                    
+      
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
         raise NotImplementedError("You must override _grid_plot in a derived class")
     

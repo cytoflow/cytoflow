@@ -84,7 +84,7 @@ from traitsui.api import View, Item, EnumEditor, VGroup, HGroup, TextEditor, Con
 from envisage.api import Plugin
 from pyface.api import ImageResource
 
-from ..workflow.views import RadvizWorkflowView, RadvizPlotParams, Channel
+from ..workflow.views import RadvizWorkflowView, RadvizPlotParams, RadvizChannel
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor, VerticalListEditor
 from ..subset_controllers import subset_handler_factory
 
@@ -179,7 +179,7 @@ class RadvizHandler(ViewHandler):
 
     # MAGIC: called when add_control is set
     def _add_channel_fired(self):
-        self.model.channels_list.append(Channel())
+        self.model.channels_list.append(RadvizChannel())
         
     def _remove_channel_fired(self):
         if self.model.channels_list:

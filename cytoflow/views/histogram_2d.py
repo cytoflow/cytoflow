@@ -128,15 +128,23 @@ class Histogram2DView(Base2DView):
         ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
       
         kwargs.setdefault('smoothed', False)
+        
+        legend_data = {}
            
-        grid.map(_hist2d, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
+        grid.map(_hist2d, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, legend_data = legend_data, **kwargs)
         
         return dict(xlim = xlim,
                     xscale = xscale,
                     ylim = ylim,
-                    yscale = yscale)
+                    yscale = yscale,
+                    legend_data = legend_data)
+        
+    def _update_legend(self, legend):
+        for lh in legend.legendHandles:
+            lh.set_alpha(0.5)
+            #lh.set_sizes([10.0])
 
-def _hist2d(x, y, xbins, ybins, **kwargs):
+def _hist2d(x, y, xbins, ybins, legend_data, **kwargs):
 
     h, X, Y = np.histogram2d(x, y, bins=[xbins, ybins])
     
@@ -150,6 +158,10 @@ def _hist2d(x, y, xbins, ybins, **kwargs):
 
     color = kwargs.pop("color")   
     ax.pcolormesh(X, Y, h.T, cmap = AlphaColormap("AlphaColor", color), **kwargs)
+    
+    # Add legend data
+    if 'label' in kwargs:
+        legend_data[kwargs['label']] = plt.Rectangle((0, 0), 1, 1, fc = color)
         
     return ax
 

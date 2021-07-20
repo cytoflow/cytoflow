@@ -26,9 +26,6 @@ import seaborn as sns
 sns.set(context = "paper", style = "whitegrid", 
         rc = {"xtick.bottom": True, "ytick.left": True})
 
-# the default marker scales are tiny!  make them less tiny
-mpl.rc('legend', markerscale = 4)
-
 from .i_view import IView
 from .i_selectionview import ISelectionView
 

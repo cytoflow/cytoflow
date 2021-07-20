@@ -122,9 +122,8 @@ class ScatterplotView(Base2DView):
     
     def _update_legend(self, legend):
         for lh in legend.legendHandles:
-            lh.set_facecolor(lh.get_facecolor())  # i don't know why
-            lh.set_edgecolor(lh.get_edgecolor())  # these are needed
             lh.set_alpha(0.5)
+            lh.set_sizes([10.0])
     
 util.expand_class_attributes(ScatterplotView)
 util.expand_method_parameters(ScatterplotView, ScatterplotView.plot)
