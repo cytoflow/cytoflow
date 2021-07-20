@@ -190,7 +190,8 @@ class BaseView(HasStrictTraits):
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,
-                          sharey = sharey)
+                          sharey = sharey,
+                          despine = despine)
         
         plot_ret = self._grid_plot(experiment = experiment, grid = g, **kwargs)
         
@@ -284,7 +285,7 @@ class BaseView(HasStrictTraits):
                     self._update_legend(legend)
                         
         if title:
-            plt.title(title)
+            plt.suptitle(title)
             
         if xlabel == "":
             xlabel = None
@@ -295,12 +296,7 @@ class BaseView(HasStrictTraits):
         g.set_axis_labels(xlabel, ylabel)
  
         g.tight_layout()
-        
-        sns.despine(top = despine, 
-                    right = despine,
-                    bottom = False,
-                    left = False)
-                    
+              
                     
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
         raise NotImplementedError("You must override _grid_plot in a derived class")
