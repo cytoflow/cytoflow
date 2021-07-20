@@ -294,6 +294,8 @@ class BaseView(HasStrictTraits):
             
         g.set_axis_labels(xlabel, ylabel)
  
+        g.tight_layout()
+        
         sns.despine(top = despine, 
                     right = despine,
                     bottom = False,
