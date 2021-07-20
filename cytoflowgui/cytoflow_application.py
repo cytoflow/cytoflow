@@ -33,7 +33,7 @@ from envisage.ui.tasks.tasks_application import TasksApplicationState
 
 from pyface.api import error, ImageResource
 from pyface.tasks.api import TaskWindowLayout
-from pyface.qt import QtGui
+from pyface.qt import QtGui, QtCore
 
 from matplotlib.figure import Figure
 
@@ -65,6 +65,9 @@ class CytoflowApplication(TasksApplication):
     # Whether to restore the previous application-level layout when the
     # applicaton is started.
     always_use_default_layout = Property(Bool)
+    
+    # Whether to scale the application for HiDPI
+    enable_high_dpi_scaling = Property(Bool)
 
     # are we debugging? at the moment, just for sending logs to the console
     debug = Bool
@@ -201,7 +204,7 @@ class CytoflowApplication(TasksApplication):
         tasks = [ factory.id for factory in self.task_factories ]
         return [ TaskWindowLayout(*tasks,
                                   active_task = active_task,
-                                  size = (1280, 800)) ]
+                                  size = (1600, 1200)) ]
 
     def _preferences_helper_default(self):
         return CytoflowPreferences(preferences = self.preferences)
@@ -210,3 +213,7 @@ class CytoflowApplication(TasksApplication):
  
     def _get_always_use_default_layout(self):
         return self.preferences_helper.always_use_default_layout
+
+    
+    
+    

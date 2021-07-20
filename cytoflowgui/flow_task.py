@@ -40,6 +40,7 @@ from pyface.api import (FileDialog, ImageResource, AboutDialog,
 from pyface.qt import QtGui
 
 from envisage.ui.tasks.api import TaskFactory
+from envisage.ui.tasks.action.preferences_action import PreferencesAction
 from envisage.api import Plugin, ExtensionPoint
 
 from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
@@ -134,10 +135,8 @@ class FlowTask(Task):
                                          accelerator='Ctrl+x'),
                               TaskAction(name='Export Jupyter notebook...',
                                          method='on_notebook',
-                                         accelerator='Ctrl+I'),                              
-#                               TaskAction(name='Preferences...',
-#                                          method='on_prefs',
-#                                          accelerator='Ctrl+P'),
+                                         accelerator='Ctrl+I'),   
+                              PreferencesAction(),
                               id='File', name='&File'),
                         SMenu(TaskToggleGroup(),
                               id = 'View', name = '&View'),
@@ -172,11 +171,9 @@ class FlowTask(Task):
                            TaskAction(method = 'on_problem',
                                       name = "Report a bug...",
                                       tooltib = "Report a bug",
-                                      image = ImageResource('bug')))]
-#                            TaskAction(method='on_prefs',
-#                                       name = "Prefs",
-#                                       tooltip='Preferences',
-#                                       image=ImageResource('prefs')),
+                                      image = ImageResource('bug')),
+                           PreferencesAction(image = ImageResource('prefs')))]
+
     
     # the file to save to if the user clicks "save" and has already clicked
     # "open" or "save as".

@@ -65,11 +65,8 @@ def run_gui():
         # if we're not running as a one-click, fail gracefully
         pass
     
-    # set the app scaling to support HiDPI displays
+    # shut up the warning about Open GL (see below)
     from pyface.qt import QtGui, QtCore
-    QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)  
-    
-    # and shut up the warning about Open GL (see below)
     QtGui.QApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  
 
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium

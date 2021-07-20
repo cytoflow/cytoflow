@@ -224,9 +224,7 @@ class ExportFigurePlugin(Plugin):
     An Envisage plugin wrapping ExportTask
     """
 
-    # Extension point IDs.
-    PREFERENCES       = 'envisage.preferences'
-    PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
+    # Extension point IDs
     TASKS             = 'envisage.ui.tasks.tasks'
     
     # these need to be declared in a Plugin instance; we pass them to
@@ -244,20 +242,6 @@ class ExportFigurePlugin(Plugin):
 
     # The plugin's name (suitable for displaying to the user).
     name = 'Export figure'
-    
-    ###########################################################################
-    # Protected interface.
-    ###########################################################################
-
-    preferences = List(contributes_to = PREFERENCES)
-    def _preferences_default(self):
-        filename = os.path.join(os.path.dirname(__file__), 'preferences.ini')
-        return [ 'file://' + filename ]
-    
-    preferences_panes = List(contributes_to = PREFERENCES_PANES)
-    def _preferences_panes_default(self):
-        from .preferences import CytoflowPreferencesPane
-        return [CytoflowPreferencesPane]
 
     tasks = List(contributes_to = TASKS)
     def _tasks_default(self):
