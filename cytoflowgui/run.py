@@ -68,6 +68,9 @@ def run_gui():
     # shut up the warning about Open GL (see below)
     from pyface.qt import QtGui, QtCore
     QtGui.QApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  
+    
+    # use high resolution pixmaps
+    QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
     # as their web renderer.  Chromium needs OpenGL.  if you don't

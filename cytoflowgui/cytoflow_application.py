@@ -26,14 +26,14 @@ Created on Mar 15, 2015
 
 import logging, io, os, pickle
 
-from traits.api import Bool, Instance, List, Property, Str, Any, File
+from traits.api import Bool, Instance, List, Property, Str, Any, File, Int
 
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
 
 from pyface.api import error, ImageResource
 from pyface.tasks.api import TaskWindowLayout
-from pyface.qt import QtGui, QtCore
+from pyface.qt import QtGui
 
 from matplotlib.figure import Figure
 
@@ -66,8 +66,9 @@ class CytoflowApplication(TasksApplication):
     # applicaton is started.
     always_use_default_layout = Property(Bool)
     
-    # Whether to scale the application for HiDPI
-    enable_high_dpi_scaling = Property(Bool)
+    # the application's DPI.  We need this enough places that let's
+    # make it a property
+    dpi = Property(Int)
 
     # are we debugging? at the moment, just for sending logs to the console
     debug = Bool
@@ -200,11 +201,11 @@ class CytoflowApplication(TasksApplication):
     #### Trait initializers ###################################################
 
     def _default_layout_default(self):
-        active_task = self.preferences_helper.default_task
+        active_task = "edu.mit.synbio.cytoflowgui.flow_task"
         tasks = [ factory.id for factory in self.task_factories ]
         return [ TaskWindowLayout(*tasks,
                                   active_task = active_task,
-                                  size = (1600, 1200)) ]
+                                  size = (12 * self.dpi, 9 * self.dpi)) ]
 
     def _preferences_helper_default(self):
         return CytoflowPreferences(preferences = self.preferences)
@@ -213,6 +214,12 @@ class CytoflowApplication(TasksApplication):
  
     def _get_always_use_default_layout(self):
         return self.preferences_helper.always_use_default_layout
+    
+    def _get_dpi(self):
+        if self.canvas:
+            return self.canvas.physicalDpiX()
+        else:
+            return None
 
     
     

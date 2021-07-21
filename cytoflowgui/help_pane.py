@@ -20,13 +20,14 @@
 import pathlib
 
 from traits.api import Instance, List, observe, Str, HTML
-from traitsui.api import View, Item, HTMLEditor
+from traitsui.api import View, Item
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.qt import QtGui
 
 from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
 from cytoflowgui.util import HintedWidget
+from cytoflowgui.editors import ZoomableHTMLEditor
 
 class HelpDockPane(TraitsDockPane):
     """
@@ -49,7 +50,7 @@ class HelpDockPane(TraitsDockPane):
     html = HTML("<b>Welcome to Cytoflow!</b>")
     
     traits_view = View(Item('pane.html',
-                            editor = HTMLEditor(base_url = pathlib.PurePath(__file__).parent.joinpath('help').joinpath('operations').as_posix()),
+                            editor = ZoomableHTMLEditor(base_url = pathlib.PurePath(__file__).parent.joinpath('help').joinpath('operations').as_posix()),
                             show_label = False))
     
     def create_contents(self, parent):

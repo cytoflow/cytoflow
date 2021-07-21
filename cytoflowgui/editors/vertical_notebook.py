@@ -25,7 +25,8 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from pyface.qt import QtGui
+from pyface.qt import QtGui, QtCore
+from pyface.api import ImageResource
 
 from traits.api import (HasTraits, HasPrivateTraits, Instance, List, Str, Bool, 
                         Property, Any, cached_property, Int, on_trait_change)
@@ -65,8 +66,8 @@ class VerticalNotebookPage(HasPrivateTraits):
     # change [Set by client]
     description_object_trait = Str
 
-    # The icon for the page open/closed button
-    icon = Int(QtGui.QStyle.SP_ArrowRight)
+    # The icon for the page button -- a Str that is the name of an ImageResource
+    icon = Str('ok')
     
     # The HasTraits object whose trait we look at to set the page icon
     icon_object = Instance(HasTraits)
@@ -223,11 +224,13 @@ class VerticalNotebookPage(HasPrivateTraits):
         """
         self.layout = QtGui.QVBoxLayout()
         control = QtGui.QWidget()
+        dpi = control.physicalDpiX()
 
         buttons_layout = QtGui.QHBoxLayout()
         buttons_container = QtGui.QWidget()
         
         self.cmd_button = QtGui.QCommandLinkButton(buttons_container)
+
         self.cmd_button.setVisible(True)
         self.cmd_button.setCheckable(True)
         self.cmd_button.setFlat(True)
@@ -236,8 +239,12 @@ class VerticalNotebookPage(HasPrivateTraits):
         
         self.cmd_button.setText(self.name)
         self.cmd_button.setDescription(self.description)
-        self.cmd_button.setIcon(self.cmd_button.style().standardIcon(self.icon))
+        self.cmd_button.setIcon(ImageResource('ok').create_icon())
+        self.cmd_button.setIconSize(QtCore.QSize(dpi * 0.4, dpi * 0.4))
         
+        self.cmd_button.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding,
+                                                        QtGui.QSizePolicy.Expanding))
+         
         buttons_layout.addWidget(self.cmd_button)
         
         if self.notebook.delete:
@@ -245,12 +252,13 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.del_button.setVisible(True)
             self.del_button.setFlat(True)
             self.del_button.setEnabled(self.deletable)
-            self.del_button.setIcon(self.del_button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-            self.del_button.clicked.connect(self._handle_close_button)
             
+            self.del_button.setIcon(ImageResource('close').create_icon())
+            self.del_button.setIconSize(QtCore.QSize(dpi * 0.2, dpi * 0.2))
+            
+            self.del_button.clicked.connect(self._handle_close_button)
             buttons_layout.addWidget(self.del_button)
             
-        buttons_layout.addStretch(1)
         buttons_container.setLayout(buttons_layout)
         
         self.layout.addWidget(buttons_container)
@@ -283,9 +291,9 @@ class VerticalNotebookPage(HasPrivateTraits):
         
         if self.icon_object is None:
             if is_open:
-                self.icon = QtGui.QStyle.SP_ArrowDown
+                self.icon = 'down'
             else:
-                self.icon = QtGui.QStyle.SP_ArrowRight
+                self.icon = 'right'
                 
     @on_trait_change('name', dispatch = 'ui')
     def _on_name_changed(self, name):
@@ -303,7 +311,7 @@ class VerticalNotebookPage(HasPrivateTraits):
     @on_trait_change('icon', dispatch = 'ui')
     def _on_icon_changed(self, icon):
         if self.cmd_button:
-            self.cmd_button.setIcon(self.cmd_button.style().standardIcon(icon))
+            self.cmd_button.setIcon(ImageResource(icon).create_icon())
         
     @on_trait_change('deletable', dispatch = 'ui')
     def _on_deletable_changed(self, deletable):

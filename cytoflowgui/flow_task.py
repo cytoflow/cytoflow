@@ -194,10 +194,11 @@ class FlowTask(Task):
         self.model.modified = False
     
     def _default_layout_default(self):
-        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane", width = 350),
-                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = 350, height = 350)),
-                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane", width = 350),
-                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = 350, height = 350)),
+        dpi = self.application.dpi
+        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane", width = int(dpi * 3)),
+                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = int(dpi * 3), height = int(dpi * 3))),
+                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane", width = int(dpi * 3)),
+                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = int(dpi * 3), height = int(dpi * 3))),
                           top_left_corner = 'left',
                           bottom_left_corner = 'left',
                           top_right_corner = 'right',
@@ -209,8 +210,8 @@ class FlowTask(Task):
         # place control passes back to user code before the toolbar
         # is created.
         
-        dpi = self.window.control.physicalDpiX()
-        self.tool_bars[0].image_size = (int(0.4 * dpi), int(0.4 * dpi))
+        self.tool_bars[0].image_size = (int(0.33 * self.application.dpi), 
+                                        int(0.33 * self.application.dpi))
         
         return FlowTaskPane(canvas = self.application.canvas,
                             model = self.application.model, 

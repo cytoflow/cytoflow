@@ -29,6 +29,7 @@ from natsort import natsorted
 from traits.api import List, DelegatesTo, Dict, observe, Property
 from traitsui.api import View, Item, Controller, Spring
 from pyface.qt import QtGui
+from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
@@ -43,7 +44,7 @@ class WorkflowItemHandler(Controller):
     deletable = Property()
     
     # the icon for the vertical notebook view.
-    icon = Property(depends_on = 'model.status')  
+    icon = Property(observe = 'model.status')  
     
     name = DelegatesTo('model')
     friendly_id = DelegatesTo('model')
@@ -119,11 +120,11 @@ class WorkflowItemHandler(Controller):
     # MAGIC: gets value for property "icon"
     def _get_icon(self):
         if self.model.status == "valid":
-            return QtGui.QStyle.SP_DialogApplyButton  # @UndefinedVariable
+            return 'ok'
         elif self.model.status == "estimating" or self.model.status == "applying":
-            return QtGui.QStyle.SP_BrowserReload  # @UndefinedVariable
+            return 'refresh'
         else: # self.model.status == "invalid" or None
-            return QtGui.QStyle.SP_DialogCancelButton  # @UndefinedVariable
+            return 'error'
         
     # MAGIC: gets value for property "conditions"
     def _get_conditions(self):

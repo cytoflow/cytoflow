@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="0.5in"
+   height="0.5in"
+   viewBox="0 0 12.7 12.7"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1 (1:1.1+202105261517+ce6663b3b7)"
+   sodipodi:docname="close.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     units="in"
+     inkscape:showpageshadow="false"
+     inkscape:zoom="8.7988368"
+     inkscape:cx="61.655877"
+     inkscape:cy="49.154225"
+     inkscape:window-width="2488"
+     inkscape:window-height="1376"
+     inkscape:window-x="72"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="path67"
+       style="fill:#000000;stroke-width:0.0186305"
+       d="M 2.7480469,2.1328125 C 2.439954,2.3309417 1.8369713,2.8099975 2.3417969,3.1425781 3.4042043,4.2162204 4.4693605,5.287139 5.5371094,6.3554688 4.4154319,7.5215492 3.1917245,8.6183039 2.1386719,9.8339844 2.184311,10.198074 2.7860425,10.899945 3.1365399,10.392934 4.2212732,9.3312998 5.2903149,8.253346 6.3652344,7.1816406 7.5350616,8.3008991 8.6279608,9.5386294 9.8515625,10.580078 10.233434,10.53683 10.907137,9.9080986 10.388672,9.5683594 9.3263639,8.4939689 8.2596859,7.4239184 7.1914062,6.3554688 8.313954,5.1905639 9.5311929,4.0901387 10.589844,2.8789062 10.551264,2.4937064 9.9197741,1.8086192 9.5761719,2.3320312 8.5016593,3.3935645 7.4331595,4.461144 6.3652344,5.5292969 5.2053921,4.4031554 4.103593,3.200281 2.9003906,2.1289062 2.8507503,2.1280739 2.7964327,2.1090305 2.7480469,2.1328125 Z" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.259097;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1332"
+       width="12.371587"
+       height="12.459825"
+       x="0.18805993"
+       y="0.16040686"
+       rx="0.97772425"
+       ry="0.97772425" />
+  </g>
+</svg>

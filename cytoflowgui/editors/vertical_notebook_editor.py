@@ -272,7 +272,7 @@ if __name__ == '__main__':
         trait3 = Bool
         trait4 = Bool
         trait5 = Button
-        icon = Instance(QtGui.QStyle.StandardPixmap)
+        icon = Str
 
         traits_view = View(Group(Item(name='trait1'),
                                  Item(name='trait2'),
@@ -299,6 +299,6 @@ if __name__ == '__main__':
         )
 
     test = TestList()
-    test.el.append(TestPageClass(trait1="one", trait2="two", icon=QtGui.QStyle.SP_DialogOkButton))
-    test.el.append(TestPageClass(trait1="three", trait2="four", icon=QtGui.QStyle.SP_BrowserStop))
+    test.el.append(TestPageClass(trait1="one", trait2="two", icon='ok'))
+    test.el.append(TestPageClass(trait1="three", trait2="four", icon='error'))
     test.configure_traits()

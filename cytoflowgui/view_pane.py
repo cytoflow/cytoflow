@@ -48,16 +48,6 @@ class ViewDockPane(TraitsDockPane):
     
     # controller
     handler = Instance(WorkflowController)
-    
-    # changed depending on whether the selected wi in the model is valid.
-#     enabled = Bool(False)
-    
-    # the currently selected view id
-#     selected_view = Str
-    
-    # if there is a default view for the currently selected operation, this
-    # is its view id
-#     default_view = Str
 
     # the size of the toolbar icons IN INCHES
     image_size = Tuple((0.33, 0.33))
