@@ -1,7 +1,7 @@
 .. _user_manual:
 
 ############################
-Cytoflow program user manual
+User manual
 ############################
 
 .. note:: **The user manual is currently under construction.**  You can get
