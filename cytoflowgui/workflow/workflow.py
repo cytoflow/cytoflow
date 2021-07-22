@@ -339,25 +339,10 @@ class LocalWorkflow(HasStrictTraits):
                 child_conn.send(msg)
         except Exception:
             log_exception()
-        
-        
-#     def estimate(self, wi):
-#         """
-#         Run estimate() on this WorkflowItem
-#         """
-#         logger.debug("LocalWorkflow.estimate :: {}"
-#                      .format(wi))
-# 
-#         idx = self.workflow.index(wi)
-#         self.message_q.put((Msg.ESTIMATE, idx))
-#         
-# 
-
 
     def run_all(self):
         self.message_q.put((Msg.RUN_ALL, None))
-        
-
+       
     @observe('workflow')
     def _on_new_workflow(self, _):
         logger.debug("LocalWorkflow._on_new_workflow")
@@ -365,8 +350,7 @@ class LocalWorkflow(HasStrictTraits):
         self.selected = None
         
         # send the new workflow to the child process
-        self.message_q.put((Msg.NEW_WORKFLOW, self.workflow))
-        
+        self.message_q.put((Msg.NEW_WORKFLOW, self.workflow)) 
         
     @observe('workflow:items')
     def _on_workflow_add_remove_items(self, event):
@@ -410,7 +394,6 @@ class LocalWorkflow(HasStrictTraits):
                 self.workflow[idx + 1].previous_wi = self.workflow[idx]
                 
             self.message_q.put((Msg.ADD_ITEMS, (idx, event.added[0])))
-            
             
     @observe('selected')
     def _on_selected_changed(self, event):
@@ -471,35 +454,6 @@ class LocalWorkflow(HasStrictTraits):
         self.message_q.put((Msg.UPDATE_VIEW, (idx, event.object.id, event.name, event.new)))
         self.modified = True       
                  
-
-#     @on_trait_change('workflow:operation:changed')
-#     def _operation_changed_event(self, obj, _, new):
-#         logger.debug("LocalWorkflow._operation_changed_event:: {}"
-#                       .format((obj, new)))
-#         
-#         (_, (name, new)) = new
-#         
-#         wi = next((x for x in self.workflow if x.operation == obj))
-#         idx = self.workflow.index(wi)
-#         self.message_q.put((Msg.UPDATE_OP, (idx, name, new)))
-#         self.modified = True
-
-
-
-            
-
-#     @on_trait_change('workflow:views:changed')
-#     def _view_changed_event(self, obj, _, new):
-#         logger.debug("LocalWorkflow._view_changed_event:: {}"
-#                       .format((obj, new)))
-#         
-#         (_, (_, name, new)) = new
-#         
-#         wi = next((x for x in self.workflow if obj in x.views))
-#         idx = self.workflow.index(wi)
-#         self.message_q.put((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
-#         self.modified = True
-        
     @observe('workflow:items:current_view')
     def _on_current_view_changed(self, event):
         logger.debug("LocalWorkflow._on_current_view_changed :: {}"
@@ -507,18 +461,7 @@ class LocalWorkflow(HasStrictTraits):
                   
         idx = self.workflow.index(event.object)
         view = event.object.current_view
-        self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
-        
-
-#     @on_trait_change('workflow:current_plot')
-#     def _on_current_plot_changed(self, obj, name, old, new):
-#         logger.debug("LocalWorkflow._on_current_plot_changed :: {}"
-#                       .format((obj, name, old, new)))                  
-#                   
-#         idx = self.workflow.index(obj)
-#         plot = obj.current_plot
-#         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
-        
+        self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))      
         
     def remote_eval(self, expr):
         self.eval_event.clear()
@@ -527,14 +470,12 @@ class LocalWorkflow(HasStrictTraits):
         self.eval_event.wait()
         return self.eval_result
 
-
     def remote_exec(self, expr):
         self.exec_event.clear()
         self.message_q.put((Msg.EXEC, expr))
         
         self.exec_event.wait()
         return
-    
     
     def wi_sync(self, wi, variable, value, timeout = 30):
         """Set WorkflowItem.status on the remote workflow, then wait for it to propogate here."""
@@ -544,7 +485,6 @@ class LocalWorkflow(HasStrictTraits):
         self.remote_exec("self.workflow[{0}].trait_set({1} = '{2}')".format(idx, variable, value))
         
         self.wi_waitfor(wi, variable, value, timeout)
-        
         
     def wi_waitfor(self, wi, variable, value, timeout = 30):
         """Waits a configurable amount of time for wi's status to change to status"""
@@ -566,7 +506,6 @@ class LocalWorkflow(HasStrictTraits):
             
             raise
 
-        
     def shutdown_remote_process(self, remote_process):
         # tell the remote process to shut down
         self.message_q.put((Msg.SHUTDOWN, None))
@@ -803,7 +742,6 @@ class RemoteWorkflow(HasStrictTraits):
         except Exception:
             log_exception()
             
-            
     def shutdown(self):
         # make sure the receiving thread is shut down
         self.recv_thread.join()
@@ -812,17 +750,14 @@ class RemoteWorkflow(HasStrictTraits):
         self.message_q.put((Msg.SHUTDOWN, 0))
         self.send_thread.join()
         
-        
     @observe('apply_calls', post_init = True)
     def _on_apply_called(self, _):
         self.message_q.put((Msg.APPLY_CALLED, self.apply_calls))
-        
         
     @observe('plot_calls', post_init = True)
     def _on_plot_called(self, _):
         self.message_q.put((Msg.PLOT_CALLED, self.plot_calls))
         
-            
     @observe('workflow:items', post_init = True)
     def _on_workflow_add_remove_items(self, event):
         logger.debug("RemoteWorkflow._on_workflow_add_remove_items :: {}"
@@ -839,10 +774,7 @@ class RemoteWorkflow(HasStrictTraits):
                 
             if removed.next_wi:
                 removed.next_wi.previous_wi = removed.previous_wi
-                
-                # invalidate following wi's
-#                 removed.next_wi.changed = (Changed.PREV_RESULT, None)
-        
+
         # add new items to the linked list
         if event.added:
             assert len(event.added) == 1
@@ -853,9 +785,6 @@ class RemoteWorkflow(HasStrictTraits):
             if idx < len(self.workflow) - 1:
                 self.workflow[idx].next_wi = self.workflow[idx + 1]
                 self.workflow[idx + 1].previous_wi = self.workflow[idx]
-                
-                # invalidate following wi's
-#                 self.workflow[idx + 1].changed = (Changed.PREV_RESULT, None)
     
     @observe('workflow:items:operation:+apply')
     def _on_operation_apply_changed(self, event):
