@@ -42,7 +42,6 @@ from .xform_stat import TransformStatisticOp
  
 # TASBE
 from .autofluorescence import AutofluorescenceOp
-from .bleedthrough_piecewise import BleedthroughPiecewiseOp
 from .bleedthrough_linear import BleedthroughLinearOp
 from .bead_calibration import BeadCalibrationOp
 from .color_translation import ColorTranslationOp

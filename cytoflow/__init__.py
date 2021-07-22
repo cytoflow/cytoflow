@@ -56,7 +56,6 @@ from .operations.quad import QuadOp
 
 # TASBE
 from .operations.autofluorescence import AutofluorescenceOp
-from .operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
 from .operations.bleedthrough_linear import BleedthroughLinearOp
 from .operations.bead_calibration import BeadCalibrationOp
 from .operations.color_translation import ColorTranslationOp
