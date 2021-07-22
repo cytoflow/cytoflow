@@ -112,10 +112,6 @@ class TableView(HasStrictTraits):
     # traits   
     id = Constant("edu.mit.synbio.cytoflow.view.table")
     friendly_id = Constant("Table View") 
-
-    REMOVED_ERROR = Constant("Statistics have changed dramatically in 0.5; please see the documentation")
-    channel = util.Removed(err_string = REMOVED_ERROR)
-    function = util.Removed(err_string = REMOVED_ERROR)
     
     statistic = Tuple(Str, Str)
     row_facet = Str

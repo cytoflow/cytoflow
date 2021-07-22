@@ -137,7 +137,6 @@ class ColorTranslationOp(HasStrictTraits):
     
     name = Constant("Color Translation")
 
-    translation = util.Removed(err_string = "'translation' is removed; the same info is found in 'controls'", warning = True)
     controls = Dict(Tuple(Str, Str), File)
     mixture_model = Bool(False)
     linear_model = Bool(False)

@@ -88,13 +88,6 @@ class Stats1DView(Base1DStatisticsView):
     id = Constant("edu.mit.synbio.cytoflow.view.stats1d")
     friendly_id = Constant("1D Statistics View")
     
-    REMOVED_ERROR = Constant("Statistics changed dramatically in 0.5; please see the documentation")
-    by = util.Removed(err_string = REMOVED_ERROR)
-    yfunction = util.Removed(err_string = REMOVED_ERROR)
-    ychannel = util.Removed(err_string = REMOVED_ERROR)
-    xvariable = util.Deprecated(new = "variable")
-    xscale = util.Deprecated(new = 'variable_scale')
-    
     variable_scale = util.ScaleEnum
     
     def enum_plots(self, experiment):

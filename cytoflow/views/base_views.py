@@ -640,9 +640,6 @@ class BaseStatisticsView(BaseView):
 
     """
     
-    # deprecated or removed attributes give warnings & errors, respectively
-    by = util.Deprecated(new = 'variable', err_string = "'by' is deprecated, please use 'variable'")
-    
     variable = Str
     subset = Str
     
@@ -836,17 +833,7 @@ class Base1DStatisticsView(BaseStatisticsView):
     scale : {'linear', 'log', 'logicle'}
         The scale applied to the data before plotting it.
     """
-    
-    REMOVED_ERROR = "Statistics changed dramatically in 0.5; please see the documentation"
-    by = util.Removed(err_string = REMOVED_ERROR)
-    yfunction = util.Removed(err_string = REMOVED_ERROR)
-    ychannel = util.Removed(err_string = REMOVED_ERROR)
-    channel = util.Removed(err_string = REMOVED_ERROR)
-    function = util.Removed(err_string = REMOVED_ERROR)
-    error_bars = util.Removed(err_string = REMOVED_ERROR)
-    
-    xvariable = util.Deprecated(new = "variable")
-    
+        
     statistic = Tuple(Str, Str)
     error_statistic = Tuple(Str, Str)
     
@@ -974,13 +961,6 @@ class Base2DStatisticsView(BaseStatisticsView):
     xscale, yscale : {'linear', 'log', 'logicle'}
         The scales applied to the data before plotting it.
     """
-
-    STATS_REMOVED = "{} has been removed. Statistics changed dramatically in 0.5; please see the documentation."
-    
-    xchannel = util.Removed(err_string = STATS_REMOVED)
-    xfunction = util.Removed(err_string = STATS_REMOVED)
-    ychannel = util.Removed(err_string = STATS_REMOVED)
-    yfunction = util.Removed(err_string = STATS_REMOVED)
     
     xstatistic = Tuple(Str, Str)
     ystatistic = Tuple(Str, Str)

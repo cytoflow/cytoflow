@@ -220,7 +220,6 @@ class ImportOp(HasStrictTraits):
 
     # are we subsetting?
     events = Int(None)
-    coarse_events = util.Deprecated(new = 'events')
         
     # DON'T DO THIS
     ignore_v = List(Str)

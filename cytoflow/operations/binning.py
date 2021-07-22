@@ -105,7 +105,6 @@ class BinningOp(HasStrictTraits):
     name = Str
     bin_count_name = Str
     channel = Str
-    num_bins = util.Removed(err_string = "'num_bins' was removed in 0.9")
     bin_width = util.PositiveFloat(None, allow_zero = False, allow_none = True)
     scale = util.ScaleEnum
     

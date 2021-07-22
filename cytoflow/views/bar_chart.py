@@ -91,9 +91,7 @@ class BarChartView(Base1DStatisticsView):
     # traits   
     id = Constant("edu.mit.synbio.cytoflow.view.barchart")
     friendly_id = Constant("Bar Chart") 
-    
-    orientation = util.Removed(err_string = "`orientation` is now a parameter to `plot`")
-    
+        
     def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
