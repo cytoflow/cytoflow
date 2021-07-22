@@ -71,9 +71,10 @@ class BinningWorkflowView(WorkflowFacetView, BinningView):
         view.copy_traits(self, view.copyable_trait_names())
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx})
+        op_{idx}.default_view({traits}).plot(ex_{idx}{plot})
         """
         .format(idx = idx,
+                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 traits = traits_str(view)))
 
 

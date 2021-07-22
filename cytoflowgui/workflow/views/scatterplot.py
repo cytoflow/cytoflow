@@ -49,7 +49,7 @@ class ScatterplotWorkflowView(WorkflowFacetView, ScatterplotView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
         

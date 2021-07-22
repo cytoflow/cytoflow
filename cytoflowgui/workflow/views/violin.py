@@ -40,7 +40,7 @@ class ViolinPlotParams(Data1DPlotParams):
 class ViolinPlotWorkflowView(WorkflowFacetView, ViolinPlotView):
     plot_params = Instance(ViolinPlotParams, ())
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = ViolinPlotView()
         view.copy_traits(self, view.copyable_trait_names())
         
@@ -51,7 +51,7 @@ class ViolinPlotWorkflowView(WorkflowFacetView, ViolinPlotView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 

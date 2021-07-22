@@ -561,10 +561,11 @@ class FlowTask(Task):
             try:
                 code = wi.operation.get_notebook_code(i)
                 code = FormatCode(code, style_config = 'pep8')[0]
-            except:
+            except Exception as e:
                 error(parent = None,
-                      message = "Had trouble serializing the {} operation"
-                                .format(wi.operation.friendly_id))
+                      message = "Had trouble serializing the {} operation:\n{}"
+                                .format(wi.operation.friendly_id,
+                                        repr(e)))
             
             nb['cells'].append(nbf.v4.new_code_cell(code))
                         
@@ -572,10 +573,12 @@ class FlowTask(Task):
                 try:
                     code = view.get_notebook_code(i)
                     code = FormatCode(code, style_config = 'pep8')[0]
-                except:
+                except Exception as e:
                     error(parent = None,
-                          message = "Had trouble serializing the {} view of the {} operation"
-                                     .format(view.friendly_id, wi.operation.friendly_id))
+                          message = "Had trouble serializing the {} view of the {} operation:\n{}"
+                                     .format(view.friendly_id, 
+                                             wi.operation.friendly_id,
+                                             repr(e)))
                 
                 nb['cells'].append(nbf.v4.new_code_cell(code))
                 

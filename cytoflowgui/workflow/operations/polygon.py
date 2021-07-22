@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Instance, Str, Property, Tuple, observe, List, Float
+from traits.api import provides, Instance, Str, observe, List, Float
 
 from cytoflow.operations.polygon import PolygonOp, PolygonSelection
 import cytoflow.utility as util

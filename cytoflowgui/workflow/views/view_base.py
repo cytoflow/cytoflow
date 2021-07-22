@@ -4,7 +4,6 @@ Created on Jan 15, 2021
 @author: brian
 '''
 
-import warnings
 import pandas as pd
 import natsort
 

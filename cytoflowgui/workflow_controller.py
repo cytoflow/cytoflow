@@ -28,8 +28,6 @@ from natsort import natsorted
 
 from traits.api import List, DelegatesTo, Dict, observe, Property
 from traitsui.api import View, Item, Controller, Spring
-from pyface.qt import QtGui
-from pyface.api import ImageResource
 
 import cytoflow.utility as util
 

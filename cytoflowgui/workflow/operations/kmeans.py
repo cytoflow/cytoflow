@@ -143,15 +143,21 @@ class KMeansWorkflowView(WorkflowByView):
             
     def get_notebook_code(self, idx):
         view = KMeans2DView()
-        view.copy_traits(self, view.copyable_trait_names())
+        trait_names = view.copyable_trait_names()
+        trait_names.remove('xchannel')
+        trait_names.remove('xscale')
+        trait_names.remove('ychannel')
+        trait_names.remove('yscale')
+        view.copy_traits(self, trait_names)
         view.subset = self.subset
         plot_params_str = traits_str(self.plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx}{plot_params})
+        op_{idx}.default_view({traits}).plot(ex_{idx}{plot}{plot_params})
         """
         .format(traits = traits_str(view),
                 idx = idx,
+                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
         

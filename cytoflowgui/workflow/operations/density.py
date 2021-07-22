@@ -121,10 +121,11 @@ class DensityGateWorkflowView(WorkflowByView, DensityGateView):
         plot_params_str = traits_str(self.plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx}{plot_params})
+        op_{idx}.default_view({traits}).plot(ex_{idx}{plot}{plot_params})
         """
         .format(traits = traits_str(view),
                 idx = idx,
+                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
     
 @camel_registry.dumper(DensityGateWorkflowOp, 'density-gate', version = 1)

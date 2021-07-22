@@ -61,6 +61,11 @@ class ViewHandler(Controller):
                          editor = TabListEditor(name = 'context.plot_names'),
                          style = 'custom',
                          show_label = False)))
+        
+    @observe('context:plot_names,context:plot_names.items', post_init = True)
+    def _plot_names_changed(self, _):
+        if self.model and not self.context.plot_names:
+            self.model.current_plot = ""
 
     @observe('context.view_error_trait', dispatch = 'ui', post_init = True)
     def _view_trait_error(self, _):

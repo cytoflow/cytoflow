@@ -96,6 +96,9 @@ class TestHistogram2D(ImportedDataTest, Base2DViewTest):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
+            
+            for view in wi.views:
+                code = code + view.get_notebook_code(i)
            
         exec(code) # smoke test
            

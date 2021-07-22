@@ -25,7 +25,7 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
-from cytoflowgui.tests.test_base import ImportedDataTest, Base2DStatisticsViewTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, Base2DStatisticsViewTest
 from cytoflowgui.workflow.views.stats_2d import Stats2DWorkflowView, Stats2DPlotParams, LINE_STYLES
 from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
@@ -157,6 +157,9 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
+            
+            for view in wi.views:
+                code = code + view.get_notebook_code(i)
            
         exec(code) # smoke test
 
