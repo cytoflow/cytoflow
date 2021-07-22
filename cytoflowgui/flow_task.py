@@ -31,7 +31,7 @@ from textwrap import dedent
 import nbformat as nbf
 from yapf.yapflib.yapf_api import FormatCode
 
-from traits.api import Instance, Str, List, on_trait_change, provides
+from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo
 from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
 from pyface.api import (FileDialog, ImageResource, AboutDialog, 
@@ -117,8 +117,8 @@ class FlowTask(Task):
     plot_params_pane = Instance(PlotParamsPane)
     
     # plugin lists, to setup the interface
-    op_plugins = List(IOperationPlugin)
-    view_plugins = List(IViewPlugin)
+    op_plugins = DelegatesTo('handler')
+    view_plugins = DelegatesTo('handler')
     
     menu_bar = SMenuBar(SMenu(TaskAction(name='Open...',
                                          method='on_open',
@@ -593,11 +593,6 @@ class FlowTaskPlugin(Plugin):
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
     TASKS             = 'envisage.ui.tasks.tasks' 
     
-    # these need to be declared in a Plugin instance; we pass them to
-    # the task instance thru its factory, below.
-    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
-    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)    
-
     #### 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
@@ -625,11 +620,7 @@ class FlowTaskPlugin(Plugin):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,
-                                                           op_plugins = self.op_plugins,
-                                                           view_plugins = self.view_plugins,
                                                            model = self.application.model,
-                                                           handler = WorkflowController(model = self.application.model,
-                                                                                        op_plugins = self.op_plugins,
-                                                                                        view_plugins = self.view_plugins),
+                                                           handler = self.application.controller,
                                                            filename = self.application.filename,
                                                            **x))]

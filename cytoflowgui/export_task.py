@@ -26,20 +26,18 @@ Created on Feb 11, 2015
 # from traits.etsconfig.api import ETSConfig
 # ETSConfig.toolkit = 'qt4'
 
-import os.path, pathlib
+import pathlib
 
 from traits.api import Instance, Event, CFloat, CInt, observe, provides, List
 from traitsui.api import ButtonEditor, View, TextEditor, Item
 
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane, VSplitter, ITaskPane, TaskPane
 from pyface.tasks.action.api import SMenuBar, SMenu, TaskToggleGroup
-from envisage.api import Plugin, ExtensionPoint
+from envisage.api import Plugin
 from envisage.ui.tasks.api import TaskFactory
 from pyface.api import FileDialog, OK, error
 from pyface.qt import QtGui
 
-from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
-from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 
 from .workflow import LocalWorkflow
 from .workflow_controller import WorkflowController
@@ -225,12 +223,7 @@ class ExportFigurePlugin(Plugin):
     """
 
     # Extension point IDs
-    TASKS             = 'envisage.ui.tasks.tasks'
-    
-    # these need to be declared in a Plugin instance; we pass them to
-    # the task instance thru its factory, below.
-    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
-    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)    
+    TASKS             = 'envisage.ui.tasks.tasks' 
 
     #### 'IPlugin' interface ##################################################
 
@@ -249,7 +242,5 @@ class ExportFigurePlugin(Plugin):
                             name = 'Export figure',
                             factory = lambda **x: ExportTask(application = self.application,
                                                              model = self.application.model,
-                                                             handler = WorkflowController(model = self.application.model,
-                                                                                          op_plugins = self.op_plugins,
-                                                                                          view_plugins = self.view_plugins),
+                                                             handler = self.application.controller,
                                                              **x))]

@@ -23,7 +23,8 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Constant
+from traits.api import Interface, Constant, List
+from envisage.api import Plugin, ExtensionPoint
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -117,3 +118,5 @@ class IViewPlugin(Interface):
         """
         
               
+class ViewPluginManager(Plugin):
+    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)

@@ -19,6 +19,7 @@
 
 
 from traits.api import Interface, Constant, List
+from envisage.api import Plugin, ExtensionPoint
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -98,3 +99,6 @@ class IOperationPlugin(Interface):
             the plugin instance
         """
         
+
+class OpPluginManager(Plugin):
+    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)

@@ -28,6 +28,7 @@ import logging, io, os, pickle
 
 from traits.api import Bool, Instance, List, Property, Str, Any, File, Int
 
+from envisage.api import ExtensionPoint
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
 
@@ -38,9 +39,12 @@ from pyface.qt import QtGui
 from matplotlib.figure import Figure
 
 from .workflow import LocalWorkflow
+from .workflow_controller import WorkflowController
 from .utility import CallbackHandler
 from .preferences import CytoflowPreferences
 from .matplotlib_backend_local import FigureCanvasQTAggLocal
+from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
+from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 
 logger = logging.getLogger(__name__)
   
@@ -82,8 +86,11 @@ class CytoflowApplication(TasksApplication):
     # keep the application log in memory
     application_log = Instance(io.StringIO, ())
 
-    # the model that's shared across all three tasks
+    # the model that's shared across both tasks
     model = Instance(LocalWorkflow)
+    
+    # the controller is shared, too
+    controller = Instance(WorkflowController)
 
     # the connection to the remote process
     remote_process = Any
@@ -126,6 +133,10 @@ class CytoflowApplication(TasksApplication):
         # set up the model
         self.model = LocalWorkflow(self.remote_workflow_connection,
                                    debug = self.debug)
+        
+        self.controller = WorkflowController(model = self.model,
+                                             op_plugins = self.get_extensions(OP_PLUGIN_EXT),
+                                             view_plugins = self.get_extensions(VIEW_PLUGIN_EXT))
         
         # and the local canvas
         self.canvas = FigureCanvasQTAggLocal(Figure(), 

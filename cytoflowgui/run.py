@@ -171,7 +171,8 @@ def run_gui():
     from cytoflowgui.export_task import ExportFigurePlugin
     from cytoflowgui.cytoflow_application import CytoflowApplication
 
-    from cytoflowgui.op_plugins import (ImportPlugin, 
+    from cytoflowgui.op_plugins import (OpPluginManager,
+                                        ImportPlugin, 
                                         ThresholdPlugin,
                                         RangePlugin, 
                                         QuadPlugin,
@@ -193,7 +194,8 @@ def run_gui():
                                         KMeansPlugin,
                                         PCAPlugin)
     
-    from cytoflowgui.view_plugins import (HistogramPlugin, 
+    from cytoflowgui.view_plugins import (ViewPluginManager,
+                                          HistogramPlugin, 
                                           Histogram2DPlugin, 
                                           ScatterplotPlugin,
                                           BarChartPlugin,
@@ -211,7 +213,8 @@ def run_gui():
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), ExportFigurePlugin()]
 
     # ordered as we want them to show up in the toolbar    
-    view_plugins = [HistogramPlugin(),
+    view_plugins = [ViewPluginManager(),
+                    HistogramPlugin(),
                     ScatterplotPlugin(),
                     Histogram2DPlugin(),
                     DensityPlugin(),
@@ -228,7 +231,8 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [ImportPlugin(),
+    op_plugins = [OpPluginManager(),
+                  ImportPlugin(),
                   ThresholdPlugin(),
                   RangePlugin(),
                   QuadPlugin(),
