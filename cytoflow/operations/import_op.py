@@ -270,6 +270,10 @@ class ImportOp(HasStrictTraits):
         # python identifiers
         if self.channels:
             for old_name, new_name in self.channels.items():
+                if not new_name:
+                    raise util.CytoflowOpError('channels',
+                                               'Can\'t leave the new name for {} empty'
+                                               .format(old_name))
                 if old_name != new_name and new_name != util.sanitize_identifier(new_name):
                     raise util.CytoflowOpError('channels',
                                                "Channel name {} must be a "

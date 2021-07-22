@@ -19,7 +19,7 @@
 from textwrap import dedent 
 
 from traits.api import (HasTraits, String, List, Dict, Str, Enum, Instance, 
-                        provides, BaseCStr)
+                        provides, BaseCStr, observe)
 
 import cytoflow.utility as util
 from cytoflow import Tube, ImportOp
@@ -62,7 +62,11 @@ class ImportWorkflowOp(WorkflowOperation, ImportOp):
     
     # since we're actually calling super().apply() from self.estimate(), we need
     # to keep around the actual experiment that's returned
-    ret_experiment = Instance('cytoflow.experiment.Experiment', transient = True)
+    ret_experiment = Instance('cytoflow.experiment.Experiment', transient = True, estimate_result = True)
+    
+    @observe('channels_list:items,channels_list:items.+type', post_init = True)
+    def _on_controls_changed(self, _):
+        self.changed = 'channels_list'
         
     def reset_channels(self):
         self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
@@ -72,8 +76,10 @@ class ImportWorkflowOp(WorkflowOperation, ImportOp):
         self.ret_experiment = super().apply()
         self.ret_events = len(self.ret_experiment)
         
-    def apply(self, _):
-        if self.ret_experiment:
+    def apply(self, *args, **kwargs):
+        if 'metadata_only' in kwargs:
+            return super().apply(*args, **kwargs)
+        elif self.ret_experiment:
             return self.ret_experiment
         elif not self.tubes:
             raise util.CytoflowOpError(None, 'Click "Set up experiment, then "Import!"')

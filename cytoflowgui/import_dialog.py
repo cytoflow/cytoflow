@@ -284,7 +284,7 @@ class ExperimentDialogModel(HasStrictTraits):
         
         if import_op.tubes:
             try:
-                self.dummy_experiment = import_op.apply(metadata_only = True, force = True)
+                self.dummy_experiment = import_op.apply(metadata_only = True)
             except Exception as e:
                 warning(None,
                         "Had trouble loading some of the experiment's FCS "
