@@ -24,6 +24,7 @@ Created on Feb 11, 2017
 '''
 
 from pyface.qt import QtCore, QtGui
+from pyface.api import ImageResource
 
 from traits.api import Instance
 
@@ -99,6 +100,8 @@ class _VerticalListEditor(_ListEditor):
         self._dispose_items()
 
         layout = self.control.layout()
+        dpi = self.control.physicalDpiX()
+
 
         # Create all of the list item trait editors:
         trait_handler = self._trait_handler
@@ -132,10 +135,18 @@ class _VerticalListEditor(_ListEditor):
                 
             if self.factory.deletable:
                 # Connecting the new button to the mapper
-                control = IconButton(QtGui.QStyle.SP_TitleBarCloseButton, self.delete_mapper.map)
-                self.delete_mapper.setMapping(control, index)
+                del_button = QtGui.QPushButton(self.control)
+                del_button.setVisible(True)
+                del_button.setFlat(True)
+                del_button.setEnabled(True)
+                
+                del_button.setIcon(ImageResource('close').create_icon())
+                del_button.setIconSize(QtCore.QSize(dpi * 0.1, dpi * 0.1))
+                
+                del_button.clicked.connect(self.delete_mapper.map)
+                self.delete_mapper.setMapping(del_button, index)
 
-                layout.addWidget(control, row, column)
+                layout.addWidget(del_button, row, column)
                 
 
             proxy = ListItemProxy(self.object, self.name, index, item_trait,
