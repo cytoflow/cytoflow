@@ -109,6 +109,12 @@ class BaseView(HasStrictTraits):
             Which `seaborn` context to use?  Controls the scaling of plot 
             elements such as tick labels and the legend.  Default is `talk`.
             
+        palette : palette name, list, or dict
+            Colors to use for the different levels of the hue variable. 
+            Should be something that can be interpreted by
+            :func:`seaborn.color_palette`, or a dictionary mapping hue levels to 
+            matplotlib colors.
+            
         despine : Bool
             Remove the top and right axes from the plot?  Default is `True`.
 
@@ -157,6 +163,7 @@ class BaseView(HasStrictTraits):
         legend = kwargs.pop('legend', True)
 
         despine = kwargs.pop('despine', False)
+        palette = kwargs.pop('palette', None)
                
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -191,7 +198,8 @@ class BaseView(HasStrictTraits):
                           legend_out = False,
                           sharex = sharex,
                           sharey = sharey,
-                          despine = despine)
+                          despine = despine,
+                          palette = palette)
         
         plot_ret = self._grid_plot(experiment = experiment, grid = g, **kwargs)
         

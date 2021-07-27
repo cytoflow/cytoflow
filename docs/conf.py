@@ -97,7 +97,10 @@ plot_pre_code = "import matplotlib.pyplot as plt; plt.switch_backend('agg')"
 # intersphinx config
 intersphinx_mapping = {'pandas' : ('https://pandas.pydata.org/pandas-docs/stable/', None),
                        'envisage' : ('https://docs.enthought.com/envisage/', None),
-                       'traits' : ('https://docs.enthought.com/traits/', None)} 
+                       'traits' : ('https://docs.enthought.com/traits/', None),
+                       'seaborn' : ('https://seaborn.pydata.org/', None),
+                       'python': ('https://docs.python.org/3', None),
+                       'matplotlib' : ('https://matplotlib.org/', None)} 
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -352,7 +355,7 @@ def setup(app):
 
 def run_apidoc(app):
     
-    os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-undoc-members'
+    # os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-undoc-members'
 
     from sphinx.ext.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
