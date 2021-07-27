@@ -731,7 +731,7 @@ class ExperimentDialogHandler(Controller):
                 metadata, _ = parse_tube(path, metadata_only = True)
             except Exception as e:
                 raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(path, e.value))
+                                   .format(path, str(e)))
                 
             # if we're the first tube loaded, create a dummy experiment
             # and setup default metadata columns
@@ -743,7 +743,7 @@ class ExperimentDialogHandler(Controller):
             try:
                 check_tube(path, self.model.dummy_experiment)
             except util.CytoflowError as e:
-                error(None, e.__str__(), "Error importing tube")
+                error(None, str(e), "Error importing tube")
                 return
             
             metadata['CF_File'] = Path(path).stem    
