@@ -22,7 +22,6 @@ import io, os
 
 import versioneer
     
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -79,10 +78,8 @@ setup(
 
                         'camel==0.1.2',
                         'yapf==0.30.0',
-                        'fcsparser==0.2.1']
-    
-                if not on_rtd else ['sphinx==4.0.2', 'bleach'],
-                        
+                        'fcsparser==0.2.1'],
+                            
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!
                         
@@ -96,7 +93,7 @@ setup(
                                         "cytoflow/utility/logicle_ext/Logicle.i",
                                         "cytoflow/utility/logicle_ext/logicle.h"],
                              swig_opts=['-c++', '-py3'])] \
-                if not (on_rtd or no_logicle) else None,
+                if not no_logicle else None,
     
     package_data = { 'cytoflowgui' : ['preferences.ini',
                                       'images/*',
