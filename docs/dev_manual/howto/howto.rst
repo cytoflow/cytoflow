@@ -9,3 +9,4 @@ How-To Guides for Developers and Contributors
    
    install
    release
+   logicle
