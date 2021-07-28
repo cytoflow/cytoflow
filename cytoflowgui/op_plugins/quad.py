@@ -22,8 +22,9 @@ Quadrant Gate
 -------------
 
 Draw a "quadrant" gate.  To create a new gate, just click where you'd like the
-intersection to be.  Creates a new metadata **Name**, with values ``name_1``,
-``name_2``, ``name_3``, ``name_4`` ordered **clockwise from upper-left.**
+intersection to be. Creates a new metadata column named :attr:`name`, with values 
+``name_1`` (upper-left quadrant), ``name_2`` (upper-right), 
+``name_3`` (lower-left), and ``name_4`` (lower-right).
 
 .. note::
 
