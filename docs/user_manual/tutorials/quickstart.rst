@@ -52,6 +52,9 @@ the "Type" selector and choose *Number*.
 
 .. image:: images/01_05_number.png
 
+.. note::  If you have an experimental variable saved as metadata in your
+           FCS file, see the :ref:`faq`.
+
 Type the name "Dox" into the *Name* box.  Notice how there's now a new
 column named "Dox" in the *Tubes* table.
 
