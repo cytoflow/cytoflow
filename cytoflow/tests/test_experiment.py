@@ -25,13 +25,13 @@ Created on Dec 1, 2015
 import unittest
 import cytoflow as flow
 import pandas as pd
-from .test_base import ImportedDataSmallTest
+from .test_base import ImportedDataTest
 
 
-class TestExperiment(ImportedDataSmallTest):
+class TestExperiment(ImportedDataTest):
     def testConditions(self):
-        self.assertEqual(len(self.ex['Dox'].unique()), 2)
-        self.assertEqual(len(self.ex['Well'].unique()), 2)
+        self.assertEqual(len(self.ex['Dox'].unique()), 3)
+        self.assertEqual(len(self.ex['Well'].unique()), 3)
         
     def testAddChannel(self):
         # TODO
@@ -40,6 +40,12 @@ class TestExperiment(ImportedDataSmallTest):
     def testAddCondition(self):
         # TODO
         pass
+    
+    def testSubset(self):
+        ex2 = self.ex.subset(['Dox', 'Well'], (100.0, 'C'))
+        self.assertEqual(len(ex2['Dox'].unique()), 1)
+        self.assertEqual(len(ex2['Well'].unique()), 1)
+        self.assertEqual(len(ex2), 100)
     
 #     def testCloneIsShallow(self):
 #         ex2 = self.ex.clone()

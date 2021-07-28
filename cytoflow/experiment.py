@@ -204,7 +204,7 @@ class Experiment(HasStrictTraits):
         
         Parameters
         ----------
-        conditions : Str or Tuple(Str)
+        conditions : Str or List(Str)
             A condition or list of conditions
             
         values : Any or Tuple(Any)
@@ -216,8 +216,16 @@ class Experiment(HasStrictTraits):
             A new :class:`Experiment` containing only the events specified in 
             ``conditions`` and ``values``.
             
+            
+        .. note:: This is a wrapper around :meth:`pandas.DataFrame.groupby` and
+                  :meth:`pandas.core.groupby.GroupBy.get_group`.  That means
+                  you can pass other things in `conditions` -- see 
+                  the :meth:`pandas.DataFrame.groupby` documentation
+                  for details.
+            
         """
-
+        conditions = list(conditions)
+        
         if isinstance(conditions, str):
             c = conditions
             v = values
