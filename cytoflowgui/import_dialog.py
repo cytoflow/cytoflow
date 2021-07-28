@@ -673,17 +673,14 @@ class ExperimentDialogHandler(Controller):
                        title = "Clear tubes and conditions?") != YES:
                 return
         
-        
         for col in csv.columns[1:]:
             self.model.tube_traits.append(TubeTrait(model = self.model,
                                                     name = util.sanitize_identifier(col),
                                                     type = 'category'))
             
-            
         for _, row in csv.iterrows():
-            filename = csv_folder / row[0]
-            
             try:
+                filename = csv_folder / row[0]
                 metadata, _ = parse_tube(str(filename), metadata_only = True)
             except Exception as e:
                 warning(None, "Had trouble loading file {}: {}".format(filename, str(e)))
@@ -709,9 +706,6 @@ class ExperimentDialogHandler(Controller):
             for col in csv.columns[1:]:
                 new_tube.trait_set(**{util.sanitize_identifier(col) : row[col]})
                 
-            
-        
-        
     @observe('add_tubes')
     def _on_add_tubes(self, _):
         """
