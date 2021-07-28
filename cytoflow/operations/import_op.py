@@ -425,9 +425,12 @@ class ImportOp(HasStrictTraits):
             if tube0_meta['$DATATYPE'] == 'I':
                 data_bits  = int(meta_channels.loc[channel]['$PnB'])
                 data_range = float(meta_channels.loc[channel]['$PnR'])
-                range_bits = int(math.log(data_range, 2))
+                range_bits = int(math.ceil(math.log(data_range, 2)))
                 
                 if range_bits < data_bits:
+                    warnings.warn('The data range $PnR doesn\'t match the data bits $PnB for channel {}, masking out {} bits'
+                                  .format(channel, data_bits - range_bits),
+                                  util.CytoflowWarning)
                     mask = 1
                     for _ in range(1, range_bits):
                         mask = mask << 1 | 1
