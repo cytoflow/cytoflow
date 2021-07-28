@@ -1,9 +1,7 @@
 .. _dev_release:
 
-
-======================
-Spinning a new release
-======================
+HOWTO: Spin a new release
+=========================
 
 Tests
 -----

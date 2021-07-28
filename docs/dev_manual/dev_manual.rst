@@ -1,14 +1,10 @@
 .. _dev_manual:
 
-##################
-Developers' Manual
-##################
+################
+Developer Manual
+################
 
-Hooray!  
-First, install the source code and get a development environment going.
-Then, have a look at the design documentation.  Finally
-
-
+So you want to use `cytoflow` in your own Python-based analyses.
 Great!  May I recommend you start with some example Jupyter notebooks.
 They provide a good introduction to both basic modules and some of
 Cytoflow's more advanced features.

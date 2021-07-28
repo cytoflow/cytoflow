@@ -1,7 +1,7 @@
 .. _dev_install:
 
-Installation notes
-==================
+HOWTO: Install Cytoflow Modules
+===============================
 
 To use the Cytoflow modules in a Jupyter notebook or your own code
 -------------------------------------------------------------------
