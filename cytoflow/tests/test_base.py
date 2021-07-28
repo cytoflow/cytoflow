@@ -171,7 +171,8 @@ class View1DTestBase(ImportedData):
 
     def testTitle(self):
         self.view.plot(self.ex, title = "Title")
-        self.assertEqual(plt.gca().get_title(), "Title")
+        self.assertEqual(plt.gcf()._suptitle.get_text(), "Title")
+
 
     def testXlabel(self):
         self.view.plot(self.ex, xlabel = "X lab")
