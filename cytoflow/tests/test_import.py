@@ -87,6 +87,7 @@ class TestImport(unittest.TestCase):
                  'Beckman Coulter - MoFlo XDP.fcs',
                  'Cytek DxP10.fcs',
                  'Cytek xP5.fcs',
+                 'Cytek NL-2000.fcs',
                  'iCyt - Eclipse.lmd',
                  'Millipore - Guava.fcs',
                  'Miltenyi Biotec - MACSQuant Analyzer.fcs',
