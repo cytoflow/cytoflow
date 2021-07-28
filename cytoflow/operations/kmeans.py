@@ -391,7 +391,7 @@ class KMeansOp(HasStrictTraits):
                     g2 = tuple(list(g) + [channel1])
                     centers_stat.loc[g2] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
          
-        new_experiment = experiment.clone()          
+        new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
         new_experiment.statistics[(self.name, "centers")] = pd.to_numeric(centers_stat)

@@ -236,7 +236,7 @@ class QuadOp(HasStrictTraits):
                             experiment[self.ychannel] < self.ythreshold)
         gate.loc[lr] = self.name + '_4'
 
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
         new_experiment.add_condition(self.name, "category", gate)
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment

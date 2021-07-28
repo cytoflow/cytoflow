@@ -412,7 +412,7 @@ class DensityGateOp(HasStrictTraits):
                             
             event_assignments.iloc[group_idx] = group_keep
                     
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
         
         new_experiment.add_condition(self.name, "bool", event_assignments)
 

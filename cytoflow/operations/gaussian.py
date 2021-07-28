@@ -573,7 +573,7 @@ class GaussianMixtureOp(HasStrictTraits):
                         
                     corr_stat.drop(tuple(list(g2) + [channel1]), inplace = True)
 
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
           
         if self.num_components > 1:
             new_experiment.add_condition(self.name, "category", event_assignments)

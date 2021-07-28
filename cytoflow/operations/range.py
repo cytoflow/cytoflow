@@ -192,7 +192,7 @@ class RangeOp(HasStrictTraits):
                                        .format(experiment[self.channel].max()))
         
         gate = experiment[self.channel].between(self.low, self.high)
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
         new_experiment.add_condition(self.name, "bool", gate)
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
             

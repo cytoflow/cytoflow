@@ -309,7 +309,7 @@ class BleedthroughLinearOp(HasStrictTraits):
                                            "Must have both (from, to) and "
                                            "(to, from) keys in self.spillover")
         
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = True)
         
         # the completely arbitrary ordering of the channels
         channels = list(set([x for (x, _) in list(self.spillover.keys())]))

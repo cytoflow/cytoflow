@@ -130,7 +130,7 @@ class FrameStatisticOp(HasStrictTraits):
                                        "{} is already in the experiment's statistics"
                                        .format(stat_name))
                     
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
 
         if self.subset:
             try:

@@ -172,7 +172,7 @@ class ThresholdOp(HasStrictTraits):
 
         gate = pd.Series(experiment[self.channel] > self.threshold)
 
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
         new_experiment.add_condition(self.name, "bool", gate)
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment

@@ -770,7 +770,7 @@ class FlowPeaksOp(HasStrictTraits):
       
             event_assignments.iloc[group_idx] = predicted_str
 
-        new_experiment = experiment.clone()          
+        new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
 #         new_experiment.statistics[(self.name, "centers")] = pd.to_numeric(centers_stat)

@@ -113,7 +113,7 @@ class RatioOp(HasStrictTraits):
                                        "New channel {0} is already in the experiment"
                                        .format(self.name))
 
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
         new_experiment.add_channel(self.name, 
                                    experiment[self.numerator] / experiment[self.denominator])
         new_experiment.data.replace([np.inf, -np.inf], np.nan, inplace = True)

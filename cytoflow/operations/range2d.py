@@ -246,7 +246,7 @@ class Range2DOp(HasStrictTraits):
         y = experiment[self.ychannel].between(self.ylow, self.yhigh)
         gate = pd.Series(x & y)
         
-        new_experiment = experiment.clone() 
+        new_experiment = experiment.clone(deep = False) 
         new_experiment.add_condition(self.name, "bool", gate)   
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))    
         return new_experiment

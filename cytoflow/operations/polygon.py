@@ -240,7 +240,7 @@ class PolygonOp(HasStrictTraits):
         path = mpl.path.Path(np.array(vertices))
         xy_data = data[[self.xchannel, self.ychannel]].values
         
-        new_experiment = experiment.clone()        
+        new_experiment = experiment.clone(deep = False)        
         new_experiment.add_condition(self.name, 
                                      "bool", 
                                      path.contains_points(xy_data))

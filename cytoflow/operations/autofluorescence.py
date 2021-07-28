@@ -265,7 +265,7 @@ class AutofluorescenceOp(HasStrictTraits):
             raise util.CytoflowOpError('channels', "Estimated channels differ from the channels "
                                "parameter.  Did you forget to (re)run estimate()?")
         
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = True)
                 
         for channel in self.channels:
             new_experiment[channel] = \

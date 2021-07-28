@@ -443,7 +443,7 @@ class BeadCalibrationOp(HasStrictTraits):
         # you have the equivalent of -5 molecules of fluoresceine?  so,
         # we filter out negative values here.
 
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = True)
         
         for channel in channels:
             new_experiment.data = \

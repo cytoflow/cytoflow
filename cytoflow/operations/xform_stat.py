@@ -231,7 +231,7 @@ class TransformStatisticOp(HasStrictTraits):
         # sort the index, for performance
         new_stat = new_stat.sort_index()
         
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         if self.statistic_name:
             new_experiment.statistics[(self.name, self.statistic_name)] = new_stat

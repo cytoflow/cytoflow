@@ -208,7 +208,7 @@ class BinningOp(HasStrictTraits):
         # put the data in bins
         bin_idx = np.digitize(experiment.data[self.channel], bins[1:-1])
 
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = False)
         new_experiment.add_condition(self.name, "float64", bins[bin_idx])
         
         # keep track of the bins we used, for prettier plotting later.

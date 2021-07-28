@@ -210,7 +210,7 @@ class TasbeWorkflowOp(WorkflowOperation):
             raise util.CytoflowOpError("No valid result to estimate with")
         
         # TODO - don't actually need to apply these operations to data in estimate
-        experiment = experiment.clone()
+        experiment = experiment.clone(deep = True)
         
         self.estimate_progress = Progress.AUTOFLUORESCENCE            
         self._af_op.channels = self.channels

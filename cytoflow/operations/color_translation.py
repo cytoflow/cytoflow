@@ -351,7 +351,7 @@ class ColorTranslationOp(HasStrictTraits):
                                            "{} --> {}.  Did you call estimate()?"
                                            .format(key, val))
                        
-        new_experiment = experiment.clone()
+        new_experiment = experiment.clone(deep = True)
         
         for channel in from_channels:
             new_experiment.data = \

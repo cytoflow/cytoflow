@@ -333,7 +333,8 @@ class PCAOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda _: True)
             
-        new_experiment = experiment.clone()       
+        # need deep = True because of the data.dropna below
+        new_experiment = experiment.clone(deep = True)       
         new_channels = []   
         for i in range(self.num_components):
             cname = "{}_{}".format(self.name, i + 1)
