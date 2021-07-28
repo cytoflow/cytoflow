@@ -29,7 +29,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os, glob, pathlib
+import sys, os, pathlib
+
+# are we running on RTD?
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # select the 'null' pyface toolkit. an exception is raised if the qt toolkit
 # is subsequently imported, but that's better than trying to actually create
@@ -71,6 +74,10 @@ autosummary_generate = True
 autodoc_member_order = 'bysource'
 #autodoc_mock_imports = ['pyface.qt', 'pyface.ui.qt4', 'traitsui.qt4']
 autodoc_mock_imports = ['traitsui.qt4']
+
+
+if on_rtd:
+    autodoc_mock_imports.append('cytoflow.utility.logicle_ext.Logicle')
     
 # napoleon options
 napoleon_use_param = False
