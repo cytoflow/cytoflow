@@ -663,7 +663,12 @@ class ExperimentDialogHandler(Controller):
         if file_dialog.return_code != PyfaceOK:
             return
         
-        csv = pandas.read_csv(file_dialog.path)
+        try:
+            csv = pandas.read_csv(file_dialog.path)
+        except Exception as e:
+            warning(None, "Had trouble reading the CSV file: {}".format(str(e)))
+            return
+            
         csv_folder = Path(file_dialog.path).parent
         
         if self.model.tubes or self.model.tube_traits:
@@ -678,13 +683,18 @@ class ExperimentDialogHandler(Controller):
                                                     name = util.sanitize_identifier(col),
                                                     type = 'category'))
             
-        for _, row in csv.iterrows():
+        for i, row in csv.iterrows():
             try:
                 filename = csv_folder / row[0]
+            except Exception as e:
+                warning(None, "Had trouble parsing row {}\n{}\nIs your CSV file formatted correctly?".format(i+2, str(e)))
+                return
+            
+            try:
                 metadata, _ = parse_tube(str(filename), metadata_only = True)
             except Exception as e:
                 warning(None, "Had trouble loading file {}: {}".format(filename, str(e)))
-                continue
+                return
             
             # if we're the first tube loaded, create a dummy experiment
             # and setup default metadata columns
