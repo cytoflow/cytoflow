@@ -65,7 +65,7 @@ class TestTASBE(TasbeTest):
                                 BleedthroughControl(channel = "PE-Tx-Red-YG-A",
                                                      file = self.cwd + "/../../cytoflow/tests/data/tasbe/mkate.fcs")]
         
-        op.beads_name = "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01"
+        op.beads_name = "RCP-30-5A Lot AA01, AA02, AA03, AA04, AB01, AB02, AC01 & GAA01-R"
         op.beads_file = self.cwd + "/../../cytoflow/tests/data/tasbe/beads.fcs"
         op.beads_unit = "MEFL"
         
