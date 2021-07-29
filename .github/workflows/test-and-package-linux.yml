@@ -71,7 +71,7 @@ jobs:
         OMP_NUM_THREADS: 1
       run: |
         locate libgcc_s.so.1
-        LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 nose2 -v -c package/nose2.cfg cytoflowgui.tests -GUI    
+        LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1 nose2 -v -c package/nose2.cfg cytoflowgui.tests -GUI    
 
 #    - name: GUI smoketest
 #      run: |  
