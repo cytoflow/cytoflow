@@ -70,7 +70,7 @@ jobs:
       env:
         OMP_NUM_THREADS: 1
       run: |
-        nose2 -v -c package/nose2.cfg -s cytoflowgui.tests -GUI    
+        nose2 -v -c package/nose2.cfg cytoflowgui.tests -GUI    
 
 #    - name: GUI smoketest
 #      run: |  
