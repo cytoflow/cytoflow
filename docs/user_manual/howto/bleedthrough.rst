@@ -8,7 +8,7 @@ channels often overlap.  For example, if I'm trying to measure a green
 fluorophore like FITC, and a yellow fluorophore like PE, a significant 
 amount of FITC fluorescence will also be picked up by my PE channel, as
 demonstrated by the screenshot below 
-(from the `BD Spectrum Viewer <https://www.bdbiosciences.com/en-us/resources/bd-spectrum-viewer>`_
+(from the `BD Spectrum Viewer <https://www.bdbiosciences.com/en-us/resources/bd-spectrum-viewer>`_)
 
 .. image:: images/bleedthrough1.png
 
@@ -84,10 +84,7 @@ Procedure
    to them.  Because it's a *linear* estimate, but the data is plotted on a *logarithmic* scale,
    the estimate lines are shown as curves.
    
-   .. image:: images/bleedthrough7.png
-   
-   .. note:: YES I chose three controls -- but only two are showing on the screen.
-   
+   .. image:: images/bleedthrough7.png   
 
 *And that's it.*  Now you can continue on with your analysis, secure in the knowledge that
 you've successfully separated the adjacent fluorescence channels.

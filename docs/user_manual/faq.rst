@@ -1,4 +1,4 @@
-.. _faq:
+.. _user_faq:
 
 **************************
 Frequently Asked Questions

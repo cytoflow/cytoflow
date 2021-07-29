@@ -42,6 +42,8 @@ Contents:
    
    guides/guides
    
+   faq
+   
    api/cytoflow
    
    

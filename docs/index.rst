@@ -77,7 +77,7 @@ telling you) and *automated data analysis* (ie, writing scripts and pipelines
 to process lots of data.)  
 
 To get a taste of what Cytoflow can do, check out an 
-`example Jupyter notebook <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`_.
+`example Jupyter notebook <https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`_.
 
 Then, head over to the :ref:`developers' manual <dev_manual>`.  There,
 you'll find:
@@ -106,7 +106,7 @@ modules, operations and views.
 .. toctree::
    :hidden:
    
-   user_manual/user_manual   
+   user_manual/user_manual  
    dev_manual/dev_manual
 
    

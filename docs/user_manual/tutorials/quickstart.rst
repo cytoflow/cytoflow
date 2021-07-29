@@ -5,7 +5,7 @@ Tutorial: Quickstart
 
 *Welcome to Cytoflow!*  This document will demonstrate importing
 some data and running a very basic analysis using the GUI.  It
- should help you get started with the following steps:
+should help you get started with the following steps:
 
 * Importing data
 * Basic visualizations
@@ -41,7 +41,7 @@ Each file is now a row in the *Tubes* table.  Cytoflow assumes that your
 FCS files were all collected under the same instrument settings (voltages,
 etc) but have varying experimental conditions (ie your independent 
 variables.)  We now have to tell Cytoflow what those conditions are for
-each tube.  Click *Add a variable*
+each tube.  Click *Add a variable*.
 
 .. image:: images/01_04_add_variable.png
 
@@ -53,7 +53,7 @@ the "Type" selector and choose *Number*.
 .. image:: images/01_05_number.png
 
 .. note::  If you have an experimental variable saved as metadata in your
-           FCS file, see the :ref:`faq`.
+           FCS file, see the :ref:`user_faq`.
 
 Type the name "Dox" into the *Name* box.  Notice how there's now a new
 column named "Dox" in the *Tubes* table.

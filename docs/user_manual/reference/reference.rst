@@ -1,8 +1,8 @@
 .. _user_reference:
 
-****************************
-Operation and View Reference
-****************************
+**************************
+Operation and View Gallery
+**************************
 
 Below is a gallery of *Cytoflow*'s operations and views. Each header will take
 you to the corresponding manual page.
