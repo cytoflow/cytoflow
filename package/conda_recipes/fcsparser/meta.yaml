@@ -1,5 +1,5 @@
 {% set name = "fcsparser" %}
-{% set version = "0.2.1" %}
+{% set version = "0.2.1bt1" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
 {% set hash_value = "830c3f49df2e94a358bb45c5eed5c943c36529b223aab9c8e7a8870f2aba3c8d" %}
@@ -9,9 +9,8 @@ package:
   version: '{{ version }}'
 
 source:
-  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
-  '{{ hash_type }}': '{{ hash_value }}'
+  git_rev: 0.2.1bt1
+  git_url: https://github.com/cytoflow/fcsparser.git
 
 build:
   number: 1

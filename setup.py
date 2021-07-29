@@ -78,7 +78,7 @@ setup(
 
                         'camel==0.1.2',
                         'yapf==0.30.0',
-                        'fcsparser==0.2.1'],
+                        'fcsparser==0.2.1bt1'],
                             
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!
