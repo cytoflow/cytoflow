@@ -73,7 +73,7 @@ the peak finding work by tweaking , please submit a bug report!
     ex = import_op.apply()
 
     bead_op = flow.BeadCalibrationOp()
-    beads = "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"
+    beads = 'RCP-30-5A Lot AA01, AA02, AA03, AA04, AB01, AB02, AC01 & GAA01-R'
     bead_op.beads = flow.BeadCalibrationOp.BEADS[beads]
     bead_op.units = {"Pacific Blue-A" : "MEBFP",
                      "FITC-A" : "MEFL",

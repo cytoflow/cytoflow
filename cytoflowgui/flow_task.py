@@ -23,7 +23,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import os.path, webbrowser, pathlib, sys
+import os.path, webbrowser, pathlib, sys, warnings
 
 import yaml.parser
 from textwrap import dedent
@@ -41,10 +41,7 @@ from pyface.qt import QtGui
 
 from envisage.ui.tasks.api import TaskFactory
 from envisage.ui.tasks.action.preferences_action import PreferencesAction
-from envisage.api import Plugin, ExtensionPoint
-
-from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
-from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
+from envisage.api import Plugin
 
 from .workflow_pane import WorkflowDockPane
 from .view_pane import ViewDockPane, PlotParamsPane
@@ -285,38 +282,43 @@ class FlowTask(Task):
 
     def open_file(self, path):
         
-        try:
-            new_workflow = load_yaml(path)
-
-            # a few things to take care of when reloading.
-            # we do this in the try block to catch people who
-            # load valid YAML files that aren't from cytoflow.
+        with warnings.catch_warnings(record = True) as w:
+            try:
             
-            for wi_idx, wi in enumerate(new_workflow):
+                new_workflow = load_yaml(path)
                 
-                # get wi lock
-                wi.lock.acquire()
+                if w:
+                    warning(None, w[-1].message.__str__())
+            
+                # a few things to take care of when reloading.
+                # we do this in the try block to catch people who
+                # load valid YAML files that aren't from cytoflow.
                 
-                # clear the wi status
-                wi.status = "loading"
-    
-                # re-link the linked list.
-                if wi_idx > 0:
-                    wi.previous_wi = new_workflow[wi_idx - 1]
-                
-                if wi_idx < len(new_workflow) - 1:
-                    wi.next_wi = new_workflow[wi_idx + 1]
-
-        except yaml.parser.ParserError as e:
-            error(None,
-                  "Parser error loading {} -- is it a Cytoflow file?\n\n{}"
-                  .format(path, str(e)))
-            return
-        except Exception as e:
-            error(None,
-                  "{} loading {} -- is it a Cytoflow file?\n\n{}"
-                  .format(e.__class__.__name__, path, str(e)))
-            return
+                for wi_idx, wi in enumerate(new_workflow):
+                    
+                    # get wi lock
+                    wi.lock.acquire()
+                    
+                    # clear the wi status
+                    wi.status = "loading"
+            
+                    # re-link the linked list.
+                    if wi_idx > 0:
+                        wi.previous_wi = new_workflow[wi_idx - 1]
+                    
+                    if wi_idx < len(new_workflow) - 1:
+                        wi.next_wi = new_workflow[wi_idx + 1]
+            
+            except yaml.parser.ParserError as e:
+                error(None,
+                      "Parser error loading {} -- is it a Cytoflow file?\n\n{}"
+                      .format(path, str(e)))
+                return
+            except Exception as e:
+                error(None,
+                      "{} loading {} -- is it a Cytoflow file?\n\n{}"
+                      .format(e.__class__.__name__, path, str(e)))
+                return
         
         # are we just running a smoke test?
         if 'startup_test' in new_workflow[0].metadata:

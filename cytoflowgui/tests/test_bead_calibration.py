@@ -44,7 +44,7 @@ class TestBeadCalibration(TasbeTest):
         self.op = op = BeadCalibrationWorkflowOp()
         
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        op.beads_name = "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01"
+        op.beads_name = "RCP-30-5A Lot AA01, AA02, AA03, AA04, AB01, AB02, AC01 & GAA01-R"
         op.beads_file = self.cwd + "/../../cytoflow/tests/data/tasbe/beads.fcs"
         op.units_list = [BeadCalibrationUnit(channel = "FITC-A", unit = "MEFL"),
                          BeadCalibrationUnit(channel = "Pacific Blue-A", unit = "MEBFP")]

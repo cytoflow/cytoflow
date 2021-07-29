@@ -162,6 +162,11 @@ def _dump(bead_op):
     
 @camel_registry.loader('bead-calibration', version = 1)
 def _load(data, version):
+    if data['beads_name'] not in BeadCalibrationOp.BEADS:
+        import warnings
+        warnings.warn('The available bead data has changed recently; please re-select your beads.')
+        data['beads_name'] = ""
+    
     return BeadCalibrationWorkflowOp(**data)
 
 @camel_registry.dumper(Unit, 'bead-unit', version = 1)

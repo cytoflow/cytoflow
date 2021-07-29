@@ -64,9 +64,7 @@ Procedure
    
    .. note:: If the beads you want to use are not in the list, please submit a bug
              report.  Adding a new set of beads is pretty trivial.
-             
-             TODO - make sure the Spherotech beads are up-to-date.
-             
+                          
 #. Specify the file containing the data from the beads.
 
 #. Click **Add a channel** for every channel you want to calibrate. In the
