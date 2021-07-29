@@ -51,12 +51,12 @@ jobs:
       run: |
         nose2 -v -c package/nose2.cfg cytoflow.tests
 
-#    - name: Run cytoflowgui tests
-#      env:
-#        OMP_NUM_THREADS: 1
-#      run: |
-#        source activate cytoflow
-#        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI        
+    - name: Run cytoflowgui tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        source activate cytoflow
+        nose2 -v -c package/nose2.cfg -s cytoflowgui.tests -GUI        
 
     
   build-windows-conda-package:
