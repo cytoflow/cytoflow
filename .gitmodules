@@ -3,3 +3,6 @@
 	url = https://github.com/cytoflow/cytoflow-examples.git
 
 
+[submodule "fcsparser"]
+	path = fcsparser
+	url = git@github.com:cytoflow/fcsparser.git
