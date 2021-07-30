@@ -145,7 +145,10 @@ class BarChartView(Base1DStatisticsView):
         lim = kwargs.pop('lim', None)
                       
         stat = experiment.statistics[self.statistic]
-        map_args = [self.variable, stat.name]
+        if orientation == 'vertical':
+            map_args = [self.variable, stat.name]
+        else:
+            map_args = [stat.name, self.variable]
         
         if self.huefacet:
             map_args.append(self.huefacet)  
