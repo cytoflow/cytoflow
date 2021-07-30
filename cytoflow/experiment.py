@@ -305,8 +305,8 @@ class Experiment(HasStrictTraits):
                      operations that are only adding columns to the 
                      underlying :class:`pandas.DataFrame`.  This will
                      improve memory performance.  However, the resulting
-                     :class:`Experiment`s **CANNOT BE MODIFIED IN-PLACE**,
-                     because doing so will affect the other :class:`Experiment`s
+                     :class:`Experiment`  **CANNOT BE MODIFIED IN-PLACE**,
+                     because doing so will affect the other :class:`Experiment` s
                      that are clones of the one being modified.
         """
         
@@ -480,13 +480,12 @@ class Experiment(HasStrictTraits):
         ------
         :exc:`.CytoflowError`
             :meth:`add_events` pukes if:
-    
-                - there are columns in ``data`` that aren't channels in the 
-                  experiment, or vice versa. 
-                - there are keys in ``conditions`` that aren't conditions in
-                  the experiment, or vice versa.
-                - there is metadata specified in ``conditions`` that can't be
-                  converted to the corresponding metadata ``dtype``.
+            * there are columns in ``data`` that aren't channels in the 
+              experiment, or vice versa. 
+            * there are keys in ``conditions`` that aren't conditions in
+              the experiment, or vice versa.
+            * there is metadata specified in ``conditions`` that can't be
+              converted to the corresponding metadata ``dtype``.
             
         Examples
         --------

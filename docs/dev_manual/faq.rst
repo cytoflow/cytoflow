@@ -19,3 +19,20 @@ files to parameterize them. But otherwise, once you've got a fully-formed
 Experiment, you should (probably) be fine to use (most of) the rest of the package(?) 
 Let me know how you get on.
 
+**How do I save the plots I've made with the Python modules?**
+
+:mod:`cytoflow` uses the :mod:`matplotlib.pyplot` stateful interface for making
+plots.  Thus, there are two ways to save the plots.  The first is to use the
+:func:`matplotlib.pyplot.savefig` -- see the :mod:`matplotlib` documentation
+for more details.  (This option gives you the greatest flexibility in format,
+resolution, etc.)
+
+If you are using the Jupyter notebook, the second is to replace the
+``%matplotlib inline`` magic with ``%matplotlib notebook``.  Then,
+when you make a plot, the plot remains interactive.  Here's an
+example:
+
+.. image:: howto/images/notebook.png
+
+Click the "disk" icon to download a copy of the image.
+
