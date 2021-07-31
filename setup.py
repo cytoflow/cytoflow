@@ -77,8 +77,7 @@ setup(
                         'pyopengl==3.1.1a1', 
 
                         'camel==0.1.2',
-                        'yapf==0.30.0',
-                        'fcsparser==0.2.1bt1'],
+                        'yapf==0.30.0'],
                             
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!

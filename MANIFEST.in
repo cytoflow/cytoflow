@@ -1,9 +1,21 @@
 include README.*
 include *.txt
+include versioneer.py
+
 include docs/*.rst
 recursive-include docs/examples-basic *.ipynb *.fcs
 include docs/examples-advanced/README.md
+
 include cytoflow/utility/logicle_ext/LICENSE.txt
 include cytoflow/utility/logicle_ext/logicle.h
-include versioneer.py
 include cytoflow/_version.py
+
+include cytoflowgui/preferences.ini
+include cytoflowgui/images/*
+include cytoflowgui/op_plugins/images/*
+include cytoflowgui/view_plugins/images/*
+include cytoflowgui/help/*.html
+include cytoflowgui/help/_images/*.png
+include cytoflowgui/help/_static/*
+
+

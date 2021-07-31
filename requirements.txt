@@ -20,7 +20,6 @@ importlib_resources==5.2.0
 # qt, pyqt are not in pip - install through your package manager
 pyopengl==3.1.1a1
 
-# not in conda
-fcsparser==0.2.1bt1
+# in the `cytoflow` conda channel
 camel==0.1.2
 yapf==0.30.0
