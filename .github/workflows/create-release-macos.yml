@@ -31,6 +31,7 @@ jobs:
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
+        submodules: true
         
     - name: Query git tag
       id: tag
@@ -102,6 +103,7 @@ jobs:
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
+        submodules: true
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
@@ -168,6 +170,7 @@ jobs:
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
+        submodules: true
         
     - name: Query git tag
       id: tag
