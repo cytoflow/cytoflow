@@ -20,6 +20,24 @@
 '''
 cytoflow.operations.base_op_views
 ---------------------------------
+
+Base classes for :class:`IOperation`s' default views.
+
+:class:`OpView` - a view that has an operation, :attr:`~OpView.op`, as an attribute.
+
+:class:`Op1DView` - an :class:`OpView` that has a :attr:`~.Op1DView.channel` attribute
+and its attendant :attr:`~.Op1DView.scale`.  This class overrides :class:`.Base1DView`
+to delegate those attributes to :attr:`~OpView.op`.
+
+:class:`Op2DView` - an :class:`OpView` that has :attr:`~.Op2DView.xchannel` (and
+:attr:`~.Op2DView.xscale`) and :attr:`~.Op2DView.ychannel` (and :attr:`~.Op2DView.yscale`).
+This class overrides :class:`.Base2DView` to delegate those attributes to :attr:`~OpView.op`.
+
+:class:`ByView` - an :class:`OpView` that can plot various plots depending on what is
+passed to :meth:`~ByView.plot`'s ``plot_name`` parameter.
+
+:class:`AnnotatingView` - An :class:`.IView` that plots an underlying data plot, then 
+plots some annotations on top of it.
 '''
 
 from warnings import warn
@@ -68,12 +86,20 @@ class Op2DView(OpView, Base2DView):
     """
     Attributes
     ----------
-    xchannel, ychannel : String
-        The channels to use for this view's X and Y axes.  If you created the 
+    xchannel : String
+        The channels to use for this view's X axis.  If you created the 
+        view using :meth:`default_view`, this is already set.
+
+    ychannel : String
+        The channels to use for this view's Y axis.  If you created the 
         view using :meth:`default_view`, this is already set.
         
-    xscale, yscale : {'linear', 'log', 'logicle'}
-        The way to scale the x axes.  If you created the view using 
+    xscale : {'linear', 'log', 'logicle'}
+        The way to scale the x axis.  If you created the view using 
+        :meth:`default_view`, this may be already set.
+        
+    yscale : {'linear', 'log', 'logicle'}
+        The way to scale the y axis.  If you created the view using 
         :meth:`default_view`, this may be already set.
     """
     xchannel = DelegatesTo('op')

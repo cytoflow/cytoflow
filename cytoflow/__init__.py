@@ -17,6 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+``cytoflow`` is a package for quantitative, reproducible analysis of flow 
+cytometry data.  
+
+Written by Brian Teague, bpteague@gmail.com
+
+Copyright Massachusetts Institute of Technology 2015-2018
+
+Copyright Brian Teague 2018-2021
+"""
+
 # check python version
 import sys
 if sys.version_info < (3, 4):
@@ -30,13 +41,9 @@ warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced w
 # and matplotlib 3.1.1 -- there's some weird interaction with seaborn here.
 import matplotlib.text
 import logging
-class MplFilter(logging.Filter):
-    def filter(self, record):
-        if record.msg == "posx and posy should be finite values":
-            return 0
-        else:
-            return 1
+
         
+from .utility.logging import MplFilter
 matplotlib.text._log.addFilter(MplFilter())
 
 # keep track of whether we're running in the GUI.

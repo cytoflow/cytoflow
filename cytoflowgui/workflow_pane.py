@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.workflow_pane
+
+The pane that has the operation toolbar and the workflow.
+"""
+
 from traits.api import provides, Instance, List, Tuple
 
 from pyface.qt import QtCore
@@ -30,6 +36,9 @@ from .workflow_controller import WorkflowController
 
 @provides(IDockPane)
 class WorkflowDockPane(TraitsDockPane):
+    """
+    Workflow dock pane
+    """
     
     id = 'edu.mit.synbio.cytoflowgui.workflow_pane'
     name = "Workflow"

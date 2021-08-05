@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflow.operations
+-------------------
+
+This package contains all of :mod:`cytoflow`'s operations -- classes
+implementing :class:`IOperation` whose ``apply()`` function takes an 
+:class:`Experiment` and returns an :class:`Experiment`.  
+"""
+
 from .i_operation import IOperation
 from .import_op import ImportOp
  

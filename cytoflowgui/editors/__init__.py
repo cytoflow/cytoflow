@@ -1,3 +1,6 @@
+'''
+Custom Qt editors
+'''
 
 from .color_text_editor import ColorTextEditor
 from .ext_enum_editor import ExtendableEnumEditor

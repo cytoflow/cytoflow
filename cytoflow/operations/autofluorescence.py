@@ -20,6 +20,14 @@
 """
 cytoflow.operations.autofluorescence
 ------------------------------------
+
+The :mod:`autofluorescence` module contains two classes:
+
+:class:`AutofluorescenceOp` -- corrects an :class:`.Experiment` for
+autofluorescence
+  
+:class:`AutofluorescenceDiagnosticView` -- a diagnostic to make sure that
+:class:`AutofluorescenceOp` estimated its parameters correctly.
 """
 
 from warnings import warn

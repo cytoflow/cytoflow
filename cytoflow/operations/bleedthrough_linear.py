@@ -17,10 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.bleedthrough_linear
 ---------------------------------------
-'''
+
+The :mod:`bleedthrough_linear` module contains two classes:
+
+:class:`BleedthroughLinearOp` - compensates for spectral bleedthrough
+in a :class:`.Experiment` using single-color controls
+
+:class:`BleedthroughLinearDiagnostic` -- a diagnostic view to make sure
+that :class:`BleedthroughLinearOp` correctly estimated its parameters.
+"""
+
 import os, math
 from natsort import natsorted
 

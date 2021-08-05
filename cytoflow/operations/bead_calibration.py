@@ -20,6 +20,14 @@
 """
 cytoflow.operations.bead_calibration
 ------------------------------------
+
+The :mod:`bead_calibration` module contains two classes:
+
+:class:`BeadCalibrationOp` - calibrates the raw measurements in a
+:class:`.Experiment` using fluorescent particles.
+
+:class:`BeadCalibrationDiagnostic` -- a diagnostic view to make sure
+that :class:`BeadCalibrationOp` correctly estimated its parameters.
 """
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 

@@ -18,8 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-FlowPeaks
----------
+FlowPeaks Clustering
+--------------------
 
 This module uses the **flowPeaks** algorithm to assign events to clusters in
 an unsupervized manner.

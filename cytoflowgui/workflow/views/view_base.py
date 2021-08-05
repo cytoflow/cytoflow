@@ -144,7 +144,7 @@ class WorkflowView(HasStrictTraits):
         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         
-        If :method:`should_plot` is called from a notification handler, the payload
+        If :meth:`should_plot` is called from a notification handler, the payload
         is the handler `event` parameter.
         """
         return True
@@ -185,7 +185,7 @@ class WorkflowFacetView(WorkflowView):
     
     def plot(self, experiment, **kwargs):
         """
-        A default :method:`plot` that subsets by the :attribute:`plotfacet` and
+        A default :meth:`plot` that subsets by the :attr:`plotfacet` and
         :attribute:`current_plot`. If you need it to do something else, you must
         override this method!
         """
@@ -203,7 +203,7 @@ class WorkflowByView(WorkflowView):
       
     def plot(self, experiment, **kwargs):
         """
-        A default :method:`plot` that passes :attribute:`current_plot` as the
+        A default :meth:`plot` that passes :attr:`current_plot` as the
         plot name.
         """
          

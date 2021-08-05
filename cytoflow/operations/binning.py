@@ -17,10 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.binning
 ---------------------------
-'''
+
+:mod:`binning` has two classes:
+
+:class:`BinningOp` -- divides events in a channel into bins of equal 
+width (after applying an optional scale)
+
+:class:`BinningView` -- a default view to display the bins.
+"""
+
 from traits.api import (HasStrictTraits, Str, provides, Constant, Int)
 import numpy as np
 

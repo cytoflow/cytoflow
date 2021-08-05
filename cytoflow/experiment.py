@@ -17,10 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.experiment
 -------------------
-'''
+
+Defines :mod:`Experiment`, :mod:`cytoflow`'s main data structure.
+"""
 
 import pandas as pd
 from pandas.api.types import CategoricalDtype, is_categorical_dtype

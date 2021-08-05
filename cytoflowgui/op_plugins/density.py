@@ -18,8 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Density 
--------
+Density Gate
+------------
 
 Computes a gate based on a 2D density plot.  The user chooses what proportion
 of events to keep, and the module creates a gate that selects those events in
