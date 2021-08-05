@@ -350,6 +350,7 @@ texinfo_documents = [
 
 def setup(app):
     app.connect('builder-inited', run_apidoc)
+    app.connect('autodoc-process-docstring', process_docstring)
     sys.modules['sys'].IN_SPHINX = True
     
 
@@ -364,5 +365,15 @@ def run_apidoc(app):
     output_dir = curr_dir / "dev_manual" / "api"
     
     module = curr_dir / ".." / "cytoflow"    
-    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*"), str(module / "utility" / "logicle_ext")])
+    main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*"), str(module / "utility" / "logicle_ext")])
     
+
+    module = curr_dir / ".." / "cytoflowgui"
+    main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
+
+
+def process_docstring(app, what, name, obj, options, lines):
+    if what == 'module' and len(lines) > 2 and not options.noindex:
+        name = obj.__name__
+        lines[0] = name
+        lines[1] = '-' * len(name)
