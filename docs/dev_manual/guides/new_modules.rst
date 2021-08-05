@@ -19,8 +19,8 @@ the :mod:`cytoflow` package, basic working knowledge of :mod:`traits` is suffici
 For GUI work, trait notification is used extensively.
 
 The GUI wrappers also use `TraitsUI <http://docs/enthought.com/traitsui/>`_ 
-because it makes wrapping traits with UI elements easy.  Have a look at views,
-handlers, and of course the trait editors. 
+because it makes wrapping traits with UI elements easy.  Have a look at 
+documentation for views, handlers, and of course the trait editors. 
 
 Finally, there are some principles that I expect new modules contributed to this
 codebase to follow:
@@ -32,7 +32,7 @@ codebase to follow:
   :class:`.CytoflowOpWarning` or :class:`.CytoflowViewWarning`.  The GUI will
   also know how to handle these gracefully.
   
-* **Separate experimental data from module state.**  There are workflow that
+* **Separate experimental data from module state.**  There are workflows that
   require estimating parameters with one data set, then applying those
   operations to another.  Make sure your module supports them.
   
@@ -62,9 +62,13 @@ The base operation API is fairly simple:
   :attr:`~.Experiment.history`.  A good example of a simple operation is 
   :class:`.RatioOp`.
   
+  .. note:: Be aware of the ``deep`` parameter for :meth:`~.Experiment.clone`!  It
+            defaults to ``True`` -- **only** set it to ``False`` if you are only
+            adding columns to the :class:`~.Experiment`.
+  
 * :meth:`~.IOperation.estimate` - You may also wish to estimate 
   the operation's parameters from a data set. Crucially, this 
-  *may not be the data set you are eventually applying the operation to.*  If
+  *might not be the data set you are eventually applying the operation to.*  If
   your operation relies on estimating parameters, implement the 
   :meth:`~.IOperation.estimate` function.  This may involve selecting a subset
   of the data in the :class:`.Experiment`, or it may involve loading in an
@@ -150,21 +154,17 @@ Wrapping an operation for the GUI sometimes feels like it requires more work
 than writing the operation in the first place.  A new operation requires at
 least five things:
 
-* A plugin class implementing :class:`.IOperationPlugin`.  It should 
-  also derive from :class:`.PluginHelpMixin`, which adds support for online help.
-  
 * A class derived from the underlying :mod:`cytoflow` operation.  The derived
-  operation should:
+  operation should be placed in a module in :mod:`cytoflowgui.workflow.operations`,
+  and it should:
   
-  - Inherit from :class:`PluginOpMixin` to add support for various GUI
-    event-handling bits
+  - Inherit from :class:`~.WorkflowOperation` to add support for various GUI
+    event-handling bits (as well as the underlying :mod:`cytoflow` class,
+    if appropriate)
     
   - Override attributes in the underlying :mod:`cytoflow` class to add
     metadata that tells the GUI how to react to changes.  (See the 
-    :class:`.PluginOpMixin` docstring for details.)
-    
-  - Override the :attr:`~.PluginOpMixin.handler_factory` attribute to be a callable that returns
-    an :class:`.OpHandlerMixin` instance.
+    :class:`~.IWorkflowOperation` docstring for details.)
     
   - Provide an implementation of :meth:`~.PluginOpMixin.get_notebook_code`, to
     support exporting to Jupyter notebook.
@@ -179,14 +179,18 @@ least five things:
     :meth:`~.PluginOpMixin.should_clear_estimate` to only do expensive operations
     when necessary.
     
-* A handler class that defines the default :class:`traits.View` and provides
-  supporting logic.  This class should be derived from :class:`.OpHandlerMixin`
-  and :class:`traits.Controller`.
-  
 * Serialization logic.  :mod:`cytoflow` uses :mod:`camel` for sane YAML 
   serialization; a dumper and loader for the class must save and load the
-  operation's parameters.
+  operation's parameters.  These should also go in :mod:`cytoflowgui.workflow.operations`.
 
+* A handler class that defines the default :class:`traits.View` and provides
+  supporting logic.  This class should be derived from :class:`.OpHandler`
+  and should be placed in :mod:`cytoflowgui.op_plugins`.
+  
+* A plugin class derived from :class:`envisage.plugin.Plugin` and implementing 
+  :class:`.IOperationPlugin`.  It should also derive from :class:`.PluginHelpMixin`, 
+  which adds support for online help.
+  
 * Tests.  Because of :mod:`cytoflowgui`'s split between processes, testing
   GUI logic for modules can be kind of a synchronization nightmare.  This is
   by design -- because the same synchronization issues are present when
@@ -204,50 +208,39 @@ New GUI views
 
 A new view operation requires at least five things:
 
-
-* A plugin class implementing :class:`.IViewPlugin`.  It should 
-  also derive from :class:`.PluginHelpMixin`, which adds support for online help.
-  
 * A class derived from the underlying :mod:`cytoflow` view.  The derived
-  view should:
+  view should be placed in :mod:`cytoflowgui.workflow.views`
   
-  - Inherit from :class:`.PluginViewMixin` to add support for various GUI
-    event-handling bits
+  - Inherit from :class:`~.WorkflowView` or one of its children to add support 
+    for various GUI event-handling bits
     
   - Override attributes in the underlying :mod:`cytoflow` class to add
     metadata that tells the GUI how to react to changes.  (See the 
-    :class:`PluginViewMixin` docstring for details.)
-    
-  - Override the :attr:`~.PluginViewMixin.handler_factory` attribute to be a 
-    callable that returns a :class:`.ViewHandlerMixin` instance.
-    
+    :class:`~.IWorkflowView` docstring for details.)
+     
   - Provide an implementation of :meth:`~.PluginViewMixin.get_notebook_code`, to
     support exporting to Jupyter notebook.
 
-  - Override the :attr:`~PluginViewMixin.plot_params` attribute with an instance
-    of an object containing plot parameters (see below).
-    
   - Optionally, override :meth:`~.PluginViewMixin.should_plot` to only plot when
     necessary.
     
-  - Optionally, overide :meth:`~.PluginViewMixin.plot_wi` to change whether
-    :meth:`plot` is called on the current :class:`.WorkflowItem`'s result or
-    the previous one's.
-    
-    
-* A handler class that defines the default :class:`traits.View` and provides
-  supporting logic.  This class should be derived from :class:`.ViewHandlerMixin`
-  and :class:`traits.Controller`.
-  
 * Serialization logic.  :mod:`cytoflow` uses :mod:`camel` for sane YAML 
   serialization; a dumper and loader for the class must save and load the
-  operation's parameters.
+  operation's parameters.  These should also go in :mod:`cytoflowgui.workflow.views`.
+
+* A handler class that defines the default :class:`traits.View` and provides
+  supporting logic.  This class should be derived from :class:`.ViewHandler`
+  and should be placed in :mod:`cytoflowgui.view_plugins`.
+
+* A plugin class derived from :class:`envisage.plugin.Plugin` and implementing 
+  :class:`.IViewPlugin`.  It should also derive from :class:`.PluginHelpMixin`, 
+  which adds support for online help.
   
 * Plot parameters.  The parameters to a view's :meth:`plot` method are stored
   in an object that derives from :class:`BasePlotParams` or one of its 
   decendants.  Choose data types that are appropriate for the view, and
-  include a default view.  Set it as the class type for the view's :attr:`plot_params`
-  attribute.  Don't forget to write serialization code for it as well!
+  include a default view named ``view_params_view`` in the handler class. 
+  Don't forget to write serialization code for it as well!
 
 * Tests.  Because of :mod:`cytoflowgui`'s split between processes, testing
   GUI logic for modules can be kind of a synchronization nightmare.  This is
@@ -255,3 +248,17 @@ A new view operation requires at least five things:
   running the software.  See the ``cytoflowgui/tests`` directory for (many)
   examples.  In the case of a view, most of these are "smoke tests", testing
   that the view doesn't crash with various sets of parameters.
+  
+  
+.. note:: Why the split between the classes in :mod:`cytoflowgui.op_modules`,
+          :mod:`cytoflowgui.workflow.operations`, :mod:`cytoflowgui.view_modules`,
+          and :mod:`cytoflowgui.workflow.views`?  It's because of the fact that
+          ``cytoflow`` runs in two processes -- one handles the GUI and the other
+          operates on the workflow. If you load a module containing UI bits, even
+          if you don't explicitly create a ``QGuiApplication``, it starts an 
+          event loop.  That's why older versions of ``Cytoflow`` had two icons
+          in the task bar when running on a Mac.  You know how sometimes you go
+          to fix a "little" bug and end up re-writing the whole program?  This
+          was one of those times....
+
+

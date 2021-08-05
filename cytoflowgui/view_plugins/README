@@ -1,10 +1,10 @@
-TODO - update this
-
-This is where the "ui adapter" bits go for the various views.  Each view gets
- - an optional class derived from traitsui.Controller, which wraps the view
-   parameters in traits that are appropriate for the Experiment we're applying
-   the view on (channel names, subset editor, etc.)
+This is where the "ui adapter" bits go for the various views.  Each view
+gets
+ - a class derived from ViewHandler, which contains the view and associated controller
+   logic
  - a class derived from envisage.Plugin:
-   a Envisage service plugin wrapping the view
-   
-For more info, see docs/new_modules.rst.
+   a Envisage service plugin wrapping the op
+
+This is also where sphinx goes to look for the user manual's documentation
+for each view.  The actual "view" classes are in workflow.views. 
+For more details, see docs/dev_manual/guides/new_modules.rst.
