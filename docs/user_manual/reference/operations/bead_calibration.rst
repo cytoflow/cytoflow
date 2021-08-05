@@ -1,5 +1,6 @@
 .. automodule:: cytoflowgui.op_plugins.bead_calibration
    :no-members:
+   :noindex:
 
 .. note:: It works best to choose units of a fluorophore that is spectrally
           matched to the channel that you're calibrating.  Here are the beads
