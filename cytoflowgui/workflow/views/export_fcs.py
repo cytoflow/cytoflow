@@ -63,7 +63,7 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
         Parameters
         ----------
         experiment : Experiment
-            The :class:`.Experiment` to export
+            The `.Experiment` to export
         """
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")   

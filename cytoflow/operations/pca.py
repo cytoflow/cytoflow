@@ -39,13 +39,13 @@ class PCAOp(HasStrictTraits):
     Use principal components analysis (PCA) to decompose a multivariate data
     set into orthogonal components that explain a maximum amount of variance.
     
-    Call :meth:`estimate` to compute the optimal decomposition.
+    Call `estimate` to compute the optimal decomposition.
       
-    Calling :meth:`apply` creates new "channels" named ``{name}_1 ... {name}_n``,
-    where ``name`` is the :attr:`name` attribute and ``n`` is :attr:`num_components`.
+    Calling `apply` creates new "channels" named ``{name}_1 ... {name}_n``,
+    where ``name`` is the `name` attribute and ``n`` is `num_components`.
 
     The same decomposition may not be appropriate for different subsets of the data set.
-    If this is the case, you can use the :attr:`by` attribute to specify 
+    If this is the case, you can use the `by` attribute to specify 
     metadata by which to aggregate the data before estimating (and applying) a 
     model.  The PCA parameters such as the number of components and the kernel
     are the same across each subset, though.
@@ -60,7 +60,7 @@ class PCAOp(HasStrictTraits):
 
     scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
-        channel is in :attr:`channels` but not in :attr:`scale`, the current 
+        channel is in `channels` but not in `scale`, the current 
         package-wide default (set with :func:`.set_default_scale`) is used.
 
     num_components : Int (default = 2)
@@ -69,7 +69,7 @@ class PCAOp(HasStrictTraits):
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
         the model.  For example, if the experiment has two pieces of metadata,
-        ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will 
+        ``Time`` and ``Dox``, setting `by` to ``["Time", "Dox"]`` will 
         fit the model separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
         
@@ -172,7 +172,7 @@ class PCAOp(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            The :class:`.Experiment` to use to estimate the k-means clusters
+            The `.Experiment` to use to estimate the k-means clusters
             
         subset : str (default = None)
             A Python expression that specifies a subset of the data in 
@@ -278,7 +278,7 @@ class PCAOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            a new Experiment with additional :attr:`~Experiment.channels` 
+            a new Experiment with additional `Experiment.channels` 
             named ``name_1 ... name_n``
 
         """

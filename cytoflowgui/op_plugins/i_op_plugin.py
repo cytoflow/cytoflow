@@ -47,7 +47,7 @@ class IOperationPlugin(Interface):
         
         Returns
         -------
-        :class:`.IWorkflowOperation`
+        `.IWorkflowOperation`
         """
         
     def get_handler(self, model):
@@ -61,7 +61,7 @@ class IOperationPlugin(Interface):
         
         Returns
         -------
-        :class:`traitsui.Controller`
+        `traitsui.Controller`
         """
 
     def get_icon(self):
@@ -70,7 +70,7 @@ class IOperationPlugin(Interface):
         
         Returns
         -------
-        :class:`pyface.ImageResource`
+        `pyface.ImageResource`
             The SVG icon
         """
         
@@ -78,7 +78,7 @@ class IOperationPlugin(Interface):
     def get_help(self):
         """
         Gets the HTML help text for this plugin, deriving the filename from the class name.
-        Probably best to use the default implementation in :class:`PluginHelpMixin`
+        Probably best to use the default implementation in `PluginHelpMixin`
         
          
         Returns
@@ -91,11 +91,11 @@ class IOperationPlugin(Interface):
     plugin = List(contributes_to = OP_PLUGIN_EXT)
     def _plugin_default(self):
         """
-        Gets the :mod:`envisage` plugin for this operation (usually `self`).
+        Gets the `envisage` plugin for this operation (usually `self`).
         
         Returns
         -------
-        :class:`envisage.Plugin`
+        `envisage.Plugin`
             the plugin instance
         """
         

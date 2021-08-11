@@ -34,13 +34,13 @@ class PolygonSelector(AxesWidget):
     """Selection polygon.
     
     The selected path can be used in conjunction with
-    :func:`~matplotlib.path.Path.contains_point` to select data points
+    :func:`matplotlib.path.Path.contains_point` to select data points
     from an image.
     
     Parameters
     ----------
     
-    ax : :class:`~matplotlib.axes.Axes`
+    ax : `matplotlib.axes.Axes`
         The parent axes for the widget.
         
     callback : callable
@@ -112,7 +112,7 @@ class SpanSelector(_SelectorWidget):
     
     Parameters
     ----------
-    ax :  :class:`matplotlib.axes.Axes` object
+    ax :  `matplotlib.axes.Axes` object
     onselect : func(min, max), min/max are floats
     direction : "horizontal" or "vertical"
       The axis along which to draw the span selector

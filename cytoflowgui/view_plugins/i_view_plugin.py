@@ -57,7 +57,7 @@ class IViewPlugin(Interface):
         
         Returns
         -------
-        :class:`IView`
+        `IView`
             An instance of the view that this plugin wraps
         """
         
@@ -79,7 +79,7 @@ class IViewPlugin(Interface):
             
         Returns
         -------
-        :class:`traitsui.Controller`
+        `traitsui.Controller`
         """
         
 
@@ -89,7 +89,7 @@ class IViewPlugin(Interface):
         
         Returns
         -------
-        :class:`pyface.ImageResource`
+        `pyface.ImageResource`
             The SVG icon    
         """
         
@@ -97,7 +97,7 @@ class IViewPlugin(Interface):
     def get_help(self):
         """
         Gets the HTML help text for this plugin, deriving the filename from the class name.
-        Probably best to use the default implementation in :class:`PluginHelpMixin`
+        Probably best to use the default implementation in `PluginHelpMixin`
         
          
         Returns
@@ -109,12 +109,12 @@ class IViewPlugin(Interface):
         
     def get_plugin(self):
         """
-        Returns an instance of :class:`envisage.Plugin` implementing
-        :class:`.IViewPlugin`.  Usually returns ``self``.
+        Returns an instance of `envisage.Plugin` implementing
+        `.IViewPlugin`.  Usually returns ``self``.
         
         Returns
         -------
-        :class:`envisage.Plugin`
+        `envisage.Plugin`
         """
         
               

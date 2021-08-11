@@ -21,13 +21,13 @@
 cytoflow.operations.bleedthrough_linear
 ---------------------------------------
 
-The :mod:`bleedthrough_linear` module contains two classes:
+The `bleedthrough_linear` module contains two classes:
 
-:class:`BleedthroughLinearOp` - compensates for spectral bleedthrough
-in a :class:`.Experiment` using single-color controls
+`BleedthroughLinearOp` -- compensates for spectral bleedthrough
+in a `Experiment` using single-color controls
 
-:class:`BleedthroughLinearDiagnostic` -- a diagnostic view to make sure
-that :class:`BleedthroughLinearOp` correctly estimated its parameters.
+`BleedthroughLinearDiagnostic` -- a diagnostic view to make sure
+that `BleedthroughLinearOp` correctly estimated its parameters.
 """
 
 import os, math
@@ -64,18 +64,18 @@ class BleedthroughLinearOp(HasStrictTraits):
     if that is the case, then the autofluorescence will be subtracted from
     the single-color controls too.
     
-    To use, set up the :attr:`controls` dict with the single color controls;
-    call :meth:`estimate` to parameterize the operation; check that the bleedthrough 
-    plots look good by calling :meth:`~.BleedthroughLinearDiagnostic.plot` on 
-    the :class:`BleedthroughLinearDiagnostic` instance returned by 
-    :meth:`default_view`; and then :meth:`apply` on an :class:`.Experiment`.
+    To use, set up the `controls` dict with the single color controls;
+    call `estimate` to parameterize the operation; check that the bleedthrough 
+    plots look good by calling `BleedthroughLinearDiagnostic.plot` on 
+    the `BleedthroughLinearDiagnostic` instance returned by 
+    `default_view`; and then `apply` on an `.Experiment`.
     
     Attributes
     ----------
     controls : Dict(Str, File)
         The channel names to correct, and corresponding single-color control
         FCS files to estimate the correction splines with.  Must be set to
-        use :meth:`estimate`.
+        use `estimate`.
         
     spillover : Dict(Tuple(Str, Str), Float)
         The spillover "matrix" to use to correct the data.  The keys are pairs
@@ -89,7 +89,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         the bleedthrough tubes were collected under (to apply the operations in the 
         history.)  Specify them here.  The key is the channel name; they value
         is a dictionary of the conditions (same as you would specify for a
-        :class:`~.Tube` )
+        `Tube` )
 
     Examples
     --------
@@ -169,7 +169,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None): 
         """
-        Estimate the bleedthrough from simgle-channel controls in :attr:`controls`
+        Estimate the bleedthrough from simgle-channel controls in `controls`
         """
         if experiment is None:
             raise util.CytoflowOpError('experiment', "No experiment specified")
@@ -271,17 +271,18 @@ class BleedthroughLinearOp(HasStrictTraits):
         self.spillover = spillover
                 
     def apply(self, experiment):
-        """Applies the bleedthrough correction to an experiment.
+        """
+        Applies the bleedthrough correction to an experiment.
         
         Parameters
         ----------
-        experiment : Experiment
+        experiment : `Experiment`
             The experiment to which this operation is applied
             
         Returns
         -------
         Experiment
-            A new :class:`Experiment` with the bleedthrough subtracted out.  
+            A new `Experiment` with the bleedthrough subtracted out.  
             The corrected channels have the following metadata added:
             
             - **linear_bleedthrough** : Dict(Str : Float)
@@ -357,8 +358,8 @@ class BleedthroughLinearOp(HasStrictTraits):
         
         Returns
         -------
-        IView
-            An IView, call :meth:`~BleedthroughLinearDiagnostic.plot` to see the diagnostic plots
+        `IView`
+            An `IView`, call `BleedthroughLinearDiagnostic.plot` to see the diagnostic plots
         """
  
         # the completely arbitrary ordering of the channels
@@ -382,7 +383,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     ----------
     op : Instance(BleedthroughPiecewiseOp)
         The operation whose parameters we're viewing.  If you made the instance
-        with :meth:`BleedthroughPLinearOp.default_view`, this is set for you
+        with `BleedthroughPLinearOp.default_view`, this is set for you
         already.
         
     subset : str

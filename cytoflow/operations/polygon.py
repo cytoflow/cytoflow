@@ -45,7 +45,7 @@ class PolygonOp(HasStrictTraits):
     ----------
     name : Str
         The operation name.  Used to name the new metadata field in the
-        experiment that's created by :meth:`apply`
+        experiment that's created by `apply`
         
     xchannel, ychannel : Str
         The names of the x and y channels to apply the gate.
@@ -59,11 +59,11 @@ class PolygonOp(HasStrictTraits):
         
     Notes
     -----
-    This module uses :meth:`matplotlib.path.Path` to represent the polygon, because
+    This module uses `matplotlib.path.Path` to represent the polygon, because
     membership testing is very fast.
     
     You can set the verticies by hand, I suppose, but it's much easier to use
-    the interactive view you get from :meth:`default_view` to do so.
+    the interactive view you get from `default_view` to do so.
 
     
     Examples
@@ -157,12 +157,12 @@ class PolygonOp(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            the old :class:`Experiment` to which this op is applied
+            the old `Experiment` to which this op is applied
             
         Returns
         -------
         Experiment
-            a new :class:'Experiment`, the same as ``old_experiment`` but with 
+            a new 'Experiment`, the same as ``old_experiment`` but with 
             a new column of type `bool` with the same as the operation name.  
             The bool is ``True`` if the event's measurement is within the 
             polygon, and ``False`` otherwise.
@@ -171,7 +171,7 @@ class PolygonOp(HasStrictTraits):
         ------
         util.CytoflowOpError
             if for some reason the operation can't be applied to this
-            experiment. The reason is in :attr:`.CytoflowOpError.args`
+            experiment. The reason is in `.CytoflowOpError.args`
         """
         
         if experiment is None:

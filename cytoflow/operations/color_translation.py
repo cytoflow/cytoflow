@@ -17,10 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.color_translation
 -------------------------------------
-'''
+
+The `color_translation` module has two classes:
+
+`ColorTranslationOp` -- translates the measurements in one channel to
+the same scale as another channel, using a two- or three-color control to 
+estimate the transfer function.
+
+`ColorTranslationDiagnostic` -- a diagnostic view showing how the 
+`ColorTranslationOp` operation estimated its parameters.
+"""
 import math
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Any, Callable,
@@ -42,12 +51,12 @@ class ColorTranslationOp(HasStrictTraits):
     Translate measurements from one color's scale to another, using a two-color
     or three-color control.
     
-    To use, set up the :attr:`controls` dictionary with the channels to convert
-    and the FCS files to compute the mapping.  Call :meth:`estimate` to
-    paramterize the module; check that the plots look good by calling the 
-    :meth:`~ColorTranslationDiagnostic.plot` method of the 
-    :class:`ColorTranslationDiagnostic` instance returned by :meth:`default_view`;
-    then call :meth:`apply` to apply the translation to an :class:`.Experiment`.
+    To use, set up the `controls` dictionary with the channels to convert
+    and the FCS files to compute the mapping.  Call `estimate` to
+    parameterize the module; check that the plots look good by calling the 
+    `ColorTranslationDiagnostic.plot` method of the 
+    `ColorTranslationDiagnostic` instance returned by `default_view`;
+    then call `apply` to apply the translation to an `Experiment`.
     
     Attributes
     ----------
@@ -74,15 +83,15 @@ class ColorTranslationOp(HasStrictTraits):
         the bleedthrough tubes were collected under (to apply the operations in the 
         history.)  Specify them here.  The key is a tuple of channel names; the 
         value is a dictionary of the conditions (same as you would specify for a
-        :class:`~.Tube` )
+        `Tube` )
 
         
     Notes
     -----
     In the TASBE workflow, this operation happens *after* the application of
-    :class:`.AutofluorescenceOp` and :class:`.BleedthroughLinearOp`.  The entire
-    operation history of the :class:`.Experiment` that is passed to 
-    :meth:`estimate` is replayed on the control files in :attr:`controls`, so
+    `AutofluorescenceOp` and `BleedthroughLinearOp`.  The entire
+    operation history of the `Experiment` that is passed to 
+    `estimate` is replayed on the control files in `controls`, so
     they are also corrected for autofluorescence and bleedthrough, and have
     metadata for subsetting.
     
@@ -160,8 +169,8 @@ class ColorTranslationOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            The :class:`.Experiment` used to check the voltages, etc. of the
+        experiment : `Experiment`
+            The `Experiment` used to check the voltages, etc. of the
             control tubes.  Also the source of the operation history that
             is replayed on the control tubes.
             
@@ -315,7 +324,7 @@ class ColorTranslationOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
+        experiment : `Experiment`
             the old_experiment to which this op is applied
             
         Returns
@@ -327,7 +336,7 @@ class ColorTranslationOp(HasStrictTraits):
             **channel_translation** : Str
             Which channel was this one translated to?
         
-            **channel_translation_fn** : Callable (pandas.Series --> pandas.Series)
+            **channel_translation_fn** : Callable (`pandas.Series` --> `pandas.Series`)
             The function that translated this channel
         """
 
@@ -376,7 +385,7 @@ class ColorTranslationOp(HasStrictTraits):
         Returns
         -------
         IView
-            A diagnostic view, call :meth:`ColorTranslationDiagnostic.plot` to 
+            A diagnostic view, call `ColorTranslationDiagnostic.plot` to 
             see the diagnostic plots
         """
 
@@ -392,7 +401,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     name : Str
         The instance name (for serialization, UI etc.)
     
-    op : Instance(ColorTranslationOp)
+    op : Instance(`ColorTranslationOp`)
         The op whose parameters we're viewing
         
     subset : str

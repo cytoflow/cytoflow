@@ -43,7 +43,7 @@ class QuadOp(HasStrictTraits):
     """
     Apply a quadrant gate to a cytometry experiment.
     
-    Creates a new metadata column named :attr:`name`, with values 
+    Creates a new metadata column named `name`, with values 
     ``name_1`` (upper-left quadrant), ``name_2`` (upper-right), 
     ``name_3`` (lower-left), and ``name_4`` (lower-right).  This
     ordering is arbitrary, and was chosen to match the FACSDiva order.
@@ -52,7 +52,7 @@ class QuadOp(HasStrictTraits):
     ----------
     name : Str
         The operation name.  Used to name the new metadata field in the
-        experiment that's created by :meth:`apply`
+        experiment that's created by `apply`
         
     xchannel : Str
         The name of the first channel to apply the range gate.
@@ -158,8 +158,8 @@ class QuadOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            a new :class:`~Experiment`, the same as the old :class:`~Experiment` 
-            but with a new column the same as the operation :attr:`name`.  
+            a new `Experiment`, the same as the old `Experiment` 
+            but with a new column the same as the operation `name`.  
             The new column is of type *Category*, with values ``name_1``, ``name_2``, 
             ``name_3``, and ``name_4``, applied to events CLOCKWISE from upper-left.
 
@@ -258,8 +258,8 @@ class QuadSelection(Op2DView, ScatterplotView):
         
     Notes
     -----
-    We inherit :attr:`xfacet` and :attr:`yfacet` from 
-    :class:`cytoflow.views.ScatterplotView`, but they must both be unset!
+    We inherit `xfacet` and `yfacet` from 
+    `cytoflow.views.ScatterplotView`, but they must both be unset!
         
     Examples
     --------

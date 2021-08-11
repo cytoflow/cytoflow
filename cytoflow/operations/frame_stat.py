@@ -17,10 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.frame_stat
 ------------------------------
-'''
+
+The `frame_stat` module contains one class:
+
+`FrameStatisticOp` -- applies a function to subsets of a data set,
+and adds the resulting statistic to the `Experiment`.  Unlike
+`ChannelStatisticOp`, which operates on a single channel, this operation
+operates on entire `pandas.DataFrame`s.
+"""
+
 from warnings import warn
 import pandas as pd
 import numpy as np
@@ -38,37 +46,37 @@ class FrameStatisticOp(HasStrictTraits):
     Apply a function to subsets of a data set, and add it as a statistic
     to the experiment.
     
-    The :meth:`apply` function groups the data by the variables in :attr:`by`, 
-    then applies the :attr:`function` callable to each :class:`pandas.DataFrame` 
-    subset.  The callable should take a :class:`DataFrame` as its only parameter.  
+    The `apply` function groups the data by the variables in `by`, 
+    then applies the `function` callable to each `pandas.DataFrame` 
+    subset.  The callable should take a `DataFrame` as its only parameter.  
     The return type is arbitrary, but to be used with the rest of 
-    :class:`cytoflow` it should probably be a numeric type or an iterable of 
+    `cytoflow` it should probably be a numeric type or an iterable of 
     numeric types.
     
     Attributes
     ----------
     name : Str
         The operation name.  Becomes the first element in the
-        :attr:`Experiment.statistics` key tuple.
+        `Experiment.statistics` key tuple.
         
     function : Callable
         The function used to compute the statistic.  Must take a 
-        :class:`pandas.DataFrame` as its only argument.  The return type is 
-        arbitrary, but to be used with the rest of :class:`cytoflow` it should 
+        `pandas.DataFrame` as its only argument.  The return type is 
+        arbitrary, but to be used with the rest of `cytoflow` it should 
         probably be a numeric type or an iterable of numeric types.  If 
-        :attr:`statistic_name` is unset, the name of the function becomes the 
-        second in element in the :attr:`Experiment.statistics` key tuple.
+        `statistic_name` is unset, the name of the function becomes the 
+        second in element in the `Experiment.statistics` key tuple.
         
     statistic_name : Str
         The name of the function; if present, becomes the second element in
-        the :attr:`Experiment.statistics` key tuple.  Particularly useful if 
-        :attr:`function` is a lambda.
+        the `Experiment.statistics` key tuple.  Particularly useful if 
+        `function` is a lambda.
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
         function.  For example, if the experiment has two pieces of metadata,
         ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will apply 
-        :attr:`function` separately to each subset of the data with a unique 
+        `function` separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
         
     subset : Str

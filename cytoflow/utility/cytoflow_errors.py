@@ -21,7 +21,7 @@
 cytoflow.utility.cytoflow_errors
 --------------------------------
 
-Custom errors for :class:`.cytoflow`.  Allows for custom handling in the GUI.
+Custom errors for `.cytoflow`.  Allows for custom handling in the GUI.
 """
 
 import warnings

@@ -17,6 +17,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflow.operations.gaussian
+----------------------------
+
+`gaussian` contains three classes:
+
+`GaussianMixtureOp` -- an operation that fits a Gaussian mixture
+model to one or more channels.
+
+`GaussianMixture1DView` -- a diagnostic view that shows how the
+`GaussianMixtureOp` estimated its model (on a 1D data set, 
+using a histogram).
+
+`GaussianMixture2DView` -- a diagnostic view that shows how the
+`GaussianMixtureOp` estimated its model (on a 2D data set,
+using a scatter plot).
+"""
 import re
 from warnings import warn
 
@@ -45,29 +62,29 @@ class GaussianMixtureOp(HasStrictTraits):
     This module fits a Gaussian mixture model with a specified number of
     components to one or more channels.
     
-    If :attr:`num_components` ``> 1``, :meth:`apply` creates a new categorical 
+    If `num_components` ``> 1``, `apply` creates a new categorical 
     metadata variable named  ``name``, with possible values ``{name}_1`` .... 
     ``name_n`` where ``n`` is the number of components.  An event is assigned to 
     ``name_i`` category if it has the highest posterior probability of having been 
     produced by component ``i``.  If an event has a value that is outside the
     range of one of the channels' scales, then it is assigned to ``{name}_None``.
     
-    Optionally, if :attr:`sigma` is greater than 0, :meth:`apply` creates new  
+    Optionally, if `sigma` is greater than 0, `apply` creates new  
     ``boolean`` metadata variables named ``{name}_1`` ... ``{name}_n`` where 
     ``n`` is the number of components.  The column ``{name}_i`` is ``True`` if 
-    the event is less than :attr:`sigma` standard deviations from the mean of 
-    component ``i``.  If :attr:`num_components` is ``1``, :attr:`sigma` must be 
+    the event is less than `sigma` standard deviations from the mean of 
+    component ``i``.  If `num_components` is ``1``, `sigma` must be 
     greater than 0.
     
     .. note::
-       The :attr:`sigma` attribute does NOT affect how events are assigned to 
+       The `sigma` attribute does NOT affect how events are assigned to 
        components in the new ``name`` variable. That is to say, if an event
-       is more than :attr:`sigma` standard deviations from ALL of the 
+       is more than `sigma` standard deviations from ALL of the 
        components, you might expect it would be labeled as ``{name}_None``. 
        It is *not*. An event is only labeled ``{name}_None`` if it has a 
        value that is outside of the channels' scales.
     
-    Optionally, if :attr:`posteriors` is ``True``, :meth:`apply` creates a new 
+    Optionally, if `posteriors` is ``True``, `apply` creates a new 
     ``double`` metadata variables named ``{name}_1_posterior`` ... 
     ``{name}_n_posterior`` where ``n`` is the number of components.  The column 
     ``{name}_i_posterior`` contains the posterior probability that this event is 
@@ -75,7 +92,7 @@ class GaussianMixtureOp(HasStrictTraits):
     
     Finally, the same mixture model (mean and standard deviation) may not
     be appropriate for every subset of the data.  If this is the case, you
-    can use the :attr:`by` attribute to specify metadata by which to aggregate
+    can use the `by` attribute to specify metadata by which to aggregate
     the data before estimating (and applying) a mixture model.  The number of 
     components must be the same across each subset, though.
     
@@ -90,8 +107,8 @@ class GaussianMixtureOp(HasStrictTraits):
 
     scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
-        channel is in :attr:`channels` but not in :attr:`scale`, the current 
-        package-wide default (set with :func:`~.set_default_scale`) is used.
+        channel is in `channels` but not in `scale`, the current 
+        package-wide default (set with :func:`set_default_scale`) is used.
 
     num_components : Int (default = 1)
         How many components to fit to the data?  Must be a positive integer.
@@ -99,13 +116,13 @@ class GaussianMixtureOp(HasStrictTraits):
     sigma : Float
         If not None, use this operation as a "gate": for each component, create 
         a new boolean variable ``{name}_i`` and if the event is within
-        :attr:`sigma` standard deviations, set that variable to ``True``.
-        If :attr:`num_components` is ``1``, must be ``> 0``.
+        `sigma` standard deviations, set that variable to ``True``.
+        If `num_components` is ``1``, must be ``> 0``.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
         the model.  For example, if the experiment has two pieces of metadata,
-        ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will fit 
+        ``Time`` and ``Dox``, setting `by` to ``["Time", "Dox"]`` will fit 
         the model separately to each subset of the data with a unique combination of
         ``Time`` and ``Dox``.
 
@@ -337,12 +354,12 @@ class GaussianMixtureOp(HasStrictTraits):
     def apply(self, experiment):
         """
         Assigns new metadata to events using the mixture model estimated
-        in :meth:`estimate`.
+        in `estimate`.
         
         Returns
         -------
         Experiment
-            A new :class:`.Experiment` with the new condition variables as
+            A new `Experiment` with the new condition variables as
             described in the class documentation.  Also adds the following
             new statistics:
             
@@ -359,7 +376,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 
             - **proportion** : Float
                 the proportion of events in each component of the mixture model.  only
-                added if :attr:`num_components` ``> 1``.
+                added if `num_components` ``> 1``.
         """
              
         if experiment is None:
@@ -602,7 +619,8 @@ class GaussianMixtureOp(HasStrictTraits):
          
         Returns
         -------
-            IView : an IView, call plot() to see the diagnostic plot.
+        `IView`
+            An `IView`, call `plot` to see the diagnostic plot.
         """
         channels = kwargs.pop('channels', self.channels)
         scale = kwargs.pop('scale', self.scale)
@@ -649,7 +667,7 @@ class GaussianMixtureOp(HasStrictTraits):
 @provides(IView)
 class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
     """
-    A default view for :class:`GaussianMixtureOp` that plots the histogram
+    A default view for `GaussianMixtureOp` that plots the histogram
     of a single channel, then the estimated Gaussian distributions on top of it.
     
     Attributes
@@ -778,7 +796,7 @@ import matplotlib.transforms as transforms
 @provides(IView)
 class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
     """
-    A default view for :class:`GaussianMixtureOp` that plots the scatter plot
+    A default view for `GaussianMixtureOp` that plots the scatter plot
     of a two channels, then the estimated 2D Gaussian distributions on top of it.
     
     Attributes

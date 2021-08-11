@@ -116,20 +116,20 @@ class Tube(HasTraits):
 @provides(IOperation)
 class ImportOp(HasStrictTraits):
     """
-    An operation for importing data and making an :class:`.Experiment`.
+    An operation for importing data and making an `.Experiment`.
     
-    To use, set the :attr:`conditions` dict to a mapping between condition name 
+    To use, set the `conditions` dict to a mapping between condition name 
     and NumPy ``dtype``.  Useful dtypes include ``category``, ``float``, 
     ``int``, ``bool``.
     
-    Next, set :attr:`tubes` to a list of :class:`Tube` containing FCS filenames 
+    Next, set `tubes` to a list of `Tube` containing FCS filenames 
     and the corresponding conditions.
     
     If you would rather not analyze every single event in every FCS file,
-    set :attr:`events` to the number of events from each FCS file you want to 
+    set `events` to the number of events from each FCS file you want to 
     load.
     
-    Call :meth:`apply` to load the data.  The usual ``experiment`` parameter
+    Call `apply` to load the data.  The usual ``experiment`` parameter
     can be ``None``.
     
     Attributes
@@ -139,10 +139,10 @@ class ImportOp(HasStrictTraits):
         Useful ``dtype``s include ``category``, ``float``, ``int``, and ``bool``.
         
     tubes : List(Tube)
-        A list of :class:``Tube`` instances, which map FCS files to their corresponding
-        experimental conditions.  Each :class:``Tube`` must have a 
-        :attr:``~Tube.conditions`` dict whose keys match those of 
-        :attr:`conditions`.
+        A list of ``Tube`` instances, which map FCS files to their corresponding
+        experimental conditions.  Each ``Tube`` must have a 
+        ``Tube.conditions`` dict whose keys match those of 
+        `conditions`.
         
     channels : Dict(Str, Str)
         If you only need a subset of the channels available in the data set,
@@ -152,13 +152,13 @@ class ImportOp(HasStrictTraits):
         You can use this to rename channels as you import data (because flow
         channel names are frequently not terribly informative.)  New channel
         names must be valid Python identifiers: start with a letter or ``_``, and
-        all characters must be letters, numbers or ``_``.  If :attr:`channels` is
+        all characters must be letters, numbers or ``_``.  If `channels` is
         empty, load all channels in the FCS files.
         
     events : Int
-        If not None, import only a random subset of events of size :attr:`events`. 
+        If not None, import only a random subset of events of size `events`. 
         Presumably the analysis will go faster but less precisely; good for
-        interactive data exploration.  Then, unset :attr:`events` and re-run
+        interactive data exploration.  Then, unset `events` and re-run
         the analysis non-interactively.
         
     name_metadata : {None, "$PnN", "$PnS"} (default = None)
@@ -170,21 +170,21 @@ class ImportOp(HasStrictTraits):
         FCS file.  Some software (such as the Beckman-Coulter software)
         also encode the same data in two different formats -- for example,
         FCS2.0 and FCS3.0.  To access a data set other than the first one,
-        set :attr:`data_set` to the 0-based index of the data set you
+        set `data_set` to the 0-based index of the data set you
         would like to use.  This will be used for *all FCS files imported by
         this operation.*
             
     ignore_v : List(Str)
-        :class:`cytoflow` is designed to operate on an :class:`.Experiment` containing
+        `cytoflow` is designed to operate on an `.Experiment` containing
         tubes that were all collected under the same instrument settings.
         In particular, the same PMT voltages ensure that data can be
         compared across samples.
         
-        *Very rarely*, you may need to set up an :class:`.Experiment` with 
-        different voltage settings on different :class:`Tube`s.  This is likely 
+        *Very rarely*, you may need to set up an `.Experiment` with 
+        different voltage settings on different `Tube`s.  This is likely 
         only to be the case when you are trying to figure out which voltages 
-        should be used in future experiments.  If so, set :attr:`ignore_v` to a 
-        :class:`List` of channel names to ignore particular channels.  
+        should be used in future experiments.  If so, set `ignore_v` to a 
+        `List` of channel names to ignore particular channels.  
         
         .. warning::
         
@@ -226,7 +226,7 @@ class ImportOp(HasStrictTraits):
       
     def apply(self, experiment = None, metadata_only = False):
         """
-        Load a new :class:`.Experiment`.  
+        Load a new `.Experiment`.  
         
         Parameters
         ----------
@@ -240,7 +240,7 @@ class ImportOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            The new :class:`.Experiment`.  New channels have the following
+            The new `.Experiment`.  New channels have the following
             metadata:
             
             - **voltage** - int
@@ -256,8 +256,8 @@ class ImportOp(HasStrictTraits):
             ``True``, to distinguish the experimental variables from the
             conditions that were added by gates, etc.
             
-            If :attr:`ignore_v` is set, it is added as a key to the 
-            :class:`.Experiment`-wide metadata.
+            If `ignore_v` is set, it is added as a key to the 
+            `.Experiment`-wide metadata.
             
         """
         

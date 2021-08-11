@@ -21,13 +21,13 @@
 cytoflow.operations.autofluorescence
 ------------------------------------
 
-The :mod:`autofluorescence` module contains two classes:
+The `autofluorescence` module contains two classes:
 
-:class:`AutofluorescenceOp` -- corrects an :class:`.Experiment` for
+`AutofluorescenceOp` -- corrects an `Experiment` for
 autofluorescence
   
-:class:`AutofluorescenceDiagnosticView` -- a diagnostic to make sure that
-:class:`AutofluorescenceOp` estimated its parameters correctly.
+`AutofluorescenceDiagnosticView` -- a diagnostic to make sure that
+`AutofluorescenceOp` estimated its parameters correctly.
 """
 
 from warnings import warn
@@ -47,16 +47,16 @@ class AutofluorescenceOp(HasStrictTraits):
     """
     Apply autofluorescence correction to a set of fluorescence channels.
     
-    The :meth:`estimate` function loads a separate FCS file (not part of the input
-    :class:`.Experiment`) and computes the untransformed median and standard deviation 
-    of the blank cells.  Then, :meth:`apply` subtracts the median from the 
+    The `estimate` function loads a separate FCS file (not part of the input
+    `Experiment`) and computes the untransformed median and standard deviation 
+    of the blank cells.  Then, `apply` subtracts the median from the 
     experiment data.
     
-    To use, set the :attr:`blank_file` property to point to an FCS file with
-    unstained or nonfluorescing cells in it; set the :attr:`channels` 
+    To use, set the `blank_file` property to point to an FCS file with
+    unstained or nonfluorescing cells in it; set the `channels` 
     property to a  list of channels to correct.
     
-    :meth:`apply` also adds the ``af_median`` and ``af_stdev`` metadata to the 
+    `apply` also adds the ``af_median`` and ``af_stdev`` metadata to the 
     corrected channels, representing the median and standard deviation of the 
     measured blank distributions.
     
@@ -67,7 +67,7 @@ class AutofluorescenceOp(HasStrictTraits):
         
     blank_file : File
         The filename of a file with "blank" cells (not fluorescent).  Used
-        to :meth:`estimate` the autofluorescence.
+        to `estimate` the autofluorescence.
         
     blank_file_conditions : Dict
         Occasionally, you'll need to specify the experimental conditions that
@@ -135,15 +135,15 @@ class AutofluorescenceOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None): 
         """
-        Estimate the autofluorescence from :attr:`blank_file` in channels
-        specified in :attr:`channels`.  
+        Estimate the autofluorescence from `blank_file` in channels
+        specified in `channels`.  
         
         Parameters
         ----------
-        experiment : Experiment
+        experiment : `Experiment`
             The experiment to which this operation is applied
             
-        subset : str (default = "")
+        subset : Str (default = "")
             An expression that specifies the events used to compute the 
             autofluorescence
 
@@ -233,7 +233,7 @@ class AutofluorescenceOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
+        experiment : `Experiment`
             the experiment to which this op is applied
             
         Returns
@@ -294,7 +294,7 @@ class AutofluorescenceOp(HasStrictTraits):
         Returns
         -------
         IView
-            An diagnostic view, call :meth:`~AutofluorescenceDiagnosticView.plot` 
+            An diagnostic view, call `AutofluorescenceDiagnosticView.plot` 
             to see the diagnostic plots
         """
         v = AutofluorescenceDiagnosticView(op = self)
@@ -309,10 +309,10 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     
     Attributes
     ----------
-    op : Instance(AutofluorescenceOp)
-        The :class:`AutofluorescenceOp` whose parameters we're viewing. Set 
+    op : Instance(`AutofluorescenceOp`)
+        The `AutofluorescenceOp` whose parameters we're viewing. Set 
         automatically if you created the instance using 
-        :meth:`AutofluorescenceOp.default_view`.
+        `AutofluorescenceOp.default_view`.
 
     """
     

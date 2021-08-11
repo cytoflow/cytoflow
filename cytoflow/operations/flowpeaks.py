@@ -17,10 +17,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.flowpeaks
 -----------------------------
-'''
+
+The `flowpeaks` module has the classes that support the **flowPeaks** 
+clustering algorithm.  It has four classes:
+
+`FlowPeaksOp` -- an operation that implements the **flowPeaks**
+algorithm (see the class documentation for a reference.)
+
+`FlowPeaks1DView` -- a diagnostic view that shows how the
+`FlowPeaksOp` performed its clustering (on a 1D data set,
+using a histogram).
+
+`FlowPeaks2DView` -- a diagnostic view that shows how the
+`FlowPeaksOp` performed its clustering (on a 2D data set,
+using a scatter plot).
+
+`FlowPeaks2DDensityView` -- a diagnostic view that shows how the
+`FlowPeaksOp` performed its clustering (on a 2D data set, 
+using a density plot).
+"""
 
 import matplotlib.pyplot as plt
 from warnings import warn
@@ -50,14 +68,14 @@ class FlowPeaksOp(HasStrictTraits):
     This module uses the **flowPeaks** algorithm to assign events to clusters in
     an unsupervised manner.
     
-    Call :meth:`estimate` to compute the clusters.
+    Call `estimate` to compute the clusters.
       
-    Calling :meth:`apply` creates a new categorical metadata variable 
+    Calling `apply` creates a new categorical metadata variable 
     named ``name``, with possible values ``{name}_1`` .... ``name_n`` where 
     ``n`` is the number of clusters estimated.
     
     The same model may not be appropriate for different subsets of the data set.
-    If this is the case, you can use the :attr:`by` attribute to specify 
+    If this is the case, you can use the `by` attribute to specify 
     metadata by which to aggregate the data before estimating (and applying) 
     a model.  The number of clusters is a model parameter and it may vary in 
     each subset. 
@@ -72,7 +90,7 @@ class FlowPeaksOp(HasStrictTraits):
 
     scale : Dict(Str : Enum("linear", "logicle", "log"))
         Re-scale the data in the specified channels before fitting.  If a 
-        channel is in :attr:`channels` but not in :attr:`scale`, the current 
+        channel is in `channels` but not in `scale`, the current 
         package-wide default (set with :func:`set_default_scale`) is used.
     
     by : List(Str)
@@ -126,17 +144,17 @@ class FlowPeaksOp(HasStrictTraits):
     There are a lot of parameters that affect this process.  The k-means
     clustering is pretty robust (though somewhat sensitive to the number of 
     clusters, which is currently not exposed in the API.) The most important
-    are exposed as attributes of the :class:`FlowPeaksOp` class.  These include:
+    are exposed as attributes of the `FlowPeaksOp` class.  These include:
     
-     - :attr:`h`, :attr:`h0`: sometimes the density function is too "rough" to 
+     - `h`, `h0`: sometimes the density function is too "rough" to 
          find good local maxima.  These parameters smooth it out by widening the
-         covariance matrices.  Increasing :attr:`h` makes the density rougher; 
-         increasing :attr:`h0` makes it smoother.
+         covariance matrices.  Increasing `h` makes the density rougher; 
+         increasing `h0` makes it smoother.
               
-    - :attr:`tol`: How smooth does the density function have to be between two 
+    - `tol`: How smooth does the density function have to be between two 
         density maxima to merge them?  Must be between 0 and 1.
            
-    - :attr:`merge_dist`: How close must two maxima be to merge them?  This 
+    - `merge_dist`: How close must two maxima be to merge them?  This 
         value is a unit-free scalar, and is approximately the number of
         k-means clusters between the two maxima.
         
@@ -240,8 +258,8 @@ class FlowPeaksOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            The :class:`.Experiment` to use to estimate the k-means clusters
+        experiment : `Experiment`
+            The `Experiment` to use to estimate the k-means clusters
             
         subset : str (default = None)
             A Python expression that specifies a subset of the data in 
@@ -581,18 +599,18 @@ class FlowPeaksOp(HasStrictTraits):
         """
         Assign events to a cluster.
         
-        Assigns each event to one of the k-means centroids from :meth:`estimate`,
+        Assigns each event to one of the k-means centroids from `estimate`,
         then groups together events in the same cluster hierarchy.
         
         Parameters
         ----------
-        experiment : Experiment
-            the :class:`.Experiment` to apply the gate to.
+        experiment : `Experiment`
+            the `Experiment` to apply the gate to.
             
         Returns
         -------
-        Experiment
-            A new :class:`.Experiment` with the gate applied to it.  
+        `Experiment`
+            A new `Experiment` with the gate applied to it.  
             TODO - document the extra statistics
         """
  
@@ -795,8 +813,8 @@ class FlowPeaksOp(HasStrictTraits):
          
         Returns
         -------
-        IView
-            an IView, call :meth:`plot` to see the diagnostic plot.
+        `IView`
+            an `IView`, call `plot` to see the diagnostic plot.
         """
         channels = kwargs.pop('channels', self.channels)
         scale = kwargs.pop('scale', self.scale)
@@ -854,7 +872,7 @@ class FlowPeaksOp(HasStrictTraits):
 @provides(IView)
 class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
     """
-    A one-dimensional diagnostic view for :class:`FlowPeaksOp`.  Plots a histogram
+    A one-dimensional diagnostic view for `FlowPeaksOp`.  Plots a histogram
     of the channel, then overlays the k-means centroids in blue.
 
     Attributes
@@ -915,7 +933,7 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
      
 class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
     """
-    A two-dimensional diagnostic view for :class:`FlowPeaksOp`.  Plots a 
+    A two-dimensional diagnostic view for `FlowPeaksOp`.  Plots a 
     scatter-plot of the two channels, then overlays the k-means centroids in 
     blue and the clusters-of-k-means in pink.
 
@@ -1009,7 +1027,7 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
                 
 class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
     """
-    A two-dimensional diagnostic view for :class:`FlowPeaksOp`.  Plots the
+    A two-dimensional diagnostic view for `FlowPeaksOp`.  Plots the
     estimated density function of the two channels, then overlays the k-means 
     centroids in blue and the clusters-of-k-means in pink.
 

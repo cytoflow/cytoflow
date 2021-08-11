@@ -21,13 +21,13 @@
 cytoflow.operations.bead_calibration
 ------------------------------------
 
-The :mod:`bead_calibration` module contains two classes:
+The `bead_calibration` module contains two classes:
 
-:class:`BeadCalibrationOp` - calibrates the raw measurements in a
-:class:`.Experiment` using fluorescent particles.
+`BeadCalibrationOp` -- calibrates the raw measurements in a
+`Experiment` using fluorescent particles.
 
-:class:`BeadCalibrationDiagnostic` -- a diagnostic view to make sure
-that :class:`BeadCalibrationOp` correctly estimated its parameters.
+`BeadCalibrationDiagnostic` -- a diagnostic view to make sure
+that `BeadCalibrationOp` correctly estimated its parameters.
 """
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
@@ -55,14 +55,14 @@ class BeadCalibrationOp(HasStrictTraits):
     Computes a log-linear calibration function that maps arbitrary fluorescence
     units to physical units (ie molecules equivalent fluorophore, or *MEF*).
     
-    To use, set :attr:`beads_file` to an FCS file containing events collected *using
+    To use, set `beads_file` to an FCS file containing events collected *using
     the same cytometer settings as the data you're calibrating*.  Specify which 
-    beads you ran by setting :attr:`beads` to match one of the  values of 
-    :data:`BeadCalibrationOp.BEADS`; and set :attr:`units` to which channels you 
-    want calibrated and in which units.  Then, call :meth:`estimate()` and check the 
-    peak-finding with :meth:`default_view().plot()`.  If the peak-finding is wacky, 
-    try adjusting :attr:`bead_peak_quantile` and :attr:`bead_brightness_threshold`.  When 
-    the peaks are successfully identified, call :meth:`apply` to scale your 
+    beads you ran by setting `beads` to match one of the  values of 
+    :data:`BeadCalibrationOp.BEADS`; and set `units` to which channels you 
+    want calibrated and in which units.  Then, call `estimate()` and check the 
+    peak-finding with `default_view().plot()`.  If the peak-finding is wacky, 
+    try adjusting `bead_peak_quantile` and `bead_brightness_threshold`.  When 
+    the peaks are successfully identified, call `apply` to scale your 
     experimental data set. 
     
     If you can't make the peak finding work, please submit a bug report!
@@ -81,7 +81,7 @@ class BeadCalibrationOp(HasStrictTraits):
     units : Dict(Str, Str)
         A dictionary specifying the channels you want calibrated (keys) and
         the units you want them calibrated in (values).  The units must be
-        keys of the :attr:`beads` attribute.       
+        keys of the `beads` attribute.       
         
     beads_file : File
         A file containing the FCS events from the beads.
@@ -109,7 +109,7 @@ class BeadCalibrationOp(HasStrictTraits):
     force_linear : Bool (default = False)
         A linear fit in log space doesn't always go through the origin, which 
         means that the calibration function isn't strictly a multiplicative
-        scaling operation.  Set :attr:`force_linear` to force the such
+        scaling operation.  Set `force_linear` to force the such
         behavior.  Keep an eye on the diagnostic plot, though, to see how much
         error you're introducing!
    
@@ -130,7 +130,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
     Finally, the peaks are filtered by height (the histogram bin has a quantile
     greater than `bead_peak_quantile`) and intensity (brighter than 
-    :attr:`bead_brightness_threshold`).
+    `bead_brightness_threshold`).
     
     How to convert from a series of peaks to mean equivalent fluorochrome?
     If there's one peak, we assume that it's the brightest peak.  If there
@@ -226,7 +226,7 @@ class BeadCalibrationOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
+        experiment : `Experiment`
             The experiment used to compute the calibration.
             
         """
@@ -408,7 +408,7 @@ class BeadCalibrationOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
+        experiment : `Experiment`
             the experiment to which this operation is applied
             
         Returns
@@ -417,10 +417,10 @@ class BeadCalibrationOp(HasStrictTraits):
             A new experiment with the specified channels calibrated in
             physical units.  The calibrated channels also have new metadata:
             
-            - **bead_calibration_fn** : Callable (pandas.Series --> pandas.Series)
+            - **bead_calibration_fn** : Callable (`pandas.Series` --> `pandas.Series`)
                 The function to calibrate raw data to bead units
         
-            - **bead_units** : String
+            - **bead_units** : Str
                 The units this channel was calibrated to
         """
         
@@ -479,8 +479,8 @@ class BeadCalibrationOp(HasStrictTraits):
         
         Returns
         -------
-         IView
-            An diagnostic view, call :meth:`~BeadCalibrationDiagnostic.plot` to 
+        `IView`
+            An diagnostic view, call `BeadCalibrationDiagnostic.plot` to 
             see the diagnostic plots
         """
 
@@ -939,53 +939,53 @@ class BeadCalibrationOp(HasStrictTraits):
 
     """
     
-    OLD_BEADS = \
-    {
-     # from http://www.spherotech.com/RCP-30-5A%20%20Rev%20K%20ML%23%20073112%20Rev.%20B.xls
-     "Spherotech RCP-30-5A Lot AK02, AK03, AK04" :
-        { "MECSB" :   [205,   470,   1211,   2740,  7516,  20122,  35573],
-          "MEBFP" :   [844,   1958,  5422,   13522, 42717, 153501, 420359],
-          "MEFL"  :   [771,   2106,  6262,   15183, 45292, 136258, 291042],
-          "MEPE"  :   [487,   1474,  4516,   11260, 34341, 107608, 260461],
-          "MEPTR" :   [205,   643,   2021,   5278,  17018, 62451,  198933],
-          "MECY"  :   [1414,  3809,  10852,  27904, 85866, 324106, 1040895],
-          "MECY7" :   [12752, 39057, 142958, 448890],
-          "MEAP"  :   [341,   1027,  3156,   7750,  23446, 68702,  116813],
-          "MEAPCY7" : [173,   427,   1097,   2399,  6359,  17475,  30725]},
-        
-     # from http://www.spherotech.com/RCP-30-5a%20%20rev%20H%20ML%20071712.xls
-     "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01" :
-        { "MECSB" :   [216,   464,   1232,   2940,  7669,  19812,  35474],
-          "MEBFP" :   [861,   1997,  5776,   15233, 45389, 152562, 396759],
-          "MEFL" :    [792,   2079,  6588,   16471, 47497, 137049, 271647],
-          "MEPE" :    [531,   1504,  4819,   12506, 36159, 109588, 250892],
-          "MEPTR" :   [233,   669,   2179,   5929,  18219, 63944,  188785],
-          "MECY" :    [1614,  4035,  12025,  31896, 95682, 353225, 1077421],
-          "MEPCY7" :  [14916, 42336, 153840, 494263],
-          "MEAP" :    [373,   1079,  3633,   9896,  28189, 79831,  151008],
-          "MEAPCY7" : [2864,  7644,  19081,  37258]},
-     # from http://www.spherotech.com/RCP-30-5a%20%20rev%20G.2.xls
-     "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R":
-        { "MECSB" :   [179,   400,    993,   3203,  6083,  17777,  36331],
-          "MEBFP" :   [700,   1705,   4262,  17546, 35669, 133387, 412089],
-          "MEFL" :    [692,   2192,   6028,  17493, 35674, 126907, 290983],
-          "MEPE" :    [505,   1777,   4974,  13118, 26757, 94930,  250470],
-          "MEPTR" :   [207,   750,    2198,  6063,  12887, 51686,  170219],
-          "MECY" :    [1437,  4693,   12901, 36837, 76621, 261671, 1069858],
-          "MEPCY7" :  [32907, 107787, 503797],
-          "MEAP" :    [587,   2433,   6720,  17962, 30866, 51704,  146080],
-          "MEAPCY7" : [718,   1920,   5133,  9324,  14210, 26735]},
-    "Spherotech URCP-100-2H (9 peaks)":
-        {
-          "MEFL" :    [3531, 11373, 34643, 107265, 324936, 835306,  2517654, 6069240],
-          "MEPE" :    [2785, 9525,  28421, 90313,  275589, 713181,  2209251, 5738784],
-          "MEPTR" :   [1158, 4161,  12528, 41140,  130347, 344149,  1091393, 2938710],
-          "MEPCY" :   [6501, 20302, 59517, 183870, 550645, 1569470, 5109318, 17854584],
-          "MEPCY7" :  [4490, 10967, 30210, 87027,  283621, 975312,  4409101, 24259524],
-          "MEAP" :    [369,  749,   3426,  10413,  50013,  177490,  500257,  1252120],
-          "MEAPCY7" : [1363, 2656,  9791,  25120,  96513,  328967,  864905,  2268931],
-          "MECSB" :   [989,  2959,  8277,  25524,  71603,  173069,  491388,  1171641],
-          "MEBFP" :   [1957, 5579,  16005, 53621,  168302, 459809,  1581762, 4999251]}}
+#    OLD_BEADS = \
+#    {
+#     # from http://www.spherotech.com/RCP-30-5A%20%20Rev%20K%20ML%23%20073112%20Rev.%20B.xls
+#     "Spherotech RCP-30-5A Lot AK02, AK03, AK04" :
+#        { "MECSB" :   [205,   470,   1211,   2740,  7516,  20122,  35573],
+#          "MEBFP" :   [844,   1958,  5422,   13522, 42717, 153501, 420359],
+#          "MEFL"  :   [771,   2106,  6262,   15183, 45292, 136258, 291042],
+#          "MEPE"  :   [487,   1474,  4516,   11260, 34341, 107608, 260461],
+#          "MEPTR" :   [205,   643,   2021,   5278,  17018, 62451,  198933],
+#          "MECY"  :   [1414,  3809,  10852,  27904, 85866, 324106, 1040895],
+#          "MECY7" :   [12752, 39057, 142958, 448890],
+#          "MEAP"  :   [341,   1027,  3156,   7750,  23446, 68702,  116813],
+#          "MEAPCY7" : [173,   427,   1097,   2399,  6359,  17475,  30725]},
+#        
+#     # from http://www.spherotech.com/RCP-30-5a%20%20rev%20H%20ML%20071712.xls
+#     "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01" :
+#        { "MECSB" :   [216,   464,   1232,   2940,  7669,  19812,  35474],
+#          "MEBFP" :   [861,   1997,  5776,   15233, 45389, 152562, 396759],
+#          "MEFL" :    [792,   2079,  6588,   16471, 47497, 137049, 271647],
+#          "MEPE" :    [531,   1504,  4819,   12506, 36159, 109588, 250892],
+#          "MEPTR" :   [233,   669,   2179,   5929,  18219, 63944,  188785],
+#          "MECY" :    [1614,  4035,  12025,  31896, 95682, 353225, 1077421],
+#          "MEPCY7" :  [14916, 42336, 153840, 494263],
+#          "MEAP" :    [373,   1079,  3633,   9896,  28189, 79831,  151008],
+#          "MEAPCY7" : [2864,  7644,  19081,  37258]},
+#     # from http://www.spherotech.com/RCP-30-5a%20%20rev%20G.2.xls
+#     "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R":
+#        { "MECSB" :   [179,   400,    993,   3203,  6083,  17777,  36331],
+#          "MEBFP" :   [700,   1705,   4262,  17546, 35669, 133387, 412089],
+#          "MEFL" :    [692,   2192,   6028,  17493, 35674, 126907, 290983],
+#          "MEPE" :    [505,   1777,   4974,  13118, 26757, 94930,  250470],
+#          "MEPTR" :   [207,   750,    2198,  6063,  12887, 51686,  170219],
+#          "MECY" :    [1437,  4693,   12901, 36837, 76621, 261671, 1069858],
+#          "MEPCY7" :  [32907, 107787, 503797],
+#          "MEAP" :    [587,   2433,   6720,  17962, 30866, 51704,  146080],
+#          "MEAPCY7" : [718,   1920,   5133,  9324,  14210, 26735]},
+#    "Spherotech URCP-100-2H (9 peaks)":
+#        {
+#          "MEFL" :    [3531, 11373, 34643, 107265, 324936, 835306,  2517654, 6069240],
+#          "MEPE" :    [2785, 9525,  28421, 90313,  275589, 713181,  2209251, 5738784],
+#          "MEPTR" :   [1158, 4161,  12528, 41140,  130347, 344149,  1091393, 2938710],
+#          "MEPCY" :   [6501, 20302, 59517, 183870, 550645, 1569470, 5109318, 17854584],
+#          "MEPCY7" :  [4490, 10967, 30210, 87027,  283621, 975312,  4409101, 24259524],
+#          "MEAP" :    [369,  749,   3426,  10413,  50013,  177490,  500257,  1252120],
+#          "MEAPCY7" : [1363, 2656,  9791,  25120,  96513,  328967,  864905,  2268931],
+#          "MECSB" :   [989,  2959,  8277,  25524,  71603,  173069,  491388,  1171641],
+#          "MEBFP" :   [1957, 5579,  16005, 53621,  168302, 459809,  1581762, 4999251]}}
             
 
 @provides(cytoflow.views.IView)
@@ -1000,10 +1000,10 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     
     Attributes
     ----------
-    op : Instance(BeadCalibrationOp)
+    op : Instance(`BeadCalibrationOp`)
         The operation instance whose parameters we're plotting.  Set 
         automatically if you created the instance using 
-        :meth:`BeadCalibrationOp.default_view`.
+        `BeadCalibrationOp.default_view`.
 
     """
     
@@ -1019,7 +1019,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
+        experiment : `Experiment`
             The experiment used to create the diagnostic plot.
         
         """

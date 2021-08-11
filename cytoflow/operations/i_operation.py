@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.i_operation
 -------------------------------
-'''
+
+`i_operation` contains just one class:
+
+`IOperation` -- an `Interface` that all operation classes must implement.
+"""
 
 from traits.api import Interface, Constant
 
@@ -55,16 +59,16 @@ class IOperation(Interface):
         
         Parameters
         ----------
-        experiment : Experiment
-            the :class:`.Experiment` to use in the estimation.
+        experiment : `Experiment`
+            the `Experiment` to use in the estimation.
         
         subset : Str (optional)
-            a string passed to :meth:`pandas.DataFrame.query` to select the subset
+            a string passed to `pandas.DataFrame.query` to select the subset
             of data on which to run the parameter estimation.
             
         Raises
         ------
-        CytoflowOpException
+        `CytoflowOpException`
             If the operation can't be be completed because of bad op
             parameters.
         """ 
@@ -75,17 +79,17 @@ class IOperation(Interface):
         
         Parameters
         ----------
-        experiment : Experiment
-            the :class:`Experiment` to apply this op to
+        experiment : `Experiment`
+            the `Experiment` to apply this op to
                     
         Returns
         -------
-        Experiment
-            the old :class:`Experiment` with this operation applied
+        `Experiment`
+            the old `Experiment` with this operation applied
                 
         Raises
         ------
-        CytoflowOpException
+        `CytoflowOpException`
             If the operation can't be be completed because of bad op
             parameters.
         """
@@ -93,11 +97,11 @@ class IOperation(Interface):
     def default_view(self, **kwargs):
         """
         Many operations have a "default" view.  This can either be a diagnostic
-        for the operation's :meth:`estimate` method, an interactive for setting
+        for the operation's `estimate` method, an interactive for setting
         gates, etc.  Frequently it makes sense to link the properties of the
-        view to the properties of the :class:`IOperation`; sometimes, 
-        :meth:`default_view` is the only way to get the view (ie, it's not 
-        useful when it doesn't reference an :class:`IOperation` instance.)
+        view to the properties of the `IOperation`; sometimes, 
+        `default_view` is the only way to get the view (ie, it's not 
+        useful when it doesn't reference an `IOperation` instance.)
         
         Parameters
         ----------
@@ -106,7 +110,7 @@ class IOperation(Interface):
         
         Returns
         -------
-        IView
-            the IView instance
+        `IView`
+            the `IView` instance
         """
         

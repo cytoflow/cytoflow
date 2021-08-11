@@ -54,7 +54,7 @@ an unsupervized manner.
 
     A list of metadata attributes to aggregate the data before estimating
     the model.  For example, if the experiment has two pieces of metadata,
-    ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will fit 
+    ``Time`` and ``Dox``, setting `by` to ``["Time", "Dox"]`` will fit 
     the model separately to each subset of the data with a unique combination of
     ``Time`` and ``Dox``.
 

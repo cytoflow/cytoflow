@@ -43,7 +43,7 @@ class RangeOp(HasStrictTraits):
     ----------
     name : Str
         The operation name.  Used to name the new metadata field in the
-        experiment that's created by :meth:`apply`
+        experiment that's created by `apply`
         
     channel : Str
         The name of the channel to apply the range gate.
@@ -136,10 +136,10 @@ class RangeOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            a new experiment, the same as old :class:`~Experiment` but with a new
+            a new experiment, the same as old `Experiment` but with a new
             column of type ``bool`` with the same as the operation name.  The 
-            bool is ``True`` if the event's measurement in :attr:`channel` is 
-            greater than :attr:`low` and less than :attr:`high`; it is ``False`` 
+            bool is ``True`` if the event's measurement in `channel` is 
+            greater than `low` and less than `high`; it is ``False`` 
             otherwise.
         """
 
@@ -218,7 +218,7 @@ class RangeSelection(Op1DView, HistogramView):
         
     Notes
     -----
-    We inherit :attr:`xfacet` and :attr:`yfacet` from `cytoflow.views.HistogramView`, but
+    We inherit `xfacet` and `yfacet` from `cytoflow.views.HistogramView`, but
     they must both be unset!
         
     Examples

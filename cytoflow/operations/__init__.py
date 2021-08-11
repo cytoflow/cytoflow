@@ -21,9 +21,9 @@
 cytoflow.operations
 -------------------
 
-This package contains all of :mod:`cytoflow`'s operations -- classes
-implementing :class:`IOperation` whose ``apply()`` function takes an 
-:class:`Experiment` and returns an :class:`Experiment`.  
+This package contains all `cytoflow` operations -- classes
+implementing `IOperation` whose ``apply()`` function takes an 
+`Experiment` and returns an `Experiment`.  
 """
 
 from .i_operation import IOperation

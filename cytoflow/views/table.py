@@ -38,20 +38,20 @@ import cytoflow.utility as util
 class TableView(HasStrictTraits):
     """
     "Plot" a tabular view of a statistic.  Mostly useful for GUIs.  Each level 
-    of the statistic's index must be used in :attr:`row_facet`, 
-    :attr:`column_facet`, :attr:`subrow_facet`, or :attr:`subcolumn_facet`.
+    of the statistic's index must be used in `row_facet`, 
+    `column_facet`, `subrow_facet`, or `subcolumn_facet`.
     This module can't "plot" a statistic with more than four index levels
-    unless :attr:`subset` is set and that results in extra levels being 
+    unless `subset` is set and that results in extra levels being 
     dropped.
     
     Attributes
     ----------
     statistic : (str, str)
         The name of the statistic to plot.  Must be a key in the  
-        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        `Experiment.statistics` attribute of the `Experiment`
         being plotted.  Each level of the statistic's index must be used 
-        in :attr:`row_facet`, :attr:`column_facet`, :attr:`subrow_facet`, or
-        :attr:`subcolumn_facet`.
+        in `row_facet`, `column_facet`, `subrow_facet`, or
+        `subcolumn_facet`.
         
     row_facet, column_facet : str
         The statistic facets to be used as row and column headers.

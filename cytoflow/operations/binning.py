@@ -21,12 +21,12 @@
 cytoflow.operations.binning
 ---------------------------
 
-:mod:`binning` has two classes:
+`binning` has two classes:
 
-:class:`BinningOp` -- divides events in a channel into bins of equal 
+`BinningOp` -- divides events in a channel into bins of equal 
 width (after applying an optional scale)
 
-:class:`BinningView` -- a default view to display the bins.
+`BinningView` -- a default view to display the bins.
 """
 
 from traits.api import (HasStrictTraits, Str, provides, Constant, Int)
@@ -61,8 +61,8 @@ class BinningOp(HasStrictTraits):
         Make the bins equidistant along what scale?
         
     bin_width : Float
-        The width of the bins. If :attr:`scale` is ``log``, :attr:`bin_width` 
-        is in log-10 units; if :attr:`scale` is ``logicle``, an error is 
+        The width of the bins. If `scale` is ``log``, `bin_width` 
+        is in log-10 units; if `scale` is ``logicle``, an error is 
         thrown because the units are ill-defined.
  
 
@@ -124,15 +124,15 @@ class BinningOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            the old_experiment to which this op is applied
+        experiment : `Experiment`
+            the old experiment to which this op is applied
             
         Returns
         -------
-        Experiment
-            A new experiment with a condition column named :attr:`name`, which
+        `Experiment`
+            A new experiment with a condition column named `name`, which
             contains the location of the left-most edge of the bin that the
-            event is in.  If :attr:`bin_count_name` is set, another column
+            event is in.  If `bin_count_name` is set, another column
             is added with that name as well, containing the number of events
             in the same bin as the event.
 
@@ -246,8 +246,8 @@ class BinningOp(HasStrictTraits):
         
         Returns
         -------
-        IView
-            An view instance, call :meth:`plot()` to plot the bins.
+        `IView`
+            An view instance, call `plot()` to plot the bins.
         """
         v = BinningView(op = self)
         v.trait_set(**kwargs)

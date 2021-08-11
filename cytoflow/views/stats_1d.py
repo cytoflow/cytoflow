@@ -93,7 +93,7 @@ class Stats1DView(Base1DStatisticsView):
     def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to :meth:`plot`.
+        produce.  The values returned can be passed to `plot`.
         """
                 
         return super().enum_plots(experiment)

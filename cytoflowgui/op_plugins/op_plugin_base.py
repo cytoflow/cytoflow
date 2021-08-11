@@ -22,7 +22,7 @@ class OpHandler(Controller):
 #     # the default traits view
 #     def default_traits_view(self):
 #         """
-#         Gets the default :class:`traits.View` for an operation.
+#         Gets the default `traits.View` for an operation.
 #         
 #         Returns
 #         -------

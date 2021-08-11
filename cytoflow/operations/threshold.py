@@ -46,7 +46,7 @@ class ThresholdOp(HasStrictTraits):
     ----------
     name : Str
         The operation name.  Used to name the new column in the
-        experiment that's created by :meth:`apply`
+        experiment that's created by `apply`
         
     channel : Str
         The name of the channel to apply the threshold on.
@@ -134,10 +134,10 @@ class ThresholdOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            a new :class:`~experiment`, the same as the old experiment but with 
+            a new `experiment`, the same as the old experiment but with 
             a new column of type ``bool`` with the same name as the operation 
-            :attr:`name`.  The new condition is ``True`` if the event's 
-            measurement in :attr:`channel` is greater than :attr:`threshold`;
+            `name`.  The new condition is ``True`` if the event's 
+            measurement in `channel` is greater than `threshold`;
             it is ``False`` otherwise.
         """
         

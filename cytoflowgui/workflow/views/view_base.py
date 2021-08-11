@@ -34,7 +34,7 @@ class IterWrapper(object):
 
 class IWorkflowView(IView):
     """
-    An interface that extends a :mod:`cytoflow` view with functions 
+    An interface that extends a `cytoflow` view with functions 
     required for GUI support.
     
     In addition to implementing the interface below, another common thing to 
@@ -93,7 +93,7 @@ class IWorkflowView(IView):
         Parameters
         ----------
         idx : integer
-            The index of the :class:`.WorkflowItem` that holds this view.
+            The index of the `.WorkflowItem` that holds this view.
             
         Returns
         -------
@@ -144,7 +144,7 @@ class WorkflowView(HasStrictTraits):
         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         
-        If :meth:`should_plot` is called from a notification handler, the payload
+        If `should_plot` is called from a notification handler, the payload
         is the handler `event` parameter.
         """
         return True
@@ -185,7 +185,7 @@ class WorkflowFacetView(WorkflowView):
     
     def plot(self, experiment, **kwargs):
         """
-        A default :meth:`plot` that subsets by the :attr:`plotfacet` and
+        A default `plot` that subsets by the `plotfacet` and
         :attribute:`current_plot`. If you need it to do something else, you must
         override this method!
         """
@@ -203,7 +203,7 @@ class WorkflowByView(WorkflowView):
       
     def plot(self, experiment, **kwargs):
         """
-        A default :meth:`plot` that passes :attr:`current_plot` as the
+        A default `plot` that passes `current_plot` as the
         plot name.
         """
          

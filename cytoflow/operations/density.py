@@ -17,10 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.density
 ---------------------------
-'''
+
+The `density` module has two classes:
+
+`DensityGateOp` -- gates an `Experiment` based on a 
+two-dimensional (smoothed) density plot.
+
+`DensityTranslationDiagnostic` -- diagnostic view that plots the gate 
+estimated by the `DensityGateOp`.
+
+"""
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Array)
@@ -192,8 +201,8 @@ class DensityGateOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            The :class:`.Experiment` to use to estimate the gate parameters.
+        experiment : `Experiment`
+            The `Experiment` to use to estimate the gate parameters.
             
         subset : Str (default = None)
             If set, determine the gate parameters on only a subset of the
@@ -311,17 +320,17 @@ class DensityGateOp(HasStrictTraits):
     def apply(self, experiment):
         """
         Creates a new condition based on membership in the gate that was
-        parameterized with :meth:`estimate`.
+        parameterized with `estimate`.
         
         Parameters
         ----------
-        experiment : Experiment
-            the :class:`.Experiment` to apply the gate to.
+        experiment : `Experiment`
+            the `Experiment` to apply the gate to.
             
         Returns
         -------
-        Experiment
-            a new :class:`.Experiment` with the new gate applied.
+        `Experiment`
+            a new `Experiment` with the new gate applied.
         """
             
         if experiment is None:
@@ -425,8 +434,8 @@ class DensityGateOp(HasStrictTraits):
          
         Returns
         -------
-        IView
-            a diagnostic view, call :meth:`~DensityGateView.plot` to see the 
+        `IView`
+            a diagnostic view, call `DensityGateView.plot` to see the 
             diagnostic plot.
         """
         v = DensityGateView(op = self)
@@ -436,7 +445,7 @@ class DensityGateOp(HasStrictTraits):
 @provides(IView)
 class DensityGateView(By2DView, AnnotatingView, DensityView):
     """
-    A diagnostic view for :class:`DensityGateOp`.  Draws a density plot,
+    A diagnostic view for `DensityGateOp`.  Draws a density plot,
     then outlines the selected bins in white.
     
     Attributes

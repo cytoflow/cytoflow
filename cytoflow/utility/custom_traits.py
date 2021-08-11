@@ -21,7 +21,7 @@
 cytoflow.utility.custom_traits
 ------------------------------
 
-Custom traits for :class:`~cytoflow`
+Custom traits for `cytoflow`
 '''
 
 from warnings import warn

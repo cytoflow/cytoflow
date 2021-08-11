@@ -23,7 +23,7 @@ from cytoflow.operations import IOperation
 
 class IWorkflowOperation(IOperation):
     """
-    An interface that extends a :mod:`cytoflow` operation with functions 
+    An interface that extends a `cytoflow` operation with functions 
     required for GUI support.
     
     In addition to implementing the interface below, another common thing to 
@@ -31,13 +31,13 @@ class IWorkflowOperation(IOperation):
     order to add metadata that controls their handling by the workflow.  
     Currently, relevant metadata include:
     
-      * **apply** - This trait is used by the operations :meth:`apply` method.
+      * **apply** - This trait is used by the operations `apply` method.
        
-      * **estimate** - This trait is used by the operation's :meth:`estimate` method.
+      * **estimate** - This trait is used by the operation's `estimate` method.
         
-      * **estimate_result** - This trait is set as a result of calling :meth:`estimate`.
+      * **estimate_result** - This trait is set as a result of calling `estimate`.
      
-      * **status** - Holds status variables like the number of events from the :mod:`ImportOp`.
+      * **status** - Holds status variables like the number of events from the `ImportOp`.
     
       * **transient** - A temporary variable (not copied between processes or serialized).
     
@@ -45,7 +45,7 @@ class IWorkflowOperation(IOperation):
     ----------
         
     do_estimate : Event
-        Firing this event causes the operation's :meth:`estimate` method 
+        Firing this event causes the operation's `estimate` method 
         to be called.
         
     changed : Event
@@ -83,10 +83,10 @@ class IWorkflowOperation(IOperation):
         Should the owning WorkflowItem clear the estimated model by calling
         op.clear_estimate()?  `changed` can be:
         
-         - Changed.ESTIMATE -- the parameters required to call :meth:`estimate` 
+         - Changed.ESTIMATE -- the parameters required to call `estimate` 
          (ie traits with ``estimate = True`` metadata) have changed
             
-         - Changed.PREV_RESULT -- the previous :class:`.WorkflowItem`'s result changed    
+         - Changed.PREV_RESULT -- the previous `.WorkflowItem`'s result changed    
               
         If `should_clear_estimate` is called from a notificaion handler, then `payload` is
         the `event` object.
@@ -107,7 +107,7 @@ class IWorkflowOperation(IOperation):
         Parameters
         ----------
         idx : integer
-            The index of the :class:`.WorkflowItem` that holds this operation.
+            The index of the `.WorkflowItem` that holds this operation.
             
         Returns
         -------
@@ -118,7 +118,7 @@ class IWorkflowOperation(IOperation):
 
 class WorkflowOperation(HasStrictTraits):
     """
-    A default implementation of :class:`IWorkflowOperation`
+    A default implementation of `IWorkflowOperation`
     """
     
     # causes this operation's estimate() function to be called. observed in LocalWorkflow.

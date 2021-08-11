@@ -33,7 +33,7 @@ of the files that will be created.
 
     A list of metadata attributes to aggregate the data before exporting.
     For example, if the experiment has two pieces of metadata,
-    ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will export
+    ``Time`` and ``Dox``, setting `by` to ``["Time", "Dox"]`` will export
     one file for each subset of the data with a unique combination of
     ``Time`` and ``Dox``.
     

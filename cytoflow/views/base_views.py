@@ -43,17 +43,17 @@ class BaseView(HasStrictTraits):
     Attributes
     ----------
     xfacet, yfacet : String
-        Set to one of the :attr:`~.Experiment.conditions` in the :class:`.Experiment`, and
+        Set to one of the `Experiment.conditions` in the `.Experiment`, and
         a new row or column of subplots will be added for every unique value
         of that condition.
         
     huefacet : String
-        Set to one of the :attr:`~.Experiment.conditions` in the in the :class:`.Experiment`,
+        Set to one of the `Experiment.conditions` in the in the `.Experiment`,
         and a new color will be added to the plot for every unique value of 
         that condition.
         
     huescale : {'linear', 'log', 'logicle'}
-        How should the color scale for :attr:`huefacet` be scaled?
+        How should the color scale for `huefacet` be scaled?
     """
     
     xfacet = Str
@@ -68,7 +68,7 @@ class BaseView(HasStrictTraits):
         Parameters
         ----------
         experiment: Experiment
-            The :class:`.Experiment` to plot using this view.
+            The `.Experiment` to plot using this view.
             
         title : str
             Set the plot title
@@ -317,7 +317,7 @@ class BaseDataView(BaseView):
     ----------
     subset : str
         An expression that specifies the subset of the statistic to plot.
-        Passed unmodified to :meth:`pandas.DataFrame.query`.
+        Passed unmodified to `pandas.DataFrame.query`.
     """
 
     subset = Str
@@ -641,7 +641,7 @@ class BaseStatisticsView(BaseView):
         
     subset : str
         An expression that specifies the subset of the statistic to plot.
-        Passed unmodified to :meth:`pandas.DataFrame.query`.
+        Passed unmodified to `pandas.DataFrame.query`.
 
     """
     
@@ -712,9 +712,9 @@ class BaseStatisticsView(BaseView):
         Parameters
         ----------
         plot_name : str
-            If this :class:`IView` can make multiple plots, ``plot_name`` is
+            If this `IView` can make multiple plots, ``plot_name`` is
             the name of the plot to make.  Must be one of the values retrieved
-            from :meth:`enum_plots`.
+            from `enum_plots`.
 
         """
         
@@ -820,19 +820,19 @@ class BaseStatisticsView(BaseView):
 
 class Base1DStatisticsView(BaseStatisticsView):
     """
-    The base class for 1-dimensional statistic views -- ie, the :attr:`variable`
+    The base class for 1-dimensional statistic views -- ie, the `variable`
     attribute is on the x axis, and the statistic value is on the y axis.
     
     Attributes
     ----------
     statistic : (str, str)
         The name of the statistic to plot.  Must be a key in the  
-        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        `Experiment.statistics` attribute of the `Experiment`
         being plotted.
         
     error_statistic : (str, str)
         The name of the statistic used to plot error bars.  Must be a key in the
-        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        `Experiment.statistics` attribute of the `Experiment`
         being plotted.
         
     scale : {'linear', 'log', 'logicle'}
@@ -947,7 +947,7 @@ class Base1DStatisticsView(BaseStatisticsView):
 
 class Base2DStatisticsView(BaseStatisticsView):
     """
-    The base class for 2-dimensional statistic views -- ie, the :attr:`variable`
+    The base class for 2-dimensional statistic views -- ie, the `variable`
     attribute varies independently, and the corresponding values from the x and
     y statistics are plotted on the x and y axes.
     
@@ -955,12 +955,12 @@ class Base2DStatisticsView(BaseStatisticsView):
     ----------
     xstatistic, ystatistic : (str, str)
         The name of the statistics to plot.  Must be a keys in the  
-        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        `Experiment.statistics` attribute of the `Experiment`
         being plotted.
         
     x_error_statistic, y_error_statistic : (str, str)
         The name of the statistics used to plot error bars.  Must be keys in the
-        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        `Experiment.statistics` attribute of the `Experiment`
         being plotted.
         
     xscale, yscale : {'linear', 'log', 'logicle'}

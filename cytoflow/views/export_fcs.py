@@ -35,9 +35,9 @@ class ExportFCS(HasStrictTraits):
     """
     Exports events as FCS files.  
     
-    This isn't a traditional view, in that it doesn't implement :meth:`plot`.
-    Instead, use :meth:`enum_files` to figure out which files will be created
-    from a particular experiment, and :meth:`export` to export the FCS files.
+    This isn't a traditional view, in that it doesn't implement `plot`.
+    Instead, use `enum_files` to figure out which files will be created
+    from a particular experiment, and `export` to export the FCS files.
     
     The Cytoflow attributes will be encoded in keywords in the FCS TEXT
     segment, starting with the characters ``CF_``.  Any FCS keywords that 
@@ -52,7 +52,7 @@ class ExportFCS(HasStrictTraits):
         The directory to export to.
         
     by : List(Str)
-        A list of conditions from :attr:`~.Experiment.conditions`; each unique
+        A list of conditions from `Experiment.conditions`; each unique
         combination of conditions will be exported to an FCS file.
         
     keywords : Dict(Str, Str)
@@ -106,7 +106,7 @@ class ExportFCS(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            The :class:`.Experiment` to export
+            The `.Experiment` to export
         """
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")   
@@ -187,7 +187,7 @@ class ExportFCS(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            The :class:`.Experiment` to export
+            The `.Experiment` to export
         """
         
         if experiment is None:

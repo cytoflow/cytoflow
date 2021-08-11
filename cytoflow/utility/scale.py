@@ -162,14 +162,14 @@ def scale_factory(scale, experiment, **scale_params):
  
 def register_scale(scale_class):
     """
-    Register a new scale for the :func:`scale_factory` and :class:`.ScaleEnum`.
+    Register a new scale for the :func:`scale_factory` and `.ScaleEnum`.
     """
     
     _scale_mapping[scale_class.name] = scale_class
     
 def set_default_scale(scale):
     """
-    Set a default scale for :class:`.ScaleEnum`
+    Set a default scale for `.ScaleEnum`
     """
     
     global _scale_default

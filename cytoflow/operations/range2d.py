@@ -46,7 +46,7 @@ class Range2DOp(HasStrictTraits):
     ----------
     name : Str
         The operation name.  Used to name the new metadata field in the
-        experiment that's created by :meth:`apply`
+        experiment that's created by `apply`
         
     xchannel : Str
         The name of the first channel to apply the range gate.
@@ -162,13 +162,13 @@ class Range2DOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            a new :class:`~Experiment`, the same as the old experiment but with 
+            a new `Experiment`, the same as the old experiment but with 
             a new column with a data type of ``bool`` and the same as the 
-            operation :attr:`name`.  The bool is ``True`` if the event's 
-            measurement in :attr:`xchannel` is greater than :attr:`xlow` and
-            less than :attr:`high`, and the event's measurement in 
-            :attr:`ychannel` is greater than :attr:`ylow` and less than 
-            :attr:`yhigh`; it is ``False`` otherwise.
+            operation `name`.  The bool is ``True`` if the event's 
+            measurement in `xchannel` is greater than `xlow` and
+            less than `high`, and the event's measurement in 
+            `ychannel` is greater than `ylow` and less than 
+            `yhigh`; it is ``False`` otherwise.
         """
         
         if experiment is None:

@@ -21,22 +21,22 @@
 cytoflow.operations.base_op_views
 ---------------------------------
 
-Base classes for :class:`IOperation`s' default views.
+Base classes for `IOperation`s default views:
 
-:class:`OpView` - a view that has an operation, :attr:`~OpView.op`, as an attribute.
+`OpView` -- a view that has an operation, `OpView.op`, as an attribute.
 
-:class:`Op1DView` - an :class:`OpView` that has a :attr:`~.Op1DView.channel` attribute
-and its attendant :attr:`~.Op1DView.scale`.  This class overrides :class:`.Base1DView`
-to delegate those attributes to :attr:`~OpView.op`.
+`Op1DView` -- an `OpView` that has a `Op1DView.channel` attribute
+and its attendant `Op1DView.scale`.  This class overrides `Base1DView`
+to delegate those attributes to `OpView.op`.
 
-:class:`Op2DView` - an :class:`OpView` that has :attr:`~.Op2DView.xchannel` (and
-:attr:`~.Op2DView.xscale`) and :attr:`~.Op2DView.ychannel` (and :attr:`~.Op2DView.yscale`).
-This class overrides :class:`.Base2DView` to delegate those attributes to :attr:`~OpView.op`.
+`Op2DView` -- an `OpView` that has `Op2DView.xchannel` (and
+`Op2DView.xscale`) and `Op2DView.ychannel` (and `Op2DView.yscale`).
+This class overrides `Base2DView` to delegate those attributes to `OpView.op`.
 
-:class:`ByView` - an :class:`OpView` that can plot various plots depending on what is
-passed to :meth:`~ByView.plot`'s ``plot_name`` parameter.
+`ByView` -- an `OpView` that can plot various plots depending on what is
+passed to `ByView.plot`'s ``plot_name`` parameter.
 
-:class:`AnnotatingView` - An :class:`.IView` that plots an underlying data plot, then 
+`AnnotatingView` -- An `IView` that plots an underlying data plot, then 
 plots some annotations on top of it.
 '''
 
@@ -57,9 +57,9 @@ class OpView(BaseDataView):
     """
     Attributes
     ----------
-    op : Instance(IOperation)
-        The :class:`IOperation` that this view is associated with.  If you
-        created the view using :meth:`default_view`, this is already set.
+    op : Instance(`IOperation`)
+        The `IOperation` that this view is associated with.  If you
+        created the view using `default_view`, this is already set.
     """
     
     op = Instance(IOperation)
@@ -69,13 +69,13 @@ class Op1DView(OpView, Base1DView):
     """
     Attributes
     ----------
-    channel : String
+    channel : Str
         The channel this view is viewing.  If you created the view using 
-        :meth:`default_view`, this is already set.
+        `default_view`, this is already set.
         
     scale : {'linear', 'log', 'logicle'}
         The way to scale the x axes.  If you created the view using 
-        :meth:`default_view`, this may be already set.
+        `default_view`, this may be already set.
     """
     
     channel = DelegatesTo('op')
@@ -86,21 +86,21 @@ class Op2DView(OpView, Base2DView):
     """
     Attributes
     ----------
-    xchannel : String
+    xchannel : Str
         The channels to use for this view's X axis.  If you created the 
-        view using :meth:`default_view`, this is already set.
+        view using `default_view`, this is already set.
 
-    ychannel : String
+    ychannel : Str
         The channels to use for this view's Y axis.  If you created the 
-        view using :meth:`default_view`, this is already set.
+        view using `default_view`, this is already set.
         
     xscale : {'linear', 'log', 'logicle'}
         The way to scale the x axis.  If you created the view using 
-        :meth:`default_view`, this may be already set.
+        `default_view`, this may be already set.
         
     yscale : {'linear', 'log', 'logicle'}
         The way to scale the y axis.  If you created the view using 
-        :meth:`default_view`, this may be already set.
+        `default_view`, this may be already set.
     """
     xchannel = DelegatesTo('op')
     xscale = DelegatesTo('op')
@@ -111,14 +111,14 @@ class Op2DView(OpView, Base2DView):
 class ByView(OpView):
     """
     A view that can plot various plots based on the ``plot_name`` parameter
-    of :meth:`plot`.
+    of `plot`.
     
     Attributes
     ----------
-    facets : List(String)
+    facets : List(Str)
         A read-only list of the conditions used to facet this view.
         
-    by : List(String)
+    by : List(Str)
         A read-only list of the conditions used to group this view's data before
         plotting.
     """
@@ -139,12 +139,12 @@ class ByView(OpView):
         """
         Returns an iterator over the possible plots that this View can
         produce.  The values returned can be passed to the ``plot_name``
-        keyword of :meth:`plot`.
+        keyword of `plot`.
         
         Parameters
         ----------
-        experiment : Experiment
-            The :class:`Experiment` that will be producing the plots.
+        experiment : `Experiment`
+            The `Experiment` that will be producing the plots.
         """
         
         if experiment is None:
@@ -226,10 +226,10 @@ class ByView(OpView):
         
         Parameters
         ----------
-        plot_name : str
-            If this :class:`IView` can make multiple plots, ``plot_name`` is
+        plot_name : Str
+            If this `IView` can make multiple plots, ``plot_name`` is
             the name of the plot to make.  Must be one of the values retrieved
-            from :meth:`enum_plots`.
+            from `enum_plots`.
         """
         if experiment is None:
             raise util.CytoflowViewError('experiment',
@@ -328,7 +328,7 @@ class By2DView(ByView, Op2DView):
 @provides(IView)
 class NullView(BaseDataView):
     """
-    An :class:`IView` that doesn't actually do any plotting.
+    An `IView` that doesn't actually do any plotting.
     """
     
     def _grid_plot(self, experiment, grid, **kwargs):
@@ -338,17 +338,17 @@ class NullView(BaseDataView):
 @provides(IView)
 class AnnotatingView(BaseDataView):
     """
-    A :class:`IView` that plots an underlying data plot, then plots some
-    annotations on top of it.  See :class:`~.gaussian.GaussianMixture1DView` for an
+    A `IView` that plots an underlying data plot, then plots some
+    annotations on top of it.  See `gaussian.GaussianMixture1DView` for an
     example.  By default, it assumes that the annotations are to be plotted
-    in the same color as the view's :attr:`huefacet`, and sets :attr:`huefacet`
+    in the same color as the view's `huefacet`, and sets `huefacet`
     accordingly if the annotation isn't already set to a different facet.
     
     .. note::
     
         The ``annotation_facet`` and ``annotation_plot`` parameters that the
-        :meth:`plot` method consumes are only for internal use, which is why
-        they're not documented in the :meth:`plot` docstring.
+        `plot` method consumes are only for internal use, which is why
+        they're not documented in the `plot` docstring.
     """
         
     def plot(self, experiment, **kwargs):
