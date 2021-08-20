@@ -108,7 +108,7 @@ class GaussianMixtureOp(HasStrictTraits):
     scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
         channel is in `channels` but not in `scale`, the current 
-        package-wide default (set with :func:`set_default_scale`) is used.
+        package-wide default (set with `set_default_scale`) is used.
 
     num_components : Int (default = 1)
         How many components to fit to the data?  Must be a positive integer.

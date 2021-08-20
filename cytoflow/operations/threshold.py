@@ -17,10 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.threshold
 -----------------------------
-'''
+
+Applies a threshold gate to an `Experiment`. `threshold` has two classes:
+
+`ThresholdOp` -- Applies the gate, given a threshold
+
+`ThresholdSelection` -- an `IView` that allows you to view and/or
+interactively set the threshold.
+"""
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, 
                         Bool, on_trait_change, provides, Any, 
@@ -128,13 +135,13 @@ class ThresholdOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            the experiment to which this operation is applied
+        experiment : `Experiment`
+            the `Experiment` to which this operation is applied
             
         Returns
         -------
         Experiment
-            a new `experiment`, the same as the old experiment but with 
+            a new `Experiment`, the same as the old experiment but with 
             a new column of type ``bool`` with the same name as the operation 
             `name`.  The new condition is ``True`` if the event's 
             measurement in `channel` is greater than `threshold`;
@@ -187,18 +194,11 @@ class ThresholdOp(HasStrictTraits):
 class ThresholdSelection(Op1DView, HistogramView):
     """
     Plots, and lets the user interact with, a threshold on the X axis.
-    
-    TODO - beautify!
-    
+        
     Attributes
     ----------
     interactive : Bool
         is this view interactive?
-        
-    Notes
-    -----
-    We inherit `xfacet` and `yfacet` from `cytoflow.views.HistogramView`, but
-    they must both be unset!
         
     Examples
     --------

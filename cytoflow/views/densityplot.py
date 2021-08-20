@@ -20,6 +20,10 @@
 """
 cytoflow.views.densityplot
 --------------------------
+
+Plot a 2D density plot.
+
+`DensityView` -- the `IView` class that makes the plot.
 """
 
 from traits.api import provides, Constant

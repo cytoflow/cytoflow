@@ -21,7 +21,31 @@
 cytoflow.utility.util_functions
 -------------------------------
 
-Useful utility functions
+Useful (mostly numeric) utility functions.
+
+`iqr` -- calculate the interquartile range for an array of numberes
+
+`num_hist_bins` -- calculate the number of histogram bins using Freedman-Diaconis
+
+`geom_mean` -- compute the geometric mean
+
+`geom_sd` -- compute the geometric standard deviation
+
+`geom_sd_range` --  compute [geom_mean / geom_sd, geom_mean * geom_sd]
+
+`geom_sem` -- compute the geometric standard error of the mean
+
+`geom_sem_range` -- compute [geom_mean / geom_sem, geom_mean * geom_sem]
+
+`cartesian` -- generate the cartesian product of input arrays
+
+`sanitize_identifier` -- makes a string a valid Python identifier by replacing all non-safe characters with '_'
+
+`random_string` -- Makes a random string of ascii digits and lowercase letters
+
+`is_numeric` -- determine if a `pandas.Series` or `numpy.ndarray` is numeric from its dtype
+
+`cov2corr` -- compute the correlation matrix from the covariance matric
 """
 
 import random, string
@@ -142,7 +166,7 @@ def geom_sd(a):
     
     Notes
     -----
-    As with :func:`geom_mean`, non-positive numbers pose a problem.  The approach
+    As with `geom_mean`, non-positive numbers pose a problem.  The approach
     here, though less rigorously validated than the one above, is to replace
     negative numbers with their absolute value plus 2 * geometric mean, then
     go about our business as per the Wikipedia page for geometric sd[1].
@@ -195,7 +219,7 @@ def geom_sem(a):
     
     Notes
     -----
-    As with :func:`geom_mean`, non-positive numbers pose a problem.  The approach
+    As with `geom_mean`, non-positive numbers pose a problem.  The approach
     here, though less rigorously validated than the one above, is to replace
     negative numbers with their absolute value plus 2 * geometric mean.  The
     geometric SEM is computed as in [1].
@@ -316,7 +340,7 @@ def random_string(n):
 
 def is_numeric(s):
     """
-    Determine if a ``pandas.Series`` or ``numpy.ndarray`` is numeric
+    Determine if a `pandas.Series` or `numpy.ndarray` is numeric
     from its dtype.
     """
     return s.dtype.kind in 'iufc'

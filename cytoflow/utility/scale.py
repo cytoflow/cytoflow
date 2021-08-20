@@ -17,14 +17,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.utility.scale
 ----------------------
-'''
+
+Base classes and functions for `cytoflow` scales.
+
+`IScale` -- the `traits.Interface` that scales must implement
+
+`ScaleMixin` -- provides useful functionality that scales can inherity
+
+`scale_factory` -- make a new instance of a scale
+
+`register_scale` -- register a new type of scale
+
+`set_default_scale`, `get_default_scale` -- sets and gets the default scale
+"""
 
 import numbers
 
-from traits.api import Interface, Str, Dict, Instance, Tuple, Array
+from traits.api import Interface, Str, Instance, Tuple, Array
 
 from .cytoflow_errors import CytoflowError
 from .util_functions import is_numeric
@@ -105,6 +117,10 @@ class IScale(Interface):
         
         
 class ScaleMixin(HasStrictTraits):
+    """
+    Provides useful functionality that scales can inherit.
+    """
+    
     def __init__(self, **kwargs):
         
         # run the traits constructor
@@ -162,14 +178,14 @@ def scale_factory(scale, experiment, **scale_params):
  
 def register_scale(scale_class):
     """
-    Register a new scale for the :func:`scale_factory` and `.ScaleEnum`.
+    Register a new scale for the `scale_factory` and `ScaleEnum`.
     """
     
     _scale_mapping[scale_class.name] = scale_class
     
 def set_default_scale(scale):
     """
-    Set a default scale for `.ScaleEnum`
+    Set a default scale for `ScaleEnum`
     """
     
     global _scale_default
@@ -181,6 +197,7 @@ def set_default_scale(scale):
     _scale_default = scale
     
 def get_default_scale():
+    """Get the defaults scale set with `set_default_scale`"""
     return _scale_default
 
 # register the new scales

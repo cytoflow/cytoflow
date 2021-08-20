@@ -17,10 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.pca
 -----------------------
-'''
+
+Apply principal component analysis (PCA) to flow data -- decomposes the
+multivariate data set into orthogonal components that explain the maximum
+amount of variance.  `pca` has one class:
+
+`PCAOp` -- the `IOperation` that applies PCA to an `Experiment`.
+"""
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
@@ -61,7 +67,7 @@ class PCAOp(HasStrictTraits):
     scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
         channel is in `channels` but not in `scale`, the current 
-        package-wide default (set with :func:`.set_default_scale`) is used.
+        package-wide default (set with `set_default_scale`) is used.
 
     num_components : Int (default = 2)
         How many components to fit to the data?  Must be a positive integer.

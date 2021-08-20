@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.utility.linear_scale
 -----------------------------
-'''
+
+A scale that doesn't transform data at all -- a "default" scale.
+
+`LinearScale` -- implements a no-op `IScale`
+"""
 
 import matplotlib.colors
 

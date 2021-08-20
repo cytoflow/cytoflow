@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.xform_stat
 ------------------------------
-'''
+
+Transforms a statistic. `xform_stat` has one class:
+
+`TransformStatisticOp` -- apply a function to a statistic, making a new statistic.
+"""
 
 from warnings import warn
 import pandas as pd
@@ -109,8 +113,8 @@ class TransformStatisticOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            The experiment to apply the operation to
+        experiment : `Experiment`
+            The `Experiment` to apply the operation to
         
         Returns
         -------

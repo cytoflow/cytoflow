@@ -17,6 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflow.utility
+----------------
+
+This package contains a bunch of utility functions to support the other modules
+in `cytoflow`. This includes numeric functions, algorithms, error handling, 
+custom traits, custom `matplotlib` widgets, custom `matplotlib` scales, and
+docstring handling.
+"""
+
 from .util_functions import (cartesian, iqr, geom_mean, geom_sd, geom_sd_range,
                              geom_sem, geom_sem_range, num_hist_bins, sanitize_identifier, 
                              random_string, is_numeric, cov2corr)

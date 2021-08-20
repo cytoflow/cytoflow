@@ -18,12 +18,31 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-'''
+"""
 cytoflow.utility.docstring
 --------------------------
 
-Utility functions for operating on docstrings.
-'''
+Utility functions for operating on docstrings.  They all assume that docstrings
+are formatted using the NumPy standard style:
+
+https://numpydoc.readthedocs.io/en/latest/format.html
+
+`expand_class_attributes` -- take entries in the ``Attributes`` section of a 
+class's ancestors' docstrings and adds them to the ``Attributes`` section of 
+this class's docstring.
+
+`expand_method_parameters` -- expand the ``Parameters`` section of a method's 
+docstring with ``Parameters`` from the overridden methods in the class's 
+ancestors.
+
+`find_section` -- find a named section in a `numpy`-formatted docstring.
+
+`get_class_attributes` -- get the entries from the ``Attributes`` section of 
+a class's docstring
+
+`get_method_parameters` -- get the entries from the ``Parameters`` section of a 
+method's docstring
+"""
 
 import re
 from warnings import warn

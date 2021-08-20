@@ -20,11 +20,16 @@
 '''
 cytoflow.utility.logging
 ------------------------
+
+Utilities to help with logging.
+
+`MplFilter` -- a `logging.Filter` that removes nuisance warnings
 '''
 
 import logging
 
 class MplFilter(logging.Filter):
+    """A `logging.Filter` that removes nuisance warnings"""
     def filter(self, record):
         if record.msg == "posx and posy should be finite values":
             return 0

@@ -17,10 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.range
 -------------------------
-'''
+
+Applies a (1D) range gate to an `Experiment`. `range` has two classes:
+
+`RangeOp` -- Applies the gate, given a pair of thresholds
+
+`RangeSelection` -- an `IView` that allows you to view the range and/or
+interactively set the thresholds.
+"""
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, Bool, 
                         provides, on_trait_change, Any, Constant)
@@ -126,17 +133,18 @@ class RangeOp(HasStrictTraits):
     _selection_view = Instance('RangeSelection', transient = True)
         
     def apply(self, experiment):
-        """Applies the range gate to an experiment.
+        """
+        Applies the range gate to an experiment.
         
         Parameters
         ----------
-        experiment : Experiment
-            the old_experiment to which this op is applied
+        experiment : `Experiment`
+            the `Experiment` to which this op is applied
             
         Returns
         -------
         Experiment
-            a new experiment, the same as old `Experiment` but with a new
+            a new    `Experiment`, the same as old `Experiment` but with a new
             column of type ``bool`` with the same as the operation name.  The 
             bool is ``True`` if the event's measurement in `channel` is 
             greater than `low` and less than `high`; it is ``False`` 
@@ -208,18 +216,12 @@ class RangeSelection(Op1DView, HistogramView):
     """
     Plots, and lets the user interact with, a selection on the X axis.
     
-    
     Attributes
     ----------
-        
+
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
         with a mouse drag?
-        
-    Notes
-    -----
-    We inherit `xfacet` and `yfacet` from `cytoflow.views.HistogramView`, but
-    they must both be unset!
         
     Examples
     --------

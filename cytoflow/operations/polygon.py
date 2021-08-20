@@ -17,10 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.polygon
 ---------------------------
-'''
+
+Apply a polygon gate to two channels in an `Experiment`.  
+`polygon` has two classes:
+
+`PolygonOp` -- Applies the gate, given a set of vertices.
+
+`PolygonSelection` -- an `IView` that allows you to view the polygon and/or
+interactively set the vertices.
+"""
 
 from traits.api import (HasStrictTraits, Str, List, Float, provides,
                         Instance, Bool, on_trait_change, Any,
@@ -115,7 +123,7 @@ class PolygonOp(HasStrictTraits):
        If you want to use the interactive default view in a Jupyter notebook,
        make sure you say ``%matplotlib notebook`` in the first cell 
        (instead of ``%matplotlib inline`` or similar).  Then call 
-       ``default_view()`` with ``interactive = True``::
+       `default_view` with ``interactive = True``::
        
            df = p.default_view(huefacet = "Dox",
                                xscale = 'log',
@@ -162,16 +170,16 @@ class PolygonOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            a new 'Experiment`, the same as ``old_experiment`` but with 
+            a new 'Experiment`, the same as ``experiment`` but with 
             a new column of type `bool` with the same as the operation name.  
             The bool is ``True`` if the event's measurement is within the 
             polygon, and ``False`` otherwise.
             
         Raises
         ------
-        util.CytoflowOpError
+        CytoflowOpError
             if for some reason the operation can't be applied to this
-            experiment. The reason is in `.CytoflowOpError.args`
+            experiment. The reason is in `CytoflowOpError.args`
         """
         
         if experiment is None:
@@ -267,7 +275,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
     Examples
     --------
 
-    In a Jupyter notebook with `%matplotlib notebook`
+    In a Jupyter notebook with ``%matplotlib notebook``
     
     >>> s = flow.PolygonOp(xchannel = "V2-A",
     ...                    ychannel = "Y2-A")

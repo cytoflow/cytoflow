@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.utility.log_scale
 --------------------------
-'''
+
+A scale that transforms data using a base-10 log.
+
+`LogScale` -- implements `IScale`, the `cytoflow` interface for the scale.
+"""
 
 from traits.api import (Instance, Str, provides, Constant, Enum, Float, 
                         Property, Tuple, Array) 
@@ -52,6 +56,10 @@ class LogScale(ScaleMixin):
     _channel_threshold = Float(0.1)
 
     def get_mpl_params(self, ax):
+        """
+        Returns a dict with the traits needed to initialize an instance of
+        `matplotlib.scale.ScaleBase`
+        """
         return {"nonpositive" : self.mode}
         
     def _set_threshold(self, threshold):
@@ -87,6 +95,13 @@ class LogScale(ScaleMixin):
                 
         
     def __call__(self, data):
+        """
+        Transforms `data` using this scale.
+        
+        Careful!  May return `NaN` if the scale domain doesn't match the data 
+        (ie, applying a log10 scale to negative numbers.)
+        """
+        
         # this function should work with: int, float, tuple, list, pd.Series, 
         # np.ndframe.  it should return the same data type as it was passed.
         
@@ -122,7 +137,11 @@ class LogScale(ScaleMixin):
                                 .format(type(data)))
                         
     def inverse(self, data):
-        # this function shoujld work with: int, float, tuple, list, pd.Series, 
+        """
+        Transforms 'data' using the inverse of this scale.
+        """
+        
+        # this function should work with: int, float, tuple, list, pd.Series, 
         # np.ndframe
         if isinstance(data, (int, float)):
             return np.power(10, data)
@@ -139,6 +158,10 @@ class LogScale(ScaleMixin):
                                 .format(type(data)))
     
     def clip(self, data):
+        """
+        Clips data to the range of the scale function
+        """
+        
         if isinstance(data, pd.Series):            
             return data.clip(lower = self.threshold)
         elif isinstance(data, np.ndarray):
@@ -155,6 +178,11 @@ class LogScale(ScaleMixin):
                 raise CytoflowError("Unknown data type in LogScale.clip") from e
             
     def norm(self, vmin = None, vmax = None):
+        """
+        A factory function that returns `matplotlib.colors.Normalize` instance,
+        which normalizes values for a `matplotlib` color palette.
+        """
+        
         if vmin is not None and vmax is not None:
             pass
         elif self.channel:

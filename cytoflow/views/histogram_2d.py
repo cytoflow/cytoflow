@@ -20,6 +20,10 @@
 """
 cytoflow.views.histogram_2d
 ---------------------------
+
+Plot a 2D histogram.
+
+`Histogram2DView` -- the `IView` class that makes the plot.
 """
 
 from traits.api import provides

@@ -17,10 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.quad
 ------------------------
-'''
+
+Applies a (2D) quad gate to an `Experiment`. `quad` has two classes:
+
+`QuadOp` -- Applies the gate, given a pair of thresholds
+
+`QuadSelection` -- an `IView` that allows you to view the quadrants and/or
+interactively set the thresholds.
+"""
 
 from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
                         provides, on_trait_change, Any, Constant)
@@ -148,12 +155,13 @@ class QuadOp(HasStrictTraits):
     _selection_view = Instance('QuadSelection', transient = True)
 
     def apply(self, experiment):
-        """Applies the quad gate to an experiment.
+        """
+        Applies the quad gate to an experiment.
         
         Parameters
         ----------
-        experiment : Experiment
-            the old experiment to which this op is applied
+        experiment : `Experiment`
+            the `Experiment` to which this op is applied
             
         Returns
         -------
@@ -163,6 +171,11 @@ class QuadOp(HasStrictTraits):
             The new column is of type *Category*, with values ``name_1``, ``name_2``, 
             ``name_3``, and ``name_4``, applied to events CLOCKWISE from upper-left.
 
+        Raises
+        ------
+        CytoflowOpError
+            if for some reason the operation can't be applied to this
+            experiment. The reason is in `CytoflowOpError.args`
         """
 
         # TODO - the naming scheme (name_1, name_2, etc) is semantically weak.  
@@ -248,18 +261,14 @@ class QuadOp(HasStrictTraits):
     
 @provides(ISelectionView)
 class QuadSelection(Op2DView, ScatterplotView):
-    """Plots, and lets the user interact with, a quadrant gate.
+    """
+    Plots, and lets the user interact with, a quadrant gate.
     
     Attributes
     ----------
     interactive : Bool
         is this view interactive?  Ie, can the user set the threshold with a 
         mouse click?
-        
-    Notes
-    -----
-    We inherit `xfacet` and `yfacet` from 
-    `cytoflow.views.ScatterplotView`, but they must both be unset!
         
     Examples
     --------

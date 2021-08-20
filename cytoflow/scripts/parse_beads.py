@@ -17,12 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.scripts.parse_beads
 ----------------------------
 
-Parse beads.csv into a dict to go in cytoflow.operations.bead_calibration
-'''
+Parse beads.csv into a dict to go in cytoflow.operations.bead_calibration.
+(As new beads are added, please add them to cytoflow/operations/beads.csv, then
+run this and put the result in `cytoflow.operations.bead_calibration`)
+"""
 
 
 # format of the input file is CSV

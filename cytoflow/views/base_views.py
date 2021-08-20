@@ -17,10 +17,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.views.base_views
 -------------------------
-'''
+
+Base classes for views.
+
+I found, as I wrote a bunch of views, that I was also writing a bunch of shared
+boiler-plate code.  This led to more bugs and a harder-to-maintain codebase.
+So, I extracted the copied code in a short hierarchy of reusable base classes:
+
+`BaseView` -- implements a view with row, column and hue facets.
+After setting up the facet grid, it calls the derived class's 
+`_grid_plot` to actually do the plotting.  `BaseView.plot` also
+has parameters to set the plot style, legend, axis labels, etc.
+  
+`BaseDataView` -- implements a view that plots an `Experiment`'s
+data (as opposed to a statistic.)  Includes functionality for subsetting
+the data before plotting, and determining axis limits and scales.
+  
+`Base1DView` -- implements a 1-dimensional data view.  See 
+`HistogramView` for an example.
+  
+`Base2DView` -- implements a 2-dimensional data view.  See
+`ScatterplotView` for an example.
+  
+`BaseNDView` -- implements an N-dimensional data view.  See
+`RadvizView` for an example.
+  
+`BaseStatisticsView` -- implements a view that plots a statistic from
+an `Experiment` (as opposed to the underlying data.)  These views
+have a "primary" `BaseStatisticsView.variable`, and can be subset
+as well.
+  
+`Base1DStatisticsView` -- implements a view that plots one dimension
+of a statistic.  See `BarChartView` for an example.
+  
+`Base2DStatisticsView` -- implements a view that plots two dimensions
+of a statistic.  See `Stats2DView` for an example.
+"""
 
 from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
 import matplotlib as mpl
@@ -112,7 +147,7 @@ class BaseView(HasStrictTraits):
         palette : palette name, list, or dict
             Colors to use for the different levels of the hue variable. 
             Should be something that can be interpreted by
-            :func:`seaborn.color_palette`, or a dictionary mapping hue levels to 
+            `seaborn.color_palette`, or a dictionary mapping hue levels to 
             matplotlib colors.
             
         despine : Bool

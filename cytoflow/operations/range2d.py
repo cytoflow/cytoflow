@@ -20,6 +20,14 @@
 '''
 cytoflow.operations.range2d
 ---------------------------
+
+Applies a 2D range gate (ie, a rectangle gate) to an `Experiment`. 
+`range2d` has two classes:
+
+`Range2DOp` -- Applies the gate, given four thresholds
+
+`Range2DSelection` -- an `IView` that allows you to view the range and/or
+interactively set the thresholds.
 '''
 
 import pandas as pd
@@ -58,7 +66,7 @@ class Range2DOp(HasStrictTraits):
         The highest value in xchannel to include in this gate.
         
     ychannel : Str
-        The name of the secon channel to apply the range gate.
+        The name of the second channel to apply the range gate.
         
     ylow : Float
         The lowest value in ychannel to include in this gate.
@@ -156,8 +164,8 @@ class Range2DOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            the old_experiment to which this op is applied
+        experiment : `Experiment`
+            the `Experiment` to which this op is applied
             
         Returns
         -------
@@ -266,11 +274,6 @@ class RangeSelection2D(Op2DView, ScatterplotView):
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
         with a mouse drag?
-        
-    Notes
-    -----
-    We inherit `xfacet` and `yfacet` from `cytoflow.views.ScatterplotView`, but
-    they must both be unset!
         
     Examples
     --------

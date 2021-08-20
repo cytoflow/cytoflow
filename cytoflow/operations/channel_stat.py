@@ -21,7 +21,7 @@
 cytoflow.operations.channel_stat
 --------------------------------
 
-`channel_stat` has one class:
+Creates a new statistic. `channel_stat` has one class:
 
 `ChannelStatisticOp` -- applies a function to subsets of a data set,
 and adds the resulting statistic to the `Experiment`

@@ -20,6 +20,10 @@
 """
 cytoflow.views.export_fcs
 -------------------------
+
+A "view" that exports events as FCS files.
+
+`ExportFCS` -- `BarChartView` -- the `IView` class that does the exporting.
 """
 
 import re

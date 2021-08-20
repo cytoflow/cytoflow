@@ -17,10 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.operations.kmeans
 --------------------------
-'''
+
+Use k-means clustering to cluster events in any number of dimensions.
+`kmeans` has three classes:
+
+`KMeansOp` -- the `IOperation` to perform the clustering.
+
+`KMeans1DView` -- a diagnostic view of the clustering (1D, using a histogram)
+
+`KMeans2DView` -- a diagnostic view of the clustering (2D, using a scatterplot)
+"""
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
@@ -64,7 +73,7 @@ class KMeansOp(HasStrictTraits):
     scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
         channel is in `channels` but not in `scale`, the current 
-        package-wide default (set with :func:`.set_default_scale`) is used.
+        package-wide default (set with `set_default_scale`) is used.
     
         .. note::
            Sometimes you may see events labeled ``{name}_None`` -- this results 
@@ -453,6 +462,8 @@ class KMeansOp(HasStrictTraits):
 @provides(IView)
 class KMeans1DView(By1DView, AnnotatingView, HistogramView):
     """
+    A diagnostic view for `KMeansOp` (1D, using a histogram)
+    
     Attributes
     ----------    
     op : Instance(KMeansOp)
@@ -517,6 +528,8 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
 @provides(IView)
 class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
     """
+    A diagnostic view for `KMeansOp` (2D, using a scatterplot).
+    
     Attributes
     ----------
     op : Instance(KMeansOp)

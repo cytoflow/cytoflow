@@ -20,6 +20,22 @@
 '''
 cytoflow.operations.import_op
 -----------------------------
+
+`import_op` has two classes:
+
+`Tube` -- represents a tube in a flow cytometry experiment -- an FCS file name
+and a dictionary of experimental conditions.
+
+`ImportOp` -- the operation that actually creates a new `Experiment` from a list
+of `Tube`s.
+
+There are a few utility functions as well:
+
+  - `parse_tube` -- parse an FCS file.
+
+  - `check_tube` -- checks an FCS file's parameters against an `Experiment`.
+  
+  - `autodetect_name_metadata` -- see if ``$PnN`` or ``$PnS`` has the channel names
 '''
 
 import warnings, math
@@ -460,6 +476,30 @@ class ImportOp(HasStrictTraits):
 
 
 def check_tube(filename, experiment, data_set = 0):
+    """
+    Check to see if an FCS file can be parsed, and that the tube's parameters 
+    are the same as those already in the `Experiment`.  If not, raises `CytoflowError`.
+    At the moment, only checks $PnV, the detector voltages.
+    
+    Parameters
+    ----------
+    filename : string
+        An FCS filename
+        
+    experiment : `Experiment`
+        The `Experiment` to check ``filename`` against.
+        
+    data_set : int (optional, default = 0)
+        The FCS standard allows for multiple data sets; ``data_set`` 
+        specifies which one to check.
+        
+    Raises
+    ------
+    `CytoflowError`
+        If the FCS file can't be read, or if the voltages in ``filename`` are
+        different than those in ``experiment``.
+        
+    """
     
     if experiment is None:
         raise util.CytoflowError("No experiment specified")
@@ -505,7 +545,24 @@ def check_tube(filename, experiment, data_set = 0):
         # TODO check the delay -- and any other params?
         
 def autodetect_name_metadata(filename, data_set = 0):
-
+    """
+    Tries to determine whether the channel names should come from
+    $PnN or $PnS.
+    
+    Parameters
+    ----------
+    filename : string
+        The name of the FCS file to operate on
+        
+    data_set : int (optional, default = 0)
+        Which data set in the FCS file to operate on
+        
+    Returns
+    -------
+    The name of the parameter to parse channel names from, 
+    either "$PnN" or "$PnS"
+    
+    """
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -551,7 +608,36 @@ def autodetect_name_metadata(filename, data_set = 0):
 
 # module-level, so we can reuse it in other modules
 def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False):   
+    """
+    Parses an FCS file.  A thin wrapper over `fcsparser.parse`.
+    
+    Parameters
+    ----------
+    filename : string
+        The file to parse.
         
+    experiment : `Experiment` (optional, default: None)
+        If provided, check the tube's parameters against this experiment
+        first.
+        
+    data_set : int (optional, default: 0)
+        Which data set in the FCS file to parse?
+        
+    metadata_only : bool (optional, default: False)
+        If ``True``, only parse the metadata.  Because this is at the beginning
+        of the FCS file, this happens much faster than parsing the entire file.
+        
+    Returns
+    -------
+    tube_metadata : dict
+        The metadata from the FCS file
+        
+    tube_data : `pandas.DataFrame` 
+        The actual tabular data from the FCS file.  Each row is an event, and
+        each column is a channel.
+        
+    """
+    
     if experiment:
         check_tube(filename, experiment)
         name_metadata = experiment.metadata["name_metadata"]

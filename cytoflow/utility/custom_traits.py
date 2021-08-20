@@ -17,17 +17,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.utility.custom_traits
 ------------------------------
 
 Custom traits for `cytoflow`
-'''
+
+`PositiveInt`, `PositiveFloat` -- versions of `Int` and `Float` that must be 
+positive (and optionally 0).
+
+`PositiveCInt`, `PositiveCFloat` -- versions of `CInt`, `CFloat` that must
+be positive (and optionally 0).
+
+`IntOrNone`, `FloatOrNone` -- versions of `Int` and `Float` that may also
+hold the value ``None``.
+
+`CIntOrNone`, `CFloatOrNone` -- versions of `CInt` and `CFloat` that may also
+hold the value ``None``.
+
+`ScaleEnum` -- an enumeration whose value is one of the registered scales.
+
+`Removed` -- a trait that was present in a previous version but was removed.
+
+`Deprecated` -- a trait that was present in a previous version but was renamed. 
+"""
 
 from warnings import warn
 import inspect
 
-from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, TraitType, ValidateTrait)
+from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, TraitType)
 from . import scale
 from . import CytoflowError, CytoflowWarning
 
@@ -53,7 +71,7 @@ class PositiveInt(BaseInt):
         
 class PositiveCInt(BaseCInt):
     """
-    Defines a trait whose value must be a positive integer
+    Defines a trait whose converted value must be a positive integer
     """
     
     info_text = 'a positive integer'
@@ -88,7 +106,7 @@ class PositiveFloat(BaseFloat):
         
 class PositiveCFloat(BaseCFloat):
     """
-    Defines a trait whose value must be a positive float
+    Defines a trait whose converted value must be a positive float
     """
     
     info_text = 'a positive float'
@@ -104,6 +122,9 @@ class PositiveCFloat(BaseCFloat):
         self.error(obj, name, value)
         
 class FloatOrNone(BaseFloat):
+    """
+    Defines a trait whose value must be a float or None
+    """
     
     info_text = 'a float or None'
     
@@ -114,6 +135,9 @@ class FloatOrNone(BaseFloat):
             return super().validate(obj, name, value)
 
 class CFloatOrNone(BaseCFloat):
+    """
+    Defines a trait whose converted value must be a float or None
+    """
     
     info_text = 'a float or None'
     
@@ -124,6 +148,9 @@ class CFloatOrNone(BaseCFloat):
             return super().validate(obj, name, value)
 
 class IntOrNone(BaseInt):
+    """
+    Defines a trait whose value must be an integer or None
+    """
     
     info_text = 'an int or None'
     
@@ -134,6 +161,9 @@ class IntOrNone(BaseInt):
             return super().validate(obj, name, value)
         
 class CIntOrNone(BaseCInt):
+    """
+    Defines a trait whose converted value must be an integer or None
+    """
     
     info_text = 'an int or None'
     
@@ -215,8 +245,8 @@ class Removed(TraitType):
     
 class Deprecated(TraitType):  
     """
-    Names a trait that was present in a previous version but was renamed in this
-    version.  When the trait is accessed, a warning is raised, and the access
+    Names a trait that was present in a previous version but was renamed.  
+    When the trait is accessed, a warning is raised, and the access
     is passed through to the new trait.
     
     Trait metadata:

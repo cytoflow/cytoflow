@@ -17,12 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.utility.algorithms
 ---------------------------
 
 Useful algorithms.
-'''
+
+`ci` -- determine a confidence interval by boostrapping.
+
+`percentiles` -- find percentiles in an array.
+
+`boostrap` -- resample (with replacement) and store aggregate values.
+"""
 
 import numpy as np
 from scipy import stats
@@ -58,7 +64,7 @@ def ci(data, func, which=95, boots=1000):
     
 def percentiles(a, pcts, axis=None):
     """
-    Like scoreatpercentile but can take and return array of percentiles.
+    Like `scoreatpercentile` but can take and return array of percentiles.
 
     from seaborn: https://github.com/mwaskom/seaborn/blob/master/seaborn/utils.py
     

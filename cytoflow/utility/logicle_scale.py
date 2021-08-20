@@ -17,10 +17,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.utility.logicle_scale
 ------------------------------
-'''
+A scale that transforms the data using the `logicle` function.
+    
+`LogicleScale` -- implements `IScale`, the `cytoflow` interface for the scale.
+
+`MatplotlibLogicleScale` -- inherits `matplotlib.scale.ScaleBase`, implements
+the matplotlib interface
+
+`LogicleMajorLocator` -- inherits `Locator`, lets matplotlib know where major
+tics are along a plot axis.
+
+`LogicleMinorLocator` -- inherits `Locator`, lets matplotlib know where minor
+tics are along a plot axis
+
+"""
 
 import math, sys
 from warnings import warn
@@ -198,6 +211,10 @@ class LogicleScale(HasStrictTraits):
             raise CytoflowError(str(e))
         
     def clip(self, data):
+        """
+        Clips data to the range of the scale function
+        """
+        
         try:
             logicle_min = self._logicle.inverse(0.0)
             logicle_max = self._logicle.inverse(1.0 - sys.float_info.epsilon)
@@ -219,6 +236,11 @@ class LogicleScale(HasStrictTraits):
             raise CytoflowError(e.strerror)
         
     def norm(self, vmin = None, vmax = None):
+        """
+        A factory function that returns `matplotlib.colors.Normalize` instance,
+        which normalizes values for a `matplotlib` color palette.
+        """
+        
         # it turns out that Logicle is already defined as a normalization to 
         # [0, 1].  vmin and vmax don't actually do anything here.
         class LogicleNormalize(matplotlib.colors.Normalize):
@@ -342,6 +364,11 @@ class LogicleScale(HasStrictTraits):
 register_scale(LogicleScale)
         
 class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):   
+    """
+    A class that inherits from `matplotlib.scale.ScaleBase`, which 
+    implements all the bits for `matplotlib` to use a new scale.
+    """
+    
     name = "logicle"
     
     logicle = Instance(FastLogicle)

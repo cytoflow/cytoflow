@@ -21,7 +21,19 @@
 cytoflow.utility.cytoflow_errors
 --------------------------------
 
-Custom errors for `.cytoflow`.  Allows for custom handling in the GUI.
+Custom errors for `cytoflow`.  Allows for custom handling in the GUI.
+
+`CytoflowError` -- a general error
+
+`CytoflowOpError` -- an error raised by an operation
+
+`CytoflowViewError` -- an error raised by a view
+
+`CytoflowWarning` -- a general warning
+
+`CytoflowOpWarning` -- a warning raised by an operation
+
+`CytoflowViewWarning` -- a warning raised by a view
 """
 
 import warnings

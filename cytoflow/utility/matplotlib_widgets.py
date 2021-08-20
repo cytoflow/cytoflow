@@ -17,12 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.utility.matplotlib_widgets
 -----------------------------------
 
 Additional widgets to be used with matplotlib
-'''
+
+`PolygonSelector` -- draw a polygon on a scatterplot
+
+`SpanSelector` -- draw a span across a histogram
+
+`Cursor` -- draws a horizontal, vertical, or cross-shaped cursor -- useful
+for setting thresholds.
+"""
 
 import time
 from matplotlib.lines import Line2D
@@ -31,10 +38,11 @@ from matplotlib.transforms import blended_transform_factory
 
 
 class PolygonSelector(AxesWidget):
-    """Selection polygon.
+    """
+    Selection polygon.
     
     The selected path can be used in conjunction with
-    :func:`matplotlib.path.Path.contains_point` to select data points
+    `matplotlib.path.Path.contains_point` to select data points
     from an image.
     
     Parameters
@@ -130,6 +138,7 @@ class SpanSelector(_SelectorWidget):
         1 = left mouse button\n
         2 = center mouse button (scroll wheel)\n
         3 = right mouse button\n
+        
     Examples
     --------
     >>> import matplotlib.pyplot as plt

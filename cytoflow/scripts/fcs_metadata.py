@@ -17,10 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.scripts.fcs_metadata
----------------------------------
-'''
+-----------------------------
+
+Return the FCS metadata (in key : value format) for a given FCS file.
+"""
 
 import argparse
 import fcsparser

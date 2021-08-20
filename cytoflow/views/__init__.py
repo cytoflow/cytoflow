@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflow.views
+--------------
+
+This package contains all `cytoflow` views -- classes
+implementing `IView` whose ``plot()`` function plots an
+experiment.
+"""
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns

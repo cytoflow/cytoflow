@@ -264,7 +264,7 @@ class Experiment(HasStrictTraits):
         ----------
         expr : string
             The expression to pass to `pandas.DataFrame.query`.  Must be
-            a valid Python expression, something you could pass to :func:`eval`.
+            a valid Python expression, something you could pass to `eval`.
             
         **kwargs : dict
             Other named parameters to pass to `pandas.DataFrame.query`.
