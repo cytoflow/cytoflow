@@ -20,6 +20,10 @@
 """
 cytoflow.views.radviz
 ---------------------
+
+A "Radviz" plot projects multivariate plots into two dimensions.
+
+`RadvizView` -- the `IView` class that makes the plot.
 """
 
 from traits.api import provides, Constant

@@ -66,7 +66,7 @@ class ChannelStatisticOp(HasStrictTraits):
         arbitrary, but to be used with the rest of `cytoflow` it should 
         probably be a numeric type or an iterable of numeric types.  If 
         `statistic_name` is unset, the name of the function becomes the 
-        second in element in the `.Experiment.statistics` key tuple.
+        second in element in the `Experiment.statistics` key tuple.
         
         .. warning::
             Be careful!  Sometimes this function is called with an empty input!

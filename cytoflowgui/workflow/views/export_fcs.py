@@ -17,9 +17,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.workflow.views.export_fcs
+----------------------------------
+
+"""
+
 from textwrap import dedent
 
-from traits.api import provides, Str, List, Bool, observe, Property, Directory
+from traits.api import provides, Str, List, observe, Property, Directory
 
 import matplotlib.pyplot as plt
 from matplotlib.table import Table
@@ -63,7 +69,7 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
         Parameters
         ----------
         experiment : Experiment
-            The `.Experiment` to export
+            The `Experiment` to export
         """
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")   

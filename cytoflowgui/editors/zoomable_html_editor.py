@@ -19,6 +19,9 @@
 
 
 """ 
+cytoflowgui.editors.zoomable_html_editor
+----------------------------------------
+
 An HTML "editor" that is high-DPI aware
 
 Adapted from:

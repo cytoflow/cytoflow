@@ -18,13 +18,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Feb 11, 2015
+cytoflowgui.export_task
+-----------------------
 
-@author: brian
+The `pyface.tasks` task that exports a figure.
+
+`ExportPane` -- the `TraitsDockPane` to determine the width and height 
+of the exported figure.
+
+`ExportTaskPane` -- the central pane of the task, shows the plot.
+
+`ExportTask` -- the `Task` to export a figure.
+
+`ExportFigurePlugin` -- the `envisage` `Plugin` that wraps `ExportTask`.
 """
-
-# from traits.etsconfig.api import ETSConfig
-# ETSConfig.toolkit = 'qt4'
 
 import pathlib
 
@@ -46,6 +53,9 @@ from .view_pane import PlotParamsPane
 
     
 class ExportPane(TraitsDockPane):
+    """
+    Determine the width and height of the exported figure.
+    """
     
     id = 'edu.mit.synbio.cytoflowgui.export_pane'
     name = 'Export'

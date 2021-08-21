@@ -178,7 +178,7 @@ class PCAOp(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            The `.Experiment` to use to estimate the k-means clusters
+            The `Experiment` to use to estimate the k-means clusters
             
         subset : str (default = None)
             A Python expression that specifies a subset of the data in 

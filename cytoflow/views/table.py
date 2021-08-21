@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.views.table
 --------------------
-'''
+
+"Plot" a tabular view of a statistic.
+
+`TableView` -- the `IView` class that makes the plot.
+"""
 
 from warnings import warn
 from traits.api import HasStrictTraits, Str, provides, Tuple, Constant

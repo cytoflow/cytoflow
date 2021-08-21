@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.workflow.operations.ratio
+-------------------------------------
+
+"""
 
 from textwrap import dedent
 from traits.api import Str, provides

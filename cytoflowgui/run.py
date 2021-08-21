@@ -17,9 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Feb 11, 2015
+cytoflowgui.run
+---------------
 
-@author: brian
 """
 
 try:

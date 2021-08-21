@@ -18,17 +18,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Created on Mar 15, 2015
+"""
+cytoflowgui.cytoflow_application
+--------------------------------
 
-@author: brian
-'''
+The `pyface.tasks` application.
+
+`CytoflowApplication` -- the `TasksApplication` class for the 
+``cytoflow`` Qt GUI
+"""
 
 import logging, io, os, pickle
 
 from traits.api import Bool, Instance, List, Property, Str, Any, File, Int
 
-from envisage.api import ExtensionPoint
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
 
@@ -43,8 +46,8 @@ from .workflow_controller import WorkflowController
 from .utility import CallbackHandler
 from .preferences import CytoflowPreferences
 from .matplotlib_backend_local import FigureCanvasQTAggLocal
-from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
-from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
+from .op_plugins import OP_PLUGIN_EXT
+from .view_plugins import VIEW_PLUGIN_EXT
 
 logger = logging.getLogger(__name__)
   
@@ -52,8 +55,7 @@ def gui_handler_callback(msg, app):
     app.application_error = msg
     
 class CytoflowApplication(TasksApplication):
-    """ The cytoflow Tasks application.
-    """
+    """ The cytoflow Tasks application"""
 
     # The application's globally unique identifier.
     id = 'edu.mit.synbio.cytoflow'

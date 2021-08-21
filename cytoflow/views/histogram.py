@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.views.histogram
 ------------------------
-'''
+
+Plots a histogram.
+
+`HistogramView` -- the `IView` class that makes the plot.
+"""
 
 from traits.api import Constant, provides
 import matplotlib.pyplot as plt

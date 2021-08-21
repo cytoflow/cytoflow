@@ -168,7 +168,7 @@ class KMeansOp(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            The `.Experiment` to use to estimate the k-means clusters
+            The `Experiment` to use to estimate the k-means clusters
             
         subset : str (default = None)
             A Python expression that specifies a subset of the data in 
@@ -278,7 +278,7 @@ class KMeansOp(HasStrictTraits):
             values  ``name_1, name_2, etc`` to indicate which k-means cluster 
             an event is a member of.
             
-            The new `.Experiment` also has one new statistic called
+            The new `Experiment` also has one new statistic called
             ``centers``, which is a list of tuples encoding the centroids of each
             k-means cluster.
         """

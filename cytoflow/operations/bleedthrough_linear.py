@@ -68,7 +68,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     call `estimate` to parameterize the operation; check that the bleedthrough 
     plots look good by calling `BleedthroughLinearDiagnostic.plot` on 
     the `BleedthroughLinearDiagnostic` instance returned by 
-    `default_view`; and then `apply` on an `.Experiment`.
+    `default_view`; and then `apply` on an `Experiment`.
     
     Attributes
     ----------

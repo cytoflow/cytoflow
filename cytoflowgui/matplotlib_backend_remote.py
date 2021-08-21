@@ -18,6 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+cytoflowgui.matplotlib_backend_remote
+-------------------------------------
+
 A matplotlib backend that renders across a process boundary.  This file has
 the "remote" canvas -- the Agg renderer into which pyplot.plot() renders.
 

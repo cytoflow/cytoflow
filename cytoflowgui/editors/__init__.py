@@ -1,7 +1,9 @@
-'''
-Custom Qt editors
-'''
+"""
+cytoflowgui.editors
+-------------------
 
+Custom Qt editors
+"""
 from .color_text_editor import ColorTextEditor
 from .ext_enum_editor import ExtendableEnumEditor
 from .instance_handler_editor import InstanceHandlerEditor

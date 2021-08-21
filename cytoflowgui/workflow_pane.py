@@ -19,6 +19,7 @@
 
 """
 cytoflowgui.workflow_pane
+-------------------------
 
 The pane that has the operation toolbar and the workflow.
 """

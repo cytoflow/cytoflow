@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Created on Feb 11, 2017
+"""
+cytoflowgui.editors.vertical_list_editor
+----------------------------------------
 
-@author: brian
-'''
+"""
 
 from pyface.qt import QtCore, QtGui
 from pyface.api import ImageResource

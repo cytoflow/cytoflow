@@ -18,6 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+cytoflowgui.workflow.workflow
+-----------------------------
+
 The main model for the GUI.
 
 At its core, the model is a list of WorkflowItem instances.  A WorkflowItem

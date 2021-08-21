@@ -78,12 +78,12 @@ class BaseView(HasStrictTraits):
     Attributes
     ----------
     xfacet, yfacet : String
-        Set to one of the `Experiment.conditions` in the `.Experiment`, and
+        Set to one of the `Experiment.conditions` in the `Experiment`, and
         a new row or column of subplots will be added for every unique value
         of that condition.
         
     huefacet : String
-        Set to one of the `Experiment.conditions` in the in the `.Experiment`,
+        Set to one of the `Experiment.conditions` in the in the `Experiment`,
         and a new color will be added to the plot for every unique value of 
         that condition.
         
@@ -103,7 +103,7 @@ class BaseView(HasStrictTraits):
         Parameters
         ----------
         experiment: Experiment
-            The `.Experiment` to plot using this view.
+            The `Experiment` to plot using this view.
             
         title : str
             Set the plot title

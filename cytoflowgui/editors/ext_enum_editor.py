@@ -17,11 +17,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Created on Apr 16, 2016
-
-@author: brian
-'''
+"""
+cytoflowgui.editors.ext_enum_editor
+-----------------------------------
+"""
 
 from traits.api import Dict
 

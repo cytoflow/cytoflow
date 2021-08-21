@@ -18,6 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+cytoflowgui.matplotlib_backend_local
+------------------------------------
+
 A matplotlib backend that renders across a process boundary.  This file
 has the "local" canvas -- the part that actually renders to a (Qt) window.
 

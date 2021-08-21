@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.view_pane
+---------------------
+
+"""
+
 from traits.api import Instance, List, Str, Dict, Tuple, observe
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.action.api import ToolBarManager

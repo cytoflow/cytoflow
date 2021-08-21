@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.workflow.operations.gaussian_2d
+-------------------------------------------
+
+"""
+
 from traits.api import (provides, Instance, Str, Property, observe, Constant,
                         List, Dict, Any, DelegatesTo)
 

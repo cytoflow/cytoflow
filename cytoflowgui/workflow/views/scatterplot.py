@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.workflow.views.scatterplot
+--------------------------------------
+
+"""
+
 from textwrap import dedent
 
 from traits.api import provides, Enum, Instance

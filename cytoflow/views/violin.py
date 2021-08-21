@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.views.violin
 ---------------------
-'''
+
+A violin plot is a facetted set of kernel density estimates.
+
+`ViolinPlotView` -- the `IView` class that makes the plot.
+"""
 
 from traits.api import Str, provides, Constant
 
@@ -33,7 +37,8 @@ from .base_views import Base1DView
 
 @provides(IView)
 class ViolinPlotView(Base1DView):
-    """Plots a violin plot -- a facetted set of kernel density estimates.
+    """
+    Plots a violin plot -- a facetted set of kernel density estimates.
     
     Attributes
     ----------

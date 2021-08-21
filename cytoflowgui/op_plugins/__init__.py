@@ -17,6 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.op_plugins
+----------------------
+
+`envisage.plugin.Plugin` classes and GUI `traitsui.handler.Controller` classes
+to adapt modules from `cytoflow.workflow.operations` to the Qt / `traitsui` GUI.
+
+The module docstrings are also the ones that are used for the GUI help
+panel.
+"""
+
 from .i_op_plugin import IOperationPlugin, OpPluginManager, OP_PLUGIN_EXT
 from .op_plugin_base import OpHandler
 from .import_op import ImportPlugin

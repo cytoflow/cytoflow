@@ -16,6 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.workflow.operations.import_op
+-----------------------------------------
+
+"""
+
 from textwrap import dedent 
 
 from traits.api import (HasTraits, String, List, Dict, Str, Enum, Instance, 

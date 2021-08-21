@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.workflow.operations.pca
+-----------------------------------
+
+"""
+
 from traits.api import (HasTraits, provides, Str, Property, observe, 
                         List, Dict, Any, Bool)
 

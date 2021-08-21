@@ -20,6 +20,10 @@
 """
 cytoflow.views.kde_2d
 ---------------------
+
+A two-dimensional kernel density estimate -- kind of like a data "topo" map.
+
+`Kde2DView` -- the `IView` class that makes the plot.
 """
 
 from traits.api import provides, Constant

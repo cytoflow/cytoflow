@@ -18,6 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+cytoflow
+--------
+
 ``cytoflow`` is a package for quantitative, reproducible analysis of flow 
 cytometry data.  
 

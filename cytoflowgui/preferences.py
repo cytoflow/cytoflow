@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.preferences
+-----------------------
+
+"""
+
 from envisage.ui.tasks.api import PreferencesPane
 from apptools.preferences.api import PreferencesHelper
 from traits.api import Bool

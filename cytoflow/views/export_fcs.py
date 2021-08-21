@@ -23,7 +23,7 @@ cytoflow.views.export_fcs
 
 A "view" that exports events as FCS files.
 
-`ExportFCS` -- `BarChartView` -- the `IView` class that does the exporting.
+`ExportFCS` -- the `IView` class that does the exporting.
 """
 
 import re
@@ -110,7 +110,7 @@ class ExportFCS(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            The `.Experiment` to export
+            The `Experiment` to export
         """
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")   
@@ -191,7 +191,7 @@ class ExportFCS(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            The `.Experiment` to export
+            The `Experiment` to export
         """
         
         if experiment is None:

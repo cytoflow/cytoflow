@@ -17,6 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.help_pane
+---------------------
+"""
+
 import pathlib
 
 from traits.api import Instance, List, observe, Str, HTML

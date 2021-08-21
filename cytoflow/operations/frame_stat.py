@@ -26,7 +26,7 @@ The `frame_stat` module contains one class:
 `FrameStatisticOp` -- applies a function to subsets of a data set,
 and adds the resulting statistic to the `Experiment`.  Unlike
 `ChannelStatisticOp`, which operates on a single channel, this operation
-operates on entire `pandas.DataFrame`s.
+operates on entire `pandas.DataFrame`.
 """
 
 from warnings import warn

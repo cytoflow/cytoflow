@@ -17,6 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.view_plugins
+----------------------
+
+`Plugin` classes and GUI `Handler` classes to adapt modules from  
+`cytoflowgui.workflow.views` to the Qt / `traitsui` GUI.
+
+The module docstrings are also the ones that are used for the GUI help
+panel.
+"""
+
 from .i_view_plugin import IViewPlugin, ViewPluginManager, VIEW_PLUGIN_EXT
 from .view_plugin_base import ViewHandler
 from .histogram import HistogramPlugin

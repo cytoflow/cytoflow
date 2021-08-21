@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Apr 18, 2015
+cytoflowgui.util
+----------------
 
-@author: brian
 '''
 
 from traits.api import Str

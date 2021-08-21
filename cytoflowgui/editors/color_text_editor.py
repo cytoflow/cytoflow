@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Created on Oct 2, 2015
+"""
+cytoflowgui.editors.color_text_editor
+-------------------------------------
 
-@author: brian
-'''
+"""
 
 from pyface.qt import QtGui, QtCore
 from traitsui.qt4.editor_factory import ReadonlyEditor

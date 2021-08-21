@@ -17,6 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.editors.range_slider
+--------------------------------
+"""
+
 from pyface.qt import QtGui, QtCore
 
 class RangeSlider(QtGui.QSlider):

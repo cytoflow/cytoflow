@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.subset_controllers
+------------------------------
+
+"""
+
 from traitsui.api import Controller, View, HGroup, Item, CheckListEditor
 
 from .editors import ValuesBoundsEditor

@@ -17,10 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.views.i_view
 ---------------------
-'''
+
+`IView` -- an interface for the visualization of flow data.
+"""
 
 from traits.api import Interface, Constant
 

@@ -17,6 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflowgui.op_plugins.i_op_plugin
+----------------------------------
+
+"""
 
 from traits.api import Interface, Constant, List
 from envisage.api import Plugin, ExtensionPoint

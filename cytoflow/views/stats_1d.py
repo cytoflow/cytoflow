@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.views.stats_1d
 -----------------------
-'''
+
+Plot a statistic with a numeric variable on the X axis.
+
+`Stats1DView` -- the `IView` class that makes the plot.
+"""
 
 from traits.api import provides, Constant
 import matplotlib as mpl

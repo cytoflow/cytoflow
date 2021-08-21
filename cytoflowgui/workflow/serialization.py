@@ -17,12 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Keep all the camel serialization bits together.
-Created on Dec 2, 2017
+"""
+cytoflowgui.workflow.serialization
+----------------------------------
 
-@author: brian
-'''
+Keep all the camel serialization bits together.
+
+"""
 
 import pandas, numpy
 from pandas.api.types import CategoricalDtype

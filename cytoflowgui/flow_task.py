@@ -18,9 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Feb 11, 2015
-
-@author: brian
+cytoflowgui.flow_task
+---------------------
 """
 
 import os.path, webbrowser, pathlib, sys, warnings

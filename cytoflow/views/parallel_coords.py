@@ -20,6 +20,10 @@
 """
 cytoflow.views.parallel_coords
 ------------------------------
+
+A parallel-coordinates plot.
+
+`ParallelCoordinatesView` -- the `IView` class that makes the plot.
 """
 
 from traits.api import provides, Constant

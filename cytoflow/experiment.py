@@ -22,6 +22,8 @@ cytoflow.experiment
 -------------------
 
 Defines `Experiment`, `cytoflow`'s main data structure.
+
+`Experiment` -- manages the data and metadata for a flow experiment.
 """
 
 import pandas as pd
@@ -298,10 +300,10 @@ class Experiment(HasStrictTraits):
     
     def clone(self, deep = True):
         """
-        Create a copy of this `Experiment.` `metadata`, 
+        Create a copy of this `Experiment`. `metadata`, 
         `statistics` and `history` are deep copies; whether
         or not `data` is a deep copy depends on the value of
-        the `deep` parameter.
+        the ``deep`` parameter.
         
         .. warning:: The intent is that `deep` is set to `False` by 
                      operations that are only adding columns to the 

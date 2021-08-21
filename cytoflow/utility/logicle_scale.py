@@ -77,7 +77,7 @@ class LogicleScale(HasStrictTraits):
     Attributes
     ----------
     experiment : Instance(cytoflow.Experiment)
-        the `cytoflow.Experiment` used to estimate the scale parameters.
+        the `Experiment` used to estimate the scale parameters.
         
     channel : Str
         If set, choose scale parameters from this channel in `experiment`.

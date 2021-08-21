@@ -17,11 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Created on Mar 7, 2015
+"""
+cytoflowgui
+-----------
 
-@author: brian
-'''
+The :mod:`cytoflowgui` package contains the Qt GUI for :mod:`cytoflow`.
+"""
 
 import sip  # @UnresolvedImport
 

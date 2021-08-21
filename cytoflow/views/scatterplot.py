@@ -20,6 +20,10 @@
 """
 cytoflow.views.scatterplot
 --------------------------
+
+A 2-d scatterplot.
+
+`ScatterplotView` -- the `IView` class that makes the plot.
 """
 
 from traits.api import provides, Constant

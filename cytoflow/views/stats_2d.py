@@ -17,10 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 cytoflow.views.stats_2d
 -----------------------
-'''
+
+Plots two statistics on a scatter plot.
+
+`Stats2DView` -- the `IView` class that makes the plot.
+"""
 
 from traits.api import provides, Constant
 import matplotlib.pyplot as plt

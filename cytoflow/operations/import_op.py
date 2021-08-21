@@ -27,7 +27,7 @@ cytoflow.operations.import_op
 and a dictionary of experimental conditions.
 
 `ImportOp` -- the operation that actually creates a new `Experiment` from a list
-of `Tube`s.
+of `Tube`.
 
 There are a few utility functions as well:
 
@@ -132,7 +132,7 @@ class Tube(HasTraits):
 @provides(IOperation)
 class ImportOp(HasStrictTraits):
     """
-    An operation for importing data and making an `.Experiment`.
+    An operation for importing data and making an `Experiment`.
     
     To use, set the `conditions` dict to a mapping between condition name 
     and NumPy ``dtype``.  Useful dtypes include ``category``, ``float``, 
@@ -191,12 +191,12 @@ class ImportOp(HasStrictTraits):
         this operation.*
             
     ignore_v : List(Str)
-        `cytoflow` is designed to operate on an `.Experiment` containing
+        `cytoflow` is designed to operate on an `Experiment` containing
         tubes that were all collected under the same instrument settings.
         In particular, the same PMT voltages ensure that data can be
         compared across samples.
         
-        *Very rarely*, you may need to set up an `.Experiment` with 
+        *Very rarely*, you may need to set up an `Experiment` with 
         different voltage settings on different `Tube`s.  This is likely 
         only to be the case when you are trying to figure out which voltages 
         should be used in future experiments.  If so, set `ignore_v` to a 
@@ -242,7 +242,7 @@ class ImportOp(HasStrictTraits):
       
     def apply(self, experiment = None, metadata_only = False):
         """
-        Load a new `.Experiment`.  
+        Load a new `Experiment`.  
         
         Parameters
         ----------
@@ -256,7 +256,7 @@ class ImportOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            The new `.Experiment`.  New channels have the following
+            The new `Experiment`.  New channels have the following
             metadata:
             
             - **voltage** - int
@@ -273,7 +273,7 @@ class ImportOp(HasStrictTraits):
             conditions that were added by gates, etc.
             
             If `ignore_v` is set, it is added as a key to the 
-            `.Experiment`-wide metadata.
+            `Experiment`-wide metadata.
             
         """
         

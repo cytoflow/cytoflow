@@ -21,7 +21,7 @@
 cytoflow.operations.autofluorescence
 ------------------------------------
 
-The `autofluorescence` module contains two classes:
+The `cytoflow.operations.autofluorescence` module contains two classes:
 
 `AutofluorescenceOp` -- corrects an `Experiment` for
 autofluorescence
