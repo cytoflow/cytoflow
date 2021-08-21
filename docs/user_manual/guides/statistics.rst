@@ -1,7 +1,7 @@
 .. _user_statistics:
 
 Guide: Using statistics to summarize data
-==================================
+=========================================
  
 Summarizing data is a key step in flow cytometry. Even simple, "traditional"
 analyses involve drawing gates and counting the number of events in them.
@@ -31,7 +31,7 @@ a different concentration of my drug, so I use "Drug" as a condition.
 
 .. image:: images/stats1.png
 
-Using a histogram (and a vertical :ref:`facet <_user_facets>`), I can see that the
+Using a histogram (and a vertical :ref:`facet <user_facets>`), I can see that the
 GFP intensity (as displayed in the FITC-A channel) is in fact changing when I
 vary the amount of drug I treat the cells with.
 

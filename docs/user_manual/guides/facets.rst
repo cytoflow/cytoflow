@@ -1,7 +1,7 @@
 .. _user_facets:
 
 Guide: Using *facets* to compare data sets
-===================================
+==========================================
 
 ``Cytoflow`` uses an idea called *facets* to help you analyze data. It's taken from
 Tufte's `trellis plots <https://en.wikipedia.org/wiki/Small_multiple>`_, which

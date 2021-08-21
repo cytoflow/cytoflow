@@ -1,7 +1,7 @@
 .. _user_mean:
 
 Guide: Which measure of center should I use?
-=====================================
+============================================
 
 When analyzing flow cytometry data, we often want to know the *center* of a 
 distribution.  For example, we may be treating our cells with a drug and 
