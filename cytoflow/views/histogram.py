@@ -86,7 +86,7 @@ class HistogramView(Base1DView):
             The number of bins to plot in the histogram.  Clipped to [100, 1000]
             
         histtype : {'stepfilled', 'step', 'bar'}
-            The type of histogram to draw.  `stepfilled` is the default, which
+            The type of histogram to draw.  ``stepfilled`` is the default, which
             is a line plot with a color filled under the curve.
             
         density: bool
@@ -94,9 +94,9 @@ class HistogramView(Base1DView):
             function, so the area under the histogram is 1.
             
         orientation : {'horizontal', 'vertical'}
-            The orientation of the histogram.  `horizontal` gives a histogram
+            The orientation of the histogram.  ``horizontal`` gives a histogram
             with the intensity on the Y axis and the count on the X axis;
-            default is `vertical`.
+            default is ``vertical``.
         
         linewidth : float
             The width of the histogram line (in points)

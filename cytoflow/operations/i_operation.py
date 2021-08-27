@@ -23,7 +23,7 @@ cytoflow.operations.i_operation
 
 `i_operation` contains just one class:
 
-`IOperation` -- an `Interface` that all operation classes must implement.
+`IOperation` -- an `traits.Interface` that all operation classes must implement.
 """
 
 from traits.api import Interface, Constant

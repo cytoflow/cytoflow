@@ -197,10 +197,10 @@ class ImportOp(HasStrictTraits):
         compared across samples.
         
         *Very rarely*, you may need to set up an `Experiment` with 
-        different voltage settings on different `Tube`s.  This is likely 
+        different voltage settings on different `Tube` instances.  This is likely 
         only to be the case when you are trying to figure out which voltages 
         should be used in future experiments.  If so, set `ignore_v` to a 
-        `List` of channel names to ignore particular channels.  
+        list of channel names to ignore particular channels.  
         
         .. warning::
         

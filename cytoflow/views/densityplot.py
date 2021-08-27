@@ -111,7 +111,7 @@ class DensityView(Base2DView):
             
         cmap : cmap
             An instance of matplotlib.colors.Colormap.  By default, the 
-            `viridis` colormap is used
+            ``viridis`` colormap is used
             
         under_color : matplotlib color
             Sets the color to be used for low out-of-range values.

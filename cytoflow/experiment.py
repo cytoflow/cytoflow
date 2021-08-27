@@ -121,7 +121,7 @@ class Experiment(HasStrictTraits):
     
      - First, to enable some of the delicious syntactic sugar for accessing
        its contents, `pandas.DataFrame` redefines 
-       `__getattribute__` and `__setattribute__`, and making it 
+       ``__getattribute__`` and ``__setattribute__``, and making it 
        recognize (and maintain across copies) additional attributes is an 
        unsupported (non-public) API feature and introduces other 
        subclassing weirdness.
@@ -131,7 +131,7 @@ class Experiment(HasStrictTraits):
        ourselves instead of making the client deal with it.  We can pretend
        to operate on the data in-place.
        
-    To maintain the ease of use, we'll override `__getitem__` and pass it 
+    To maintain the ease of use, we'll override ``__getitem__`` and pass it 
     to the wrapped `pandas.DataFrame`.  We'll do the same with some of 
     the more useful `pandas.DataFrame` API pieces (like `query`); 
     and of course, you can just get the data frame itself with 
@@ -275,7 +275,7 @@ class Experiment(HasStrictTraits):
         -------
         Experiment
             A new `Experiment`, a clone of this one with the data 
-            returned by `pandas.DataFrame.query()`
+            returned by `pandas.DataFrame.query`
         """
         
         resolvers = {}

@@ -26,7 +26,7 @@ The `density` module has two classes:
 `DensityGateOp` -- gates an `Experiment` based on a 
 two-dimensional (smoothed) density plot.
 
-`DensityTranslationDiagnostic` -- diagnostic view that plots the gate 
+`DensityGateView` -- diagnostic view that plots the gate 
 estimated by the `DensityGateOp`.
 
 """

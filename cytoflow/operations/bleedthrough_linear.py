@@ -89,7 +89,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         the bleedthrough tubes were collected under (to apply the operations in the 
         history.)  Specify them here.  The key is the channel name; they value
         is a dictionary of the conditions (same as you would specify for a
-        `Tube` )
+        `cytoflow.operations.import_op.Tube` )
 
     Examples
     --------
@@ -293,7 +293,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         
             - **bleedthrough_fn** : Callable (Tuple(Float) --> Float)
               The function that will correct one event in this channel.  Pass it
-              the values specified in `bleedthrough_channels` and it will return
+              the values specified in `controls` and it will return
               the corrected value for this channel.
         """
         if experiment is None:
@@ -383,7 +383,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     ----------
     op : Instance(BleedthroughPiecewiseOp)
         The operation whose parameters we're viewing.  If you made the instance
-        with `BleedthroughPLinearOp.default_view`, this is set for you
+        with `BleedthroughLinearOp.default_view`, this is set for you
         already.
         
     subset : str

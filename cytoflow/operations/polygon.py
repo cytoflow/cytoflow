@@ -179,7 +179,7 @@ class PolygonOp(HasStrictTraits):
         ------
         CytoflowOpError
             if for some reason the operation can't be applied to this
-            experiment. The reason is in `CytoflowOpError.args`
+            experiment. The reason is in the ``args`` attribute.
         """
         
         if experiment is None:

@@ -44,33 +44,33 @@ def write_fcs(filename, chn_names, chn_ranges, data,
     
     Parameters
     ----------
-    filename: str
+    filename : str
         Path to the output .fcs file
         
-    chn_names: list of str, length C
+    chn_names : list of str, length C
         Names of the output channels
         
-    chn_ranges: dictionary
+    chn_ranges : dictionary
         Keys: channel names.  Values: ranges
         
-    data: 2d ndarray of shape (N,C)
+    data : 2d ndarray of shape (N,C)
         The numpy array data to store as .fcs file format. 
         
-    compat_chn_names: bool
+    compat_chn_names : bool
         Compatibility mode for 3rd party flow analysis software:
         The characters " ", "?", and "_" are removed in the output
         channel names.
         
-    compat_percent: bool
+    compat_percent : bool
         Compatibliity mode for 3rd party flow analysis software:
         If a column in `data` contains values only between 0 and 1,
         they are multiplied by 100.
         
-    compat_negative: bool
+    compat_negative : bool
         Compatibliity mode for 3rd party flow analysis software:
         Flip the sign of `data` if its mean is smaller than zero.
         
-    compat_copy: bool
+    compat_copy : bool
         Do not override the input array `data` when modified in
         compatibility mode.
 

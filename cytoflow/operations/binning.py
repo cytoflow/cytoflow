@@ -64,7 +64,6 @@ class BinningOp(HasStrictTraits):
         The width of the bins. If `scale` is ``log``, `bin_width` 
         is in log-10 units; if `scale` is ``logicle``, an error is 
         thrown because the units are ill-defined.
- 
 
         
     Examples
@@ -132,9 +131,7 @@ class BinningOp(HasStrictTraits):
         `Experiment`
             A new experiment with a condition column named `name`, which
             contains the location of the left-most edge of the bin that the
-            event is in.  If `bin_count_name` is set, another column
-            is added with that name as well, containing the number of events
-            in the same bin as the event.
+            event is in.
 
         """
         if experiment is None:

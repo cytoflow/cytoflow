@@ -48,7 +48,7 @@ class FrameStatisticOp(HasStrictTraits):
     
     The `apply` function groups the data by the variables in `by`, 
     then applies the `function` callable to each `pandas.DataFrame` 
-    subset.  The callable should take a `DataFrame` as its only parameter.  
+    subset.  The callable should take a `pandas.DataFrame` as its only parameter.  
     The return type is arbitrary, but to be used with the rest of 
     `cytoflow` it should probably be a numeric type or an iterable of 
     numeric types.

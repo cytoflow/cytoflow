@@ -58,9 +58,9 @@ class BeadCalibrationOp(HasStrictTraits):
     To use, set `beads_file` to an FCS file containing events collected *using
     the same cytometer settings as the data you're calibrating*.  Specify which 
     beads you ran by setting `beads` to match one of the  values of 
-    :data:`BeadCalibrationOp.BEADS`; and set `units` to which channels you 
-    want calibrated and in which units.  Then, call `estimate()` and check the 
-    peak-finding with `default_view().plot()`.  If the peak-finding is wacky, 
+    `BeadCalibrationOp.BEADS`; and set `units` to which channels you 
+    want calibrated and in which units.  Then, call `estimate` and check the 
+    peak-finding with `BeadCalibrationDiagnostic.plot`.  If the peak-finding is wacky, 
     try adjusting `bead_peak_quantile` and `bead_brightness_threshold`.  When 
     the peaks are successfully identified, call `apply` to scale your 
     experimental data set. 
@@ -89,7 +89,7 @@ class BeadCalibrationOp(HasStrictTraits):
     beads : Dict(Str, List(Float))
         The beads' characteristics.  Keys are calibrated units (ie, MEFL or
         MEAP) and values are ordered lists of known fluorophore levels.  Common
-        values for this dict are included in :data:`BeadCalibrationOp.BEADS`.
+        values for this dict are included in `BeadCalibrationOp.BEADS`.
         
     bead_peak_quantile : Int (default = 80)
         The quantile threshold used to choose bead peaks. 
@@ -135,7 +135,7 @@ class BeadCalibrationOp(HasStrictTraits):
     How to convert from a series of peaks to mean equivalent fluorochrome?
     If there's one peak, we assume that it's the brightest peak.  If there
     are two peaks, we assume they're the brightest two.  If there are ``n >=3``
-    peaks, we check all the contiguous `n`-subsets of the bead intensities
+    peaks, we check all the contiguous ``n``-subsets of the bead intensities
     and find the one whose linear regression (in log space!) has the smallest
     norm (square-root sum-of-squared-residuals.)
     

@@ -59,7 +59,7 @@ class OpView(BaseDataView):
     ----------
     op : Instance(`IOperation`)
         The `IOperation` that this view is associated with.  If you
-        created the view using `IOperation.default_view`, this is already set.
+        created the view using `default_view`, this is already set.
     """
     
     op = Instance(IOperation)
@@ -71,11 +71,11 @@ class Op1DView(OpView, Base1DView):
     ----------
     channel : Str
         The channel this view is viewing.  If you created the view using 
-        `IOperation.default_view`, this is already set.
+        `default_view`, this is already set.
         
     scale : {'linear', 'log', 'logicle'}
         The way to scale the x axes.  If you created the view using 
-        `IOperation.default_view`, this may be already set.
+        `default_view`, this may be already set.
     """
     
     channel = DelegatesTo('op')
@@ -92,15 +92,15 @@ class Op2DView(OpView, Base2DView):
 
     ychannel : Str
         The channels to use for this view's Y axis.  If you created the 
-        view using `IOperation.default_view`, this is already set.
+        view using `default_view`, this is already set.
         
     xscale : {'linear', 'log', 'logicle'}
         The way to scale the x axis.  If you created the view using 
-        `IOperation.default_view`, this may be already set.
+        `default_view`, this may be already set.
         
     yscale : {'linear', 'log', 'logicle'}
         The way to scale the y axis.  If you created the view using 
-        `IOperation.default_view`, this may be already set.
+        `default_view`, this may be already set.
     """
     xchannel = DelegatesTo('op')
     xscale = DelegatesTo('op')
