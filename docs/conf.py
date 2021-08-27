@@ -433,7 +433,6 @@ class AnyResolver(ReferencesResolver):
                         res_role, newnode = r, n
                         break
 
-            
             # second, see if the reference is to any object in the
             # class hierarchy
             if not res_role and 'py:module' in node and 'py:class' in node:
@@ -457,12 +456,6 @@ class AnyResolver(ReferencesResolver):
                     else:
                         logger.warning("Could not handle role {}".format(r),
                                        location = node)
-                        import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.1.0.202012051215/pysrc')
-                        import pydevd;pydevd.settrace()
-#             elif not res_role:
-#                 import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.1.0.202012051215/pysrc')
-#                 import pydevd;pydevd.settrace()
-#                 node_mro = []
             
             # check if any result starts with a prefix in any_preferred
             for r, n in results:
@@ -529,6 +522,9 @@ def run_apidoc(app):
     
 
     module = curr_dir / ".." / "cytoflowgui"
+    main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
+    
+    module = curr_dir / ".." / "fcsparser"
     main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
 
 
