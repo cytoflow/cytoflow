@@ -351,7 +351,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, cast
+from typing import List, Tuple, Any, cast
 from docutils import nodes
 from docutils.nodes import Element, Node
 from sphinx import addnodes
@@ -361,9 +361,12 @@ from sphinx.addnodes import pending_xref
 from sphinx.util import logging
 from sphinx.transforms.post_transforms import ReferencesResolver
 
+import importlib
+
 logger = logging.getLogger(__name__)
 
-any_preferred = ['cytoflow.operations.i_operation']
+any_preferred = ['cytoflow.operations.i_operation',
+                 'cytoflow.views.i_view']
 
 class AnyResolver(ReferencesResolver):
     default_priority = 5
@@ -423,8 +426,43 @@ class AnyResolver(ReferencesResolver):
         else:
             res_role = None
             
-            # first, see if the reference is to any object in the
+            # first, are we looking for a module?  do we already know about it?
+            if 'py:module' in node and node['reftarget'] == node['py:module'].split('.')[-1]:
+                for r, n in results:
+                    if node['py:module'] == n['reftitle']:
+                        res_role, newnode = r, n
+                        break
+
+            
+            # second, see if the reference is to any object in the
             # class hierarchy
+            if not res_role and 'py:module' in node and 'py:class' in node:
+                node_mod = importlib.import_module(node['py:module'])
+                node_klass = getattr(node_mod, node['py:class'])
+                node_mro = node_klass.mro()
+                
+                for r, n in results:
+                    if r == 'py:attr' or r == 'py:meth':
+                        # n_attr = n['reftitle'].split('.')[-1]
+                        n_klass = '.'.join(n['reftitle'].split('.')[:-1])
+                        if n_klass in [x.__module__ + '.' + x.__qualname__ for x in node_mro]:
+                            res_role, newnode = r, n
+                            break
+                    elif r == 'py:class':
+                        # in same module?
+                        n_mod = '.'.join(n['reftitle'].split('.')[:-1])
+                        if 'py:module' in node and node['py:module'] == n_mod:
+                            res_role, newnode = r, n
+                            break
+                    else:
+                        logger.warning("Could not handle role {}".format(r),
+                                       location = node)
+                        import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.1.0.202012051215/pysrc')
+                        import pydevd;pydevd.settrace()
+#             elif not res_role:
+#                 import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.1.0.202012051215/pysrc')
+#                 import pydevd;pydevd.settrace()
+#                 node_mro = []
             
             # check if any result starts with a prefix in any_preferred
             for r, n in results:
@@ -432,19 +470,19 @@ class AnyResolver(ReferencesResolver):
                     if n['reftitle'].startswith(p):
                         res_role, newnode = r, n
                         break
-                
+                 
                 if res_role:
                     break
-
-            # check to see if any result is shorter (ie, a base class)
-            if not res_role:
-                def num_elements(result):
-                    r, n = result
-                    return len(n['reftitle'].split('.'))
-                
-                res_sorted = sorted(results, key = num_elements)
-                if num_elements(res_sorted[0]) < num_elements(res_sorted[1]):
-                    res_role, newnode = res_sorted[0]
+# 
+#             # check to see if any result is shorter (ie, a base class)
+#             if not res_role:
+#                 def num_elements(result):
+#                     r, n = result
+#                     return len(n['reftitle'].split('.'))
+#                 
+#                 res_sorted = sorted(results, key = num_elements)
+#                 if num_elements(res_sorted[0]) < num_elements(res_sorted[1]):
+#                     res_role, newnode = res_sorted[0]
                     
             if not res_role:         
                 def stringify(name: str, node: Element) -> str:
