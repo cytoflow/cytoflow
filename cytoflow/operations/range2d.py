@@ -26,7 +26,7 @@ Applies a 2D range gate (ie, a rectangle gate) to an `Experiment`.
 
 `Range2DOp` -- Applies the gate, given four thresholds
 
-`Range2DSelection` -- an `IView` that allows you to view the range and/or
+`RangeSelection2D` -- an `IView` that allows you to view the range and/or
 interactively set the thresholds.
 '''
 
@@ -174,7 +174,7 @@ class Range2DOp(HasStrictTraits):
             a new column with a data type of ``bool`` and the same as the 
             operation `name`.  The bool is ``True`` if the event's 
             measurement in `xchannel` is greater than `xlow` and
-            less than `high`, and the event's measurement in 
+            less than `xhigh`, and the event's measurement in 
             `ychannel` is greater than `ylow` and less than 
             `yhigh`; it is ``False`` otherwise.
         """
@@ -278,7 +278,7 @@ class RangeSelection2D(Op2DView, ScatterplotView):
     Examples
     --------
     
-    In a Jupyter notebook with `%matplotlib notebook`
+    In a Jupyter notebook with ``%matplotlib notebook``
     
     >>> r = flow.Range2DOp(name = "Range2D",
     ...                    xchannel = "V2-A",

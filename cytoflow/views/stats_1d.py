@@ -146,7 +146,7 @@ class Stats1DView(Base1DStatisticsView):
         Notes
         -----
                 
-        Other `kwargs` are passed to `matplotlib.pyplot.plot <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html>`_
+        Other ``kwargs`` are passed to `matplotlib.pyplot.plot`
         
         """
 

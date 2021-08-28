@@ -340,6 +340,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             self.blit_buffer = None
             
     def print_figure(self, *args, **kwargs):
+        """
+        """
         self.child_conn.send((Msg.PRINT, (args, kwargs)))
 
 

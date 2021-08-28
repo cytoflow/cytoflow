@@ -23,9 +23,9 @@ cytoflow.utility.scale
 
 Base classes and functions for `cytoflow` scales.
 
-`IScale` -- the `traits.Interface` that scales must implement
+`IScale` -- the `traits.has_traits.Interface` that scales must implement
 
-`ScaleMixin` -- provides useful functionality that scales can inherity
+`ScaleMixin` -- provides useful functionality that scales can inherit
 
 `scale_factory` -- make a new instance of a scale
 

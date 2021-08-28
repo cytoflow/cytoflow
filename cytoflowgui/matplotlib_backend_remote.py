@@ -225,6 +225,8 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
 
         
     def draw(self, *args, **kwargs):
+        """
+        """
         logger.debug("FigureCanvasAggRemote.draw()")
             
         with self.buffer_lock:

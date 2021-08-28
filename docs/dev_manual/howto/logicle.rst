@@ -1,7 +1,7 @@
-.. _dev_logicle
+.. _dev_logicle:
 
-HOWTO: Use the `logicle` scale in other `matplotlib` plots
-==========================================================
+HOWTO: Use the ``logicle`` scale in other `matplotlib` plots
+============================================================
 
 :mod:`cytoflow` implements an interesting scaling routine called
 ``logicle``.  It's a biexponential function that is "linear" near

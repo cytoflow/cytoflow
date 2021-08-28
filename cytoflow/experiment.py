@@ -305,7 +305,7 @@ class Experiment(HasStrictTraits):
         or not `data` is a deep copy depends on the value of
         the ``deep`` parameter.
         
-        .. warning:: The intent is that `deep` is set to `False` by 
+        .. warning:: The intent is that ``deep`` is set to ``False`` by 
                      operations that are only adding columns to the 
                      underlying `pandas.DataFrame`.  This will
                      improve memory performance.  However, the resulting

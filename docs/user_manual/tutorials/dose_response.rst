@@ -1,4 +1,4 @@
-.. _user_dose_response
+.. _user_dose_response:
 
 Tutorial: Dose-Response
 =======================

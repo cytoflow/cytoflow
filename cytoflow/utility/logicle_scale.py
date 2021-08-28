@@ -20,17 +20,17 @@
 """
 cytoflow.utility.logicle_scale
 ------------------------------
-A scale that transforms the data using the `logicle` function.
+A scale that transforms the data using the ``logicle`` function.
     
 `LogicleScale` -- implements `IScale`, the `cytoflow` interface for the scale.
 
 `MatplotlibLogicleScale` -- inherits `matplotlib.scale.ScaleBase`, implements
 the matplotlib interface
 
-`LogicleMajorLocator` -- inherits `Locator`, lets matplotlib know where major
+`LogicleMajorLocator` -- inherits `matplotlib.ticker.Locator`, lets matplotlib know where major
 tics are along a plot axis.
 
-`LogicleMinorLocator` -- inherits `Locator`, lets matplotlib know where minor
+`LogicleMinorLocator` -- inherits `matplotlib.ticker.Locator`, lets matplotlib know where minor
 tics are along a plot axis
 
 """
@@ -59,7 +59,7 @@ from .cytoflow_errors import CytoflowError, CytoflowWarning
 @provides(IScale)
 class LogicleScale(HasStrictTraits):
     """
-    A scale that transforms the data using the `logicle` function.
+    A scale that transforms the data using the ``logicle`` function.
     
     This scaling method implements a "linear-like" region around 0, and a
     "log-like" region for large values, with a very smooth transition between
@@ -72,7 +72,7 @@ class LogicleScale(HasStrictTraits):
     The transformation has one parameter, `W`, which specifies the width of
     the "linear" range in log10 decades.  By default, the optimal value is
     estimated from the data; but if you assign a value to `W` it will be used.
-    `0.5` is usually a good start.
+    ``0.5`` is usually a good start.
     
     Attributes
     ----------
@@ -93,7 +93,7 @@ class LogicleScale(HasStrictTraits):
         
     quantiles = Tuple(Float, Float) (default = (0.001, 0.999))
         If there are a few very large or very small values, this can throw off
-        matplotlib's choice of default axis ranges.  Set `quantiles` to choose
+        matplotlib's choice of default axis ranges.  Set ``quantiles`` to choose
         what part of the data to consider when choosing axis ranges.
         
     W : Float (default = estimated from data)

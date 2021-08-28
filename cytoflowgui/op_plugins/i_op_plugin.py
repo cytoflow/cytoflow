@@ -37,10 +37,10 @@ class IOperationPlugin(Interface):
         The Envisage ID used to refer to this plugin
         
     operation_id : Constant
-        Same as the "id" attribute of the IOperation this plugin wraps.
+        Same as the ``id`` attribute of the IOperation this plugin wraps.
         
     short_name : Constant
-        The operation's "short" name - for menus and toolbar tool tips
+        The operation's ``short`` name - for menus and toolbar tool tips
     """
 
     operation_id = Constant
@@ -48,11 +48,11 @@ class IOperationPlugin(Interface):
 
     def get_operation(self):
         """
-        Makes an instance of the IWorkflowOperation that this plugin wraps.
+        Makes an instance of the `IWorkflowOperation` that this plugin wraps.
         
         Returns
         -------
-        `.IWorkflowOperation`
+        `IWorkflowOperation`
         """
         
     def get_handler(self, model):
@@ -66,7 +66,7 @@ class IOperationPlugin(Interface):
         
         Returns
         -------
-        `traitsui.Controller`
+        `traitsui.handler.Controller`
         """
 
     def get_icon(self):
@@ -75,7 +75,7 @@ class IOperationPlugin(Interface):
         
         Returns
         -------
-        `pyface.ImageResource`
+        `pyface.i_image_resource.IImageResource`
             The SVG icon
         """
         
@@ -83,7 +83,7 @@ class IOperationPlugin(Interface):
     def get_help(self):
         """
         Gets the HTML help text for this plugin, deriving the filename from the class name.
-        Probably best to use the default implementation in `PluginHelpMixin`
+        Probably best to use the default implementation in `cytoflowgui.op_plugins.op_plugin_base.PluginHelpMixin`
         
          
         Returns
@@ -100,7 +100,7 @@ class IOperationPlugin(Interface):
         
         Returns
         -------
-        `envisage.Plugin`
+        `envisage.plugin.Plugin`
             the plugin instance
         """
         

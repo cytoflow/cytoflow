@@ -27,7 +27,7 @@ Useful algorithms.
 
 `percentiles` -- find percentiles in an array.
 
-`boostrap` -- resample (with replacement) and store aggregate values.
+`bootstrap` -- resample (with replacement) and store aggregate values.
 """
 
 import numpy as np
@@ -64,7 +64,7 @@ def ci(data, func, which=95, boots=1000):
     
 def percentiles(a, pcts, axis=None):
     """
-    Like `scoreatpercentile` but can take and return array of percentiles.
+    Like `scipy.stats.scoreatpercentile` but can take and return array of percentiles.
 
     from seaborn: https://github.com/mwaskom/seaborn/blob/master/seaborn/utils.py
     

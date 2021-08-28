@@ -115,8 +115,8 @@ class SpanSelector(_SelectorWidget):
     those values.
     
     To guarantee that the selector remains responsive, keep a reference to it.
-    In order to turn off the SpanSelector, set `span_selector.active=False`. To
-    turn it back on, set `span_selector.active=True`.
+    In order to turn off the SpanSelector, set ``span_selector.active=False``. To
+    turn it back on, set ``span_selector.active=True``.
     
     Parameters
     ----------

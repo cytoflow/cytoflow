@@ -226,7 +226,7 @@ class RangeSelection(Op1DView, HistogramView):
     Examples
     --------
     
-    In an IPython notebook with `%matplotlib notebook`
+    In an IPython notebook with ``%matplotlib notebook``
     
     >>> r = RangeOp(name = "RangeGate",
     ...             channel = 'Y2-A')

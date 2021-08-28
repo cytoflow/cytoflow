@@ -175,7 +175,7 @@ class QuadOp(HasStrictTraits):
         ------
         CytoflowOpError
             if for some reason the operation can't be applied to this
-            experiment. The reason is in `CytoflowOpError.args`
+            experiment. The reason is in the ``args`` attribute of `CytoflowOpError`.
         """
 
         # TODO - the naming scheme (name_1, name_2, etc) is semantically weak.  
@@ -273,7 +273,7 @@ class QuadSelection(Op2DView, ScatterplotView):
     Examples
     --------
     
-    In an Jupyter notebook with `%matplotlib notebook`
+    In an Jupyter notebook with ``%matplotlib notebook``
     
     >>> q = flow.QuadOp(name = "Quad",
     ...                 xchannel = "V2-A",

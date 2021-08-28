@@ -23,16 +23,16 @@ cytoflow.utility.custom_traits
 
 Custom traits for `cytoflow`
 
-`PositiveInt`, `PositiveFloat` -- versions of `Int` and `Float` that must be 
+`PositiveInt`, `PositiveFloat` -- versions of `traits.trait_types.Int` and `traits.trait_types.Float` that must be 
 positive (and optionally 0).
 
-`PositiveCInt`, `PositiveCFloat` -- versions of `CInt`, `CFloat` that must
+`PositiveCInt`, `PositiveCFloat` -- versions of `traits.trait_types.CInt`, `traits.trait_types.CFloat` that must
 be positive (and optionally 0).
 
-`IntOrNone`, `FloatOrNone` -- versions of `Int` and `Float` that may also
+`IntOrNone`, `FloatOrNone` -- versions of `traits.trait_types.Int` and `traits.trait_types.Float` that may also
 hold the value ``None``.
 
-`CIntOrNone`, `CFloatOrNone` -- versions of `CInt` and `CFloat` that may also
+`CIntOrNone`, `CFloatOrNone` -- versions of `traits.trait_types.CInt` and `traits.trait_types.CFloat` that may also
 hold the value ``None``.
 
 `ScaleEnum` -- an enumeration whose value is one of the registered scales.

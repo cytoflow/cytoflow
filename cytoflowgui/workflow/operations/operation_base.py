@@ -78,23 +78,23 @@ class IWorkflowOperation(IOperation):
          
          - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
          
-        If `should_apply` is called from a notification handler, then `payload` is
-        the `event` object.
+        If `should_apply` is called from a notification handler, then ``payload`` is
+        the ``event`` object from the notification handler.
         """
 
     
-    def should_clear_estimate(self, changed, event):
+    def should_clear_estimate(self, changed, payload):
         """
         Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
+        op.clear_estimate()?  ``changed`` can be:
         
          - Changed.ESTIMATE -- the parameters required to call `estimate` 
-         (ie traits with ``estimate = True`` metadata) have changed
+           (ie traits with ``estimate = True`` metadata) have changed
             
-         - Changed.PREV_RESULT -- the previous `.WorkflowItem`'s result changed    
+         - Changed.PREV_RESULT -- the previous `WorkflowItem`'s result changed    
               
-        If `should_clear_estimate` is called from a notificaion handler, then `payload` is
-        the `event` object.
+        If `should_clear_estimate` is called from a notificaion handler, then ``payload`` is
+        the ``event`` object.
          """
     
     
@@ -112,7 +112,7 @@ class IWorkflowOperation(IOperation):
         Parameters
         ----------
         idx : integer
-            The index of the `.WorkflowItem` that holds this operation.
+            The index of the `WorkflowItem` that holds this operation.
             
         Returns
         -------

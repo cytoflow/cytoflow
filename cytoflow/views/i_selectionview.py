@@ -30,7 +30,7 @@ from .i_view import IView
 class ISelectionView(IView):
     """A decorator that lets you add (possibly interactive) selections to an IView.
     
-    Note that this is a Decorator *design pattern*, not a Python `@decorator`.
+    Note that this is a Decorator *design pattern*, not a Python ``@decorator``.
     
     Attributes
     ----------

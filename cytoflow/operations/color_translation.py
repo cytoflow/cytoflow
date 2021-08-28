@@ -83,7 +83,7 @@ class ColorTranslationOp(HasStrictTraits):
         the bleedthrough tubes were collected under (to apply the operations in the 
         history.)  Specify them here.  The key is a tuple of channel names; the 
         value is a dictionary of the conditions (same as you would specify for a
-        `Tube` )
+        `cytoflow.operations.import_op.Tube` )
 
         
     Notes

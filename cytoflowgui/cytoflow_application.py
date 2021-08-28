@@ -24,8 +24,8 @@ cytoflowgui.cytoflow_application
 
 The `pyface.tasks` application.
 
-`CytoflowApplication` -- the `TasksApplication` class for the 
-``cytoflow`` Qt GUI
+`CytoflowApplication` -- the `pyface.tasks.tasks_application.TasksApplication` class for the 
+`cytoflow` Qt GUI
 """
 
 import logging, io, os, pickle

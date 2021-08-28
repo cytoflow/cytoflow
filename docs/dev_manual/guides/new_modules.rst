@@ -188,7 +188,7 @@ least five things:
   and should be placed in :mod:`cytoflowgui.op_plugins`.
   
 * A plugin class derived from :class:`envisage.plugin.Plugin` and implementing 
-  :class:`.IOperationPlugin`.  It should also derive from :class:`.PluginHelpMixin`, 
+  :class:`IOperationPlugin`.  It should also derive from :class:`cytoflowgui.op_plugins.op_plugin_base.PluginHelpMixin`, 
   which adds support for online help.
   
 * Tests.  Because of :mod:`cytoflowgui`'s split between processes, testing
@@ -233,7 +233,7 @@ A new view operation requires at least five things:
   and should be placed in :mod:`cytoflowgui.view_plugins`.
 
 * A plugin class derived from :class:`envisage.plugin.Plugin` and implementing 
-  :class:`.IViewPlugin`.  It should also derive from :class:`.PluginHelpMixin`, 
+  :class:`IViewPlugin`.  It should also derive from :class:`cytoflowgui.view_plugins.view_plugin_base.PluginHelpMixin,`, 
   which adds support for online help.
   
 * Plot parameters.  The parameters to a view's :meth:`plot` method are stored

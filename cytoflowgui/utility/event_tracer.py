@@ -180,7 +180,7 @@ class MultiThreadRecordContainer(object):
     def get_change_event_collector(self, thread_name):
         """ Return the dedicated RecordContainer for the thread.
 
-        If no RecordContainer is found for `thread_name` then a new
+        If no RecordContainer is found for ``thread_name`` then a new
         RecordContainer is created.
 
         """

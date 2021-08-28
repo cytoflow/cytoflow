@@ -63,15 +63,15 @@ def write_fcs(filename, chn_names, chn_ranges, data,
         
     compat_percent : bool
         Compatibliity mode for 3rd party flow analysis software:
-        If a column in `data` contains values only between 0 and 1,
+        If a column in ``data`` contains values only between 0 and 1,
         they are multiplied by 100.
         
     compat_negative : bool
         Compatibliity mode for 3rd party flow analysis software:
-        Flip the sign of `data` if its mean is smaller than zero.
+        Flip the sign of ``data`` if its mean is smaller than zero.
         
     compat_copy : bool
-        Do not override the input array `data` when modified in
+        Do not override the input array ``data`` when modified in
         compatibility mode.
 
     kwargs : Str

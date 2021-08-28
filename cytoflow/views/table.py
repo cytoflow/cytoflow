@@ -57,12 +57,18 @@ class TableView(HasStrictTraits):
         in `row_facet`, `column_facet`, `subrow_facet`, or
         `subcolumn_facet`.
         
-    row_facet, column_facet : str
-        The statistic facets to be used as row and column headers.
+    row_facet : str
+        The statistic facet to be used as row headers.
+
+    column_facet : str
+        The statistic facet to be used as column headers.
         
-    subrow_facet, subcolumn_facet : str
-        The statistic facets to be used as subrow and subcolumn headers.
-        
+    subrow_facet : str
+        The statistic facet to be used as subrow headers.
+
+    subcolumn_facet : str
+        The statistic facet to be used as subcolumn headers.
+                
     subset : str
         A Python expression used to select a subset of the statistic to plot.
         

@@ -21,7 +21,7 @@
 cytoflow.utility.hlog_scale
 ---------------------------
 
-A scale that transforms the data using the `hyperlog` function.  `hlog` has
+A scale that transforms the data using the ``hyperlog`` function.  `hlog_scale` has
 several classes:
 
 `HlogScale` -- implements `IScale`, the `cytoflow` interface for the scale.
@@ -29,10 +29,10 @@ several classes:
 `MatplotlibHlogScale` -- inherits `matplotlib.scale.ScaleBase`, implements
 the matplotlib interface
 
-`HlogMajorLocator` -- inherits `Locator`, lets matplotlib know where major
+`HlogMajorLocator` -- inherits `matplotlib.ticker.Locator`, lets matplotlib know where major
 tics are along a plot axis.
 
-`HlogMinorLocator` -- inherits `Locator`, lets matplotlib know where minor
+`HlogMinorLocator` -- inherits `matplotlib.ticker.Locator`, lets matplotlib know where minor
 tics are along a plot axis
 
 `hlog`, `hlog_inv` -- the actual functions that perform the scale and inverse
@@ -57,14 +57,14 @@ from .cytoflow_errors import CytoflowError
 @provides(IScale)
 class HlogScale(ScaleMixin):
     """
-    A scale that transforms the data using the `hyperlog` function.
+    A scale that transforms the data using the ``hyperlog`` function.
     
     This scaling method implements a "linear-like" region around 0, and a
     "log-like" region for large values, with a smooth transition between
     them.
     
     The transformation has one parameter, `b`, which specifies the location of
-    the transition from linear to log-like.  The default, `500`, is good for
+    the transition from linear to log-like.  The default, ``500``, is good for
     18-bit scales and not good for other scales.
     
     Attributes

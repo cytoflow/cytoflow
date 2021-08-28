@@ -66,7 +66,7 @@ class IViewPlugin(Interface):
         """
         Gets an instance of the handler for this view or params model.
         
-        NOTE: You have to check to see what the class of `model` is, and return
+        NOTE: You have to check to see what the class of ``model`` is, and return
         an appropriate handler!
         
         Parameters
@@ -79,7 +79,7 @@ class IViewPlugin(Interface):
             
         Returns
         -------
-        `traitsui.Controller`
+        `traitsui.handler.Controller`
         """
         
 
@@ -89,7 +89,7 @@ class IViewPlugin(Interface):
         
         Returns
         -------
-        `pyface.ImageResource`
+        `pyface.i_image_resource.IImageResource`
             The SVG icon    
         """
         
@@ -97,7 +97,7 @@ class IViewPlugin(Interface):
     def get_help(self):
         """
         Gets the HTML help text for this plugin, deriving the filename from the class name.
-        Probably best to use the default implementation in `PluginHelpMixin`
+        Probably best to use the default implementation in `cytoflowgui.view_plugins.view_plugin_base.PluginHelpMixin`
         
          
         Returns
@@ -109,12 +109,12 @@ class IViewPlugin(Interface):
         
     def get_plugin(self):
         """
-        Returns an instance of `envisage.Plugin` implementing
-        `.IViewPlugin`.  Usually returns ``self``.
+        Returns an instance of `envisage.plugin.Plugin` implementing
+        `IViewPlugin`.  Usually returns ``self``.
         
         Returns
         -------
-        `envisage.Plugin`
+        `envisage.plugin.Plugin`
         """
         
               

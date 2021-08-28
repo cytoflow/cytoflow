@@ -107,7 +107,7 @@ class Histogram2DView(Base2DView):
             
         Notes
         -----
-        Other `kwargs` are passed to `matplotlib.axes.Axes.pcolormesh <https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html>`_
+        Other ``kwargs`` are passed to `matplotlib.axes.Axes.pcolormesh`
     
         """
         

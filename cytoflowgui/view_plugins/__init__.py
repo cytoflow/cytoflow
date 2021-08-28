@@ -21,7 +21,7 @@
 cytoflowgui.view_plugins
 ----------------------
 
-`Plugin` classes and GUI `Handler` classes to adapt modules from  
+`envisage.plugin.Plugin` classes and GUI `traitsui.handler.Controller` classes to adapt modules from  
 `cytoflowgui.workflow.views` to the Qt / `traitsui` GUI.
 
 The module docstrings are also the ones that are used for the GUI help

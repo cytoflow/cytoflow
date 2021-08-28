@@ -29,7 +29,7 @@ Import the data
 
 * Start Cytoflow. Under the **Import Data** operation, choose **Set up experiment...**
 
-* Add two variables, *IP* and *Time*. Make both of them *Number*s.
+* Add two variables, *IP* and *Time*. Make both of them *Number* s.
 
 * In this case, I've encoded the amount of IP and the time (in minutes) in the
   FCS files' file names.  For example:

@@ -51,7 +51,6 @@ Useful (mostly numeric) utility functions.
 import random, string
 
 import numpy as np
-import pandas as pd
 from scipy import stats
 
 def iqr(a):
@@ -194,7 +193,7 @@ def geom_sd_range(a):
         
     Returns
     -------
-    A tuple, with `(geom_mean / geom_sd, geom_mean * geom_sd)`
+    A tuple, with ``(geom_mean / geom_sd, geom_mean * geom_sd)``
     """
     
     u = geom_mean(a)

@@ -162,7 +162,7 @@ the appropriate file.
   * **On Windows (64-bit)**: ``_Logicle.cp38-win_amd64.pyd``
   * **On MacOS**: ``_Logicle.cpython-38m-darwin.so``
   
-* Copy the file you just download into the `cytoflow/utility/logicle_ext/` folder
+* Copy the file you just download into the ``cytoflow/utility/logicle_ext/`` folder
   in your source tree.
   
 * Test that everything works.  Start a ``python`` interpreter and say::

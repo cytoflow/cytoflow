@@ -12,7 +12,7 @@ plot them next to eachother using the same scale and axes:
    :alt: A figure showing multiple line plots on the same axes
    
    This figure shows multiple line plots on the same X axes, making 
-   it easy to compare between them. (Image by Wikipedia user `Chrispounds`)
+   it easy to compare between them. (Image by Wikipedia user ``Chrispounds``)
    
 Let's say I have two different FCS files. As I imported them, I created a ``Sample``
 variable and assigned the tubes ``Sample_1`` and ``Sample_2``, respectively. Now I 

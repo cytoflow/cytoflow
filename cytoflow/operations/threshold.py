@@ -202,7 +202,7 @@ class ThresholdSelection(Op1DView, HistogramView):
         
     Examples
     --------
-    In an Jupyter notebook with `%matplotlib notebook`
+    In an Jupyter notebook with ``%matplotlib notebook``
     
     >>> t = flow.ThresholdOp(name = "Threshold",
     ...                      channel = "Y2-A")

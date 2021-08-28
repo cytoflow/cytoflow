@@ -23,14 +23,14 @@ cytoflowgui.export_task
 
 The `pyface.tasks` task that exports a figure.
 
-`ExportPane` -- the `TraitsDockPane` to determine the width and height 
+`ExportPane` -- the `pyface.tasks.traits_dock_pane.TraitsDockPane` to determine the width and height 
 of the exported figure.
 
 `ExportTaskPane` -- the central pane of the task, shows the plot.
 
-`ExportTask` -- the `Task` to export a figure.
+`ExportTask` -- the `pyface.tasks.task.Task` to export a figure.
 
-`ExportFigurePlugin` -- the `envisage` `Plugin` that wraps `ExportTask`.
+`ExportFigurePlugin` -- the `envisage` `envisage.plugin.Plugin` that wraps `ExportTask`.
 """
 
 import pathlib

@@ -35,7 +35,7 @@ this class's docstring.
 docstring with ``Parameters`` from the overridden methods in the class's 
 ancestors.
 
-`find_section` -- find a named section in a `numpy`-formatted docstring.
+`find_section` -- find a named section in a numpy-formatted docstring.
 
 `get_class_attributes` -- get the entries from the ``Attributes`` section of 
 a class's docstring

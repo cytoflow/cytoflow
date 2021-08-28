@@ -76,8 +76,8 @@ class DensityView(Base2DView):
         ...                 ychannel = 'Y2-A',
         ...                 yscale = 'log').plot(ex)
         
-    The same plot, smoothed, with a log color scale.  *Note - you can change
-    the hue scale, even if you don't have control over the hue facet!*
+    The same plot, smoothed, with a log color scale.  *Note - you can change*
+    *the hue scale, even if you don't have control over the hue facet!*
     
     .. plot::
         :context: close-figs
@@ -121,7 +121,7 @@ class DensityView(Base2DView):
             
         Notes
         -----
-        Other `kwargs` are passed to `matplotlib.axes.Axes.pcolormesh <https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html>`_
+        Other ``kwargs`` are passed to `matplotlib.axes.Axes.pcolormesh`
         
         """
         

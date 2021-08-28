@@ -103,7 +103,9 @@ intersphinx_mapping = {'pandas' : ('https://pandas.pydata.org/pandas-docs/stable
                        'envisage' : ('https://docs.enthought.com/envisage/', None),
                        'seaborn' : ('https://seaborn.pydata.org/', None),
                        'python': ('https://docs.python.org/3', None),
-                       'matplotlib' : ('https://matplotlib.org/', None)} 
+                       'matplotlib' : ('https://matplotlib.org/', None),
+                       'numpy' : ('https://numpy.org/doc/stable/', None),
+                       'scipy' : ('https://docs.scipy.org/doc/scipy/reference/', None)} 
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -458,14 +460,15 @@ class AnyResolver(ReferencesResolver):
                                        location = node)
             
             # check if any result starts with a prefix in any_preferred
-            for r, n in results:
-                for p in any_preferred:
-                    if n['reftitle'].startswith(p):
-                        res_role, newnode = r, n
+            if not res_role:
+                for r, n in results:
+                    for p in any_preferred:
+                        if n['reftitle'].startswith(p):
+                            res_role, newnode = r, n
+                            break
+                     
+                    if res_role:
                         break
-                 
-                if res_role:
-                    break
 # 
 #             # check to see if any result is shorter (ie, a base class)
 #             if not res_role:
@@ -523,9 +526,9 @@ def run_apidoc(app):
 
     module = curr_dir / ".." / "cytoflowgui"
     main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
-    
-    module = curr_dir / ".." / "fcsparser"
-    main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
+#     
+#     module = curr_dir / ".." / "fcsparser"
+#     main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
 
 
 def process_docstring(app, what, name, obj, options, lines):

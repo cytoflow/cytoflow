@@ -273,9 +273,9 @@ class KMeansOp(HasStrictTraits):
         Returns
         -------
         Experiment
-            a new Experiment with one additional `Experiment.condition` 
+            a new Experiment with one additional entry in `Experiment.conditions` 
             named `name`, of type ``category``.  The new category has 
-            values  ``name_1, name_2, etc`` to indicate which k-means cluster 
+            values  ``name_1``, ``name_2``, etc to indicate which k-means cluster 
             an event is a member of.
             
             The new `Experiment` also has one new statistic called

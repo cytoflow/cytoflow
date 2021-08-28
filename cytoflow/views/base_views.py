@@ -29,7 +29,7 @@ So, I extracted the copied code in a short hierarchy of reusable base classes:
 
 `BaseView` -- implements a view with row, column and hue facets.
 After setting up the facet grid, it calls the derived class's 
-`_grid_plot` to actually do the plotting.  `BaseView.plot` also
+``_grid_plot`` to actually do the plotting.  `BaseView.plot` also
 has parameters to set the plot style, legend, axis labels, etc.
   
 `BaseDataView` -- implements a view that plots an `Experiment`'s
@@ -561,7 +561,7 @@ class Base2DView(BaseDataView):
         The scales applied to the `xchannel` data before plotting it.
         
     yscale : {'linear', 'log', 'logicle'} (default = 'linear')
-        The scales applied to the `ychannel data before plotting it.
+        The scales applied to the `ychannel` data before plotting it.
     """
     
     xchannel = Str
@@ -719,7 +719,7 @@ class BaseStatisticsView(BaseView):
         -------
         iterator
             An iterator across the possible plot names. The iterator ALSO has an instance
-            attribute called :attribute::`by`, which holds a list of the facets that are
+            attribute called ``by``, which holds a list of the facets that are
             not yet set (and thus need to be specified in the plot name.)
         """
         
