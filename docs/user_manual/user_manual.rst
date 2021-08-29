@@ -19,6 +19,7 @@ The **User Manual** is divided into four sections:
       tutorials/quickstart
       tutorials/dose_response
       tutorials/induction
+      tutorials/machine_learning
       
 #. :ref:`HOWTOs <user_howto>` are "recipes" -- step-by-step guides to 
    accomplish a particular task.  They are a little higher-level than 

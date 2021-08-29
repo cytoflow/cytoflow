@@ -15,6 +15,7 @@ more advanced analyses.
    
    quickstart
    dose_response
+   machine_learning
    
    
 **Advanced tutorials**
@@ -28,8 +29,8 @@ more advanced analyses.
   Basic
   -----
   Quick start
-  Basic Statistics
   Yeast dose-response
+  Machine learning
   
   
 ..
