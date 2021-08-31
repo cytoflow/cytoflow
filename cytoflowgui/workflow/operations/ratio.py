@@ -39,6 +39,10 @@ class RatioWorkflowOp(WorkflowOperation, RatioOp):
     numerator = Str(apply = True)
     denominator = Str(apply = True)
     
+    def clear_estimate(self):
+        # no-op
+        return
+    
     def get_notebook_code(self, idx):
         op = RatioOp()
         op.copy_traits(self, op.copyable_trait_names())

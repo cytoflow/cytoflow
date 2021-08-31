@@ -82,6 +82,10 @@ class Range2DSelectionView(WorkflowView, RangeSelection2D):
 
     def _get_yhigh(self):
         return self._range[3]
+    
+    def clear_estimate(self):
+        # no-op
+        return
         
     def get_notebook_code(self, idx):
         view = RangeSelection2D()

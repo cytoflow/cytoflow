@@ -71,6 +71,10 @@ class QuadSelectionView(WorkflowView, QuadSelection):
 
     def _get_ythreshold(self):
         return self._xy[1]
+    
+    def clear_estimate(self):
+        # no-op
+        return
         
     def get_notebook_code(self, idx):
         view = QuadSelection()

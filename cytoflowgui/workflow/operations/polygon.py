@@ -63,6 +63,10 @@ class PolygonSelectionView(WorkflowView, PolygonSelection):
         self._vertices = []
         self.op.vertices = []
         
+    def clear_estimate(self):
+        # no-op
+        return
+        
     def get_notebook_code(self, idx):
         view = PolygonSelection()
         view.copy_traits(self, view.copyable_trait_names())

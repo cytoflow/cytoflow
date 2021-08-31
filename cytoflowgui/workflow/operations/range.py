@@ -70,6 +70,10 @@ class RangeSelectionView(WorkflowView, RangeSelection):
 
     def _get_high(self):
         return self._range[1]
+    
+    def clear_estimate(self):
+        # no-op
+        return
         
     def get_notebook_code(self, idx):
         view = RangeSelection()

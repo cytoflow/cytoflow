@@ -45,6 +45,10 @@ class BinningWorkflowOp(WorkflowOperation, BinningOp):
     def default_view(self, **kwargs):
         return BinningWorkflowView(op = self, **kwargs)
     
+    def clear_estimate(self):
+        # no-op
+        return
+    
     def get_notebook_code(self, idx):
         op = BinningOp()
         op.copy_traits(self, op.copyable_trait_names())
