@@ -1,6 +1,9 @@
 Cytoflow: Better quantitative flow cytometry.
 =============================================
 
+.. image:: hero.png
+   :align: center
+
 Cytoflow is a **point-and click program** and a **Python library** for
 analyzing flow cytometry data.  It was written by Brian Teague to address
 shortcomings in currently-available flow software.
