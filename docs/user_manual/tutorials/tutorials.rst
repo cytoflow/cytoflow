@@ -24,6 +24,7 @@ more advanced analyses.
    :maxdepth: 2
    
    induction
+   kiani
    
 ..
   Basic
