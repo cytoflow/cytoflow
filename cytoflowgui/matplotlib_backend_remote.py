@@ -334,3 +334,10 @@ FigureCanvas = FigureCanvasAggRemote
 
 # we don't need a figure manager with any more than default functionality
 FigureManager = FigureManagerBase
+
+# monkey-patch seaborn
+def tight_layout(self, *args, **kwargs):
+    pass
+
+import seaborn.axisgrid
+seaborn.axisgrid.Grid.tight_layout = tight_layout
