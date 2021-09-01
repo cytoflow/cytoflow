@@ -228,7 +228,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         """ 
         Returns the control cluster for the notebook page
         """
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QtGui.QVBoxLayout()        
         control = QtGui.QWidget()
         dpi = control.physicalDpiX()
 
@@ -248,9 +248,11 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.cmd_button.setIcon(ImageResource('ok').create_icon())
         self.cmd_button.setIconSize(QtCore.QSize(dpi * 0.2, dpi * 0.2))
         
-        self.cmd_button.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding,
-                                                        QtGui.QSizePolicy.Expanding))
-         
+        size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Preferred)
+        size_policy.setHeightForWidth(True)
+        self.cmd_button.setSizePolicy(size_policy)
+
         buttons_layout.addWidget(self.cmd_button)
         
         if self.notebook.delete:
@@ -277,6 +279,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         separator.setFrameShadow(QtGui.QFrame.Sunken)
         self.layout.addWidget(separator)
         
+        self.layout.setContentsMargins(11, 0, 5, 0)
         control.setLayout(self.layout)
         return control
 
@@ -460,7 +463,6 @@ class VerticalNotebook(HasPrivateTraits):
         """
 
         self.layout = QtGui.QVBoxLayout()
-
         self.control = QtGui.QWidget()
         self.control.setLayout(self.layout)
 
