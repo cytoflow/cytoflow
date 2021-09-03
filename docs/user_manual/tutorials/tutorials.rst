@@ -25,6 +25,7 @@ more advanced analyses.
    
    induction
    kiani
+   repressor
    
 ..
   Basic
