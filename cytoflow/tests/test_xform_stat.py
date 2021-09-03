@@ -57,6 +57,8 @@ class Test(ImportedDataSmallTest):
         
         self.assertIn("Dox", stat.index.names)
         self.assertNotIn("T", stat.index.names)
+        
+        self.assertIsInstance(ex.data.index, pd.RangeIndex)
 
     def testBadFunction(self):
          

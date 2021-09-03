@@ -26,6 +26,7 @@ Created on Dec 1, 2015
 import unittest
 
 import cytoflow as flow
+import pandas as pd
 import cytoflow.utility as util
 from .test_base import ImportedDataSmallTest
 
@@ -49,6 +50,8 @@ class TestChannelStats(ImportedDataSmallTest):
         stat = ex.statistics[("ByDox", "len")]
         self.assertIn("Dox", stat.index.names)
         self.assertIn("T", stat.index.names)
+        
+        self.assertIsInstance(ex.data.index, pd.RangeIndex)
         
         
     def testTuple(self):

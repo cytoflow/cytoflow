@@ -25,6 +25,7 @@ Created on Dec 1, 2015
 import unittest
 
 import cytoflow as flow
+import pandas as pd
 import cytoflow.utility as util
 from .test_base import ImportedDataSmallTest
 
@@ -65,6 +66,8 @@ class TestGaussian1D(ImportedDataSmallTest):
         
         self.assertLess(abs(ex2.data.groupby("Gauss_2").size().loc[False] - 17813), 10)
         self.assertLess(abs(ex2.data.groupby("Gauss_2").size().loc[True] - 2187), 10)
+        
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
                 
     def testApplyBy(self):
         self.gate.by = ["Dox"]

@@ -24,6 +24,7 @@ Created on Oct 30, 2015
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 from .test_base import ClosePlotsWhenDoneTest
 
 
@@ -69,6 +70,8 @@ class TestAutofluorescence(ClosePlotsWhenDoneTest):
         
         with self.assertRaises(ValueError):
             self.assertFalse((self.ex.data == ex2.data).all().all())
+            
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
     def testPlot(self):
         self.op.default_view().plot(self.ex)

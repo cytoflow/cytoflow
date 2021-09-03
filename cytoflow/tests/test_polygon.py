@@ -24,6 +24,7 @@ Created on Dec 1, 2015
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 from .test_base import ImportedDataSmallTest
 
 
@@ -44,6 +45,8 @@ class Test(ImportedDataSmallTest):
                 
         # how many events ended up in the gate?
         self.assertEqual(ex2.data.groupby("Polygon").size()[True], 4126)
+        
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
     def testPlot(self):
         self.gate.default_view().plot(self.ex)

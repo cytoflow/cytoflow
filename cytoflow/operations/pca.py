@@ -379,5 +379,7 @@ class PCAOp(HasStrictTraits):
                 new_experiment.data.loc[group_idx, c] = x_tf[:, ci]
 
         new_experiment.data.dropna(inplace = True)
+        new_experiment.data.reset_index(drop = True, inplace = True)
+
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment

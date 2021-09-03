@@ -24,6 +24,7 @@ Created on Dec 1, 2015
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 from .test_base import ImportedDataSmallTest
 
 
@@ -42,6 +43,8 @@ class TestFlowpeaks(ImportedDataSmallTest):
         self.op.estimate(self.ex)
         ex2 = self.op.apply(self.ex)
         self.assertEqual(len(ex2['FP'].unique()), 2)
+        
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
     
     def testEstimateBy(self):
         self.op.by = ["Dox"]

@@ -24,6 +24,7 @@ Created on Nov 16, 2015
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 from .test_base import ClosePlotsWhenDoneTest
 
 
@@ -48,7 +49,9 @@ class Test(ClosePlotsWhenDoneTest):
                                  scale = "log",
                                  bin_count_name = "Bin_Count")
 
-        self.op.apply(self.ex)
+        ex2 = self.op.apply(self.ex)
+        
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
     def testView(self):
         """Just run default_view().plot(); don't actually test functionality"""

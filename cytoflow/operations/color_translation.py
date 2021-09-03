@@ -365,6 +365,8 @@ class ColorTranslationOp(HasStrictTraits):
         for channel in from_channels:
             new_experiment.data = \
                 new_experiment.data[new_experiment.data[channel] > 0]
+                
+        new_experiment.data.reset_index(drop = True, inplace = True)
         
         for from_channel, to_channel in translation.items():
             trans_fn = self._trans_fn[(from_channel, to_channel)]

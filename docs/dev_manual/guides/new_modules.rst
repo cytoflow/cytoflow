@@ -65,6 +65,11 @@ The base operation API is fairly simple:
   .. note:: Be aware of the ``deep`` parameter for :meth:`~.Experiment.clone`!  It
             defaults to ``True`` -- **only** set it to ``False`` if you are only
             adding columns to the :class:`~.Experiment`.
+            
+  .. note:: The resulting :class:`.Experiment` must have a `pandas.RangeIndex` for its
+            index -- several modules rely on this!  If you add or remove events from 
+            the `Experiment`, make sure you call `pandas.Index.reset_index` to make
+            the index monotonic again.
   
 * :meth:`~.IOperation.estimate` - You may also wish to estimate 
   the operation's parameters from a data set. Crucially, this 

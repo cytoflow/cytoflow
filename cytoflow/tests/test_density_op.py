@@ -24,6 +24,7 @@ Created on Dec 1, 2015
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 import cytoflow.utility as util
 from .test_base import ImportedDataSmallTest
 
@@ -60,7 +61,8 @@ class TestDensityGate(ImportedDataSmallTest):
                  
         self.assertAlmostEqual(ex2.data.groupby("D").size().loc[True], 16218)
         self.assertAlmostEqual(ex2.data.groupby("D").size().loc[False], 3782)
-
+            
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]

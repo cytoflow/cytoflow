@@ -24,6 +24,7 @@ Created on Feb 4, 2018
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 from .test_base import ImportedDataTest
 
 class TestKMeans(ImportedDataTest):
@@ -41,6 +42,8 @@ class TestKMeans(ImportedDataTest):
         self.op.estimate(self.ex)
         ex2 = self.op.apply(self.ex)
         self.assertEqual(len(ex2['KM'].unique()), 2)
+        
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
     def testEstimateBy(self):
         self.op.by = ["Well"]

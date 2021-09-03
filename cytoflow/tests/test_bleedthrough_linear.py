@@ -61,6 +61,8 @@ class TestBleedthroughLinear(ClosePlotsWhenDoneTest):
         with self.assertRaises(AssertionError):
             pd.testing.assert_frame_equal(self.ex.data, ex2.data)
             
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
+            
     def testApplyDoesntAlterOriginal(self):
         ex_data_copy = self.ex.data.copy(deep = True)
         self.op.apply(self.ex)

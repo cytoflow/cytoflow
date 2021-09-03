@@ -24,6 +24,7 @@ Created on Feb 4, 2018
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 from .test_base import ImportedDataTest  # @UnresolvedImport
 
 class TestGaussian(ImportedDataTest):
@@ -41,6 +42,8 @@ class TestGaussian(ImportedDataTest):
         self.op.estimate(self.ex)
         ex2 = self.op.apply(self.ex)
         self.assertEqual(len(ex2['GM'].unique()), 2)
+        
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
     def testEstimateBy(self):
         self.op.by = ["Well"]

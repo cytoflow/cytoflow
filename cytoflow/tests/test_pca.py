@@ -24,6 +24,7 @@ Created on Feb 4, 2018
 '''
 import unittest
 import cytoflow as flow
+import pandas as pd
 from .test_base import ImportedDataSmallTest
 
 
@@ -45,6 +46,8 @@ class TestPCA(ImportedDataSmallTest):
         ex2 = self.op.apply(self.ex)
         self.assertIn("PCA_1", ex2.channels)
         self.assertIn("PCA_2", ex2.channels)
+        
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
     def testEstimateBy(self):
         self.op.by = ["Dox"]
