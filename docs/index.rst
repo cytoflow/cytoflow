@@ -27,7 +27,7 @@ How is Cytoflow different?
   workflows.  The library was designed to work particularly well in a 
   `Jupyter notebook <https://jupyter.org/>`_.  
 * Cytoflow is **free and open-source.**  Contribute bug reports at the 
-  `GitHub project page <https://github.com/bpteague/cytoflow>`_
+  `GitHub project page <https://github.com/cytoflow/cytoflow>`_
   or download the source code to modify it for your own needs.  Then,
   contribute your changes back so the rest of the community can benefit from
   them.
