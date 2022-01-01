@@ -68,8 +68,8 @@ The base operation API is fairly simple:
             
   .. note:: The resulting :class:`.Experiment` must have a `pandas.RangeIndex` for its
             index -- several modules rely on this!  If you add or remove events from 
-            the `Experiment`, make sure you call `pandas.Index.reset_index` to make
-            the index monotonic again.
+            the `Experiment`, make sure you call `pandas.DataFrame.reset_index` on 
+            `Experiment.data` to make the index monotonic again.
   
 * :meth:`~.IOperation.estimate` - You may also wish to estimate 
   the operation's parameters from a data set. Crucially, this 

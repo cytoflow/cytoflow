@@ -24,7 +24,7 @@ cytoflowgui.editors.zoomable_html_editor
 
 An HTML "editor" that is high-DPI aware.
 
-Derived from `traitsui.editors.html_editor.HTMLEditor`
+Derived from `traitsui.editors.html_editor`
 
 Adapted from:
 https://github.com/enthought/traitsui/blob/master/traitsui/editors/html_editor.py

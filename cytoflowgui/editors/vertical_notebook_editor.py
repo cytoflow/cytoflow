@@ -247,8 +247,8 @@ class VerticalNotebookEditor(BasicEditorFactory):
     """ 
     List member trait to read the notebook page icon from
     If None, then use right-arrow for "closed" and down-arrow for "open"
-    The type of this trait is toolkit-specific; for example, the `pyface.qt`
-    type is a `QtGui.QStyle.StandardPixmap`
+    The type of this trait is toolkit-specific; for example, the ``pyface.qt``
+    type is a ``QtGui.QStyle.StandardPixmap``
     """
     
     page_deletable = Str

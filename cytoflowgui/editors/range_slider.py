@@ -21,7 +21,7 @@
 cytoflowgui.editors.range_slider
 --------------------------------
 
-A `QtGui.QSlider` with two carets -- allows a range to be specified.
+A ``QtGui.QSlider`` with two carets -- allows a range to be specified.
 """
 
 from pyface.qt import QtGui, QtCore
@@ -33,8 +33,8 @@ class RangeSlider(QtGui.QSlider):
         maximum and minimum, as is a normal slider, but instead of having a
         single slider value, there are 2 slider values.
 
-        This class emits the same signals as the `QtGui.QSlider` base class, with the
-        exception of `valueChanged`
+        This class emits the same signals as the ``QtGui.QSlider`` base class, with the
+        exception of ``valueChanged``
     """
     def __init__(self, *args):
         super(RangeSlider, self).__init__(*args)

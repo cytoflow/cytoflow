@@ -609,7 +609,7 @@ def autodetect_name_metadata(filename, data_set = 0):
 # module-level, so we can reuse it in other modules
 def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False):   
     """
-    Parses an FCS file.  A thin wrapper over `fcsparser.parse`.
+    Parses an FCS file.  A thin wrapper over ``fcsparser.parse``.
     
     Parameters
     ----------

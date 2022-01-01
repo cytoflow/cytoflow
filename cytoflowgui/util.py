@@ -21,13 +21,15 @@
 cytoflowgui.util
 ----------------
 
+A few utility classes for `cytoflowgui`
 '''
 
 from traits.api import Str
 from pyface.ui.qt4.file_dialog import FileDialog
 
-
 class DefaultFileDialog(FileDialog):
+    """A ``pyface.ui.qt4.file_dialog.FileDialog`` with a default suffix"""
+    
     default_suffix = Str
     
     def _create_control(self, parent):
@@ -36,16 +38,17 @@ class DefaultFileDialog(FileDialog):
         return dlg
 
 
-# when pyface makes a new dock pane, it sets the width and height as fixed
-# (from the new layout or from the default).  then, after it's finished
-# setting up, it resets the minimum and maximum widget sizes.  in Qt5, this
-# triggers a re-layout according to the widgets' hinted sizes.  so, here
-# we keep track of "fixed" sizes, then return those sizes as the size hint
-# to the layout engine.
-
 from pyface.qt import QtGui
 
 class HintedMainWindow(QtGui.QMainWindow):
+    """
+    When pyface makes a new dock pane, it sets the width and height as fixed
+    (from the new layout or from the default).  Then, after it's finished
+    setting up, it resets the minimum and maximum widget sizes.  In Qt5, this
+    triggers a re-layout according to the widgets' hinted sizes.  So, here
+    we keep track of "fixed" sizes, then return those sizes as the size hint
+    to the layout engine.
+    """
     
     hint_width = None
     hint_height = None
@@ -69,6 +72,14 @@ class HintedMainWindow(QtGui.QMainWindow):
         return hint
     
 class HintedWidget(QtGui.QWidget):
+    """
+    When pyface makes a new widget, it sets the width and height as fixed
+    (from the new layout or from the default).  Then, after it's finished
+    setting up, it resets the minimum and maximum widget sizes.  In Qt5, this
+    triggers a re-layout according to the widgets' hinted sizes.  So, here
+    we keep track of "fixed" sizes, then return those sizes as the size hint
+    to the layout engine.
+    """
     
     hint_width = None
     hint_height = None

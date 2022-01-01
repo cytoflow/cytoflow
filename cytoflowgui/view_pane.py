@@ -94,6 +94,9 @@ class ViewDockPane(TraitsDockPane):
             self._actions[plugin.view_id] = task_action
             self.toolbar.append(task_action)
             
+        # see the comment in cytoflowgui.view_pane for an explanation of this
+        # HintedMainWindow business.
+        
         self._window = window = HintedMainWindow()
         window.addToolBar(QtCore.Qt.RightToolBarArea, 
                           self.toolbar.create_tool_bar(window))

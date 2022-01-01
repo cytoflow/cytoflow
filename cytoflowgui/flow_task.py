@@ -21,12 +21,12 @@
 cytoflowgui.flow_task
 ---------------------
 
-The main `pyface.tasks.task.Task`, and its associated `pyface.tasks.task_pane.TaskPane`
+The main `pyface.tasks.task.Task`, and its associated `pyface.tasks.i_task_pane.ITaskPane`
 and `envisage.plugin.Plugin`. 
 
 - `FlowTask` -- the `pyface.tasks.task.Task` that allows the user to analyze flow data.
 
-- `FlowTaskPane` -- the central `pyface.tasks.task_pane.TaskPane` that contains the
+- `FlowTaskPane` -- the central `pyface.tasks.i_task_pane.ITaskPane` that contains the
   current `IWorkflowView`.
   
 - `FlowTaskPlugin` -- the `envisage.plugin.Plugin` that provides the task factory and

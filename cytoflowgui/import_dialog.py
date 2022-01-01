@@ -33,7 +33,7 @@ There are a few main classes:
 
 - `ExperimentDialogModel` -- the tabular model of tubes, traits, and trait values
 
-- `ExperimentalDialogHandler` -- the controller which contains the view and the
+- `ExperimentDialogHandler` -- the controller which contains the view and the
   logic for connecting it to the model.
   
 Additionally, there are several utility functions and classes: 
@@ -94,6 +94,7 @@ def not_false ( value ):
     return (value is not False)
 
 def sanitize_metadata(meta):
+    """replaces all non-Python-safe characters in a tube's metadata with '_'"""
     ret = {}
     for k, v in meta.items():
         if len(k) > 0 and k[0] == '$':
@@ -135,24 +136,30 @@ class Tube(HasStrictTraits):
     # these are the traits that every tube has.  every other trait is
     # dynamically created. 
     
-    # the tube index
     index = Property(Int)
+    """The tube index"""
     
-    # the file name.
     file = Str(transient = True)
+    """The FCS filename"""
     
     # need a link to the model; needed for row coloring
     parent = Instance("ExperimentDialogModel", transient = True)
+    """Which model are we part of?"""
     
-    # needed for fast hashing
+    # Remember that we store conditions as traits on this instance.
+    # we store them here too for fast hashing
     conditions = Dict
+    """A Dict of the conditions (for hashing)"""
     
-    # metadata from the FCS file
     metadata = Dict
+    """The FCS metadata"""
     
     all_conditions_set = Property(Bool, depends_on = "conditions")
+    """Do all of the conditions have a value?"""
             
     def conditions_hash(self):
+        """Return a hash of this tube's conditions (for equality testing)"""
+        
         ret = int(0)
     
         for key, value in self.conditions.items():
@@ -191,7 +198,8 @@ class Tube(HasStrictTraits):
     
     
 class ExperimentColumn(ObjectColumn):
-        
+    """A `traitsui.table_column.ObjectColumn` with setable color"""
+     
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
         if not self.is_editable(obj):
@@ -209,11 +217,13 @@ class ExperimentColumn(ObjectColumn):
             return self._label
         return self.name
     
-
-
-
-                 
+    
 def eval_bool(x):
+    """
+    Evaluate "f", "false", "n" or "no" as `False`; 
+    and "t", "true", "y" or "yes" as `True`
+    """
+    
     try:
         xc = x.casefold()
         if xc == 'f' or xc == 'false' or xc == 'n' or xc == 'no':
@@ -225,7 +235,13 @@ def eval_bool(x):
     except:
         return bool(x)
     
+    
 class ConvertingBool(BaseCBool):
+    """
+    A trait that converts "f", "false", "n", or "no" to `False`
+    and "t", "true", "y" or "yes" to `True`
+    """
+    
     evaluate = eval_bool
     
     def validate ( self, _, name, value ):
@@ -233,13 +249,26 @@ class ConvertingBool(BaseCBool):
             return eval_bool( value )
         except:
             self.error( object, name, value )
+            
     
 class TubeTrait(HasStrictTraits):
+    """
+    A class representing a trait on a tube.  A trait has an underlying
+    `traits.trait_type.TraitType`, a name, a type ("metadata", "category",
+    "float" or "bool"), and a default view. 
+    """
+    
     model = Instance('ExperimentDialogModel')
+    """Which model are we a part of?"""
 
     trait = Property
+    """The `traits.trait_type.TraitType` that underlies this trait"""
+    
     name = ValidPythonIdentifier
+    """The name of the trait"""
+    
     type = Enum(['metadata', 'category', 'float', 'bool'])
+    """What type of trait is it?"""
         
     remove_trait = Event
     
@@ -271,28 +300,37 @@ class ExperimentDialogModel(HasStrictTraits):
     The model for the Experiment setup dialog.
     """
 
-    # the list of Tubes (rows in the table)
     tubes = List(Tube)
+    """T he list of Tubes (rows in the table)"""
 
-    # a list of the traits that have been added to Tube instances
-    # (columns in the table)
     tube_traits = List(TubeTrait)
+    """A list of the traits that have been added to Tube instances (columns in the table)"""
+    
     tube_traits_dict = Dict
+    """A dictionary of trait name --> TubeTrait instances"""
     
-    # keeps track of whether a tube is unique or not
     counter = Dict(Int, Int)
-    
-    # are all the tubes unique and filled?
+    """
+    A dictionary of tube hash --> # of tubes with that hash;
+    keeps track of whether a tube is unique or not
+    """
+
     valid = Property(List)
+    """Are all the tubes unique and filled?"""
     
-    # a dummy Experiment, with the first Tube and no events, so we can check
-    # subsequent tubes for voltage etc. and fail early.
     dummy_experiment = Instance(Experiment)
+    """
+    A dummy Experiment, with the first Tube and no events, so we can check
+    subsequent tubes for voltage etc. and fail early.
+    """
     
     # traits to communicate with the traits_view
     fcs_metadata = Property(List, depends_on = 'tubes')
     
     def init(self, import_op):    
+        """
+        Initializes the model from a pre-existing `ImportOp`
+        """
         
         if 'CF_File' not in import_op.conditions:
             self.tube_traits.append(
@@ -395,7 +433,6 @@ class ExperimentDialogModel(HasStrictTraits):
                 self.counter[tube_hash] = 1
             
     @observe('tube_traits:items:name')
-    #def _on_trait_name_change(self, trait, _, old_name, new_name):
     def _on_trait_name_change(self, event):
         trait = event.object
         old_name = event.old
@@ -441,7 +478,6 @@ class ExperimentDialogModel(HasStrictTraits):
                 
                 
     @observe('tube_traits:items:type')
-    #def _on_type_change(self, trait, name, old_type, new_type):
     def _on_type_change(self, event):
         trait = event.object
         old_type = event.old
@@ -475,6 +511,10 @@ class ExperimentDialogModel(HasStrictTraits):
                 
     
     def update_import_op(self, import_op):
+        """
+        Update an `ImportOp` with the information in this dialog
+        """
+        
         if not self.tubes:
             return
         
@@ -514,6 +554,10 @@ class ExperimentDialogModel(HasStrictTraits):
         
             
     def is_tube_unique(self, tube):
+        """
+        Is a tube unique?
+        """
+        
         tube_hash = tube.conditions_hash()
         if tube_hash in self.counter:
             return self.counter[tube.conditions_hash()] == 1
@@ -541,9 +585,13 @@ class ExperimentDialogModel(HasStrictTraits):
         ret = [x for x in meta.keys() if len(meta[x]) > 1]
             
         return sorted(ret)
+    
                     
 class ExperimentDialogHandler(Controller):
-    
+    """
+    A controller that contains the import dialog's view and the logic that 
+    connects it to the `ExperimentDialogModel`
+    """
     
     # bits for model initialization
     import_op = Instance('cytoflowgui.workflow.operations.import_op.ImportWorkflowOp')
@@ -610,7 +658,7 @@ class ExperimentDialogHandler(Controller):
     updating = Bool(False)
     
     def init(self, info):
-                       
+        
         # save a reference to the table editor
         self.table_editor = info.ui.get_editors('tubes')[0]
         
@@ -620,7 +668,8 @@ class ExperimentDialogHandler(Controller):
         return True
     
     def close(self, info, is_ok):
-        """ Handles the user attempting to close a dialog-based user interface.
+        """
+        Handles the user attempting to close a dialog-based user interface.
 
         This method is called when the user attempts to close a window, by
         clicking an **OK** or **Cancel** button, or clicking a Close control

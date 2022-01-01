@@ -269,7 +269,7 @@ def traits_eq(self, other):
     return self.trait_get(self.copyable_trait_names()) == other.trait_get(self.copyable_trait_names())
 
 def traits_hash(self):
-    """Get a unique hash of a `.HasTraits`"""
+    """Get a unique hash of a `traits.has_traits.HasTraits`"""
     return hash(tuple(self.trait_get(self.copyable_trait_names()).items()))
 
 # set underlying cytoflow repr

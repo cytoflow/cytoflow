@@ -39,7 +39,7 @@ from cytoflowgui.editors import ZoomableHTMLEditor
 
 class HelpDockPane(TraitsDockPane):
     """
-    A `pyface.tasks.dock_pane.traits_dock_pane.TraitsDockPane` to view help 
+    A `pyface.tasks.i_dock_pane.IDockPane` to view help 
     for the current `IWorkflowOperation` or `IWorkflowView`.
     """
 

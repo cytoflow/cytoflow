@@ -21,30 +21,30 @@
 cytoflowgui.matplotlib_backend_local
 ------------------------------------
 
-A matplotlib backend that renders across a process boundary.  This file
+A matplotlib backend that renders across a process boundary.  This module
 has the "local" canvas -- the part that actually renders to a (Qt) window.
 
 By default, matplotlib only works in one thread.  For a GUI application, this
 is a problem because when matplotlib is working (ie, scaling a bunch of data
 points) the GUI freezes.
 
-This module implements a matplotlib backend where the plotting done in one
-process (ie via pyplot, etc) shows up in a canvas running in another process
-(the GUI).  The canvas is the interface across the process boundary: a "local"
-canvas, which is a GUI widget (in this case a QWidget) and a "remote" canvas
-(running in the process where pyplot.plot() etc. are used.)  The remote canvas
-is a subclass of the Agg renderer; when draw() is called, the remote canvas
-pulls the current buffer out of the renderer and pushes it through a pipe
-to the local canvas, which draws it on the screen.  blit() is implemented
-too.
+This module and `matplotlib_backend_remote` implement a matplotlib backend 
+where the plotting done in one process (ie via pyplot, etc) shows up in a 
+canvas running in another process (the GUI).  The canvas is the interface 
+across the process boundary: a "local" canvas, which is a GUI widget (in this 
+case a QWidget) and a "remote" canvas (running in the process where 
+pyplot.plot() etc. are used.)  The remote canvas is a subclass of the Agg 
+renderer; when draw() is called, the remote canvas pulls the current buffer 
+out of the renderer and pushes it through a pipe to the local canvas, which 
+draws it on the screen.  blit() is implemented too.
 
 This takes care of one direction of data flow, and would be enough if we were
 just plotting.  However, we want to use matplotlib widgets as well, which
 means there's data flowing from the local canvas to the remote canvas too.
-The local canvas is a subclass of FigureCanvasQTAgg, which is itself a 
-sublcass of QWidget.  The local canvas overrides several of the event handlers,
-passing the event information to the remote canvas which in turn runs the
-matplotlib event handlers.
+The local canvas is a subclass of ``matplotlib.backends.backend_qt5agg.FigureCanvasQTAgg``, 
+which is itself a sublcass of QWidget. The local canvas overrides several of 
+the event handlers, passing the event information to the remote canvas which 
+in turn runs the matplotlib event handlers.
 """
 
 import time, threading, logging, sys, traceback
@@ -61,6 +61,12 @@ logger = logging.getLogger(__name__)
 DEBUG = 0
 
 class Msg(object):
+    """
+    Messages sent between the local and remote canvases.
+    There is an identical class in `matplotlib_backend_remote` because we
+    don't want these two modules requiring one another
+    """
+    
     DRAW = "DRAW"
     BLIT = "BLIT"
     WORKING = "WORKING"
@@ -75,6 +81,8 @@ class Msg(object):
     PRINT = "PRINT"
     
 def log_exception():
+    """Catch and log exceptions (with their tracebacks"""
+    
     (exc_type, exc_value, tb) = sys.exc_info()
 
     err_string = traceback.format_exception_only(exc_type, exc_value)[0]
@@ -92,7 +100,6 @@ def log_exception():
 class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
     """
     The local canvas; ie, the one in the GUI.
-      figure - A Figure instance
    """
 
     def __init__(self, figure, child_conn, working_pixmap):
@@ -150,6 +157,11 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         self.child_conn.send((Msg.DPI, self.physicalDpiX()))
         
     def listen_for_remote(self):
+        """
+        The main method for the thread that listens for messages from
+        the remote canvas
+        """
+        
         while self.child_conn.poll(None):
             try:
                 (msg, payload) = self.child_conn.recv()
@@ -181,6 +193,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             
             
     def send_to_remote(self):
+        """
+        The main method for the thread that sends messages to the remote canvas
+        """
         while True:
             self.send_event.wait()
             self.send_event.clear()
@@ -203,10 +218,18 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             
 
     def leaveEvent(self, event):
+        """
+        Override the Qt event leaveEvent
+        """
+        
         QtGui.QApplication.restoreOverrideCursor()
 
 
     def mousePressEvent(self, event):
+        """
+        Override the Qt event mousePressEvent
+        """
+        
         logger.debug('FigureCanvasQTAggLocal.mousePressEvent: {}'
                       .format(event.button()))
         x = event.pos().x()
@@ -219,6 +242,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             
             
     def mouseDoubleClickEvent(self, event):
+        """
+        Override the Qt event mouseDoubleClickEvent
+        """
+        
         logger.debug('FigureCanvasQTAggLocal.mouseDoubleClickEvent: {}'
                       .format(event.button()))
         x = event.pos().x()
@@ -231,6 +258,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 
 
     def mouseMoveEvent(self, event):
+        """
+        Override the Qt event mouseMoveEvent
+        """
+        
 #         if DEBUG:
 #             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
         self.move_x = event.x()
@@ -240,6 +271,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 
 
     def mouseReleaseEvent(self, event):
+        """
+        Override the Qt event mouseReleaseEvent
+        """
+        
         logger.debug('FigureCanvasQTAggLocal.mouseReleaseEvent: {}'
                       .format(event.button()))
         
@@ -253,6 +288,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 
 
     def resizeEvent(self, event):
+        """
+        Override the Qt event resizeEvent
+        """
+        
         w = event.size().width()
         h = event.size().height()
                 
@@ -278,7 +317,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         # it fires, cancel the timer and restart it.  otherwise, after 0.2
         # seconds, make the window redraw.  this minimizes redrawing and
         # makes the user experience much better, even though it's a stupid
-        # hack because i can't (easily) stop the widget from recieveing
+        # hack because i can't (easily) stop the widget from receiving
         # resize events during a resize.
         
         if self._resize_timer is not None:
@@ -341,6 +380,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             
     def print_figure(self, *args, **kwargs):
         """
+        Pass a "print" request to the remote canvas 
+        (actually this is for rastering a figure and saving it to disk)
         """
         self.child_conn.send((Msg.PRINT, (args, kwargs)))
 
