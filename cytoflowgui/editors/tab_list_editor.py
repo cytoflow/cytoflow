@@ -21,6 +21,7 @@
 cytoflowgui.editors.tab_list_editor
 -----------------------------------
 
+A `traitsui.editors.enum_editor.EnumEditor` whose widget is a tab bar.
 """
 
 from pyface.qt import QtGui

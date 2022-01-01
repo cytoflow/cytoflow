@@ -20,6 +20,9 @@
 """
 cytoflowgui.instance_handler_editor
 -----------------------------------
+
+A `traitsui.editors.instance_editor.InstanceEditor` that allows the handler
+to be created at runtime, using a factory.
 """
 
 from pyface.qt import QtGui
@@ -116,6 +119,7 @@ class InstanceHandlerEditor(InstanceEditor):
     custom_editor_class = _InstanceHandlerEditor
     
     handler_factory = Callable
+    """The factory to create this editor's handler"""
     
     def custom_editor(self, ui, object, name, description, parent):  # @ReservedAssignment
         """ Generates an editor using the "custom" style.

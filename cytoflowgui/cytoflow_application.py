@@ -57,53 +57,65 @@ def gui_handler_callback(msg, app):
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application"""
 
-    # The application's globally unique identifier.
     id = 'edu.mit.synbio.cytoflow'
+    """The application's GUID"""
 
-    # The application's user-visible name.
     name = 'Cytoflow'
+    """The application's user-visible name."""
 
     # Override two traits from TasksApplication so we can provide defaults, below
 
-    # The default window-level layout for the application.
     default_layout = List(TaskWindowLayout)
+    """The default window-level layout for the application."""
 
-    # Whether to restore the previous application-level layout when the
-    # applicaton is started.
     always_use_default_layout = Property(Bool)
+    """Restore the previous application-level layout?"""
     
-    # the application's DPI.  We need this enough places that let's
-    # make it a property
+    # We need this enough places that let's make it a property
     dpi = Property(Int)
+    """The application's DPI"""
 
-    # are we debugging? at the moment, just for sending logs to the console
+    # A the moment, just for sending logs to the console
     debug = Bool
+    """Are we debugging?"""
 
-    # did we get a filename on the command line?
     filename = File
+    """Filename from the command-line, if present"""
 
-    # if there's an ERROR-level log message, drop it here     
     application_error = Str
-    
-    # keep the application log in memory
-    application_log = Instance(io.StringIO, ())
+    """If there's an ERROR-level log message, drop it here"""
 
-    # the model that's shared across both tasks
+    application_log = Instance(io.StringIO, ())
+    """Keep the application log in memory"""
+
     model = Instance(LocalWorkflow)
+    """The model that's shared across both tasks"""
     
-    # the controller is shared, too
     controller = Instance(WorkflowController)
+    """The `WorkflowController`, shared across both tasks"""
 
     # the connection to the remote process
     remote_process = Any
-    remote_workflow_connection = Any
-    remote_canvas_connection = Any
+    """The `multiprocessing.Process` containing the remote workflow"""
     
-    # the matplotlib canvas that's shared across all three tasks
+    remote_workflow_connection = Any
+    """The `multiprocessing.Pipe` to communicate with the remote process"""
+    
+    remote_canvas_connection = Any
+    """
+    The `multiprocessing.Pipe` to communicate with the remote `matplotlib` canvas,
+    FigureCanvasAggRemote`.
+    """
+    
     canvas = Instance(FigureCanvasQTAggLocal)
+    """The shared `matplotlib` canvas"""
             
     def run(self):
-
+        """
+        Run the application: configure logging, set up the model, controller and
+        canvas, and initialize the GUI.
+        """
+        
         # set the root logger level to DEBUG; decide what to do with each 
         # message on a handler-by-handler basis
         logging.getLogger().setLevel(logging.DEBUG)
@@ -151,16 +163,19 @@ class CytoflowApplication(TasksApplication):
         super(CytoflowApplication, self).run()
         
     def show_error(self, error_string):
+        """GUI error handler"""
         error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n"
                     "Afterwards, may need to restart Cytoflow to continue working.\n\n" 
                     + error_string)
         
     def stop(self):
+        """Overridden from `envisage.ui.tasks.tasks_application.TasksApplication` to shut down the remote process"""
         super().stop()
         self.model.shutdown_remote_process(self.remote_process)
         
 
     preferences_helper = Instance(CytoflowPreferences)
+    """Cytoflow preferences manager"""
 
     ###########################################################################
     # Private interface.

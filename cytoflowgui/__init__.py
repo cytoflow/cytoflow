@@ -21,7 +21,7 @@
 cytoflowgui
 -----------
 
-The :mod:`cytoflowgui` package contains the Qt GUI for :mod:`cytoflow`.
+The `cytoflowgui` package contains the Qt GUI for `cytoflow`.
 """
 
 import sip  # @UnresolvedImport

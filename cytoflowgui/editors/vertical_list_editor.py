@@ -21,6 +21,15 @@
 cytoflowgui.editors.vertical_list_editor
 ----------------------------------------
 
+A vertical editor for lists, derived from `traitsui.editors.list_editor.ListEditor`,
+with the same API.
+
+.. note::
+    The difference between this class and the underlying **ListEditor** is that 
+    this class doesn't use a scroll area.  Instead, as items are added, it
+    expands.  To enable this behavior, make sure you ask for the 'simple'
+    editor style, NOT 'custom'!
+
 """
 
 from pyface.qt import QtCore, QtGui
@@ -35,12 +44,6 @@ from traitsui.qt4.helper import IconButton
 from traitsui.editors.list_editor import ListItemProxy
 
 class _VerticalListEditor(_ListEditor):
-    """
-    The difference between this class and the underlying ListEditor is that 
-    this class doesn't use a scroll area.  Instead, as items are added, it
-    expands.  To enable this behavior, make sure you ask for the 'simple'
-    editor style, NOT 'custom'!
-    """
     
     delete_mapper = Instance(QtCore.QSignalMapper)
     

@@ -21,6 +21,8 @@
 cytoflowgui.preferences
 -----------------------
 
+Skeleton preferences manager. At the moment, the only preference is whether
+to always use the default application layout.
 """
 
 from envisage.ui.tasks.api import PreferencesPane
@@ -35,14 +37,15 @@ class CytoflowPreferences(PreferencesHelper):
 
     #### 'PreferencesHelper' interface ########################################
 
-    # The path to the preference node that contains the preferences.
     preferences_path = 'edu.mit.synbio.cytoflow.preferences'
+    """The path to the preference node that contains the preferences."""
+
 
     #### Preferences ##########################################################
 
-    # Whether to always apply the default application layout.
     # See TasksApplication for more information.
     always_use_default_layout = Bool
+    """Whether to always apply the default application layout."""
 
 
 class CytoflowPreferencesPane(PreferencesPane):
@@ -52,8 +55,8 @@ class CytoflowPreferencesPane(PreferencesPane):
 
     #### 'PreferencesPane' interface ##########################################
 
-    # The factory to use for creating the preferences model object.
     model_factory = CytoflowPreferences
+    """The factory to use for creating the preferences model object."""
 
     view = View(
         VGroup(HGroup(Item('always_use_default_layout'),
@@ -61,4 +64,5 @@ class CytoflowPreferencesPane(PreferencesPane):
                       show_labels = False),
                label='Application startup'),
         resizable=True)
+    """The view for the preferences dialog box"""
 

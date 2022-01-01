@@ -21,6 +21,19 @@
 cytoflowgui.workflow.subset
 ---------------------------
 
+Structured representation of the possible clauses for a **subset** 
+argument to `IOperation.estimate` or `IView.plot`.  
+
+`ISubset` - The top-level `traits.has_traits.Interface`
+
+`BoolSubset` - represents a subset of True or False values from a boolean 
+    condition
+
+`CategorySubset` - represents a subset of one or more values from a categorical
+    condition.
+    
+`RangeSubset` - represents a subset that is a range of values from a 
+    numerical condition.
 """
 
 from traits.api import (provides, Interface, Str, List, Property, Bool,
@@ -31,12 +44,16 @@ from cytoflow import utility as util
 from .serialization import camel_registry, traits_repr
 
 class ISubset(Interface):
+    """The interface that the rest of the subset classes must implement."""
+    
     name = Str
     values = List
     str = Property(Str)
     
 @provides(ISubset)
 class BoolSubset(HasStrictTraits):
+    """A subset that selects either True or False values from a boolean condition"""
+    
     name = Str
     values = List  # unused
     selected_t = Bool(False)
@@ -80,6 +97,8 @@ def _load_bool_subset(data, version):
 
 @provides(ISubset)
 class CategorySubset(HasStrictTraits):
+    """A subset that selects one or more values from a categorical condition"""
+    
     name = Str
     values = List
     selected = List
@@ -125,6 +144,8 @@ def _load_category_subset(data, version):
 
 @provides(ISubset)
 class RangeSubset(HasStrictTraits):
+    """A subset that selects a range from a numerical condition"""
+    
     name = Str
     values = List
     high = CFloat(Undefined)

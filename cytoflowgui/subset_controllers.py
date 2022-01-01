@@ -21,6 +21,9 @@
 cytoflowgui.subset_controllers
 ------------------------------
 
+Instances of `traitsui.handler.Controller` for the various `ISubset` classes.
+These contain the `graitsui.view.View`\s for them.  Also a utility function
+to return the appropriate handler for an arbitrary `ISubset` model.
 """
 
 from traitsui.api import Controller, View, HGroup, Item, CheckListEditor
@@ -30,6 +33,7 @@ from .editors import ValuesBoundsEditor
 from cytoflowgui.workflow.subset import BoolSubset, CategorySubset, RangeSubset
 
 class BoolSubsetHandler(Controller):
+    """Controller for `BoolSubset`"""
     
     def subset_view(self):
         return View(HGroup(Item('selected_t',
@@ -39,6 +43,7 @@ class BoolSubsetHandler(Controller):
         
         
 class CategorySubsetHandler(Controller):
+    """Controller for `CategorySubset`"""
     
     def subset_view(self):
         return View(Item('selected',
@@ -49,6 +54,7 @@ class CategorySubsetHandler(Controller):
         
         
 class RangeSubsetHandler(Controller):
+    """Controller for `RangeSubset`"""
     
     def subset_view(self):
         return View(Item('high',
@@ -62,6 +68,11 @@ class RangeSubsetHandler(Controller):
         
         
 def subset_handler_factory(model):
+    """
+    A factory method to produce the right handler for a given 
+    implementation of `ISubset`
+    """
+    
     if isinstance(model, BoolSubset):
         return BoolSubsetHandler(model)
     elif isinstance(model, CategorySubset):

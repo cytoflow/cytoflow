@@ -21,6 +21,10 @@
 cytoflowgui.editors.value_bounds_editor
 ---------------------------------------
 
+A `traitsui.editors.range_editor.RangeEditor` that allows the user to 
+select a range of values from a list (specified in **values**, naturally).
+
+Uses `RangeSlider` for the widget.
 """
 
 if __name__ == '__main__':
@@ -307,7 +311,11 @@ class _ValueBoundsEditor(EditorWithList):
             
     
 class ValuesBoundsEditor(EditorWithListFactory, RangeEditor):
-            
+    """
+    A `traitsui.editors.range_editor.RangeEditor` that uses a 
+    list of values instead of low & high range.
+    """
+      
     def _get_simple_editor_class(self):
         return _ValueBoundsEditor
     

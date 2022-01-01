@@ -21,6 +21,9 @@
 cytoflowgui.editors.subset_list_editor
 --------------------------------------
 
+An editor for lists of `ISubset`. For each entry in the list, creates 
+an appropriate instance editor, each set up with appropriate ranges, 
+values, etc. from the experiment conditions and metadata.
 """
 
 import pandas as pd
@@ -106,15 +109,17 @@ class _SubsetListEditor(_VerticalListEditor):
 
 
 class SubsetListEditor(VerticalListEditor):    
-    # the name of the trait containing the names --> values dict
     conditions = Str
-    
-    # the name of the trait containing the metadata dict
+    """The name of the trait containing the names --> values dict"""
+
     metadata = Str
-    
-    # a string to evaluate on the metadata to see if we include this condition
-    # in the editor
+    """The name of the trait containing the metadata dictionary"""
+
     when = Str
+    """
+    A string to evaluate on the metadata to see if we include this condition
+    in the editor
+    """
     
     # override some defaults
     style = Trait("custom", TraitPrefixList('simple', 'custom', 'text', 'readonly'))

@@ -21,8 +21,11 @@
 cytoflowgui.workflow.serialization
 ----------------------------------
 
-Keep all the camel serialization bits together.
+Utility bits that let us use `camel` to serialize a `RemoteWorkflow`.  
 
+Many of the dumpers and loaders support serializing `pandas` types,
+such as `pandas.Series` and `pandas.DataFrame`, or for testing
+serialization with unit tests.
 """
 
 import pandas, numpy
@@ -41,12 +44,42 @@ camel_registry = CamelRegistry()
 standard_types_registry = CamelRegistry(tag_prefix = YAML_TAG_PREFIX)
 
 def load_yaml(path):
+    """
+    Load a Python object from a YAML file.
+    
+    Parameters
+    ----------
+    path : string
+        The path to the YAML file to load
+           
+    Returns
+    -------
+    object
+        The Python object loaded from the YAML file
+    """
+    
     with open(path, 'r') as f:
         data = Camel([camel_registry]).load(f.read())
         
     return data
 
 def save_yaml(data, path, lock_versions = {}):
+    """
+    Save a Python object to a YAML file
+    
+    Parameters
+    ----------
+    data : object
+        The Python object to serialize
+        
+    path : string
+        The path to save to
+        
+    lock_versions : dict
+         A dictionary of types and versions of dumpers to use
+         when serializing.
+    """
+    
     with open(path, 'w') as f:
         c = Camel([standard_types_registry, camel_registry])
         for klass, version in lock_versions.items():
@@ -232,16 +265,20 @@ def _load_series_v3(data, version):
     
 # a few bits for testing serialization
 def traits_eq(self, other):
+    """Are the copyable traits of two `traits.has_traits.HasTraits` equal?"""
     return self.trait_get(self.copyable_trait_names()) == other.trait_get(self.copyable_trait_names())
 
 def traits_hash(self):
+    """Get a unique hash of a `.HasTraits`"""
     return hash(tuple(self.trait_get(self.copyable_trait_names()).items()))
 
 # set underlying cytoflow repr
 def traits_repr(obj):
+    """A uniform implementation of **__repr__** for `traits.has_traits.HasTraits`"""
     return obj.__class__.__name__ + '(' + traits_str(obj) + ')'
 
 def traits_str(obj):
+    """A uniform implementation of **__str__** for `traits.has_traits.HasTraits`"""
     try:
         traits = obj.trait_get(transient = lambda x: x is not True,
                                status = lambda x: x is not True,

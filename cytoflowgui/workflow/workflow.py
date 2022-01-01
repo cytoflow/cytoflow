@@ -23,9 +23,9 @@ cytoflowgui.workflow.workflow
 
 The main model for the GUI.
 
-At its core, the model is a list of WorkflowItem instances.  A WorkflowItem
+At its core, the model is a list of `WorkflowItem` instances.  A `WorkflowItem`
 wraps an operation, its completion status, the result of applying it to
-the previous WorkflowItem's result, and views on that result.  The Workflow
+the previous `WorkflowItem`'s result, and `IView`'s on that result.  The Workflow
 also maintains a "current" or selected WorkflowItem.
 
 The left panel of the GUI is a View on this object (viewing the list of
@@ -36,15 +36,15 @@ So far, so simple.  However, in a single-threaded GUI application, the UI
 freezes when something processor-intensive is happening.  Adding another thread
 doesn't help matters because of the CPython global interpreter lock; while
 Python is otherwise computing, the GUI doesn't update.  To solve this, the 
-Workflow maintains a copy of itself in a separate process.  The local Workflow
-is the one that is viewed by the GUI; the remote Workflow is the one that
+Workflow maintains a copy of itself in a separate process.  The `LocalWorkflow`
+is the one that is viewed by the GUI; the `RemoteWorkflow` is the one that
 actually loads the data and does the processing.  Thus the GUI remains
 responsive.  Changed attributes in either Workflow are noticed by a set of 
 Traits handlers, which send those changes to the other process.
 
 This process is also where the plotting happens.  For an explanation of how
 the plots are ferried back to the GUI, see the module docstring for
-matplotlib_backend.py
+`cytoflowgui.matplotlib_backend_local` and `cytoflowgui.matplotlib_backend_remote`
 """
 
 '''
@@ -106,7 +106,6 @@ When a local view trait changes
 5. If the WorkflowInstance is the selected one, and the view is the current view:
    5a. Asks if the view should plot?
    5b. If yes, adds the plot call to the execution queue
-
 
 '''
 
@@ -213,6 +212,8 @@ class UniquePriorityQueue(PriorityQueue):
     
     
 def filter_unpicklable(obj):
+    """Recursively filter unpicklable items from lists and dictionaries"""
+    
     if type(obj) is list:
         return [filter_unpicklable(x) for x in obj]
     elif type(obj) is dict:
@@ -220,25 +221,38 @@ def filter_unpicklable(obj):
     else:
         if not hasattr(obj, '__getstate__') and not isinstance(obj,
                   (str, int, float, tuple, list, set, dict)):
-            return "filtered: {}".format(type(obj))
+            return "Unpicklable: {}".format(type(obj))
         else:
             return obj
 
     
 
 class LocalWorkflow(HasStrictTraits):
+    """
+    The workflow that is maintained in the "local" process -- ie, the same one that
+    showing a GUI.
+    """
     
     workflow = List(WorkflowItem, comparison_mode = ComparisonMode.identity)
+    """The list of `WorkflowItem`s"""
+    
     selected = Instance(WorkflowItem)
+    """The currently-selected `WorkflowItem`"""
     
     modified = Bool
+    """Has this workflow been modified since it was loaded?"""
     
     recv_thread = Instance(threading.Thread)
+    """The `threading.Thread` that receives messages from the remote process"""
+    
     send_thread = Instance(threading.Thread)
-    log_thread = Instance(threading.Thread)
+    """The `threading.Thread` that sends messages to the remote process"""
+    
     message_q = Instance(Queue, ())
+    """The `queue.Queue` of messages to send to the remote process"""
     
     debug = Bool(False)
+    
     # count the number of times the remote process calls apply() or plot().
     # useful for debugging
     apply_calls = Int(0)
@@ -268,6 +282,11 @@ class LocalWorkflow(HasStrictTraits):
         
 
     def recv_main(self, child_conn):
+        """
+        The method that runs in `recv_thread` to receive messages from the 
+        remote process.
+        """
+        
         while child_conn.poll(None):
             try:
                 (msg, payload) = child_conn.recv()
@@ -332,6 +351,11 @@ class LocalWorkflow(HasStrictTraits):
                 log_exception()
     
     def send_main(self, child_conn):
+        """
+        The method that runs in `send_thread` to send messages from `message_q` to
+        the remote process
+        """
+        
         try:
             while True:
                 msg = self.message_q.get()
@@ -344,6 +368,10 @@ class LocalWorkflow(HasStrictTraits):
             log_exception()
 
     def run_all(self):
+        """
+        Send the RUN_ALL message to the remote process
+        """
+        
         self.message_q.put((Msg.RUN_ALL, None))
        
     @observe('workflow')
@@ -467,6 +495,10 @@ class LocalWorkflow(HasStrictTraits):
         self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))      
         
     def remote_eval(self, expr):
+        """
+        Evaluate an expression in the remote process and return the result
+        """
+        
         self.eval_event.clear()
         self.message_q.put((Msg.EVAL, expr))
         
@@ -474,6 +506,10 @@ class LocalWorkflow(HasStrictTraits):
         return self.eval_result
 
     def remote_exec(self, expr):
+        """
+        Execute an expression in the remote process and wait until it completes
+        """
+        
         self.exec_event.clear()
         self.message_q.put((Msg.EXEC, expr))
         
@@ -481,7 +517,10 @@ class LocalWorkflow(HasStrictTraits):
         return
     
     def wi_sync(self, wi, variable, value, timeout = 30):
-        """Set WorkflowItem.status on the remote workflow, then wait for it to propogate here."""
+        """
+        Set `WorkflowItem.status` on the remote workflow, then wait for it to 
+        propogate here.
+        """
         
         assert(wi.trait_get([variable])[variable] != value)
         idx = self.workflow.index(wi)
@@ -510,6 +549,7 @@ class LocalWorkflow(HasStrictTraits):
             raise
 
     def shutdown_remote_process(self, remote_process):
+        """Shut down the remote process"""
         # tell the remote process to shut down
         self.message_q.put((Msg.SHUTDOWN, None))
         
@@ -524,18 +564,35 @@ class LocalWorkflow(HasStrictTraits):
 
 
 class RemoteWorkflow(HasStrictTraits):
+    """
+    The workflow that is maintained in the "remote" process -- ie, the one that
+    actually does the processing.
+    """
+    
     workflow = List(WorkflowItem, comparison_mode = ComparisonMode.identity)
+    """The list of `WorkflowItem`'s """
+    
     selected = Instance(WorkflowItem)
+    """The currently-selected `WorkflowItem`"""
     
     last_view_plotted = Instance(IWorkflowView)
+    """The last `IWorkflowView` that was plotted"""
     
     send_thread = Instance(threading.Thread)
+    """The `threading.Thread` that sends messages to the local process"""
+    
     recv_thread = Instance(threading.Thread)
+    """The `threading.Thread` that receives messages from the local process"""
+    
     message_q = Instance(Queue, ())
+    """The `queue.Queue` of messages to send to the local process"""
     
     # synchronization primitives for plotting
     matplotlib_events = Any
+    """`threading.Event` to synchronize matplotlib plotting across process boundaries"""
+
     plot_lock = Any
+    """`threading.Lock` to synchronize matplotlib plotting across process boundaries"""
     
     exec_q = Instance(UniquePriorityQueue, ())
     exec_lock = Instance(threading.Lock, ())
@@ -545,6 +602,9 @@ class RemoteWorkflow(HasStrictTraits):
     plot_calls = Int(0)
     
     def run(self, parent_workflow_conn, parent_mpl_conn = None):
+        """
+        The method that runs the main loop of the remote process
+        """
         
         # set up the plotting synchronization primitives
         self.matplotlib_events = threading.Event()
@@ -594,6 +654,11 @@ class RemoteWorkflow(HasStrictTraits):
                 log_exception()
 
     def recv_main(self, parent_conn):
+        """
+        The method that runs in the `recv_thread` to receive messages from
+        the local process.
+        """
+        
         while parent_conn.poll(None):
             try:
                 (msg, payload) = parent_conn.recv()
@@ -734,6 +799,11 @@ class RemoteWorkflow(HasStrictTraits):
                 log_exception()
             
     def send_main(self, parent_conn):
+        """
+        The method that runs in `send_thread` to send messages to the
+        local process.
+        """
+        
         try:
             while True:
                 msg = self.message_q.get()
@@ -746,6 +816,7 @@ class RemoteWorkflow(HasStrictTraits):
             log_exception()
             
     def shutdown(self):
+        """Shut down the remote process"""
         # make sure the receiving thread is shut down
         self.recv_thread.join()
         
@@ -926,130 +997,5 @@ class RemoteWorkflow(HasStrictTraits):
             idx = self.workflow.index(event.new)
             if event.new.current_view:
                 self.exec_q.put((idx + 0.1, (event.new, event.new.plot)))
-                            
-            
-#     @on_trait_change('workflow:changed')
-#     def _changed_event(self, obj, name, new):
-#         logger.debug("RemoteWorkflow._changed_event:: {}"
-#                       .format((obj, name, new)))
-#         
-#         wi = obj
-#         idx = self.workflow.index(wi)
-#         (msg, payload) = new
-#         
-#         if msg == Changed.OPERATION:
-#             if wi.operation.should_apply(Changed.OPERATION, payload):
-#                 with wi.lock:
-#                     wi.result = None
-#                     wi.status = "invalid"
-#                 self.exec_q.put((idx, (wi, wi.apply)))
-#         
-#         elif msg == Changed.VIEW:
-#             (view, name, new) = payload
-#             if wi.current_view == view and wi.current_view.should_plot(Changed.VIEW, payload):
-#                 wi.current_view.update_plot_names(wi)
-#                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
-#                 
-#         elif msg == Changed.ESTIMATE:
-#             if wi.operation.should_clear_estimate(Changed.ESTIMATE, payload):
-#                 try:
-#                     wi.operation.clear_estimate()
-#                 except AttributeError:
-#                     pass
-#         
-#         elif msg == Changed.ESTIMATE_RESULT:
-#             if (wi == self.selected 
-#                 and wi.current_view 
-#                 and wi.current_view.should_plot(Changed.ESTIMATE_RESULT, payload)):
-#                 wi.current_view.update_plot_names(wi)
-#                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
-#                 
-#             if wi.operation.should_apply(Changed.ESTIMATE_RESULT, payload):
-#                 self.exec_q.put((idx, (wi, wi.apply)))
-#                         
-#         elif msg == Changed.OP_STATUS:
-#             (name, new) = payload
-#             self.message_q.put((Msg.UPDATE_OP, (idx, name, new)))
-#             
-#         elif msg == Changed.VIEW_STATUS:
-#             (view, name, new) = payload
-#             self.message_q.put((Msg.UPDATE_VIEW, (idx, view.id, name, new)))
-#             
-#         elif msg == Changed.RESULT:
-#             if (wi == self.selected 
-#                 and wi.current_view 
-#                 and wi.current_view.should_plot(Changed.RESULT, payload)):
-#                 wi.current_view.update_plot_names(wi)
-#                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
-#                 
-#         elif msg == Changed.PREV_RESULT:
-#             if wi.operation.should_clear_estimate(Changed.PREV_RESULT, payload):
-#                 try:
-#                     wi.operation.clear_estimate()
-#                 except AttributeError:
-#                     pass
-#                 
-#             if wi.operation.should_apply(Changed.PREV_RESULT, payload):
-#                 with wi.lock:
-#                     wi.result = None
-#                     wi.status = "invalid"
-#                 self.exec_q.put((idx, (wi, wi.apply)))
-#                 
-#             if (wi == self.selected 
-#                 and wi.current_view 
-#                 and wi.current_view.should_plot(Changed.PREV_RESULT, payload)):
-#                 wi.current_view.update_plot_names(wi)
-#                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
-
-
-
-
-            
-#     @on_trait_change('workflow:result', post_init = True)
-#     def _result_changed(self, obj, name, old, new):
-#         logger.debug("RemoteWorkflow._result_changed :: {}"
-#                       .format((self, obj, name, old, new)))   
-#              
-#         if obj.result:
-#             obj.channels = list(obj.result.channels)
-#             obj.conditions = dict(obj.result.conditions)
-#             obj.statistics = dict(obj.result.statistics)
-#  
-#             # some things in metadata are unpicklable, functions and such,
-#             # so filter them out.
-#             obj.metadata = filter_unpicklable(dict(obj.result.metadata))
-#             
-
-#         obj.changed = (Changed.RESULT, None)
-#         
-#         if obj.next_wi:
-#             obj.next_wi.changed = (Changed.PREV_RESULT, None)
-            
-             
-    #@on_trait_change('workflow:current_view, workflow:current_view:current_plot', post_init = True)
-    #@observe('workflow:current_view')
-#     def _current_view_changed(self, obj, name, old, new):
-#         logger.debug("RemoteWorkflow._current_view_changed :: {}"
-#                       .format((self, obj, name, old, new)))
-#         
-#         if obj == self.selected:
-#             idx = self.workflow.index(obj)
-#             obj.current_view.update_plot_names(obj)
-#             self.exec_q.put((idx + 0.1, (obj, obj.plot)))
-#         
-
-#             
-#     @on_trait_change('workflow:apply_called')
-#     def _apply_called(self):
-#         self.apply_calls += 1
-#         self.message_q.put((Msg.APPLY_CALLED, self.apply_calls))
-#         
-#         
-#     @on_trait_change('workflow:plot_called')
-#     def _plot_called(self):
-#         self.plot_calls += 1
-#         self.message_q.put((Msg.PLOT_CALLED, self.plot_calls))
-
-
 
     

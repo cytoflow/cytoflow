@@ -86,7 +86,8 @@ class ExportPane(TraitsDockPane):
                          show_label = False))
         
     def create_contents(self, parent):
-        """ Create and return the toolkit-specific contents of the dock pane.
+        """ 
+        Create and return the toolkit-specific contents of the dock pane.
         """
         self.ui = self.edit_traits(kind="subpanel", 
                                    parent=parent,
@@ -106,13 +107,20 @@ class ExportTaskPane(TaskPane):
     name = 'Cytometry Data Viewer'
     
     model = Instance(LocalWorkflow)
+    """The shared `LocalWorkflow` model"""
+    
     handler = Instance(WorkflowController)
+    """The shared `WorkflowController`"""
     
     layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
+    """The center window's layout"""
+    
     canvas = Instance(FigureCanvasQTAggLocal)
+    """The shared canvas, an instance of `FigureCanvasQTAggLocal`"""
         
-    def create(self, parent):      
-        # create a layout for the tab widget and the main view
+    def create(self, parent):    
+        """Create a layout for the tab widget and the main view"""
+        
         self.layout = layout = QtGui.QVBoxLayout()          # @UndefinedVariable
         self.control = QtGui.QWidget()                      # @UndefinedVariable
         self.control.setLayout(layout)
@@ -138,21 +146,31 @@ class ExportTask(Task):
     
     menu_bar = SMenuBar(SMenu(TaskToggleGroup(),
                               id = 'View', name = '&View'))
+    """The menu bar schema"""
     
-    # the main workflow instance.
     model = Instance(LocalWorkflow)
-    
-    # the handler that connects it to various views
+    """The shared `LocalWorkflow` model"""
+
     handler = Instance(WorkflowController)
+    """The shared `WorkflowController`"""
+
            
     # side panes
     params_pane = Instance(TraitsDockPane)
+    """Plot parameters pane"""
+    
     export_pane = Instance(TraitsDockPane)
+    """Pane with size, DPI and buttons"""
     
     # additional parameters for exporting
     width = CFloat(11)
+    """Width, in inches"""
+    
     height = CFloat(8.5)
+    """Height, in inches"""
+    
     dpi = CInt(96)
+    """Resolution, in dots per inch"""
     
     # events for exporting
     do_exit = Event
@@ -177,10 +195,16 @@ class ExportTask(Task):
         return [self.params_pane, self.export_pane]
 
     def activated(self):
+        """
+        Called after the task has been activated in a TaskWindow.  Places the
+        shared canvas in the center pane's layout.
+        """
         self.window.central_pane.activate()
                                 
     @observe('do_exit', post_init = True)
     def activate_cytoflow_task(self, _):
+        """Switch to the `FlowTask` task"""
+        
         task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.flow_task')
         self.window.activate_task(task)
         
@@ -233,7 +257,7 @@ class ExportFigurePlugin(Plugin):
     """
 
     # Extension point IDs
-    TASKS             = 'envisage.ui.tasks.tasks' 
+    TASKS = 'envisage.ui.tasks.tasks' 
 
     #### 'IPlugin' interface ##################################################
 

@@ -21,6 +21,32 @@
 cytoflowgui.import_dialog
 -------------------------
 
+A modal dialog that allows the user to set up their experiment, mapping
+FCS files to experimental conditions.
+
+There are a few main classes:
+
+- `Tube` -- represents one tube (well, an FCS file) in an experiment -- the filename
+  and its metadata.
+
+- `TubeTrait` -- represents one trait (the trait type and name)
+
+- `ExperimentDialogModel` -- the tabular model of tubes, traits, and trait values
+
+- `ExperimentalDialogHandler` -- the controller which contains the view and the
+  logic for connecting it to the model.
+  
+Additionally, there are several utility functions and classes: 
+
+- `not_true` and `not_false` -- obvious
+
+- `sanitize_metadata` -- replaces all non-Python-safe characters in a tube's 
+  metadata with '_'
+  
+- `eval_bool` -- interprets various strings as True or False
+
+- `ConvertingBool` -- trait type that uses `eval_bool` to convert strings 
+  to boolean values
 """
 
 # for local debugging

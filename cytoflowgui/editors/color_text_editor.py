@@ -21,6 +21,9 @@
 cytoflowgui.editors.color_text_editor
 -------------------------------------
 
+A `traitsui.editors.text_editor.TextEditor`
+ that allows you to set the foreground and background color
+of the text.
 """
 
 from pyface.qt import QtGui, QtCore
@@ -29,8 +32,6 @@ from traitsui.api import BasicEditorFactory
 from traits.api import Color, Instance, Str, Undefined
 
 class _ColorTextEditor(ReadonlyEditor):
-    """ Read-only style of text editor, which displays a read-only text field.
-    """
 
     _palette = Instance(QtGui.QPalette)
     _foreground_color = Color
@@ -83,6 +84,14 @@ class _ColorTextEditor(ReadonlyEditor):
         
 # editor factory
 class ColorTextEditor(BasicEditorFactory):
+    """
+    Editor factory for a color text editor
+    """
+    
     klass = _ColorTextEditor
+    
     foreground_color = Str
+    """The foreground color"""
+    
     background_color = Str
+    """The background color"""

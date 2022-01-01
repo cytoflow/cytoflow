@@ -21,6 +21,8 @@
 cytoflowgui.workflow.workflow_item
 ----------------------------------
 
+Represents one step in an analysis pipeline.  Wraps a single 
+`IOperation` and any `IView` of its result.  
 """
 
 import sys, logging, warnings, threading
@@ -45,87 +47,138 @@ logger = logging.getLogger(__name__)
 
 class WorkflowItem(HasStrictTraits):
     """        
-    The basic unit of a Workflow: wraps an operation and a list of views.
+    The basic unit of a Workflow: wraps an operation and a list of views.  
+    This class is serialized and synchronized between the `LocalWorkflow` and the
+    `RemoteWorkflow`.
     
     Notes
     -----
     Because we serialize instances of this, we have to pay careful attention
-    to which traits are ``transient`` (and aren't serialized)
+    to which traits are ``transient`` (and aren't serialized). Additionally,
+    traits marked as ``status`` are only serialized remote --> local.  For more
+    details about the synchronization, see the module docstring for `cytoflowgui.workflow`
     """
     
-    # the operation's id
     friendly_id = DelegatesTo('operation')
+    """The operation's id"""
     
-    # the operation's name
     name = DelegatesTo('operation')
+    """The operation's name"""
     
-    # the operation this Item wraps
     operation = Instance('cytoflowgui.workflow.operations.IWorkflowOperation', copy = "ref")
+    """The operation that this `WorkflowItem` wraps"""
     
     # the IViews associated with this operation
     views = List(Instance('cytoflowgui.workflow.views.IWorkflowView'), 
                  copy = "ref", 
                  comparison_mode = ComparisonMode.identity)
+    """The `IView`\'s associated with this operation"""
     
-    # the currently selected view
     current_view = Instance('cytoflowgui.workflow.views.IWorkflowView', copy = "ref")
+    """The currently selected view"""
         
-    # the Experiment that is the result of applying *operation* to the
-    # previous_wi WorkflowItem's ``result``
     result = Instance(Experiment, transient = True)
+    """The `Experiment` that is the result of applying `operation` to the
+       `previous_wi`'s `result`"""
     
     # the channels, conditions and statistics from result.  usually these would be
     # Properties (ie, determined dynamically), but that's hard with the
     # multiprocess model.
     
     channels = List(Str, status = True)
+    """The channels from `result`"""
+    
     conditions = Dict(Str, pd.Series, status = True)
+    """The conditions from `result`"""
+    
     metadata = Dict(Str, Any, status = True)
+    """The metadata from `result`"""
+    
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
+    """The statistics from `result`"""
     
-    # the default view for this workflow item
     default_view = Property(Instance('cytoflowgui.workflow.views.IWorkflowView'), observe = 'operation')
+    """The default view for this workflow item (if any)"""
     
-    # the previous_wi WorkflowItem in the workflow
     previous_wi = Instance('WorkflowItem', transient = True)
+    """The previous `WorkflowItem` in the workflow"""
     
-    # the next_wi WorkflowItem in the workflow
     next_wi = Instance('WorkflowItem', transient = True)
+    """The next `WorkflowItem` in the workflow"""
     
     # the workflow that we're a part of.  need to make klass = HasStrictTraits because
     # we could be an instance of either LocalWorkflow or RemoteWorkflow
     workflow = Instance(HasStrictTraits, transient = True)
+    """
+    The `LocalWorkflow` or `RemoteWorkflow` that this `WorkflowItem` is a part of
+    """
     
-    # is the wi valid?
     # MAGIC: first value is the default
     status = Enum("invalid", "waiting", "estimating", "applying", "valid", "loading", status = True)
+    """This `WorkflowItem`'s status"""
     
     # report the errors and warnings
     op_error = Str(status = True)
+    """Errors from `operation`'s `IOperation.apply` method"""
+    
     op_error_trait = Str(status = True)
+    """The trait that caused the error in `op_error`"""
+
     op_warning = Str(status = True)
-    op_warning_trait = Str(status = True)    
+    """Warnings from `operation`'s `IOperation.apply` method"""
+    
+    op_warning_trait = Str(status = True)  
+    """The trait that caused the warning in `op_warning`"""
+      
     estimate_error = Str(status = True)
+    """Errors from `operation`'s `IOperation.estimate` method"""
+    
     estimate_warning = Str(status = True)
+    """Warnings from `operation`'s `IOperation.estimate` method"""
+
     view_error = Str(status = True)
+    """Errors from the most recently plotted view's `IView.plot` method"""
+    
     view_error_trait = Str(status = True)
+    """The trait that caused the error in `view_error`"""
+    
     view_warning = Str(status = True)
+    """Warnings from the most recently plotted view's `IView.plot` method"""
+    
     view_warning_trait = Str(status = True)
+    """The trait that caused the warning in `view_warning`"""
     
     plot_names = List(Any, status = True)
+    """
+    The possible values for the **plot_name** parameter of `current_view`'s
+    `IView.plot` method. Retrieved from that view's **enum_plots()** method and
+    updated automatically when `result` or `current_view` changes.
+    """
+    
     plot_names_label = Str(status = True)
+    """
+    The GUI label for the element that allows users to select a plot name from
+    `plot_names`.  Updated automatically when `result` or `current_view` changes.
+    """
     
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
+    """`threading.Event` to synchronize matplotlib plotting across process boundaries"""
+    
     plot_lock = Any(transient = True)
+    """`threading.Lock` to synchronize matplotlib plotting across process boundaries"""
     
-    # synchronization primitive for updating wi traits
     lock = Instance(threading.RLock, (), transient = True)
+    """`threading.Lock` for updating this `WorkflowItem`'s traits"""
+
     
-    ### Overrides to make edit_traits go looking for views in the handler
     def edit_traits(self, view = None, parent = None, kind = None, 
                         context = None, handler = None, id = "",  # @ReservedAssignment
                         scrollable=None, **args):
+        """
+        Override the base `traits.has_traits.HasTraits.edit_traits` to make it go looking for views
+        in the handler.
+        """
          
         if context is None:
             context = self
@@ -188,6 +241,8 @@ class WorkflowItem(HasStrictTraits):
         
         
     def estimate(self):
+        """Call `operation`'s `IOperation.estimate`"""
+        
         logger.debug("WorkflowItem.estimate :: {}".format((self)))
 
         prev_result = self.previous_wi.result if self.previous_wi else None
@@ -232,7 +287,8 @@ class WorkflowItem(HasStrictTraits):
             
     def apply(self):
         """
-        Apply this wi's operation to the previous_wi wi's result
+        Calls `operation`'s `IOperation.apply`; applies this `WorkflowItem`'s 
+        operation to `previous_wi`'s result
         """
         logger.debug("WorkflowItem.apply :: {}".format((self)))
         self.workflow.apply_calls += 1
@@ -280,7 +336,12 @@ class WorkflowItem(HasStrictTraits):
                     pass
 
         
-    def plot(self):              
+    def plot(self):   
+        """
+        Call `current_view`'s `IView.plot` on `result`, or on `previous_wi`'s `result`
+        if there's no current `result`.
+        """
+                   
         logger.debug("WorkflowItem.plot :: {}".format((self)))
         self.workflow.plot_calls += 1
                      

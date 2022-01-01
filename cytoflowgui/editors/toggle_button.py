@@ -21,6 +21,7 @@
 cytoflowgui.editors.toggle_button
 ---------------------------------
 
+A button that can be toggled off and on.
 """
 
 # for local debugging
@@ -44,8 +45,8 @@ class _ToggleButton(Editor):
     #  Trait definitions:
     #---------------------------------------------------------------------------
 
-    # The button label
     label = Str
+    """The button label"""
 
     #---------------------------------------------------------------------------
     #  Finishes initializing the editor by creating the underlying toolkit
@@ -91,14 +92,14 @@ class ToggleButtonEditor(BasicEditorFactory):
 
     klass = _ToggleButton
 
-    # Value to set when the button is clicked
     value = Property
- 
-    # Optional label for the button
+    """Value to set when the button is clicked"""
+
     label = Str
+    """Optional label for the button"""
  
-    # The name of the external object trait that the button label is synced to
     label_value = Str
+    """The name of the external object trait that the button label is synced to"""
  
         
 if __name__ == '__main__':

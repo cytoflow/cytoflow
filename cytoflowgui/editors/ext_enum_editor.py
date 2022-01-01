@@ -20,6 +20,10 @@
 """
 cytoflowgui.editors.ext_enum_editor
 -----------------------------------
+
+A `traitsui.editors.enum_editor.EnumEditor` that allows **_names** to be extended with
+**extra_items** in the factory.
+
 """
 
 from traits.api import Dict
@@ -65,6 +69,7 @@ class _ExtendableEnumEditor(_EnumEditor):
 class ExtendableEnumEditor(EnumEditor):
     
     extra_items = Dict
+    """The extra items for the enum, beyond what's in **names**"""
         
     def _get_simple_editor_class(self):
         """ Returns the editor class to use for "simple" style views.

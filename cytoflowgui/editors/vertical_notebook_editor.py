@@ -21,6 +21,10 @@
 cytoflowgui.editors.vertical_notebook_editor
 --------------------------------------------
 
+A `cytoflow`-specific re-implementation of the `traitsui.editors.list_editor.ListEditor`
+in *notebook* mode, but vertically instead of horizontally
+
+
 """
 
 from traits.api import HasTraits
@@ -227,38 +231,41 @@ class VerticalNotebookEditor(BasicEditorFactory):
     # The editor class to be created:
     klass = _VerticalNotebookEditor
 
-    # Allow multiple open pages at once?
     multiple_open = Bool(False)
+    """Allow multiple open pages at once?"""
     
-    # Include a "delete" button?
     delete = Bool(False)
+    """Include a "delete" button?"""
 
-    # List member trait to read the notebook page name from
     page_name = Str
+    """List member trait to read the notebook page name from"""
 
-    # List member trait to read the notebook page description from
     page_description = Str
-    
-    # List member trait to read the notebook page icon from
-    # If None, then use right-arrow for "closed" and down-arrow for "open"
-    # The type of this trait is toolkit-specific; for example, the pyface.qt
-    # type is a QtGui.QStyle.StandardPixmap
+    """List member trait to read the notebook page name from"""
+
     page_icon = Str
+    """ 
+    List member trait to read the notebook page icon from
+    If None, then use right-arrow for "closed" and down-arrow for "open"
+    The type of this trait is toolkit-specific; for example, the `pyface.qt`
+    type is a `QtGui.QStyle.StandardPixmap`
+    """
     
-    # List member trait to specify whether the page is deletable
-    # If the "delete" trait, above, is True, then this list member
-    # trait will enable or disable the "delete" button
     page_deletable = Str
+    """
+    List member trait to specify whether the page is deletable
+    If the "delete" trait, above, is True, then this list member
+    trait will enable or disable the "delete" button
+    """
 
-    # Name of the view to use for each page:
     view = AView
-    
-    # A factory to produce a handler from an object
-    handler_factory = Callable
+    """Name of the view to use for each page"""
 
-    # Name of the trait to synchronize notebook page
-    # selection with:
+    handler_factory = Callable
+    """A factory to produce a handler from an object"""
+
     selected = Str
+    """Name of the trait to synchronize notebook page selection with"""
 
 if __name__ == '__main__':
 
