@@ -87,6 +87,7 @@ you'll find:
 
 * :ref:`Tutorial Jupyter notebooks <dev_tutorials>` to get you started
   writing your own analyses.
+* :ref:`In-depth examples <dev_examples>` that demonstrate more advanced usage.
 * :ref:`How-to guides <dev_howto>` to help you with common tasks.
 * :ref:`Developer's guides <dev_guides>` to help you understand how Cytoflow
   is structured (particularly useful for writing your own modules.)

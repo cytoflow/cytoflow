@@ -4,7 +4,7 @@
 Examples
 ********
 
-These tutorials illustrate some of the capabilities of the `cytoflow` library.
+These examples illustrate some of the advanced capabilities of the `cytoflow` library.
 They are generated from the example notebooks and data sets in the 
 ``cytoflow-$VERSION-examples-advanced.zip`` file, available from the ``Releases`` tab
 at `the project homepage <https://github.com/cytoflow/cytoflow/>`_.  Feel free
