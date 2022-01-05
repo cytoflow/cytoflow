@@ -513,13 +513,15 @@ def setup(app):
     
 def convert_notebooks(app):
     from nbconvert.nbconvertapp import NbConvertApp
-    
     from traitlets.config import Config
+    from shutil import copy2
     
     curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
     
     notebooks_basic = (curr_dir / 'examples-basic').glob('*.ipynb')
     dest_dir = curr_dir / 'dev_manual' / 'tutorials'
+    images_dir = dest_dir / '_images'
+    images_dir.mkdir(exist_ok = True)
 
     for notebook_file in notebooks_basic:
         output_name = notebook_file.stem.lower()
@@ -534,10 +536,17 @@ def convert_notebooks(app):
         app = NbConvertApp(config = c)
         app.init_writer()
         app.convert_notebooks()
+        
+        images = notebook_file.parent.glob('_images/*')
+        
+        for image_file in images:
+            copy2(image_file, images_dir)
 
 
     notebooks_advanced = (curr_dir / 'examples-advanced').glob('*/*.ipynb')
     dest_dir = curr_dir / 'dev_manual' / 'examples'
+    images_dir = dest_dir / '_images'
+    images_dir.mkdir(exist_ok = True)
     
     for notebook_file in notebooks_advanced:
         output_name = notebook_file.stem.lower()
@@ -552,6 +561,11 @@ def convert_notebooks(app):
         app = NbConvertApp(config = c)
         app.init_writer()
         app.convert_notebooks()
+        
+        images = notebook_file.parent.glob('_images/*')
+        
+        for image_file in images:
+            copy2(image_file, images_dir)
     
     
 def run_apidoc(app):

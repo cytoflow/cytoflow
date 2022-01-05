@@ -36,3 +36,10 @@ _Logicle.cpython-34m.so
 /docs/dev_manual/api/*
 !/docs/dev_manual/api/api.rst
 
+# auto-generated tutorials and examples
+/docs/dev_manual/tutorials/*
+!/docs/dev_manual/tutorials/tutorials.rst
+
+/docs/dev_manual/examples/*
+!/docs/dev_manual/examples/examples.rst
+
