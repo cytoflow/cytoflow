@@ -506,11 +506,54 @@ class AnyResolver(ReferencesResolver):
 def setup(app):    
     app.add_post_transform(AnyResolver)
 
+    app.connect('builder-inited', convert_notebooks)
     app.connect('builder-inited', run_apidoc)
     app.connect('autodoc-process-docstring', process_docstring)
     sys.modules['sys'].IN_SPHINX = True
     
+def convert_notebooks(app):
+    from nbconvert.nbconvertapp import NbConvertApp
+    
+    from traitlets.config import Config
+    
+    curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
+    
+    notebooks_basic = (curr_dir / 'examples-basic').glob('*.ipynb')
+    dest_dir = curr_dir / 'dev_manual' / 'tutorials'
 
+    for notebook_file in notebooks_basic:
+        output_name = notebook_file.stem.lower()
+        output_name = output_name.replace(' ', '_')
+        
+        c = Config()
+        c.NbConvertApp.export_format = 'rst'
+        c.NbConvertApp.output_base = output_name
+        c.FilesWriter.build_directory = str(dest_dir)
+        c.NbConvertApp.notebooks = [str(notebook_file)]
+        
+        app = NbConvertApp(config = c)
+        app.init_writer()
+        app.convert_notebooks()
+
+
+    notebooks_advanced = (curr_dir / 'examples-advanced').glob('*/*.ipynb')
+    dest_dir = curr_dir / 'dev_manual' / 'examples'
+    
+    for notebook_file in notebooks_advanced:
+        output_name = notebook_file.stem.lower()
+        output_name = output_name.replace(' ', '_')
+        
+        c = Config()
+        c.NbConvertApp.export_format = 'rst'
+        c.NbConvertApp.output_base = output_name
+        c.FilesWriter.build_directory = str(dest_dir)
+        c.NbConvertApp.notebooks = [str(notebook_file)]
+        
+        app = NbConvertApp(config = c)
+        app.init_writer()
+        app.convert_notebooks()
+    
+    
 def run_apidoc(app):
     
     # os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-undoc-members'
