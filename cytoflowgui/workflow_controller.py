@@ -72,8 +72,8 @@ from traitsui.api import View, Item, Controller, Spring
 import cytoflow.utility as util
 
 from .workflow import WorkflowItem
-from .editors import InstanceHandlerEditor
-from cytoflowgui.editors import VerticalNotebookEditor
+from .editors import InstanceHandlerEditor, VerticalNotebookEditor
+from .experiment_pane_model import WorkflowItemNode, NoneNode, experiment_tree_editor
 
 logger = logging.getLogger(__name__)
     
@@ -125,6 +125,8 @@ class WorkflowItemHandler(Controller):
 
     previous_channels = Property(observe = "model.previous_wi.channels")
     """The channels in the previous `WorkflowItem.result`"""
+    
+    tree_node = Property()
 
     ###### VIEWS
     # the view on that handler        
@@ -184,8 +186,28 @@ class WorkflowItemHandler(Controller):
                          style = 'custom',
                          show_label = False),
                     handler = self)
-
         
+        
+    def experiment_view(self):
+        """
+        Returns a `traitsui.view.View` of `LocalWorkflow.selected`, showing
+        some things about the experiment -- channels, conditions, statistics,
+        etc.
+        """
+        
+        return View(Item('handler.tree_node',
+                         editor = experiment_tree_editor,
+                         style = 'simple',
+                         show_label = False),
+                    handler = self)
+        
+        
+    def _get_tree_node(self):
+        if self.model is None:
+            return NoneNode()
+        else:
+            return WorkflowItemNode(wi = self.model)
+
     def _get_operation_handler(self, op):
         plugin = next((x for x in self.op_plugins if op.id == x.operation_id))
         return plugin.get_handler(model = op, context = self.model)
@@ -362,6 +384,20 @@ class WorkflowController(Controller):
         
         return View(Item('selected',
                          editor = InstanceHandlerEditor(view = 'view_plot_name_view',
+                                                        handler_factory = self.handler_factory),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self)
+        
+        
+    def experiment_view(self):  
+        """
+        Returns a `traitsui.view.View` of `LocalWorkflow.selected` for the
+        experiment viewer.
+        """
+        
+        return View(Item('selected',
+                         editor = InstanceHandlerEditor(view = 'experiment_view',
                                                         handler_factory = self.handler_factory),
                          style = 'custom',
                          show_label = False),

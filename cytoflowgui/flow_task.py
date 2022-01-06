@@ -56,6 +56,7 @@ from envisage.api import Plugin
 from .workflow_pane import WorkflowDockPane
 from .view_pane import ViewDockPane, PlotParamsPane
 from .help_pane import HelpDockPane
+from .experiment_pane import ExperimentBrowserDockPane
 from .matplotlib_backend_local import FigureCanvasQTAggLocal
 from .workflow import LocalWorkflow
 from .workflow_controller import WorkflowController
@@ -138,6 +139,8 @@ class FlowTask(Task):
     
     view_pane = Instance(ViewDockPane)
     """The view configuration dock pane"""
+    
+    browser_pane = Instance(ExperimentBrowserDockPane)
     
     help_pane = Instance(HelpDockPane)
     """The help dock pane"""
@@ -247,6 +250,7 @@ class FlowTask(Task):
         
         dpi = self.application.dpi
         return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane", width = int(dpi * 3)),
+                                           PaneItem("edu.mit.synbio.cytoflowgui.experiment_pane", width = int(dpi * 3)),
                                            PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = int(dpi * 3), height = int(dpi * 3))),
                           right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane", width = int(dpi * 3)),
                                             PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = int(dpi * 3), height = int(dpi * 3))),
@@ -281,6 +285,10 @@ class FlowTask(Task):
                                               plugins = self.op_plugins,
                                               task = self)
         
+        self.browser_pane = ExperimentBrowserDockPane(model = self.model,
+                                                      handler = self.handler,
+                                                      task = self)
+        
         self.view_pane = ViewDockPane(model = self.model,
                                       handler = self.handler,
                                       plugins = self.view_plugins,
@@ -294,7 +302,8 @@ class FlowTask(Task):
         self.plot_params_pane = PlotParamsPane(model = self.model,
                                                handler = self.handler)
         
-        return [self.workflow_pane, self.view_pane, self.help_pane, self.plot_params_pane]
+        return [self.workflow_pane, self.view_pane, self.browser_pane, 
+                self.help_pane, self.plot_params_pane]
         
     def on_new(self):
         """
