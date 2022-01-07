@@ -22,7 +22,7 @@ cytoflowgui.editors.color_text_editor
 -------------------------------------
 
 A `traitsui.editors.text_editor.TextEditor`
- that allows you to set the foreground and background color
+that allows you to set the foreground and background color
 of the text.
 """
 
@@ -69,8 +69,9 @@ class _ColorTextEditor(ReadonlyEditor):
     #---------------------------------------------------------------------------
 
     def update_editor ( self ):
-        """ Updates the editor when the object trait changes externally to the
-            editor.
+        """ 
+        Updates the editor when the object trait changes externally to the
+        editor.
         """
         self.control.setText(self.str_value)
         

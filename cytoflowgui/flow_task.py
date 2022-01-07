@@ -41,9 +41,10 @@ from textwrap import dedent
 import nbformat as nbf
 from yapf.yapflib.yapf_api import FormatCode
 
-from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo
+from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo, observe
 from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter
-from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
+from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup, SGroup
+# from pyface.tasks.action.dock_pane_toggle_group import DockPaneToggleGroup, DockPaneToggleAction, ActionItem
 from pyface.api import (FileDialog, ImageResource, AboutDialog, 
                         confirm, OK, YES, ConfirmationDialog, warning,
                         error)
@@ -62,6 +63,28 @@ from .workflow import LocalWorkflow
 from .workflow_controller import WorkflowController
 from .util import DefaultFileDialog
 from .workflow.serialization import save_yaml, load_yaml
+
+
+# class DockPaneImageToggleGroup(DockPaneToggleGroup):
+#     @observe("dock_panes.items")
+#     def _dock_panes_updated(self, event):
+#         """Recreate the group items when dock panes have been added/removed.
+#         """
+# 
+#         # Remove the previous group items.
+#         self.destroy()
+# 
+#         items = []
+#         for dock_pane in self.dock_panes:
+#             action = DockPaneToggleAction(dock_pane=dock_pane,
+#                                           image = dock_pane.image)
+#             items.append(ActionItem(action=action))
+# 
+#         self.items = items
+# 
+#         # Inform the parent menu manager.
+#         manager = self.get_manager()
+#         manager.changed = True
 
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
@@ -141,6 +164,7 @@ class FlowTask(Task):
     """The view configuration dock pane"""
     
     browser_pane = Instance(ExperimentBrowserDockPane)
+    """The experiment browser dock pane"""
     
     help_pane = Instance(HelpDockPane)
     """The help dock pane"""
@@ -184,31 +208,51 @@ class FlowTask(Task):
                               id="Help", name ="&Help"))
     """The menu bar schema"""
     
-    tool_bars = [ SToolBar(TaskAction(method='on_new',
-                                      name = "New",
-                                      tooltip='New workflow',
-                                      image=ImageResource('new')),
-                           TaskAction(method='on_open',
-                                      name = "Open",
-                                      tooltip='Open a file',
-                                      image=ImageResource('open')),
-                           TaskAction(method='on_save',
-                                      name = "Save",
-                                      tooltip='Save the current file',
-                                      image=ImageResource('save')),
-                           TaskAction(method='on_export',
-                                      name = "Save Plot",
-                                      tooltip='Save the current plot',
-                                      image=ImageResource('export')),
-                           TaskAction(method='on_notebook',
-                                       name='Notebook',
-                                       tooltip="Export to an Jupyter notebook...",
-                                       image=ImageResource('jupyter')),
-                           TaskAction(method = 'on_problem',
-                                      name = "Report a bug...",
-                                      tooltib = "Report a bug",
-                                      image = ImageResource('bug')),
-                           PreferencesAction(image = ImageResource('prefs')))]
+    tool_bars = [ SToolBar(SGroup(TaskAction(method='on_new',
+                                             name = "New",
+                                             tooltip='New workflow',
+                                             image=ImageResource('new')),
+                                  TaskAction(method='on_open',
+                                             name = "Open",
+                                             tooltip='Open a file',
+                                             image=ImageResource('open')),
+                                  TaskAction(method='on_save',
+                                             name = "Save",
+                                             tooltip='Save the current file',
+                                             image=ImageResource('save')),
+                                  TaskAction(method='on_export',
+                                             name = "Save Plot",
+                                             tooltip='Save the current plot',
+                                             image=ImageResource('export')),
+                                  TaskAction(method='on_notebook',
+                                              name='Notebook',
+                                              tooltip="Export to an Jupyter notebook...",
+                                              image=ImageResource('jupyter')),
+                                  TaskAction(method = 'on_problem',
+                                             name = "Report a bug...",
+                                             tooltib = "Report a bug",
+                                             image = ImageResource('bug')),
+                                  PreferencesAction(image = ImageResource('prefs'))),
+                           SGroup(TaskAction(method = 'on_toggle_workflow',
+                                             name = 'Workflow',
+                                             tooltip = 'Toggle workflow pane',
+                                             image = ImageResource('workflow')),
+                                  TaskAction(method = 'on_toggle_view',
+                                                    name = 'View Properties',
+                                                    tooltip = 'Toggle view properties pane',
+                                                    image = ImageResource('view_pane')),
+                                  TaskAction(method = 'on_toggle_plot_params',
+                                                    name = 'Plot Parameters',
+                                                    tooltip = 'Toggle plot parameters pane',
+                                                    image = ImageResource('plot_params')),
+                                  TaskAction(method = 'on_toggle_browser',
+                                                    name = 'Browser',
+                                                    tooltip = 'Toggle experiment browser pane',
+                                                    image = ImageResource('browser')),
+                                  TaskAction(method = 'on_toggle_help',
+                                                    name = 'Help',
+                                                    tooltip = 'Toggle help pane',
+                                                    image = ImageResource('help'))))]
     """The tool bar schema"""
 
     
@@ -285,25 +329,25 @@ class FlowTask(Task):
                                               plugins = self.op_plugins,
                                               task = self)
         
-        self.browser_pane = ExperimentBrowserDockPane(model = self.model,
-                                                      handler = self.handler,
-                                                      task = self)
-        
         self.view_pane = ViewDockPane(model = self.model,
                                       handler = self.handler,
                                       plugins = self.view_plugins,
                                       task = self)
         
+        self.plot_params_pane = PlotParamsPane(model = self.model,
+                                               handler = self.handler)
+        
+        self.browser_pane = ExperimentBrowserDockPane(model = self.model,
+                                                      handler = self.handler,
+                                                      task = self)
+
         self.help_pane = HelpDockPane(model = self.model,
                                       view_plugins = self.view_plugins,
                                       op_plugins = self.op_plugins,
                                       task = self)
         
-        self.plot_params_pane = PlotParamsPane(model = self.model,
-                                               handler = self.handler)
-        
-        return [self.workflow_pane, self.view_pane, self.browser_pane, 
-                self.help_pane, self.plot_params_pane]
+        return [self.workflow_pane, self.view_pane, self.plot_params_pane,
+                self.browser_pane, self.help_pane, ]
         
     def on_new(self):
         """
@@ -579,6 +623,32 @@ class FlowTask(Task):
                 webbrowser.open_new_tab("https://github.com/cytoflow/cytoflow/issues/new")
                   
             return
+        
+        
+    def on_toggle_workflow(self):
+        """Toggle the visibility of the workflow pane"""
+        self.workflow_pane.visible = not self.workflow_pane.visible
+        
+        
+    def on_toggle_view(self):
+        """Toggle the visibility of the view properties pane"""
+        self.view_pane.visible = not self.view_pane.visible
+        
+        
+    def on_toggle_plot_params(self):
+        """Toggle the visibility of the plot parameters pane"""
+        self.plot_params_pane.visible = not self.plot_params_pane.visible
+        
+        
+    def on_toggle_browser(self):
+        """Toggle the visiblity of the experiment browser pane"""
+        self.browser_pane.visible = not self.browser_pane.visible
+        
+        
+    def on_toggle_help(self):
+        """Toggle the visiblity of the help pane"""
+        self.help_pane.visible = not self.help_pane.visible
+        
     
     def _get_package_versions(self):    
         from cytoflow import __version__ as cf_version
