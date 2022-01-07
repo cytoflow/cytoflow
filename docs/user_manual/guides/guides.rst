@@ -14,6 +14,7 @@ can help you use Cytoflow more effectively!
    facets
    statistics
    mean
+   browser
 
   
   

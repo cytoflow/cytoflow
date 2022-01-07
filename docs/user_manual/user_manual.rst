@@ -50,6 +50,7 @@ The **User Manual** is divided into four sections:
       guides/mean
       guides/statistics
       guides/facets
+      guides/browser
       
 #. :ref:`Reference documents <user_reference>` for each operation and
    view in Cytoflow.  These are the same documents that appear in the
