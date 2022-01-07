@@ -73,7 +73,7 @@ import cytoflow.utility as util
 
 from .workflow import WorkflowItem
 from .editors import InstanceHandlerEditor, VerticalNotebookEditor
-from .experiment_pane_model import WorkflowItemNode, NoneNode, experiment_tree_editor
+from .experiment_pane_model import WorkflowItemNode, StringNode, experiment_tree_editor
 
 logger = logging.getLogger(__name__)
     
@@ -204,7 +204,7 @@ class WorkflowItemHandler(Controller):
         
     def _get_tree_node(self):
         if self.model is None:
-            return NoneNode()
+            return StringNode(label = "Please select an operation in the workflow")
         else:
             return WorkflowItemNode(wi = self.model)
 
