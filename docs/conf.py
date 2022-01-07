@@ -128,10 +128,6 @@ copyright = u'Massachusetts Institute of Technology 2015-2018, Brian Teague 2018
 
 # Configure the sidebar
 
-# # Configure the footer
-# if tags.has("embedded_help"):  # @UndefinedVariable
-#     templates_path = ['embedded_templates']
-
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
