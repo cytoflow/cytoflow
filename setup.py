@@ -98,7 +98,9 @@ setup(
                                       'images/*',
                                       'op_plugins/images/*',
                                       'view_plugins/images/*',
-                                      'help/*.html',
+                                      'editors/images/*',
+                                      'help/operations/*.html',
+                                      'help/views/*.html',
                                       'help/_images/*.png',
                                       'help/_static/*']},
 

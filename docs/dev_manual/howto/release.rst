@@ -32,7 +32,8 @@ Documentation
   
 - Build the user manual and check it for completeness::
 
-  	  python setup.py build_sphinx -b user_manual
+  	  sphinx-build docs/user_manual/reference cytoflowgui/help
+
   	  
 Packaging
 ---------

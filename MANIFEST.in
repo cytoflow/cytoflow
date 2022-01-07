@@ -14,8 +14,8 @@ include cytoflowgui/preferences.ini
 include cytoflowgui/images/*
 include cytoflowgui/op_plugins/images/*
 include cytoflowgui/view_plugins/images/*
-include cytoflowgui/help/*.html
+include cytoflowgui/editors/images/*
+include cytoflowgui/help/operations/*.html
+include cytoflowgui/help/views/*.html
 include cytoflowgui/help/_images/*.png
 include cytoflowgui/help/_static/*
-
-
