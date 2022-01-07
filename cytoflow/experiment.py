@@ -27,6 +27,8 @@ Defines `Experiment`, `cytoflow`'s main data structure.
 """
 
 import pandas as pd
+from natsort import natsorted
+
 from pandas.api.types import CategoricalDtype, is_categorical_dtype
 from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
                        Property, Tuple)
@@ -393,7 +395,18 @@ class Experiment(HasStrictTraits):
                                     .format(dtype)) from exc
                                         
         self.metadata[name] = {}
-        self.metadata[name]['type'] = "condition"      
+        self.metadata[name]['type'] = "condition"
+        self.metadata[name]['dtype'] = self.data[name].dtype.name
+        
+        if self.data[name].dtype.kind == 'b':
+            self.metadata[name]['values_type'] = 'boolean'
+        elif self.data[name].dtype.kind in "ifu":
+            self.metadata[name]['values_type'] = 'numeric'
+        elif self.data[name].dtype.kind in "OSU":
+            self.metadata[name]['values_type'] = 'categorical'
+            
+        self.metadata[name]['values'] = natsorted(self.data[name].unique())
+    
             
     def add_channel(self, name, data = None):
         """
@@ -548,9 +561,15 @@ class Experiment(HasStrictTraits):
                 cats = sorted(cats) 
                 self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
                 new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)
+                
+
         
         self.data = self.data.append(new_data, ignore_index = True, sort = True)
         del new_data
+        
+        # update the metadata 'values'
+        for condition in self.conditions:
+            self.metadata[condition]['values'] = natsorted(self.data[condition].unique())
 
 if __name__ == "__main__":
     import fcsparser

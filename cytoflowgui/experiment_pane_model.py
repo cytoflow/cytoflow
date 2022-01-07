@@ -159,23 +159,26 @@ class ConditionNode(TreeNodeObject):
         return "@icons:string_node"
     
     def tno_get_children(self, _):
-        condition = self.wi.conditions[self.condition]
-        values = condition.sort_values()
-        dtype = pd.Series(list(values)).dtype
-        if dtype.kind == 'b':
-            return [StringNode(name = 'Type',
-                               value = 'boolean')]
-        elif dtype.kind in "ifu":
-            return [StringNode(name = 'Type',
-                               value = 'numeric'),
-                    StringNode(name = 'Values',
-                               value = ', '.join([str(x) for x in values]))]
-        elif dtype.kind in "OSU":
-            return [StringNode(name = 'Type',
-                               value = 'categorical'),
-                    StringNode(name = 'Values',
-                               value = ', '.join(values))]
-
+#         condition = self.wi.conditions[self.condition]
+#         values = condition.sort_values()
+#         dtype = pd.Series(list(values)).dtype
+#         if dtype.kind == 'b':
+#             ret = [StringNode(name = 'Type',
+#                               value = 'boolean')]
+#         elif dtype.kind in "ifu":
+#             ret = [StringNode(name = 'Type',
+#                               value = 'numeric'),
+#                    StringNode(name = 'Values',
+#                               value = ', '.join([str(x) for x in values]))]
+#         elif dtype.kind in "OSU":
+#             ret = [StringNode(name = 'Type',
+#                               value = 'categorical'),
+#                    StringNode(name = 'Values',
+#                               value = ', '.join(values))]
+            
+        return [StringNode(name = k, value = str(self.wi.metadata[self.condition][k])) 
+                           for k in self.wi.metadata[self.condition].keys()]
+                    
 
 class StatisticsNode(TreeNodeObject):
     """A tree node for all the statistics"""
