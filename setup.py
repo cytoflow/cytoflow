@@ -52,7 +52,7 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['numpy==1.20.2',
+    install_requires = ['numpy==1.21.0',
                         'pandas==1.2.5',
                         'matplotlib==3.3.4',
                         'bottleneck==1.3.2',
