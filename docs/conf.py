@@ -72,9 +72,7 @@ autosummary_generate = True
 
 # autodoc options
 autodoc_member_order = 'bysource'
-#autodoc_mock_imports = ['pyface.qt', 'pyface.ui.qt4', 'traitsui.qt4']
-autodoc_mock_imports = ['traitsui.qt4']
-
+autodoc_mock_imports = ['traitsui', 'pyface']
 
 if on_rtd:
     autodoc_mock_imports.append('cytoflow.utility.logicle_ext.Logicle')

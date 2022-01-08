@@ -65,7 +65,7 @@ extensions = [
 
 # autodoc options
 autodoc_member_order = 'bysource'
-autodoc_mock_imports = ['traitsui.qt4']
+autodoc_mock_imports = ['traitsui', 'pyface']
 
 # napoleon options
 napoleon_use_param = False
