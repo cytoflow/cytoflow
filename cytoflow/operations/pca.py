@@ -265,7 +265,6 @@ class PCAOp(HasStrictTraits):
             # drop data that isn't in the scale range
             for c in self.channels:
                 x = x[~(np.isnan(x[c]))]
-            x = x.values
              
             pca[group] = \
                 sklearn.decomposition.PCA(n_components = self.num_components,

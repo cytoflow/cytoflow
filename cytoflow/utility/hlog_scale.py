@@ -177,6 +177,8 @@ class HlogScale(ScaleMixin):
         
         class HlogNormalize(matplotlib.colors.Normalize):
             def __init__(self, vmin, vmax, scale):
+                super().__init__(vmin, vmax)
+
                 self._scale = scale
                 matplotlib.colors.Normalize.__init__(self, vmin, vmax)
                 

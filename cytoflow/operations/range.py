@@ -34,6 +34,7 @@ from traits.api import (HasStrictTraits, Float, Str, Instance, Bool,
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D    
+from matplotlib.widgets import SpanSelector
 
 import cytoflow.utility as util
 from cytoflow.views import HistogramView, ISelectionView
@@ -249,7 +250,7 @@ class RangeSelection(Op1DView, HistogramView):
 
     # internal state.
     _ax = Any(transient = True)
-    _span = Instance(util.SpanSelector, transient = True)
+    _span = Instance(SpanSelector, transient = True)
     _low_line = Instance(Line2D, transient = True)
     _high_line = Instance(Line2D, transient = True)
     _hline = Instance(Line2D, transient = True)
@@ -286,8 +287,8 @@ class RangeSelection(Op1DView, HistogramView):
             self._hline.remove()
             
 
-        self._low_line = plt.axvline(self.op.low, linewidth=3, color='blue')
-        self._high_line = plt.axvline(self.op.high, linewidth=3, color='blue')
+        self._low_line = plt.axvline(self.op.low, linewidth=2, color='blue')
+        self._high_line = plt.axvline(self.op.high, linewidth=2, color='blue')
             
         ymin, ymax = plt.ylim()
         y = (ymin + ymax) / 2.0
@@ -301,10 +302,14 @@ class RangeSelection(Op1DView, HistogramView):
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive:
-            self._span = util.SpanSelector(self._ax, 
-                                           onselect=self._onselect, 
-                                           span_stays=False,
-                                           useblit = True)
+            self._span = SpanSelector(self._ax, 
+                                      onselect = self._onselect, 
+                                      direction = "horizontal",
+                                      interactive = False,
+                                      props = dict(facecolor = 'none',
+                                                   edgecolor = 'blue',
+                                                   linewidth = 2),
+                                      useblit = True)
         else:
             self._span = None
         

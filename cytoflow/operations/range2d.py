@@ -346,9 +346,9 @@ class RangeSelection2D(Op2DView, ScatterplotView):
             self._selector = RectangleSelector(
                                 self._ax, 
                                 onselect=self._onselect, 
-                                rectprops=dict(facecolor = 'none',
-                                               edgecolor = 'blue',
-                                               linewidth = 2),
+                                props=dict(facecolor = 'none',
+                                           edgecolor = 'blue',
+                                           linewidth = 2),
                                 useblit = True)
         else:
             self._selector = None

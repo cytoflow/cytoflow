@@ -37,6 +37,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.widgets import Cursor
 
 import cytoflow.utility as util
 from cytoflow.views import ISelectionView, HistogramView
@@ -225,7 +226,7 @@ class ThresholdSelection(Op1DView, HistogramView):
     # internal state
     _ax = Any(transient = True)
     _line = Instance(Line2D, transient = True)
-    _cursor = Instance(util.Cursor, transient = True)
+    _cursor = Instance(Cursor, transient = True)
     
     def plot(self, experiment, **kwargs):
         """
@@ -260,18 +261,18 @@ class ThresholdSelection(Op1DView, HistogramView):
             self._line = None
         
         if self.op.threshold:    
-            self._line = plt.axvline(self.op.threshold, linewidth=3, color='blue')
+            self._line = plt.axvline(self.op.threshold, linewidth=2, color='blue')
             
         plt.draw()
         
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive:
-            self._cursor = util.Cursor(self._ax, 
-                                       horizOn=False,
-                                       vertOn=True,
-                                       color='blue',
-                                       useblit = True)
+            self._cursor = Cursor(self._ax, 
+                                  horizOn=False,
+                                  vertOn=True,
+                                  color='blue',
+                                  useblit = True)
             self._cursor.connect_event('button_press_event', self._onclick)
             
         elif self._cursor:

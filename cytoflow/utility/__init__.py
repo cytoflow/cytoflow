@@ -40,8 +40,6 @@ from .custom_traits import (PositiveInt, PositiveCInt, PositiveFloat,
                             PositiveCFloat, ScaleEnum, Deprecated, Removed,
                             FloatOrNone, CFloatOrNone, IntOrNone, CIntOrNone)
 
-from .matplotlib_widgets import PolygonSelector, SpanSelector, Cursor
-
 from .docstring import expand_class_attributes, expand_method_parameters
 
 from .fcswrite import write_fcs
