@@ -24,7 +24,7 @@ Runtime hook -- updates two copies of qt.conf to point to the one-click's
 Qt resources
 '''
 
-import os, sys
+import sys
 from pathlib import Path
 
 qt_path = Path(sys._MEIPASS) / 'PyQt5' / 'Qt'
