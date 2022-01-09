@@ -86,7 +86,20 @@ def run_gui():
     
     # so now i guess we depend on opengl too. 
     
-    from OpenGL import GL  # @UnresolvedImport @UnusedImport
+    try:
+        from OpenGL import GL  # @UnresolvedImport @UnusedImport
+    except ImportError:
+        logger.info("Patching util.find_library for MacOS")
+        from ctypes import util
+        orig_find_library = util.find_library
+
+        def new_find_library(name):
+            res = orig_find_library(name)
+            if res: return res
+            return '/System/Library/Frameworks/' + name + '.framework/' + name
+        util.find_library = new_find_library
+        from OpenGL import GL
+        util.find_library = orig_find_library
 
     # need to import these before a QCoreApplication is instantiated.  and that seems
     # to happen in .... 'import cytoflow' ??
