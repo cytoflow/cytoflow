@@ -23,7 +23,7 @@ Created on Dec 1, 2015
 @author: brian
 '''
 import unittest
-import cytoflow as flow
+from cytoflow import utility as util
 import pandas as pd
 from .test_base import ImportedDataTest
 
@@ -38,10 +38,20 @@ class TestExperiment(ImportedDataTest):
         self.ex.add_channel("FSC_over_2", self.ex.data["FSC-A"] / 2.0)
         self.assertEqual(len(self.ex.channels), 17)
         
+    def testAddConflictingNameChannel(self):
+        self.assertEqual(len(self.ex.channels), 16)
+        with self.assertRaises(util.CytoflowError):
+            self.ex.add_channel("B1_A", self.ex.data["FSC-A"] / 2.0)
+        
     def testAddCondition(self):
         self.assertEqual(len(self.ex.conditions), 3)
         self.ex.add_condition('in_gate', 'bool', pd.Series([True] * len(self.ex)))
         self.assertEqual(len(self.ex.conditions), 4)
+
+    def testAddConflictingNameCondition(self):
+        self.assertEqual(len(self.ex.conditions), 3)
+        with self.assertRaises(util.CytoflowError):
+            self.ex.add_condition('B1_A', 'bool', pd.Series([True] * len(self.ex)))
     
     def testSubset(self):
         ex2 = self.ex.subset(['Dox', 'Well'], (100.0, 'C'))

@@ -284,8 +284,8 @@ class Experiment(HasStrictTraits):
         for name, col in self.data.iteritems():
             new_name = util.sanitize_identifier(name)
             if new_name in resolvers:
-                raise util.CytoflowError("Tried to sanitize column name {1} to "
-                                         "{2} but it already existed in the "
+                raise util.CytoflowError("Tried to sanitize column name {0} to "
+                                         "{1} but it already existed in the "
                                          " DataFrame."
                                          .format(name, new_name))
             else:
@@ -373,11 +373,15 @@ class Experiment(HasStrictTraits):
         if name != util.sanitize_identifier(name):
             raise util.CytoflowError("Name '{}' is not a valid Python identifier"
                                      .format(name))
-        
+                    
         if name in self.data:
-            raise util.CytoflowError("Already a column named {0} in self.data"
+            raise util.CytoflowError("There is already a column named {0} in self.data"
                                      .format(name))
-        
+            
+        for col in self.data:
+            if util.sanitize_identifier(name) == util.sanitize_identifier(col):
+                raise util.CytoflowError("Name '{}' conflicts with channel or condition {} -- choose another name.")
+                    
         if data is None and len(self) > 0:
             raise util.CytoflowError("If data is None, self.data must be empty!")
         
@@ -445,6 +449,11 @@ class Experiment(HasStrictTraits):
         if name in self.data:
             raise util.CytoflowError("Already a column named {0} in self.data"
                                 .format(name))
+            
+        for col in self.data:
+            if util.sanitize_identifier(name) == util.sanitize_identifier(col):
+                raise util.CytoflowError("Name '{}' conflicts with channel or condition {} -- choose another name.")
+            
 
         if data is None and len(self) > 0:
             raise util.CytoflowError("If data is None, self.data must be empty!")
