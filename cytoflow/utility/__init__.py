@@ -31,7 +31,7 @@ from .util_functions import (cartesian, iqr, geom_mean, geom_sd, geom_sd_range,
                              geom_sem, geom_sem_range, num_hist_bins, sanitize_identifier, 
                              random_string, is_numeric, cov2corr)
 
-from .algorithms import ci
+from .algorithms import ci, polygon_contains
 from .cytoflow_errors import CytoflowError, CytoflowOpError, CytoflowViewError
 from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWarning
 

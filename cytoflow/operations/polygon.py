@@ -240,18 +240,21 @@ class PolygonOp(HasStrictTraits):
         yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
         
         vertices = [(xscale(x), yscale(y)) for (x, y) in self.vertices]
+        vertices.append(vertices[0])
         data = experiment.data[[self.xchannel, self.ychannel]].copy()
         data[self.xchannel] = xscale(data[self.xchannel])
         data[self.ychannel] = yscale(data[self.ychannel])
-            
-        # use a matplotlib Path because testing for membership is a fast C fn.
-        path = mpl.path.Path(np.array(vertices))
+        
+        # use an extremely fast parallel algorithm to test polygon membership.
+        # this function is better defined for edge cases than matplotlib's
+        # path.contains_points.  and it's faster.
+        # see https://stackoverflow.com/questions/36399381/whats-the-fastest-way-of-checking-if-a-point-is-inside-a-polygon-in-python
+        # for a deep dive
         xy_data = data[[self.xchannel, self.ychannel]].values
+        in_polygon = util.polygon_contains(xy_data, np.array(vertices))
         
         new_experiment = experiment.clone(deep = False)        
-        new_experiment.add_condition(self.name, 
-                                     "bool", 
-                                     path.contains_points(xy_data))
+        new_experiment.add_condition(self.name, "bool", in_polygon)
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
             
         return new_experiment

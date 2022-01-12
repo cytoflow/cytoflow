@@ -103,6 +103,7 @@ def percentiles(a, pcts, axis=None):
         scores = scores.squeeze()
     return scores
 
+
 def bootstrap(*args, **kwargs):
     """
     Resample one or more arrays with replacement and store aggregate values.
@@ -176,7 +177,7 @@ def bootstrap(*args, **kwargs):
                                      func_kwargs, rs)
 
     boot_dist = []
-    for i in range(int(n_boot)):
+    for _ in range(int(n_boot)):
         resampler = rs.randint(0, n, n)
         sample = [a.take(resampler, axis=0) for a in args]
         boot_dist.append(func(*sample, **func_kwargs))
@@ -191,7 +192,7 @@ def _structured_bootstrap(args, n_boot, units, func, func_kwargs, rs):
     args = [[a[units == unit] for unit in unique_units] for a in args]
 
     boot_dist = []
-    for i in range(int(n_boot)):
+    for _ in range(int(n_boot)):
         resampler = rs.randint(0, n_units, n_units)
         sample = [np.take(a, resampler, axis=0) for a in args]
         lengths = list(map(len, sample[0]))
@@ -208,7 +209,54 @@ def _smooth_bootstrap(args, n_boot, func, func_kwargs):
     n = len(args[0])
     boot_dist = []
     kde = [stats.gaussian_kde(np.transpose(a)) for a in args]
-    for i in range(int(n_boot)):
+    for _ in range(int(n_boot)):
         sample = [a.resample(n).T for a in kde]
         boot_dist.append(func(*sample, **func_kwargs))
     return np.array(boot_dist)
+
+# from https://stackoverflow.com/questions/36399381/whats-the-fastest-way-of-checking-if-a-point-is-inside-a-polygon-in-python
+from numba import jit, njit
+import numba
+
+@jit(nopython=True)
+def is_inside_sm(polygon, point):
+    length = len(polygon)-1
+    dy2 = point[1] - polygon[0][1]
+    intersections = 0
+    ii = 0
+    jj = 1
+
+    while ii<length:
+        dy  = dy2
+        dy2 = point[1] - polygon[jj][1]
+
+        # consider only lines which are not completely above/bellow/right from the point
+        if dy*dy2 <= 0.0 and (point[0] >= polygon[ii][0] or point[0] >= polygon[jj][0]):
+
+            # non-horizontal line
+            if dy<0 or dy2<0:
+                F = dy*(polygon[jj][0] - polygon[ii][0])/(dy-dy2) + polygon[ii][0]
+
+                if point[0] > F: # if line is left from the point - the ray moving towards left, will intersect it
+                    intersections += 1
+                elif point[0] == F: # point on line
+                    return 2
+
+            # point on upper peak (dy2=dx2=0) or horizontal line (dy=dy2=0 and dx*dx2<=0)
+            elif dy2==0 and (point[0]==polygon[jj][0] or (dy==0 and (point[0]-polygon[ii][0])*(point[0]-polygon[jj][0])<=0)):
+                return 2
+
+        ii = jj
+        jj += 1
+
+    #print 'intersections =', intersections
+    return intersections & 1  
+
+
+@njit(parallel=True)
+def polygon_contains(points, polygon):
+    ln = len(points)
+    D = np.empty(ln, dtype=numba.boolean) 
+    for i in numba.prange(ln):
+        D[i] = is_inside_sm(polygon,points[i])
+    return D  

@@ -48,6 +48,24 @@ class Test(ImportedDataSmallTest):
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
+    def testInclusive(self):
+        # make a polygon with a segment that goes through the origin
+        self.gate = flow.PolygonOp(name = "Polygon",
+                                   xchannel = "V2-A",
+                                   ychannel = "Y2-A",
+                                   vertices = [(0.0, -1.0),
+                                               (0.0, 1.0),
+                                               (1.0, 1.0),
+                                               (1.0, -1.0)])
+        
+        # set a data point at 0.0, 0.0
+        self.ex.data.at[0, 'V2-A'] = 0.0
+        self.ex.data.at[0, 'Y2-A'] = 0.0
+        
+        # make sure that the point at 0.0, 0.0 is included in the gate
+        ex2 = self.gate.apply(self.ex)
+        self.assertEqual(ex2.data.groupby("Polygon").size()[True], 1)
+        
     def testPlot(self):
         self.gate.default_view().plot(self.ex)
 

@@ -62,6 +62,7 @@ setup(
                         'seaborn==0.11.1',
                         'statsmodels==0.12.2',
                         'natsort==7.1.1',
+                        'numba==0.53.1',
                         
                         'traits==6.2.0',
                         'traitsui==7.1.1',
