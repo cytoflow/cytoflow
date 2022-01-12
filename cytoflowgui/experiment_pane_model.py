@@ -236,11 +236,17 @@ class StatisticNode(TreeNodeObject):
                StringNode(name = 'Name',
                           value = self.statistic[1])]
                 
-        for i, name in enumerate(statistic.index.names):
-            ret.append(StringNode(name = 'Facet ' + str(i),
-                                  value = name))
-            ret.append(StringNode(name = 'Facet ' + str(i) + ' Levels',
-                                  value = ', '.join([str(x) for x in statistic.index.levels[i]])))
+        if statistic.index.nlevels == 1:
+            ret.append(StringNode(name = 'Facet Name',
+                                  value = str(statistic.index.names[0])))
+            ret.append(StringNode(name = 'Facet Levels',
+                                  value = ", ".join([str(x) for x in statistic.index.values])))
+        else:
+            for i, name in enumerate(statistic.index.names):
+                ret.append(StringNode(name = 'Facet ' + str(i),
+                                      value = name))
+                ret.append(StringNode(name = 'Facet ' + str(i) + ' Levels',
+                                      value = ', '.join([str(x) for x in statistic.index.levels[i]])))
             
         return ret
     
