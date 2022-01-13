@@ -108,8 +108,21 @@ class TestImport(unittest.TestCase):
         
         ex2 = flow.ImportOp(tubes = [flow.Tube(file = file)],
                             data_set = 1).apply()
+                            
+        self.assertNotEqual(len(ex1), len(ex2))
 
-        self.assertTrue(len(ex1) != len(ex2))
+        ex3 = flow.ImportOp(tubes = [flow.Tube(file = file)],
+                            data_set = 2).apply()
+                            
+        self.assertNotEqual(len(ex2), len(ex3))
+
+        
+        ex4 = flow.ImportOp(tubes = [flow.Tube(file = file)],
+                            data_set = 3).apply()
+                            
+        self.assertNotEqual(len(ex3), len(ex4))
+
+                            
 if __name__ == "__main__":
     import sys;sys.argv = ['', 'TestImport.testManufacturers']
     unittest.main()
