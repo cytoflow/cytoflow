@@ -41,7 +41,7 @@ from textwrap import dedent
 import nbformat as nbf
 from yapf.yapflib.yapf_api import FormatCode
 
-from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo, observe
+from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo
 from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup, SGroup
 # from pyface.tasks.action.dock_pane_toggle_group import DockPaneToggleGroup, DockPaneToggleAction, ActionItem
@@ -652,14 +652,14 @@ class FlowTask(Task):
     
     def _get_package_versions(self):    
         from cytoflow import __version__ as cf_version
-        from fcsparser import __version__ as fcs_version
+        from fcsparser.fcsparser import __version__ as fcs_version
         from pandas import __version__ as pd_version
         from numpy import __version__ as np_version
         from numexpr import __version__ as nxp_version
         from bottleneck import __version__ as btl_version
         from seaborn import __version__ as sns_version
-        from matplotlib import __version__ as mpl_version
-        from scipy import __version__ as scipy_version
+        from matplotlib import __version__ as mpl_version  # @UnresolvedImport
+        from scipy import __version__ as scipy_version  # @UnresolvedImport
         from sklearn import __version__ as skl_version
         from statsmodels import __version__ as stats_version
         from pyface import __version__ as pyf_version

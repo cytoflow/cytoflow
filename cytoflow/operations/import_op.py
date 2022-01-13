@@ -42,7 +42,7 @@ import warnings, math
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum, Int)
 
-import fcsparser
+from fcsparser import fcsparser
 import numpy as np
 from pathlib import Path
 
@@ -52,43 +52,43 @@ from ..experiment import Experiment
 from .i_operation import IOperation
 
 # override fcsparser's broken fromfile
-import numpy
-def _fromfile(file, dtype, count, *args, **kwargs):
-
-    dtypes = dtype.split(',')
-    field_width = []
-    
-    for dt in dtypes:
-        num_bytes = int(dt[2:])
-        field_width.append(num_bytes)
-        
-    try:
-        ret = numpy.fromfile(file, 
-                             dtype=",".join(['u1'] * sum(field_width)), 
-                             count=count, 
-                             *args, 
-                             **kwargs)
-    except (TypeError, IOError):
-        ret = numpy.frombuffer(file.read(count * sum(field_width)),
-                               dtype=",".join(['u1'] * sum(field_width)), 
-                               count=count, 
-                               *args, 
-                               **kwargs)
-
-    ret = ret.view('u1').reshape((count, sum(field_width)))
-    ret_dtypes = []
-    for field, dt in enumerate(dtypes):
-        dtype_type = dt[1]
-        dtype_endian = dt[0]
-        num_bytes = int(dt[2:])
-        while num_bytes & (num_bytes - 1) != 0:
-            ret = np.insert(ret, sum(field_width[0:field]), np.zeros(count), axis = 1)
-            num_bytes = num_bytes + 1
-        ret_dtypes.append(dtype_endian + dtype_type + str(num_bytes))
-
-    return ret.view(','.join(ret_dtypes)).ravel()
-    
-fcsparser.api.fromfile = _fromfile
+# import numpy
+# def _fromfile(file, dtype, count, *args, **kwargs):
+# 
+#     dtypes = dtype.split(',')
+#     field_width = []
+#     
+#     for dt in dtypes:
+#         num_bytes = int(dt[2:])
+#         field_width.append(num_bytes)
+#         
+#     try:
+#         ret = numpy.fromfile(file, 
+#                              dtype=",".join(['u1'] * sum(field_width)), 
+#                              count=count, 
+#                              *args, 
+#                              **kwargs)
+#     except (TypeError, IOError):
+#         ret = numpy.frombuffer(file.read(count * sum(field_width)),
+#                                dtype=",".join(['u1'] * sum(field_width)), 
+#                                count=count, 
+#                                *args, 
+#                                **kwargs)
+# 
+#     ret = ret.view('u1').reshape((count, sum(field_width)))
+#     ret_dtypes = []
+#     for field, dt in enumerate(dtypes):
+#         dtype_type = dt[1]
+#         dtype_endian = dt[0]
+#         num_bytes = int(dt[2:])
+#         while num_bytes & (num_bytes - 1) != 0:
+#             ret = np.insert(ret, sum(field_width[0:field]), np.zeros(count), axis = 1)
+#             num_bytes = num_bytes + 1
+#         ret_dtypes.append(dtype_endian + dtype_type + str(num_bytes))
+# 
+#     return ret.view(','.join(ret_dtypes)).ravel()
+#     
+# fcsparser.api.fromfile = _fromfile
 
 
 class Tube(HasTraits):

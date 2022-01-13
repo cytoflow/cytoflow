@@ -122,7 +122,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'Cytoflow'
 import time
-copyright = u'Massachusetts Institute of Technology 2015-2018, Brian Teague 2018-{}'.format(time.strftime("%Y"))
+copyright = u'Massachusetts Institute of Technology 2015-2018, Brian Teague 2018-{}'.format(time.strftime("%Y"))  # @ReservedAssignment
 
 # Configure the sidebar
 
@@ -348,7 +348,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-from typing import List, Tuple, Any, cast
+from typing import List, Tuple, cast
 from docutils import nodes
 from docutils.nodes import Element, Node
 from sphinx import addnodes

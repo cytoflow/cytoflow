@@ -25,7 +25,7 @@ Return the FCS metadata (in key : value format) for a given FCS file.
 """
 
 import argparse
-import fcsparser
+from fcsparser import fcsparser
 
 def main():
     parser = argparse.ArgumentParser()

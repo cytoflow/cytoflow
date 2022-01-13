@@ -6,3 +6,4 @@
 [submodule "fcsparser"]
 	path = fcsparser
 	url = https://github.com/cytoflow/fcsparser.git
+	branch = cytoflow1.2
