@@ -85,14 +85,13 @@ requirements:
     
     - camel==0.1.2
     - yapf==0.30.0
-    
-    # only install mkl libraries on windows, where they're required
-    - nomkl # [not win]
 
     # make sure some compatible version of the jupyter notebook
     # gets installed
     - notebook
 
+    # only install mkl libraries on windows, where they're required
+    - nomkl # [not win]
 
 test:
   # Python imports
