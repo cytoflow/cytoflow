@@ -77,6 +77,10 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
+        
+    - name: Remove nomkl
+      run: |
+        sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
