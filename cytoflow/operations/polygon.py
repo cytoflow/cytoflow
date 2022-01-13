@@ -31,11 +31,12 @@ interactively set the vertices.
 """
 
 from traits.api import (HasStrictTraits, Str, List, Float, provides,
-                        Instance, Bool, on_trait_change, Any,
+                        Instance, Bool, observe, Any,
                         Constant)
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.widgets import PolygonSelector
 import numpy as np
 
 import cytoflow.utility as util
@@ -71,7 +72,9 @@ class PolygonOp(HasStrictTraits):
     membership testing is very fast.
     
     You can set the verticies by hand, I suppose, but it's much easier to use
-    the interactive view you get from `default_view` to do so.
+    the interactive view you get from `default_view` to do so.  
+    Set `PolygonSelection.interactive` to `True`, then single-click to set
+    vertices. Click the first vertex a second time to close the polygon.
 
     
     Examples
@@ -297,7 +300,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
 
     # internal state.
     _ax = Any(transient = True)
-    _widget = Instance(util.PolygonSelector, transient = True)
+    _widget = Instance(PolygonSelector, transient = True)
     _patch = Instance(mpl.patches.PathPatch, transient = True)
         
     def plot(self, experiment, **kwargs):
@@ -311,11 +314,11 @@ class PolygonSelection(Op2DView, ScatterplotView):
         
         super(PolygonSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
-        self._draw_poly()
-        self._interactive()
+        self._draw_poly(None)
+        self._interactive(None)
     
-    @on_trait_change('op.vertices', post_init = True)
-    def _draw_poly(self):
+    @observe('op.vertices', post_init = True)
+    def _draw_poly(self, _):
         if not self._ax:
             return
          
@@ -337,15 +340,15 @@ class PolygonSelection(Op2DView, ScatterplotView):
         self._ax.add_patch(self._patch)
         plt.draw()
     
-    @on_trait_change('interactive', post_init = True)
-    def _interactive(self):
+    @observe('interactive', post_init = True)
+    def _interactive(self, _):
         if self._ax and self.interactive:
-            self._widget = util.PolygonSelector(self._ax,
-                                                self._onselect,
-                                                useblit = True)
+            self._widget = PolygonSelector(self._ax,
+                                           self._onselect,
+                                           useblit = False) # something breaks blitting!
         elif self._widget:
             self._widget = None       
-    
+     
     def _onselect(self, vertices):
         self.op.vertices = vertices
     

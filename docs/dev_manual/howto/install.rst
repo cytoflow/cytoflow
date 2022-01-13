@@ -129,7 +129,7 @@ the appropriate file.
 
 * Clone the repository::
 
-    git clone https://github.com/cytoflow/cytoflow.git
+    git clone --recurse-submodules https://github.com/cytoflow/cytoflow.git
 
 * Create a new environment.  In this example, I have called it ``cf_dev``.
   In the new repository you just cloned, say::

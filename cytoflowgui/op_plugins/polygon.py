@@ -22,7 +22,7 @@ Polygon Gate
 ------------
 
 Draw a polygon gate.  To add vertices, use a single-click; to close the
-polygon, double-click.
+polygon, click the first vertex a second time.
 
 .. object:: Name
 

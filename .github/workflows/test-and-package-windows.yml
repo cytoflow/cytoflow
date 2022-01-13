@@ -28,6 +28,10 @@ jobs:
       uses: actions/checkout@v2    
       with:
         submodules: true    
+        
+    - name: Remove nomkl
+      run: |
+        sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
@@ -117,6 +121,10 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
+        
+    - name: Remove nomkl
+      run: |
+        sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
@@ -175,6 +183,10 @@ jobs:
       id: display
       run: |
         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        
+    - name: Remove nomkl
+      run: |
+        sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
@@ -192,7 +204,7 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install --yes --quiet 'sphinx==4.2.0' 'bleach==3.3.0'
+        conda install --yes --quiet 'sphinx==4.2.0'
         pip install "pyinstaller==4.2"
         
     - name: Build embedded help docs

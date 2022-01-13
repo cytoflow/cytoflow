@@ -34,6 +34,7 @@ from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.widgets import Cursor
 
 import numpy as np
 import pandas as pd
@@ -299,7 +300,7 @@ class QuadSelection(Op2DView, ScatterplotView):
     _ax = Any(transient = True)
     _hline = Instance(Line2D, transient = True)
     _vline = Instance(Line2D, transient = True)
-    _cursor = Instance(util.Cursor, transient = True)
+    _cursor = Instance(Cursor, transient = True)
         
     def plot(self, experiment, **kwargs):
         """
@@ -332,10 +333,10 @@ class QuadSelection(Op2DView, ScatterplotView):
             
         if self.op.xthreshold and self.op.ythreshold:
             self._hline = plt.axhline(self.op.ythreshold, 
-                                      linewidth = 3, 
+                                      linewidth = 2, 
                                       color = 'blue')
             self._vline = plt.axvline(self.op.xthreshold,
-                                      linewidth = 3,
+                                      linewidth = 2,
                                       color = 'blue')
 
             plt.draw()
@@ -343,11 +344,11 @@ class QuadSelection(Op2DView, ScatterplotView):
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive and self._cursor is None:
-            self._cursor = util.Cursor(self._ax,
-                                       horizOn = True,
-                                       vertOn = True,
-                                       color = 'blue',
-                                       useblit = True) 
+            self._cursor = Cursor(self._ax,
+                                  horizOn = True,
+                                  vertOn = True,
+                                  color = 'blue',
+                                  useblit = True) 
             self._cursor.connect_event('button_press_event', self._onclick)
         elif not self.interactive and self._cursor is not None:
             self._cursor.disconnect_events()

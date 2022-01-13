@@ -245,6 +245,8 @@ class LogicleScale(HasStrictTraits):
         # [0, 1].  vmin and vmax don't actually do anything here.
         class LogicleNormalize(matplotlib.colors.Normalize):
             def __init__(self, scale = None, vmin = None, vmax = None):
+                super().__init__(vmin, vmax)
+                
                 self._scale = scale
                 self.vmin = scale.inverse(0.0)
                 self.vmax = scale.inverse(1.0 - sys.float_info.epsilon)
