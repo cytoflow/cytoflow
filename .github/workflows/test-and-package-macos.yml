@@ -191,7 +191,7 @@ jobs:
     - name: Install packaging deps
       run: |
         conda install --yes --quiet 'sphinx==4.2.0'
-        pip install "pyinstaller==4.2"
+        pip install "pyinstaller==4.8"
         
     - name: Build embedded help docs
       run: |

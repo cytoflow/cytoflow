@@ -5,24 +5,33 @@ from PyInstaller.building.datastruct import TOC, unique_name
 
 def toc_setitem(self, key, value):
     if isinstance(key, slice):
-        if len(self) == 0 and key == slice(None, None, None):
+        if key == slice(None, None, None):
             # special case: set the entire list
+            self.filenames = set()
+            self.clear()
             self.extend(value)
             return
         else:
-            raise KeyError
-            
+            raise KeyError("TOC.__setitem__ doesn't handle slices")
+
     else:
         old_value = self[key]
-        self.filenames.remove(old_value[0])
-        
+        old_name = unique_name(old_value)
+        self.filenames.remove(old_name)
+
         new_name = unique_name(value)
-        if new_name in self.filenames:
-            raise KeyError
-        self.filenames.add(new_name)
-        super(TOC, self).__setitem__(key, value)
+        if new_name not in self.filenames:
+            self.filenames.add(new_name)
+            super(TOC, self).__setitem__(key, value)
         
 TOC.__setitem__ = toc_setitem
+
+def toc_iadd(self, other):
+    for entry in other:
+        self.append(entry)
+    return self
+    
+TOC.__iadd_= toc_iadd
 
 a = Analysis(['../cytoflowgui/run.py'],
              pathex=['cytoflowgui/'],

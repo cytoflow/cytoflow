@@ -55,6 +55,7 @@ Packaging
 - Make sure that the :mod:`pyinstaller` distribution will build on your local 
   machine (back in your development environment).  ::
 
+  	  pip install pyinstaller==4.8
   	  pyinstaller package/pyinstaller.spec 
 
 - Make sure that the ReadTheDocs build is working.
