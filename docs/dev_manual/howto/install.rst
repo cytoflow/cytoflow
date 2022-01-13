@@ -135,6 +135,10 @@ the appropriate file.
   In the new repository you just cloned, say::
 
     conda env create --name cf_dev --file environment.yml
+    
+.. note:: On Windows, you must edit ``environment.yml`` before you execute 
+   ``conda env create``.  Remove the last line, the one that reads
+   ``- nomkl # [not win]``
   
 * Activate the new environment::
     
@@ -175,7 +179,7 @@ the appropriate file.
 Running the point-and-click GUI program
 ---------------------------------------
 
-There are one-click bundles available at http://cytoflow.github.io/
+There are pre-built bundles available at http://cytoflow.github.io/
 
 Alternately, you can follow the instructions above for installing the 
 Anaconda package, then run ``cytoflow`` through the Anaconda Navigator or

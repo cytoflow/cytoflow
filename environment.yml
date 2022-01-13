@@ -33,4 +33,4 @@ dependencies:
     
     - notebook
     
-    - nomkl  # remove me if on windows!
+    - nomkl # [not win]
