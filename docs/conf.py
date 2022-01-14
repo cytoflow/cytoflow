@@ -348,7 +348,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-from typing import List, Tuple, cast
+from typing import List, Tuple, Any, cast
 from docutils import nodes
 from docutils.nodes import Element, Node
 from sphinx import addnodes
@@ -575,13 +575,8 @@ def run_apidoc(app):
     module = curr_dir / ".." / "cytoflow"    
     main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*"), str(module / "utility" / "logicle_ext")])
     
-
     module = curr_dir / ".." / "cytoflowgui"
     main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
-#     
-#     module = curr_dir / ".." / "fcsparser"
-#     main(['-T', '-e', '-f', '-M', '-E', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
-
 
 def process_docstring(app, what, name, obj, options, lines):
     if what == 'module' and len(lines) > 2 and not options.noindex:
