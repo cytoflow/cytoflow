@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_namespace_packages, Extension
 import io, os
 
 import versioneer
@@ -43,11 +43,11 @@ try:
     cmdclass = versioneer.get_cmdclass({'build_sphinx' : BuildDoc})
 except ImportError:
     cmdclass = versioneer.get_cmdclass()
-        
+            
 setup(
     name = "cytoflow",
     version = versioneer.get_version(),  # @UndefinedVariable
-    packages = find_packages(exclude = ["package", "package.qt"]),
+    packages = find_namespace_packages(exclude = ["package", "package.qt"]),
     cmdclass = cmdclass,
     
     # Project uses reStructuredText, so ensure that the docutils get
