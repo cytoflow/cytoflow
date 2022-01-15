@@ -45,10 +45,9 @@ jobs:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.1.1
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         activate-environment: cytoflow
-        python-version: 3.8
         environment-file: environment.yml
          
     - name: Configure conda
@@ -96,10 +95,9 @@ jobs:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.1.1
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         activate-environment: cytoflow
-        python-version: 3.8
         environment-file: environment.yml
         
     - name: Configure conda
@@ -141,7 +139,7 @@ jobs:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.1.1
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
@@ -200,10 +198,9 @@ jobs:
         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.1.1
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         activate-environment: cytoflow
-        python-version: 3.8
         environment-file: environment.yml
          
     - name: Configure conda
