@@ -221,8 +221,9 @@ jobs:
         sphinx-build docs/user_manual/reference cytoflowgui/help
         
     - name: Build GUI binary
-      run: |
-        pyinstaller --log-level=DEBUG package/pyinstaller.spec
+      uses: GabrielBB/xvfb-action@v1
+      with:
+          run: pyinstaller --log-level=DEBUG package/pyinstaller.spec
         
 #    - name: GUI binary smoketest
 #      run: |
