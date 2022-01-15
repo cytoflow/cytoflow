@@ -222,7 +222,7 @@ jobs:
         
     - name: Build GUI binary
       run: |
-        pyinstaller package/pyinstaller.spec
+        pyinstaller --log-level=DEBUG package/pyinstaller.spec
         
 #    - name: GUI binary smoketest
 #      run: |
