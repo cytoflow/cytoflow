@@ -241,9 +241,10 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         to a numpy array and send it to the local process.
         """
         logger.debug("FigureCanvasAggRemote.draw()")
+
+        FigureCanvasAgg.draw(self)
             
         with self.buffer_lock:
-            FigureCanvasAgg.draw(self)
             
             self.buffer = np.array(self.renderer.buffer_rgba())
                 
