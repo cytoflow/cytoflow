@@ -24,6 +24,8 @@ cytoflowgui.experiment_pane_model
 The classes that provide the model for the `ExperimentBrowserDockPane`.
 """
 
+import pandas as pd
+
 from traits.api import Instance, Str, Tuple
 from traitsui.api import TreeEditor, TreeNodeObject, ObjectTreeNode
 
