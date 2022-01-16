@@ -40,7 +40,7 @@ from matplotlib.widgets import PolygonSelector
 import numpy as np
 
 import cytoflow.utility as util
-from cytoflow.views import ISelectionView, ScatterplotView
+from cytoflow.views import ISelectionView, ScatterplotView, DensityView
 
 from .i_operation import IOperation
 from .base_op_views import Op2DView
@@ -116,8 +116,9 @@ class PolygonOp(HasStrictTraits):
         :context: close-figs
             
         >>> df = p.default_view(huefacet = "Dox",
-        ...                    xscale = 'log',
-        ...                    yscale = 'log')
+        ...                     xscale = 'log',
+        ...                     yscale = 'log',
+        ...                     density = True)
         
         >>> df.plot(ex)
         
@@ -146,6 +147,17 @@ class PolygonOp(HasStrictTraits):
         True      4125
         dtype: int64
             
+    You can also get (or draw) the polygon on a density plot instead of a 
+    scatterplot:
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> df = p.default_view(huefacet = "Dox",
+        ...                     xscale = 'log',
+        ...                     yscale = 'log')
+        
+        >>> df.plot(ex)
     """
     
     # traits
@@ -160,7 +172,7 @@ class PolygonOp(HasStrictTraits):
     xscale = util.ScaleEnum()
     yscale = util.ScaleEnum()
     
-    _selection_view = Instance('PolygonSelection', transient = True)
+    _selection_view = Instance('_PolygonSelection', transient = True)
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -263,36 +275,27 @@ class PolygonOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        self._selection_view = PolygonSelection(op = self)
+        """
+        Returns an `IView` that allows a user to view the polygon or interactively draw it.
+        
+        Parameters
+        ----------
+        
+        density : bool, default = False
+            If `True`, return a density plot instead of a scatterplot.
+        """ 
+        
+        density = kwargs.pop('density', False)
+        if density:
+            self._selection_view = DensityPolygonSelectionView(op = self)
+        else:
+            self._selection_view = ScatterplotPolygonSelectionView(op = self)
+            
         self._selection_view.trait_set(**kwargs)
         return self._selection_view
     
-@provides(ISelectionView)
-class PolygonSelection(Op2DView, ScatterplotView):
-    """
-    Plots, and lets the user interact with, a 2D polygon selection.
     
-    Attributes
-    ----------
-    interactive : bool
-        is this view interactive?  Ie, can the user set the polygon verticies
-        with mouse clicks?
-        
-    Examples
-    --------
-
-    In a Jupyter notebook with ``%matplotlib notebook``
-    
-    >>> s = flow.PolygonOp(xchannel = "V2-A",
-    ...                    ychannel = "Y2-A")
-    >>> poly = s.default_view()
-    >>> poly.plot(ex2)
-    >>> poly.interactive = True
-    """
-    
-    id = Constant('edu.mit.synbio.cytoflow.views.polygon')
-    friendly_id = Constant("Polygon Selection")
-    
+class _PolygonSelection(Op2DView):    
     xfacet = Constant(None)
     yfacet = Constant(None)
 
@@ -312,7 +315,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
         
         """
         
-        super(PolygonSelection, self).plot(experiment, **kwargs)
+        super(_PolygonSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_poly(None)
         self._interactive(None)
@@ -345,15 +348,72 @@ class PolygonSelection(Op2DView, ScatterplotView):
         if self._ax and self.interactive:
             self._widget = PolygonSelector(self._ax,
                                            self._onselect,
-                                           useblit = False) # something breaks blitting!
+                                           useblit = True,
+                                           grab_range = 20)
         elif self._widget:
             self._widget = None       
      
     def _onselect(self, vertices):
         self.op.vertices = vertices
+  
+
+@provides(ISelectionView)
+class ScatterplotPolygonSelectionView(_PolygonSelection, ScatterplotView):
+    """
+    Plots, and lets the user interact with, a 2D polygon selection on a scatterplot.
     
-util.expand_class_attributes(PolygonSelection)
-util.expand_method_parameters(PolygonSelection, PolygonSelection.plot)        
+    Attributes
+    ----------
+    interactive : bool
+        is this view interactive?  Ie, can the user set the polygon verticies
+        with mouse clicks?
+        
+    Examples
+    --------
+
+    In a Jupyter notebook with ``%matplotlib notebook``
+    
+    >>> s = flow.PolygonOp(xchannel = "V2-A",
+    ...                    ychannel = "Y2-A")
+    >>> poly = s.default_view()
+    >>> poly.plot(ex2)
+    >>> poly.interactive = True
+    """
+    
+    id = Constant('edu.mit.synbio.cytoflow.views.polygon')
+    friendly_id = Constant("Polygon Selection")
+
+util.expand_class_attributes(ScatterplotPolygonSelectionView)
+util.expand_method_parameters(ScatterplotPolygonSelectionView, ScatterplotPolygonSelectionView.plot) 
+
+@provides(ISelectionView)
+class DensityPolygonSelectionView(_PolygonSelection, DensityView):
+    """
+    Plots, and lets the user interact with, a 2D polygon selection on a density plot.
+    
+    Attributes
+    ----------
+    interactive : bool
+        is this view interactive?  Ie, can the user set the polygon verticies
+        with mouse clicks?
+        
+    Examples
+    --------
+
+    In a Jupyter notebook with ``%matplotlib notebook``
+    
+    >>> s = flow.PolygonOp(xchannel = "V2-A",
+    ...                    ychannel = "Y2-A")
+    >>> poly = s.default_view(density = True)
+    >>> poly.plot(ex2)
+    >>> poly.interactive = True
+    """
+    
+    id = Constant('edu.mit.synbio.cytoflow.views.polygon_density')
+    friendly_id = Constant("Polygon Selection")
+
+util.expand_class_attributes(DensityPolygonSelectionView)
+util.expand_method_parameters(ScatterplotPolygonSelectionView, ScatterplotPolygonSelectionView.plot) 
         
 if __name__ == '__main__':
     import cytoflow as flow

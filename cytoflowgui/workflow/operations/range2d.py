@@ -25,7 +25,7 @@ cytoflowgui.workflow.operations.range2d
 
 from traits.api import provides, Instance, Str, Property, Tuple, observe
 
-from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
+from cytoflow.operations.range2d import Range2DOp, ScatterplotRangeSelection2DView
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
@@ -36,7 +36,7 @@ from .operation_base import IWorkflowOperation, WorkflowOperation
 Range2DOp.__repr__ = traits_repr
 
 @provides(IWorkflowView)
-class Range2DSelectionView(WorkflowView, RangeSelection2D):
+class Range2DSelectionView(WorkflowView, ScatterplotRangeSelection2DView):
     op = Instance(IWorkflowOperation, fixed = True)
     plot_params = Instance(ScatterplotPlotParams, ())
     
@@ -88,7 +88,7 @@ class Range2DSelectionView(WorkflowView, RangeSelection2D):
         return
         
     def get_notebook_code(self, idx):
-        view = RangeSelection2D()
+        view = ScatterplotRangeSelection2DView()
         view.copy_traits(self, view.copyable_trait_names())
         plot_params_str = traits_str(self.plot_params)
         

@@ -25,7 +25,7 @@ cytoflowgui.workflow.operations.quad
 
 from traits.api import provides, Instance, Str, Property, Tuple, observe
 
-from cytoflow.operations.quad import QuadOp, QuadSelection
+from cytoflow.operations.quad import QuadOp, ScatterplotQuadSelectionView
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
@@ -37,7 +37,7 @@ QuadOp.__repr__ = traits_repr
 
 
 @provides(IWorkflowView)
-class QuadSelectionView(WorkflowView, QuadSelection):
+class QuadSelectionView(WorkflowView, ScatterplotQuadSelectionView):
     op = Instance(IWorkflowOperation, fixed = True)
     plot_params = Instance(ScatterplotPlotParams, ()) 
     
@@ -77,7 +77,7 @@ class QuadSelectionView(WorkflowView, QuadSelection):
         return
         
     def get_notebook_code(self, idx):
-        view = QuadSelection()
+        view = ScatterplotQuadSelectionView()
         view.copy_traits(self, view.copyable_trait_names())
         plot_params_str = traits_str(self.plot_params)
 

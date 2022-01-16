@@ -25,7 +25,7 @@ cytoflowgui.workflow.operations.polygon
 
 from traits.api import provides, Instance, Str, observe, List, Float
 
-from cytoflow.operations.polygon import PolygonOp, PolygonSelection
+from cytoflow.operations.polygon import PolygonOp, ScatterplotPolygonSelectionView
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
@@ -37,7 +37,7 @@ PolygonOp.__repr__ = traits_repr
 
 
 @provides(IWorkflowView)
-class PolygonSelectionView(WorkflowView, PolygonSelection):
+class PolygonSelectionView(WorkflowView, ScatterplotPolygonSelectionView):
     op = Instance(IWorkflowOperation, fixed = True)
     plot_params = Instance(ScatterplotPlotParams, ()) 
     
@@ -68,7 +68,7 @@ class PolygonSelectionView(WorkflowView, PolygonSelection):
         return
         
     def get_notebook_code(self, idx):
-        view = PolygonSelection()
+        view = ScatterplotPolygonSelectionView()
         view.copy_traits(self, view.copyable_trait_names())
         plot_params_str = traits_str(self.plot_params)
         

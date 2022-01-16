@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.8
 # coding: latin-1
+from scipy.integrate.quadpack import _quad
 
 # (c) Massachusetts Institute of Technology 2015-2018
 # (c) Brian Teague 2018-2021
@@ -40,7 +41,7 @@ import numpy as np
 import pandas as pd
 
 import cytoflow.utility as util
-from cytoflow.views import ISelectionView, ScatterplotView
+from cytoflow.views import ISelectionView, ScatterplotView, DensityView
 
 from .i_operation import IOperation
 from .base_op_views import Op2DView
@@ -153,7 +154,7 @@ class QuadOp(HasStrictTraits):
     ychannel = Str
     ythreshold = Float(None)
     
-    _selection_view = Instance('QuadSelection', transient = True)
+    _selection_view = Instance('_QuadSelection', transient = True)
 
     def apply(self, experiment):
         """
@@ -256,37 +257,26 @@ class QuadOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        self._selection_view = QuadSelection(op = self)
+        """
+        Returns an `IView` that allows a user to view the quad selector or interactively draw it.
+        
+        Parameters
+        ----------
+        
+        density : bool, default = False
+            If `True`, return a density plot instead of a scatterplot.
+        """ 
+        
+        density = kwargs.pop('density', False)
+        if density:
+            self._selection_view = DensityQuadSelectionView(op = self)
+        else:
+            self._selection_view = ScatterplotQuadSelectionView(op = self)
+
         self._selection_view.trait_set(**kwargs)
         return self._selection_view
     
-@provides(ISelectionView)
-class QuadSelection(Op2DView, ScatterplotView):
-    """
-    Plots, and lets the user interact with, a quadrant gate.
-    
-    Attributes
-    ----------
-    interactive : Bool
-        is this view interactive?  Ie, can the user set the threshold with a 
-        mouse click?
-        
-    Examples
-    --------
-    
-    In an Jupyter notebook with ``%matplotlib notebook``
-    
-    >>> q = flow.QuadOp(name = "Quad",
-    ...                 xchannel = "V2-A",
-    ...                 ychannel = "Y2-A"))
-    >>> qv = q.default_view()
-    >>> qv.interactive = True
-    >>> qv.plot(ex2) 
-    """
-    
-    id = Constant('edu.mit.synbio.cytoflow.views.quad')
-    friendly_id = Constant("Quadrant Selection")
-    
+class _QuadSelection(Op2DView):
     xfacet = Constant(None)
     yfacet = Constant(None)
     
@@ -358,9 +348,69 @@ class QuadSelection(Op2DView, ScatterplotView):
         """Update the threshold location"""
         self.op.xthreshold = event.xdata
         self.op.ythreshold = event.ydata  
+    
+
+@provides(ISelectionView)
+class ScatterplotQuadSelectionView(_QuadSelection, ScatterplotView):
+    """
+    Plots, and lets the user interact with, a quadrant gate.
+    
+    Attributes
+    ----------
+    interactive : Bool
+        is this view interactive?  Ie, can the user set the threshold with a 
+        mouse click?
         
-util.expand_class_attributes(QuadSelection)
-util.expand_method_parameters(QuadSelection, QuadSelection.plot)  
+    Examples
+    --------
+    
+    In an Jupyter notebook with ``%matplotlib notebook``
+    
+    >>> q = flow.QuadOp(name = "Quad",
+    ...                 xchannel = "V2-A",
+    ...                 ychannel = "Y2-A"))
+    >>> qv = q.default_view()
+    >>> qv.interactive = True
+    >>> qv.plot(ex2) 
+    """
+    
+    id = Constant('edu.mit.synbio.cytoflow.views.quad')
+    friendly_id = Constant("Quadrant Selection")
+    
+util.expand_class_attributes(ScatterplotQuadSelectionView)
+util.expand_method_parameters(ScatterplotQuadSelectionView, ScatterplotQuadSelectionView.plot)  
+    
+    
+@provides(ISelectionView)
+class DensityQuadSelectionView(_QuadSelection, DensityView):
+    """
+    Plots, and lets the user interact with, a quadrant gate on a density view
+    
+    Attributes
+    ----------
+    interactive : Bool
+        is this view interactive?  Ie, can the user set the threshold with a 
+        mouse click?
+        
+    Examples
+    --------
+    
+    In an Jupyter notebook with ``%matplotlib notebook``
+    
+    >>> q = flow.QuadOp(name = "Quad",
+    ...                 xchannel = "V2-A",
+    ...                 ychannel = "Y2-A"))
+    >>> qv = q.default_view(density = True)
+    >>> qv.interactive = True
+    >>> qv.plot(ex2) 
+    """
+    
+    id = Constant('edu.mit.synbio.cytoflow.views.quad_density')
+    friendly_id = Constant("Quadrant Selection (Density Plot)")
+    
+util.expand_class_attributes(DensityQuadSelectionView)
+util.expand_method_parameters(DensityQuadSelectionView, DensityQuadSelectionView.plot)  
+
     
 if __name__ == '__main__':
     import cytoflow as flow

@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 import cytoflow.utility as util
-from cytoflow.views import ScatterplotView, ISelectionView
+from cytoflow.views import ScatterplotView, DensityView, ISelectionView
 
 from .i_operation import IOperation
 from .base_op_views import Op2DView
@@ -157,7 +157,7 @@ class Range2DOp(HasStrictTraits):
     ylow = Float(None)
     yhigh = Float(None)
     
-    _selection_view = Instance('RangeSelection2D', transient = True)
+    _selection_view = Instance('_RangeSelection2D', transient = True)
 
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -260,37 +260,28 @@ class Range2DOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        self._selection_view = RangeSelection2D(op = self)
+        """
+        Returns an `IView` that allows a user to view the selection or interactively draw it.
+        
+        Parameters
+        ----------
+        
+        density : bool, default = False
+            If `True`, return a density plot instead of a scatterplot.
+        """ 
+       
+        density = kwargs.pop('density', False)
+
+        if density:
+            self._selection_view = DensityRangeSelection2DView(op = self)
+        else:
+            self._selection_view = ScatterplotRangeSelection2DView(op = self)
+            
         self._selection_view.trait_set(**kwargs)
         return self._selection_view
     
-@provides(ISelectionView)
-class RangeSelection2D(Op2DView, ScatterplotView):
-    """
-    Plots, and lets the user interact with, a 2D selection.
-    
-    Attributes
-    ----------
-    interactive : Bool
-        is this view interactive?  Ie, can the user set min and max
-        with a mouse drag?
-        
-    Examples
-    --------
-    
-    In a Jupyter notebook with ``%matplotlib notebook``
-    
-    >>> r = flow.Range2DOp(name = "Range2D",
-    ...                    xchannel = "V2-A",
-    ...                    ychannel = "Y2-A"))
-    >>> rv = r.default_view()
-    >>> rv.interactive = True
-    >>> rv.plot(ex2) 
-    """
-    
-    id = Constant('edu.mit.synbio.cytoflow.views.range2d')
-    friendly_id = Constant("2D Range Selection")
 
+class _RangeSelection2D(Op2DView):
     xfacet = Constant(None)
     yfacet = Constant(None)
     
@@ -317,7 +308,7 @@ class RangeSelection2D(Op2DView, ScatterplotView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        super(RangeSelection2D, self).plot(experiment, **kwargs)
+        super(_RangeSelection2D, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_rect()
         self._interactive()
@@ -360,9 +351,67 @@ class RangeSelection2D(Op2DView, ScatterplotView):
         self.op.xhigh = max(pos1.xdata, pos2.xdata)
         self.op.ylow = min(pos1.ydata, pos2.ydata)
         self.op.yhigh = max(pos1.ydata, pos2.ydata)
+
+
+@provides(ISelectionView)
+class ScatterplotRangeSelection2DView(_RangeSelection2D, ScatterplotView):
+    """
+    Plots, and lets the user interact with, a 2D selection.
+    
+    Attributes
+    ----------
+    interactive : Bool
+        is this view interactive?  Ie, can the user set min and max
+        with a mouse drag?
         
-util.expand_class_attributes(RangeSelection2D)
-util.expand_method_parameters(RangeSelection2D, RangeSelection2D.plot) 
+    Examples
+    --------
+    
+    In a Jupyter notebook with ``%matplotlib notebook``
+    
+    >>> r = flow.Range2DOp(name = "Range2D",
+    ...                    xchannel = "V2-A",
+    ...                    ychannel = "Y2-A"))
+    >>> rv = r.default_view()
+    >>> rv.interactive = True
+    >>> rv.plot(ex2) 
+    """
+    
+    id = Constant('edu.mit.synbio.cytoflow.views.range2d')
+    friendly_id = Constant("2D Range Selection")
+    
+util.expand_class_attributes(ScatterplotRangeSelection2DView)
+util.expand_method_parameters(ScatterplotRangeSelection2DView, ScatterplotRangeSelection2DView.plot) 
+    
+@provides(ISelectionView)
+class DensityRangeSelection2DView(_RangeSelection2D, DensityView):
+    """
+    Plots, and lets the user interact with, a 2D selection.
+    
+    Attributes
+    ----------
+    interactive : Bool
+        is this view interactive?  Ie, can the user set min and max
+        with a mouse drag?
+        
+    Examples
+    --------
+    
+    In a Jupyter notebook with ``%matplotlib notebook``
+    
+    >>> r = flow.Range2DOp(name = "Range2D",
+    ...                    xchannel = "V2-A",
+    ...                    ychannel = "Y2-A"))
+    >>> rv = r.default_view(density = True)
+    >>> rv.interactive = True
+    >>> rv.plot(ex2) 
+    """
+    
+    id = Constant('edu.mit.synbio.cytoflow.views.range2d_density')
+    friendly_id = Constant("2D Range Selection (Density plot)")
+    
+util.expand_class_attributes(DensityRangeSelection2DView)
+util.expand_method_parameters(DensityRangeSelection2DView, DensityRangeSelection2DView.plot) 
     
 if __name__ == '__main__':
     import cytoflow as flow
