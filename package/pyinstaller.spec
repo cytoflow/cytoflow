@@ -50,24 +50,22 @@ a = Analysis(['../cytoflowgui/run.py'],
              runtime_hooks=['package/hooks/rthook_qtapi.py',
                             'package/hooks/rthook_qt5webengine.py',
                             'package/hooks/rthook_qtconf.py'],
-             excludes=['gi.repository.Gio', 'gi.repository.GModule',
-                       'gi.repository.GObject', 'gi.repository.Gtk',
-                       'gi.repository.Gdk', 'gi.repository.Atk',
-                       'gi.repository.cairo', 'gi.repository.GLib',
-                       'gobject', 'Tkinter', 'FixTk', '_tkinter',
-                       'PySide', 'PySide.QtCore', 'PySide.QtGui',
-                       'PySide.QtNetwork', 'PySide.QtSvg', 'PyQt4',
-                       'PyQt5.QtBluetooth', 'PyQt5.QtDesigner',
-                       'PyQt5.QtHelp', 'PyQt5.QtLocation',
-                       'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNfc', 
-                       'PyQt5.QtQml', 'PyQt5.QtQuick', 'PyQt5.QtQuickWidgets',
-                       'PyQt5.QtSensors', 'PyQt5.QtSerialPort', 'PyQt5.QtSql',
-                       'PyQt5.QtTest', 'PyQt5.QtWebSockets', 'PyQt5.QtXml',
-                       'PyQt5.QtXmlPatterns',
-                       'pyface.wx', 'traitsui.wx', 'IPython','wx',
-                       'gtk', 'gi', 'sphinx', 'twisted', 'zope',
-                       'jinja2', 'httplib2', '_mysql',
-                       'sqlalchemy', 'zmq'],
+             excludes=[
+             	# Unused modules
+             	'tornado', 'babel', 'IPython', 
+             	'ipykernel', 'jedi', 'notebook', 'pytest', 'readline', 
+             	'sphinx', 'tkinter', 'zmq',
+             	
+             	# Unused Qt5 libraries
+                 'PyQt5.QtBluetooth', 'PyQt5.QtDesigner',
+                 'PyQt5.QtHelp', 'PyQt5.QtLocation',
+                 'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNfc', 
+                 'PyQt5.QtQml', 'PyQt5.QtQuick', 'PyQt5.QtQuickWidgets',
+                 'PyQt5.QtSensors', 'PyQt5.QtSerialPort', 'PyQt5.QtSql',
+                 'PyQt5.QtTest', 'PyQt5.QtWebSockets', 'PyQt5.QtXml',
+                 'PyQt5.QtXmlPatterns',
+                 ],
+
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=None)
@@ -75,21 +73,28 @@ a = Analysis(['../cytoflowgui/run.py'],
 # remove a few libraries that cause crashes if we don't use the system
 # versions
 
-remove_strs = ["glib", "gobject", "gthread", "libX", "libICE", "libdrm"]
+remove_strs = ["glib", "gobject", "gthread", "libX", "libICE", "libdrm", "terminfo"]
 
 # on linux, Anaconda version of fontconfig looks for the config bundled with
 # Anaconda instead of the system config.  this breaks the fonts when you
 # run on a system that you didn't build on
 
-remove_strs = []
 remove_strs.append('libfontconfig')
 remove_strs.append('libuuid')
 
 lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
-remove_items = [item for sublist in lol for item in sublist]
-logging.info("Removing binaries: {}".format(remove_items))
+remove_binaries = [item for sublist in lol for item in sublist]
+logging.info("Removing binaries: {}".format(remove_binaries))
 
-a.binaries = a.binaries - remove_items
+a.binaries = a.binaries - remove_binaries
+
+# pull out all that silly terminfo stuff
+remove_strs = ['terminfo']
+lol = [ [x for x in a.datas if x[1].find(y) >= 0] for y in remove_strs]
+remove_datas = [item for sublist in lol for item in sublist]
+logging.info("Removing datas: {}".format(remove_datas))
+
+a.datas = a.datas - remove_datas
 
 # replace the module cytoflow/_version.py with a fixed version from versioneer
 logging.info("Freezing dynamic version")
