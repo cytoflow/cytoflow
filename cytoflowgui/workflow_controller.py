@@ -126,7 +126,7 @@ class WorkflowItemHandler(Controller):
     previous_channels = Property(observe = "model.previous_wi.channels")
     """The channels in the previous `WorkflowItem.result`"""
     
-    tree_node = Property()
+    tree_node = Property(observe = "[model.channels,model.metadata,model.conditions,model.statistics]")
 
     ###### VIEWS
     # the view on that handler        
