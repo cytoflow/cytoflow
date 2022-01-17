@@ -385,17 +385,9 @@ class ImportOp(HasStrictTraits):
             tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
-                        
+            
+        # take care of strange encodings
         for channel in channels:
-            if self.channels and channel in self.channels:
-                new_name = self.channels[channel]
-                if channel == new_name:
-                    continue
-                experiment.data.rename(columns = {channel : new_name}, inplace = True)
-                experiment.metadata[new_name] = experiment.metadata[channel]
-                experiment.metadata[new_name]["fcs_name"] = channel
-                del experiment.metadata[channel]
-              
             # this catches an odd corner case where some instruments store
             # instrument-specific info in the "extra" bits.  we have to
             # clear them out.
@@ -430,8 +422,19 @@ class ImportOp(HasStrictTraits):
                 warnings.warn('Converting channel {} from logarithmic to linear'
                               .format(channel),
                               util.CytoflowWarning)
-#                 experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
+                experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
 
+
+        # rename channels if necessary                     
+        for channel in channels:
+            if self.channels and channel in self.channels:
+                new_name = self.channels[channel]
+                if channel == new_name:
+                    continue
+                experiment.data.rename(columns = {channel : new_name}, inplace = True)
+                experiment.metadata[new_name] = experiment.metadata[channel]
+                experiment.metadata[new_name]["fcs_name"] = channel
+                del experiment.metadata[channel]
 
         return experiment
 
