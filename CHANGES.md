@@ -1,3 +1,12 @@
+## Release 1.2 "mCherry"
+* Huge improvements to documentation.  Head over to https://cytoflow.readthedocs.io for tutorials, HOWTOs, explainers, and reference documentation.
+* Implemented an "experiment browser" to help keep track of channels, conditions, and statistics in the GUI.
+* Add an FCS export "view". Save calibrated or compensated data back to FCS files for analysis with other tools.
+* Better support for high-DPI displays.
+* Major GUI code restructure to separate the model from the view and controller.  As a result, cytoflow only creates one icon on the Mac taskbar now!
+* Fix a number of bugs, including one high-profile bug where the GUI would crash on saving.
+* Update dependencies to current versions.
+
 ## Release 1.1 "tdTomato"
 Maintenance release.
 
