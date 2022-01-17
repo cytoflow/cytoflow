@@ -30,7 +30,7 @@ interactively set the threshold.
 """
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, 
-                        Bool, on_trait_change, provides, Any, 
+                        Bool, observe, provides, Any, Dict,
                         Constant)
     
 import pandas as pd
@@ -227,6 +227,8 @@ class ThresholdSelection(Op1DView, HistogramView):
     _ax = Any(transient = True)
     _line = Instance(Line2D, transient = True)
     _cursor = Instance(Cursor, transient = True)
+    _line_props = Dict()
+
     
     def plot(self, experiment, **kwargs):
         """
@@ -234,18 +236,28 @@ class ThresholdSelection(Op1DView, HistogramView):
         
         Parameters
         ----------
+        
+        line_props : Dict
+           The properties of the `matplotlib.lines.Line2D` that are drawn
+           on top of the histogram.  They're passed directly to the 
+           `matplotlib.lines.Line2D` constructor.
+           Default: ``{color : 'black', linewidth : 2}``
         """
         
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
+        
+        self._line_props = kwargs.pop('line_props',
+                                        {'color' : 'black',
+                                         'linewidth' : 2})
 
         super(ThresholdSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()        
-        self._draw_threshold()
-        self._interactive()
+        self._draw_threshold(None)
+        self._interactive(None)
     
-    @on_trait_change('op.threshold', post_init = True)
-    def _draw_threshold(self):
+    @observe('op.threshold', post_init = True)
+    def _draw_threshold(self, _):
         if not self._ax or not self.op.threshold:
             return
         
@@ -261,12 +273,12 @@ class ThresholdSelection(Op1DView, HistogramView):
             self._line = None
         
         if self.op.threshold:    
-            self._line = plt.axvline(self.op.threshold, linewidth=2, color='blue')
+            self._line = plt.axvline(self.op.threshold, **self._line_props)
             
         plt.draw()
         
-    @on_trait_change('interactive', post_init = True)
-    def _interactive(self):
+    @observe('interactive', post_init = True)
+    def _interactive(self, _):
         if self._ax and self.interactive:
             self._cursor = Cursor(self._ax, 
                                   horizOn=False,

@@ -31,7 +31,7 @@ interactively set the vertices.
 """
 
 from traits.api import (HasStrictTraits, Str, List, Float, provides,
-                        Instance, Bool, observe, Any,
+                        Instance, Bool, observe, Any, Dict, 
                         Constant)
 
 import matplotlib as mpl
@@ -305,22 +305,26 @@ class _PolygonSelection(Op2DView):
     _ax = Any(transient = True)
     _widget = Instance(PolygonSelector, transient = True)
     _patch = Instance(mpl.patches.PathPatch, transient = True)
+    _patch_props = Dict()
         
     def plot(self, experiment, **kwargs):
-        """
-        Plot the scatter plot, and then plot the selection on top of it.
         
-        Parameters
-        ----------
-        
-        """
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+            
+        self._patch_props = kwargs.pop('patch_props',
+                                        {'edgecolor' : 'black',
+                                         'linewidth' : 2,
+                                         'fill' : False})
         
         super(_PolygonSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_poly(None)
         self._interactive(None)
     
-    @observe('op.vertices', post_init = True)
+
+    @observe('op.vertices', post_init = True)        
     def _draw_poly(self, _):
         if not self._ax:
             return
@@ -333,12 +337,9 @@ class _PolygonSelection(Op2DView):
              
         patch_vert = np.concatenate((np.array(self.op.vertices), 
                                     np.array((0,0), ndmin = 2)))
-                                    
+        
         self._patch = \
-            mpl.patches.PathPatch(mpl.path.Path(patch_vert, closed = True),
-                                  edgecolor="black",
-                                  linewidth = 2,
-                                  fill = False)
+            mpl.patches.PathPatch(mpl.path.Path(patch_vert, closed = True), **self._patch_props)
             
         self._ax.add_patch(self._patch)
         plt.draw()
@@ -351,10 +352,12 @@ class _PolygonSelection(Op2DView):
                                            useblit = True,
                                            grab_range = 20)
         elif self._widget:
-            self._widget = None       
+            self._widget.set_active(False) 
+            self._widget = None    
      
     def _onselect(self, vertices):
         self.op.vertices = vertices
+        self.interactive = False
   
 
 @provides(ISelectionView)
@@ -382,6 +385,22 @@ class ScatterplotPolygonSelectionView(_PolygonSelection, ScatterplotView):
     
     id = Constant('edu.mit.synbio.cytoflow.views.polygon')
     friendly_id = Constant("Polygon Selection")
+    
+    def plot(self, experiment, **kwargs):
+        """
+        Plot the default view, and then draw the selection on top of it.
+        
+        Parameters
+        ----------
+        
+        patch_props : Dict
+           The properties of the `matplotlib.patches.Patch` that are drawn
+           on top of the scatterplot or density view.  They're passed
+           directly to the `matplotlib.patches.Patch` constructor.
+           Default: ``{edgecolor : 'black', linewidth : 2, fill : False}``
+        
+        """
+        super().plot(experiment, **kwargs)
 
 util.expand_class_attributes(ScatterplotPolygonSelectionView)
 util.expand_method_parameters(ScatterplotPolygonSelectionView, ScatterplotPolygonSelectionView.plot) 
@@ -411,6 +430,22 @@ class DensityPolygonSelectionView(_PolygonSelection, DensityView):
     
     id = Constant('edu.mit.synbio.cytoflow.views.polygon_density')
     friendly_id = Constant("Polygon Selection")
+    
+    def plot(self, experiment, **kwargs):
+        """
+        Plot the default view, and then draw the selection on top of it.
+        
+        Parameters
+        ----------
+        
+        patch_props : Dict
+           The properties of the `matplotlib.patches.Patch` that are drawn
+           on top of the scatterplot or density view.  They're passed
+           directly to the `matplotlib.patches.Patch` constructor.
+           Default: {edgecolor : 'black', linewidth : 2, fill : False}
+        
+        """
+        super().plot(experiment, **kwargs)
 
 util.expand_class_attributes(DensityPolygonSelectionView)
 util.expand_method_parameters(ScatterplotPolygonSelectionView, ScatterplotPolygonSelectionView.plot) 

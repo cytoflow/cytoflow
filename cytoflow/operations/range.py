@@ -30,7 +30,7 @@ interactively set the thresholds.
 """
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, Bool, 
-                        provides, on_trait_change, Any, Constant)
+                        provides, observe, Any, Constant, Dict)
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D    
@@ -254,6 +254,7 @@ class RangeSelection(Op1DView, HistogramView):
     _low_line = Instance(Line2D, transient = True)
     _high_line = Instance(Line2D, transient = True)
     _hline = Instance(Line2D, transient = True)
+    _line_props = Dict()
             
     def plot(self, experiment, **kwargs):
         """
@@ -261,19 +262,29 @@ class RangeSelection(Op1DView, HistogramView):
         
         Parameters
         ----------
+        
+        line_props : Dict
+           The properties of the `matplotlib.lines.Line2D` that are drawn
+           on top of the histogram.  They're passed directly to the 
+           `matplotlib.lines.Line2D` constructor.
+           Default: ``{color : 'black', linewidth : 2}``
         """
         
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
+            
+        self._line_props = kwargs.pop('line_props',
+                                        {'color' : 'black',
+                                         'linewidth' : 2})
 
         super(RangeSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
-        self._draw_span()
-        self._interactive()
+        self._draw_span(None)
+        self._interactive(None)
 
-    @on_trait_change('op.low, op.high', post_init = True)
-    def _draw_span(self):
+    @observe('[op.low,op.high]', post_init = True)
+    def _draw_span(self, _):
         if not (self._ax and self.op.low and self.op.high):
             return
         
@@ -286,21 +297,18 @@ class RangeSelection(Op1DView, HistogramView):
         if self._hline and self._hline in self._ax.lines:
             self._hline.remove()
             
-
-        self._low_line = plt.axvline(self.op.low, linewidth=2, color='blue')
-        self._high_line = plt.axvline(self.op.high, linewidth=2, color='blue')
+        self._low_line = plt.axvline(self.op.low, **self._line_props)
+        self._high_line = plt.axvline(self.op.high, **self._line_props)
             
         ymin, ymax = plt.ylim()
         y = (ymin + ymax) / 2.0
         self._hline = plt.plot([self.op.low, self.op.high], 
-                               [y, y], 
-                               color='blue', 
-                               linewidth = 2)[0]
-                                   
+                               [y, y], **self._line_props)[0]     
+                               
         plt.draw()
     
-    @on_trait_change('interactive', post_init = True)
-    def _interactive(self):
+    @observe('interactive', post_init = True)
+    def _interactive(self, _):
         if self._ax and self.interactive:
             self._span = SpanSelector(self._ax, 
                                       onselect = self._onselect, 

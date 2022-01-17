@@ -465,13 +465,23 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
         Parameters
         ----------
         
+        contour_props : Dict
+            The keyword arguments passed to the 
+            `matplotlib.axes.Axes.contour` constructor, which controls the 
+            visual properties of the contour that's plotted on top of the 
+            density plot. Default: ``{'colors' : 'w'}`` 
+        
         """
+        
+        contour_props = kwargs.pop('contour_props',
+                                   {'colors' : 'w'})
         
         annotations = {}
         for i in self.op._keep_xbins:
             annotations[i] = (self.op._keep_xbins[i],
                               self.op._keep_ybins[i],
-                              self.op._histogram[i])
+                              self.op._histogram[i],
+                              contour_props)
         
         super().plot(experiment,
                      annotations = annotations,
@@ -487,15 +497,18 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
                          annotation_color, 
                          **kwargs):
         # plot a countour around the bins that got kept
+        
+
   
         keep_x = annotation[0]
         keep_y = annotation[1]
         h = annotation[2]
+        contour_props = annotation[3]
         xbins = self.op._xbins[0:-1]
         ybins = self.op._ybins[0:-1]
         last_level = h[keep_x[-1], keep_y[-1]]
 
-        axes.contour(xbins, ybins, h.T, [last_level], colors = 'w')
+        axes.contour(xbins, ybins, h.T, [last_level], **contour_props)
         
 util.expand_class_attributes(DensityGateView)
 util.expand_method_parameters(DensityGateView, DensityGateView.plot)

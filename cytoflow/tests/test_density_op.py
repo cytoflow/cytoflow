@@ -90,6 +90,11 @@ class TestDensityGate(ImportedDataSmallTest):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         self.gate.default_view().plot(self.ex, plot_name = 1.0)        
+        
+    def testPlotProps(self):
+        self.gate.by = ["Dox"]
+        self.gate.estimate(self.ex)
+        self.gate.default_view().plot(self.ex, contour_props = {'color' : 'b'})     
 
 if __name__ == "__main__":
     import sys;sys.argv = ['', 'TestDensityGate.testApplyBy']

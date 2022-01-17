@@ -51,6 +51,12 @@ class Test(ImportedDataSmallTest):
     def testPlot(self):
         self.gate.default_view().plot(self.ex)
 
+    def testPlotProps(self):
+        self.gate.default_view().plot(self.ex, line_props = {'color' : 'blue'})
+
+    def testDensityPlot(self):
+        self.gate.default_view(density = True).plot(self.ex)
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

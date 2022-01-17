@@ -33,7 +33,7 @@ interactively set the thresholds.
 import pandas as pd
 
 from traits.api import HasStrictTraits, Float, Str, Bool, Instance, \
-    provides, on_trait_change, Any, Constant
+    provides, observe, Any, Constant, Dict
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
@@ -294,6 +294,8 @@ class _RangeSelection2D(Op2DView):
     _ax = Any(transient = True)
     _selector = Instance(RectangleSelector, transient = True)
     _box = Instance(Rectangle, transient = True)
+    _patch_props = Dict()
+
         
     def plot(self, experiment, **kwargs):
         """
@@ -302,19 +304,30 @@ class _RangeSelection2D(Op2DView):
         Parameters
         ----------
         
+        patch_props : Dict
+           The properties of the `matplotlib.patches.Patch` that are drawn
+           on top of the scatterplot or density view.  They're passed
+           directly to the `matplotlib.patches.Rectangle` constructor.
+           Default: ``{edgecolor : 'black', linewidth : 2, fill : False}``
+        
         """
         
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
+            
+        self._patch_props = kwargs.pop('patch_props',
+                                        {'edgecolor' : 'black',
+                                         'linewidth' : 2,
+                                         'fill' : False})
         
         super(_RangeSelection2D, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
-        self._draw_rect()
-        self._interactive()
+        self._draw_rect(None)
+        self._interactive(None)
 
-    @on_trait_change('op.xlow, op.xhigh, op.ylow, op.yhigh', post_init = True)
-    def _draw_rect(self):
+    @observe('[op.xlow,op.xhigh,op.ylow,op.yhigh]', post_init = True)
+    def _draw_rect(self, _):
         if not self._ax:
             return
         
@@ -325,14 +338,12 @@ class _RangeSelection2D(Op2DView):
             self._box = Rectangle((self.op.xlow, self.op.ylow), 
                                   (self.op.xhigh - self.op.xlow), 
                                   (self.op.yhigh - self.op.ylow), 
-                                  facecolor="none",
-                                  edgecolor = 'blue',
-                                  linewidth = 2)
+                                  **self._patch_props)
             self._ax.add_patch(self._box)
             plt.draw()
     
-    @on_trait_change('interactive', post_init = True)
-    def _interactive(self):
+    @observe('interactive', post_init = True)
+    def _interactive(self, _):
         if self._ax and self.interactive:
             self._selector = RectangleSelector(
                                 self._ax, 

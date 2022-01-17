@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.8
 # coding: latin-1
-from scipy.integrate.quadpack import _quad
 
 # (c) Massachusetts Institute of Technology 2015-2018
 # (c) Brian Teague 2018-2021
@@ -31,7 +30,7 @@ interactively set the thresholds.
 """
 
 from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
-                        provides, on_trait_change, Any, Constant)
+                        provides, observe, Any, Constant, Dict)
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -291,27 +290,24 @@ class _QuadSelection(Op2DView):
     _hline = Instance(Line2D, transient = True)
     _vline = Instance(Line2D, transient = True)
     _cursor = Instance(Cursor, transient = True)
+    _line_props = Dict()
         
-    def plot(self, experiment, **kwargs):
-        """
-        Plot the underlying scatterplot and then plot the selection on top of it.
-        
-        Parameters
-        ----------
-        
-        """
-        
+    def plot(self, experiment, **kwargs):      
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
+            
+        self._line_props = kwargs.pop('line_props',
+                                       {'color' : 'black',
+                                        'linewidth' : 2})
         
         super().plot(experiment, **kwargs)
         self._ax = plt.gca()
-        self._draw_lines()
-        self._interactive()
+        self._draw_lines(None)
+        self._interactive(None)
 
-    @on_trait_change('op.xthreshold, op.ythreshold', post_init = True)
-    def _draw_lines(self):
+    @observe('[op.xthreshold,op.ythreshold]', post_init = True)    
+    def _draw_lines(self, _):
         if not self._ax:
             return
         
@@ -320,19 +316,15 @@ class _QuadSelection(Op2DView):
             
         if self._vline and self._vline in self._ax.lines:
             self._vline.remove()
-            
+                        
         if self.op.xthreshold and self.op.ythreshold:
-            self._hline = plt.axhline(self.op.ythreshold, 
-                                      linewidth = 2, 
-                                      color = 'blue')
-            self._vline = plt.axvline(self.op.xthreshold,
-                                      linewidth = 2,
-                                      color = 'blue')
-
+            self._hline = plt.axhline(self.op.ythreshold, **self._line_props) 
+            self._vline = plt.axvline(self.op.xthreshold, **self._line_props)
+            
             plt.draw()
 
-    @on_trait_change('interactive', post_init = True)
-    def _interactive(self):
+    @observe('interactive', post_init = True)
+    def _interactive(self, _):
         if self._ax and self.interactive and self._cursor is None:
             self._cursor = Cursor(self._ax,
                                   horizOn = True,
@@ -377,6 +369,22 @@ class ScatterplotQuadSelectionView(_QuadSelection, ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.views.quad')
     friendly_id = Constant("Quadrant Selection")
     
+    def plot(self, experiment, **kwargs):
+        """
+        Plot the default view, and then draw the quad selection on top of it.
+        
+        Parameters
+        ----------
+        
+        line_props : Dict
+           The properties of the `matplotlib.lines.Line2D` that are drawn
+           on top of the scatterplot or density view.  They're passed
+           directly to the `matplotlib.lines.Line2D` constructor.
+           Default: ``{color : 'black', linewidth : 2}``
+        
+        """
+        super().plot(experiment, **kwargs)
+    
 util.expand_class_attributes(ScatterplotQuadSelectionView)
 util.expand_method_parameters(ScatterplotQuadSelectionView, ScatterplotQuadSelectionView.plot)  
     
@@ -407,6 +415,22 @@ class DensityQuadSelectionView(_QuadSelection, DensityView):
     
     id = Constant('edu.mit.synbio.cytoflow.views.quad_density')
     friendly_id = Constant("Quadrant Selection (Density Plot)")
+    
+    def plot(self, experiment, **kwargs):
+        """
+        Plot the default view, and then draw the quad selection on top of it.
+        
+        Parameters
+        ----------
+        
+        line_props : Dict
+           The properties of the `matplotlib.lines.Line2D` that are drawn
+           on top of the scatterplot or density view.  They're passed
+           directly to the `matplotlib.lines.Line2D` constructor.
+           Default: ``{color : 'black', linewidth : 2}``
+        
+        """
+        super().plot(experiment, **kwargs)
     
 util.expand_class_attributes(DensityQuadSelectionView)
 util.expand_method_parameters(DensityQuadSelectionView, DensityQuadSelectionView.plot)  

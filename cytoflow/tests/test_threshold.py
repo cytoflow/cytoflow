@@ -45,6 +45,9 @@ class Test(ImportedDataSmallTest):
 
     def testPlot(self):
         self.gate.default_view().plot(self.ex)
+        
+    def testPlotParams(self):
+        self.gate.default_view().plot(self.ex, line_props = {'color' : 'grey'})
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
