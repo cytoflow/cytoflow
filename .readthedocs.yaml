@@ -16,4 +16,4 @@ submodules:
   include: all
 
 conda:
-  environment: environment-rtd.yml
+  environment: docs/environment-rtd.yml
