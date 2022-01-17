@@ -32,5 +32,4 @@ dependencies:
     - yapf==0.30.0
     
     - notebook
-    
-    - nomkl # [not win]
+   

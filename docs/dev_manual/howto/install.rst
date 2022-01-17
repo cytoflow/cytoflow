@@ -135,10 +135,6 @@ the appropriate file.
   In the new repository you just cloned, say::
 
     conda env create --name cf_dev --file environment.yml
-    
-.. note:: On Windows, you must edit ``environment.yml`` before you execute 
-   ``conda env create``.  Remove the last line, the one that reads
-   ``- nomkl # [not win]``
   
 * Activate the new environment::
     

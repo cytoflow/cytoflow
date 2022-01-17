@@ -42,10 +42,6 @@ jobs:
       id: display
       run: |
         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
-        
-    - name: Remove nomkl
-      run: |
-        sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
@@ -110,10 +106,6 @@ jobs:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
-        
-    - name: Remove nomkl
-      run: |
-        sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
@@ -192,10 +184,6 @@ jobs:
       id: display
       run: |
         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
-        
-    - name: Remove nomkl
-      run: |
-        sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
