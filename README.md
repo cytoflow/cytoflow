@@ -13,6 +13,8 @@ Welcome to a different style of flow cytometry analysis.  Take a look at some ex
 
 or some [screenshots from the GUI](http://cytoflow.github.io/screenshots.html)
 
+## Note: My 'day job' is teaching at a regional comprehensive college, so during the semester I may not have a huge amount of time to respond to bugs and feature requests. I'm still activately developing Cytoflow, so please continue to file bugs!
+
 ### What's wrong with other packages?  
 
 Packages such as FACSDiva and FlowJo are focused on primarily on identifying
@@ -70,7 +72,7 @@ A few things.
   is stored in a `pandas.DataFrame`, which is rapidly becoming the standard for 
   Python data analysis (and will make R users feel right at home.)
   
-* **Extensible.**  (Adding a new analysis or visualization module)[http://cytoflow.readthedocs.io/en/stable/new_modules.html) 
+* **Extensible.**  [Adding a new analysis or visualization module](http://cytoflow.readthedocs.io/en/stable/new_modules.html) 
   is simple; the interface to implement is only two or three functions.  
 
 * **Quantitative and statistically sound.** Ready access to useful data-driven tools for

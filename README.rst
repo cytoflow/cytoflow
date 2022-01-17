@@ -23,6 +23,9 @@ some example `Jupyter <http://jupyter.org/>`__ notebooks:
 or some `screenshots from the
 GUI <http://cytoflow.github.io/screenshots.html>`__
 
+Note: My ‘day job’ is teaching at a regional comprehensive college, so during the semester I may not have a huge amount of time to respond to bugs and feature requests. I’m still activately developing Cytoflow, so please continue to file bugs!
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 What’s wrong with other packages?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -86,9 +89,9 @@ A few things.
    which is rapidly becoming the standard for Python data analysis (and
    will make R users feel right at home.)
 
--  **Extensible.** (Adding a new analysis or visualization
-   module)[http://cytoflow.readthedocs.io/en/stable/new_modules.html) is
-   simple; the interface to implement is only two or three functions.
+-  **Extensible.** `Adding a new analysis or visualization
+   module <http://cytoflow.readthedocs.io/en/stable/new_modules.html>`__
+   is simple; the interface to implement is only two or three functions.
 
 -  **Quantitative and statistically sound.** Ready access to useful
    data-driven tools for analysis, such as fitting 2-dimensional

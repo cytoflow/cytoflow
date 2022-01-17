@@ -14,3 +14,5 @@ Please fill out the following template.
   - What did you expect to happen?
   
 **Don't forget to attach the log file to this bug report!** 
+
+**If you are having trouble with a particular FCS file, please attach that file too.**
