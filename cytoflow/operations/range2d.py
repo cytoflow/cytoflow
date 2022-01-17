@@ -26,8 +26,11 @@ Applies a 2D range gate (ie, a rectangle gate) to an `Experiment`.
 
 `Range2DOp` -- Applies the gate, given four thresholds
 
-`RangeSelection2D` -- an `IView` that allows you to view the range and/or
-interactively set the thresholds.
+`ScatterplotRangeSelection2DView` -- an `IView` that allows you to view the 
+range and/or interactively set the thresholds on a scatterplot.
+
+`DensityRangeSelection2DView` -- an `IView` that allows you to view the 
+range and/or interactively set the thresholds on a scatterplot.
 '''
 
 import pandas as pd

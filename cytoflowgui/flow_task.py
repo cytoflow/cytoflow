@@ -65,27 +65,6 @@ from .util import DefaultFileDialog
 from .workflow.serialization import save_yaml, load_yaml
 
 
-# class DockPaneImageToggleGroup(DockPaneToggleGroup):
-#     @observe("dock_panes.items")
-#     def _dock_panes_updated(self, event):
-#         """Recreate the group items when dock panes have been added/removed.
-#         """
-# 
-#         # Remove the previous group items.
-#         self.destroy()
-# 
-#         items = []
-#         for dock_pane in self.dock_panes:
-#             action = DockPaneToggleAction(dock_pane=dock_pane,
-#                                           image = dock_pane.image)
-#             items.append(ActionItem(action=action))
-# 
-#         self.items = items
-# 
-#         # Inform the parent menu manager.
-#         manager = self.get_manager()
-#         manager.changed = True
-
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
     """

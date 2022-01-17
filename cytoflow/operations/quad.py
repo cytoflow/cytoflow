@@ -25,8 +25,11 @@ Applies a (2D) quad gate to an `Experiment`. `quad` has two classes:
 
 `QuadOp` -- Applies the gate, given a pair of thresholds
 
-`QuadSelection` -- an `IView` that allows you to view the quadrants and/or
-interactively set the thresholds.
+`ScatterplotQuadSelectionView` -- an `IView` that allows you to view the 
+quadrants and/or interactively set the thresholds on a scatterplot.
+
+`ScatterplotQuadSelectionView` -- an `IView` that allows you to view the 
+quadrants and/or interactively set the thresholds on a density plot.
 """
 
 from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,

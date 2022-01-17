@@ -26,8 +26,11 @@ Apply a polygon gate to two channels in an `Experiment`.
 
 `PolygonOp` -- Applies the gate, given a set of vertices.
 
-`PolygonSelection` -- an `IView` that allows you to view the polygon and/or
-interactively set the vertices.
+`ScatterplotPolygonSelectionView` -- an `IView` that allows you to view the 
+polygon and/or interactively set the vertices on a scatterplot.
+
+`DensityPolygonSelectionView` -- an `IView` that allows you to view the 
+polygon and/or interactively set the vertices on a scatterplot.
 """
 
 from traits.api import (HasStrictTraits, Str, List, Float, provides,
@@ -68,13 +71,12 @@ class PolygonOp(HasStrictTraits):
         
     Notes
     -----
-    This module uses `matplotlib.path.Path` to represent the polygon, because
-    membership testing is very fast.
-    
     You can set the verticies by hand, I suppose, but it's much easier to use
     the interactive view you get from `default_view` to do so.  
-    Set `PolygonSelection.interactive` to `True`, then single-click to set
-    vertices. Click the first vertex a second time to close the polygon.
+    Set `ScatterplotPolygonSelectionView.interactive` to `True`, then 
+    single-click to set vertices. Click the first vertex a second time to 
+    close the polygon.  You'll need to do this in a Jupyter notebook with
+    ``%matplotlib notebook`` -- see the ``Interactive Plots`` demo for an example.
 
     
     Examples

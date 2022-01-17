@@ -21,14 +21,14 @@
 cytoflowgui.view_pane
 ---------------------
 
-Dock panes for modifying an `IWorkflowView`'s traits and the parameters
-that are passed to `IWorkflowView.plot`.
+Dock panes for modifying an `IWorkflowView`\s traits and the parameters
+that are passed to `IView.plot`.
 
 - `ViewDockPane` -- the dock pane to manipulate the traits of the currently
   selected view.
   
 - `PlotParamsPane` -- the dock pane to manipulate the parameters passed to
-  `IWorkflowView.plot`. 
+  `IView.plot`. 
 """
 
 from traits.api import Instance, List, Str, Dict, Tuple, observe
