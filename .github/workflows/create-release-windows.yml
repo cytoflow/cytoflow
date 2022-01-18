@@ -129,6 +129,10 @@ jobs:
       run: |
         python setup.py build_ext --inplace
         
+    - name: Reset git
+      run: |
+        git reset --hard
+        
     - name: Build wheel
       run: |
         python setup.py bdist_wheel
