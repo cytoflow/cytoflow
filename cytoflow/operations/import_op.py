@@ -341,14 +341,27 @@ class ImportOp(HasStrictTraits):
         experiment.metadata['fcs_metadata'] = {}
         for tube in self.tubes:
             if metadata_only:
-                tube_meta, tube_data = parse_tube(tube.file,
-                                                  experiment,
-                                                  data_set = self.data_set,
-                                                  metadata_only = True)
+                try:
+                    tube_meta, tube_data = parse_tube(tube.file,
+                                                      experiment,
+                                                      data_set = self.data_set,
+                                                      metadata_only = True)
+                except Exception as e:
+                    raise util.CytoflowOpError('tubes',
+                                               "FCS reader threw an error reading metadata "
+                                               "for tube {}: {}"
+                                               .format(self.tubes[0].file, str(e))) from e
             else:
-                tube_meta, tube_data = parse_tube(tube.file, 
-                                                  experiment, 
-                                                  data_set = self.data_set)
+                try:
+                    tube_meta, tube_data = parse_tube(tube.file, 
+                                                      experiment, 
+                                                      data_set = self.data_set)
+                except Exception as e:
+                    raise util.CytoflowOpError('tubes',
+                                               "FCS reader threw an error reading data "
+                                               "for tube {}: {}"
+                                               .format(self.tubes[0].file, str(e))) from e
+                
     
                 if self.events is not None:
                     if self.events <= len(tube_data):
