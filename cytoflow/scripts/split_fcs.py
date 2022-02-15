@@ -23,33 +23,62 @@ cytoflow.scripts.split_fcs
 
 The FCS standard allows multiple datasets to be concatenated into one
 FCS file. This script splits them, optionally renaming the resulting
-files using the provided FCS metadata
+files using the provided FCS metadata.
 """
 
-import argparse
-import fcsparser
+import argparse, warnings, pathlib, re
+from copy import copy
+from fcsparser import fcsparser
 import cytoflow as flow
+import cytoflow.utility as util
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("fcs_file", help = "FCS file to split")
     parser.add_argument('-n', '--name_metadata', help = "FCS metadata to use as the name")
-    parser.add_argument('-d', '--dry', help = "Dry run: say what the program would do but don't do it")
+    parser.add_argument('-p', '--path', help = "Path to export files to (default: '.'", default = '.')
+    parser.add_argument('-d', '--dry', action = 'store_true', help = "Dry run: say what the program would do but don't do it")
     args = parser.parse_args()
     
-    tube_meta = fcsparser.parse(args.fcs_file, meta_data_only = True)
-
+    # first, figure out how many data segments there are.
     for i in range(0, 99):
-        try:
+        with warnings.catch_warnings(record = True) as w:
+            meta = fcsparser.parse(args.fcs_file, data_set = i, meta_data_only = True)
+            if w and "does not contain the number of data sets" in  w[-1].message.__str__():
+                return
+
+        if args.name_metadata in meta:
+            filename = meta[args.name_metadata] + '.fcs'
+        else:
+            filename = pathlib.Path(args.fcs_file).stem + '_{}'.format(i) + '.fcs'
+            
+        path = pathlib.Path(args.path) / pathlib.Path(filename)
+        
+        print(path)
+        
+        if not args.dry:
             op = flow.ImportOp(tubes = [flow.Tube(file = args.fcs_file, conditions = {})],
                                data_set = i)
             ex = op.apply()
-        except:
             
-    for c in ex.channels:
-        m = ex.metadata[c]
-        if "voltage" in m:
-            print("{0}\t{1}".format(c, m["voltage"]))
+            _, metadata = list(ex.metadata['fcs_metadata'].items())[0]
+            metadata = copy(metadata)
+
+            exclude_keywords = ['$BEGINSTEXT', '$ENDSTEXT', '$BEGINANALYSIS', 
+                                '$ENDANALYSIS', '$BEGINDATA', '$ENDDATA',
+                                '$BYTEORD', '$DATATYPE', '$MODE', '$NEXTDATA', 
+                                '$TOT', '$PAR']
+            metadata = {str(k) : str(v) for k, v in metadata.items()
+                                        if re.search('^\$P\d+[BENRDSG]$', k) is None
+                                        and k not in exclude_keywords}
+        
+            util.write_fcs(str(path),
+                           ex.channels,
+                           {c: ex.metadata[c]['range'] for c in ex.channels},
+                           ex.data.values,
+                           compat_chn_names = False,
+                           compat_negative = False,
+                           **metadata)
 
 if __name__ == '__main__':
     main()
