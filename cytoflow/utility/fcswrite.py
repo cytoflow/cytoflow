@@ -135,8 +135,8 @@ def write_fcs(filename, chn_names, chn_ranges, data,
     DATA = struct.pack('>%sf' % len(data1), *data1)
 
     # TEXT segment
-    # fix length of TEXT to 4 kilo bytes
-    ltxt = 4096
+    # fix length of TEXT to 8 kilo bytes
+    ltxt = 8192
     ver='FCS3.0'
     textfirst= '{0: >8}'.format(256)
     datafirst= '{0: >8}'.format(256+ltxt)
