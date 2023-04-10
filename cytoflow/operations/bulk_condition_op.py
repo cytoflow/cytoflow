@@ -48,10 +48,10 @@ class BulkConditionOp(HasStrictTraits):
     Attributes
     ----------
     conditions_csv_path : Str
-        The path to a CSV file containing the labels.
+        The path to a CSV file containing the conditions.
         
     conditions : pd.DataFrame
-        The labels to apply.
+        The conditions to apply. Must have the same number of rows as the experiment.
 
     combine_order : List(Str)
         A list of conditions to combine in the given order. Results in a new condition with the name `combined_conditions_name`.
