@@ -78,6 +78,7 @@ from .operations.gaussian import GaussianMixtureOp
 from .operations.kmeans import KMeansOp
 from .operations.flowpeaks import FlowPeaksOp
 from .operations.pca import PCAOp
+from .operations.umap import UMAPOp
 
 # channels
 from .operations.channel_stat import ChannelStatisticOp

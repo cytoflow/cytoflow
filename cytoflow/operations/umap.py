@@ -18,44 +18,45 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.operations.pca
+cytoflow.operations.UMAP
 -----------------------
 
-Apply principal component analysis (PCA) to flow data -- decomposes the
+Apply principal component analysis (UMAP) to flow data -- decomposes the
 multivariate data set into orthogonal components that explain the maximum
-amount of variance.  `pca` has one class:
+amount of variance.  `UMAP` has one class:
 
-`PCAOp` -- the `IOperation` that applies PCA to an `Experiment`.
+`UMAPOp` -- the `IOperation` that applies UMAP to an `Experiment`.
 """
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, Bool, provides)
+                        Constant, List, Float, provides)
 
 import numpy as np
 import pandas as pd
-import sklearn.decomposition
+import umap
 
 import cytoflow.utility as util
 from .i_operation import IOperation
 from .base_dimensionality_reduction_op import BaseDimensionalityReductionOp
 
 @provides(IOperation)
-class PCAOp(BaseDimensionalityReductionOp):
+class UMAPOp(BaseDimensionalityReductionOp):
     """
-    Use principal components analysis (PCA) to decompose a multivariate data
-    set into orthogonal components that explain a maximum amount of variance.
-    
-    Call `estimate` to compute the optimal decomposition.
+    Use Uniform Manifold Approximation and Projection (UMAP) to project a multivariate data
+    set into a low dimensional embedding of the data such that the representing graph of the data points in the embedding
+      is as structurally similar as possible to the graph in high dimension.
+
+    Call `estimate` to compute fit the umap on the data.
       
     Calling `apply` creates new "channels" named ``{name}_1 ... {name}_n``,
     where ``name`` is the `name` attribute and ``n`` is `num_components`.
 
-    The same decomposition may not be appropriate for different subsets of the data set.
+    The same dimensionality reduction may not be appropriate for different subsets of the data set.
     If this is the case, you can use the `by` attribute to specify 
     metadata by which to aggregate the data before estimating (and applying) a 
-    model.  The PCA parameters such as the number of components and the kernel
-    are the same across each subset, though.
+    model.  The UMAP parameters such as the number of components are the same 
+    across each subset, though.
 
     Attributes
     ----------
@@ -72,6 +73,20 @@ class PCAOp(BaseDimensionalityReductionOp):
 
     num_components : Int (default = 2)
         How many components to fit to the data?  Must be a positive integer.
+
+    n_neighbors : Int (default = 15)
+        The size of local neighborhood (in terms of number of neighboring 
+        sample points) used for manifold approximation. Larger values result 
+        in more global views of the manifold, while smaller values result in 
+        more local data being preserved. For more information check out the
+        UMAP documentation.
+    
+    min_dist : Float (default = 0.1)
+        The effective minimum distance between embedded points. Smaller values
+        will result in a more clustered/clumped embedding where nearby points
+        on the manifold are drawn closer together, while larger values will 
+        result on a more even dispersal of points
+
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -106,7 +121,7 @@ class PCAOp(BaseDimensionalityReductionOp):
     .. plot::
         :context: close-figs
         
-        >>> pca = flow.PCAOp(name = 'PCA',
+        >>> UMAP = flow.UMAPOp(name = 'UMAP',
         ...                  channels = ['V2-A', 'V2-H', 'Y2-A', 'Y2-H'],
         ...                  scale = {'V2-A' : 'log',
         ...                           'V2-H' : 'log',
@@ -120,16 +135,16 @@ class PCAOp(BaseDimensionalityReductionOp):
     .. plot::
         :context: close-figs
         
-        >>> pca.estimate(ex)
+        >>> UMAP.estimate(ex)
         
     Apply the operation
     
     .. plot::
         :context: close-figs
         
-        >>> ex2 = pca.apply(ex)
+        >>> ex2 = UMAP.apply(ex)
 
-    Plot a scatterplot of the PCA.  Compare to a scatterplot of the underlying
+    Plot a scatterplot of the UMAP. Compare to a scatterplot of the underlying
     channels.
     
     .. plot::
@@ -141,8 +156,8 @@ class PCAOp(BaseDimensionalityReductionOp):
         ...                      yscale = "log",
         ...                      subset = "Dox == 1.0").plot(ex2)
 
-        >>> flow.ScatterplotView(xchannel = "PCA_1",
-        ...                      ychannel = "PCA_2",
+        >>> flow.ScatterplotView(xchannel = "UMAP_1",
+        ...                      ychannel = "UMAP_2",
         ...                      subset = "Dox == 1.0").plot(ex2)
        
     .. plot::
@@ -154,30 +169,29 @@ class PCAOp(BaseDimensionalityReductionOp):
         ...                      yscale = "log",
         ...                      subset = "Dox == 10.0").plot(ex2) 
 
-        >>> flow.ScatterplotView(xchannel = "PCA_1",
-        ...                      ychannel = "PCA_2",
+        >>> flow.ScatterplotView(xchannel = "UMAP_1",
+        ...                      ychannel = "UMAP_2",
         ...                      subset = "Dox == 10.0").plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.pca')
-    friendly_id = Constant("Principal Component Analysis")
+    id = Constant('edu.mit.synbio.cytoflow.operations.umap')
+    friendly_id = Constant("Uniform Manifold Approximation and Projection (UMAP)")
     
-    whiten = Bool(False)
+    n_neighbors = util.PositiveInt(2, allow_zero = False)
+    min_dist = util.PositiveFloat(0.1, allow_zero = True)
 
     def _validate_estimate(self, experiment, subset = None):
         """
         Check that the user-specified parameters are valid.
         """
         
-        if self.num_components > len(self.channels):
-            raise util.CytoflowOpError('num_components',
-                                       "Number of components must be less than "
-                                       "or equal to number of channels.")
+        if self.n_neighbors > len(experiment):
+            raise util.CytoflowOpError('n_neighbors',
+                                       "Number of neighbors must be less than "
+                                       "or equal to number of data points.")
     
     def _init_embedder(self, group, data_subset):
-        return sklearn.decomposition.PCA(n_components = self.num_components,
-                                          whiten = self.whiten,
-                                          random_state = 0)
+        return umap.UMAP(n_neighbors=self.n_neighbors, n_components= self.num_components)
     
     
     def estimate(self, experiment, subset = None):
@@ -187,7 +201,7 @@ class PCAOp(BaseDimensionalityReductionOp):
         Parameters
         ----------
         experiment : Experiment
-            The `Experiment` to use to estimate the PCA decomposition.
+            The `Experiment` to use to estimate the UMAP projection.
             
         subset : str (default = None)
             A Python expression that specifies a subset of the data in 
@@ -199,7 +213,7 @@ class PCAOp(BaseDimensionalityReductionOp):
          
     def apply(self, experiment):
         """
-        Apply the PCA decomposition to the data.
+        Apply the UMAP projection to the data.
         
         Returns
         -------
