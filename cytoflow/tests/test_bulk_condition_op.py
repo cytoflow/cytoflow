@@ -20,7 +20,7 @@
 '''
 Created on Dec 1, 2015
 
-@author: brian
+@author: florian
 '''
 import unittest
 import cytoflow as flow
@@ -38,39 +38,72 @@ class TestBulkCondition(unittest.TestCase):
 
     # region [postive tests]
 
-    def testApplyLabel_ValidDataFrameGiven_LabelsArePresentInExperiment(self):
+    def testApplyCondition_ValidDataFrameGiven_ConditionsArePresentInExperiment(self):
         conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
-        labels = flow.BulkConditionOp(conditions_df = conditions_df)
-        new_ex = labels.apply(self.ex)
+        cond_op = flow.BulkConditionOp(conditions_df = conditions_df)
+        new_ex = cond_op.apply(self.ex)
         self.assertTrue("blast" in new_ex.data.columns)
 
-    def testApplyLabel_CorrectPathGiven_LabelsArePresentInExperiment(self):
-        labels = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/494_labels.csv')
-        new_ex = labels.apply(self.ex)
+    def testApplyCondition_CorrectPathGiven_ConditionsArePresentInExperiment(self):
+        cond_op = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/494_labels.csv')
+        new_ex = cond_op.apply(self.ex)
         self.assertTrue("blast" in new_ex.data.columns)
+
+    def testApplyCondition_CombineOrderGiven_CorrectCombineValueIsPresentForFirstTwoMeasurement(self):
+        conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+        cond_op = flow.BulkConditionOp(conditions_df = conditions_df, combine_order = ["allevents","syto", "singlets", "intact","cd19", "blast"])
+        new_ex = cond_op.apply(self.ex)
+        self.assertEqual(new_ex.data['combined_conditions'][0],'allevents')
+        self.assertEqual(new_ex.data['combined_conditions'][1],'blast')
+
+    def testApplyCondition_DifferentCombineConditionsNameGiven_CorrectColumnNameIsPresent(self):
+        conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+        cond_op = flow.BulkConditionOp(conditions_df = conditions_df, combine_order = ["allevents","syto", "singlets", "intact","cd19", "blast"])
+        cond_op.combined_conditions_name = "combined"
+        new_ex = cond_op.apply(self.ex)
+        self.assertTrue("combined" in new_ex.data.columns)
+        self.assertEqual(new_ex.data['combined'][0],'allevents')
+
+    def testApplyCondition_DifferentCombineDefaultValueGiven_CorrectDefaultValueIsPresent(self):
+        conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+        cond_op = flow.BulkConditionOp(conditions_df = conditions_df, combine_order = ["cd19", "blast"])
+        cond_op.combined_condition_default = "default"
+        new_ex = cond_op.apply(self.ex)
+        self.assertEqual(new_ex.data['combined_conditions'][0],'default')
+        self.assertEqual(new_ex.data['combined_conditions'][1],'blast')
 
     # endregion
 
     #region [negative tests]
 
-    def testApplyLabel_NoLabelsGiven_ThrowsTraitError(self):
+    def testApplyCondition_NoLabelsGiven_ThrowsTraitError(self):
         with self.assertRaises(util.CytoflowOpError):
-            labels = flow.BulkConditionOp()
-            new_ex = labels.apply(self.ex)
+            cond_op = flow.BulkConditionOp()
+            new_ex = cond_op.apply(self.ex)
 
-    def testApplyLabel_NumpyGiven_ThrowsTraitError(self):
+    def testApplyCondition_NumpyGiven_ThrowsTraitError(self):
         with self.assertRaises(TraitError):
             conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
-            labels = flow.BulkConditionOp(conditions_df = conditions_df.to_numpy())
-            new_ex = labels.apply(self.ex)
+            cond_op = flow.BulkConditionOp(conditions_df = conditions_df.to_numpy())
+            new_ex = cond_op.apply(self.ex)
         
-        
-
-    def testApplyLabel_NonExistingPathGiven_ThrowsCytoFlowOpException(self):
+    def testApplyCondition_NonExistingPathGiven_ThrowsCytoFlowOpException(self):
         with self.assertRaises(util.CytoflowOpError):
-            labels = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/typo.csv')
-            new_ex = labels.apply(self.ex)
+            cond_op = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/typo.csv')
+            new_ex = cond_op.apply(self.ex)
+
+    def testApplyCondition_NonExistingColumnInCombineOrderGiven_ThrowsCytoFlowOpException(self):
+        with self.assertRaises(util.CytoflowOpError):
+            conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+            cond_op = flow.BulkConditionOp(conditions_df = conditions_df, combine_order = ['blasts','typo'])
+            new_ex = cond_op.apply(self.ex)
     
+    def testApplyCondition_DuplicateColumnInCombineOrderGiven_ThrowsCytoFlowOpException(self):
+        with self.assertRaises(util.CytoflowOpError):
+            conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+            cond_op = flow.BulkConditionOp(conditions_df = conditions_df, combine_order = ['blasts','blasts'])
+            new_ex = cond_op.apply(self.ex)
+
     # endregion
 
 

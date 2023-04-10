@@ -28,8 +28,8 @@ Adds a set of conditions from pandas.DataFrames to an `Experiment`. `external_la
 """
 
 import os
-from traits.api import (HasStrictTraits, Float, Str, Instance, 
-                        Bool, observe, provides, Any, Dict,
+from traits.api import (HasStrictTraits, Str, Instance, 
+                        Bool, observe, provides, List,
                         Constant)
     
 import pandas as pd
@@ -61,6 +61,9 @@ class BulkConditionOp(HasStrictTraits):
     
     conditions_df = Instance(pd.DataFrame, args=(), copy = "ref")
     conditions_csv_path = Str
+    combine_order = List(Str)
+    combined_conditions_name = Str("combined_conditions")
+    combined_condition_default = Str("No Condition")
     
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -112,6 +115,25 @@ class BulkConditionOp(HasStrictTraits):
         new_experiment = experiment.clone(deep = False)
         for col in self.conditions_df.columns:
             new_experiment.add_condition(col, "bool", self.conditions_df[col])
+
+        if self.combine_order is not None and len(self.combine_order) > 0:
+            
+            if len(self.combine_order) != len(set(self.combine_order)):
+                raise util.CytoflowOpError("combine_order", "combine_order contains duplicates")
+            
+            set_diff = set(self.combine_order).difference(set(new_experiment.data.columns))
+            if len(set_diff) > 0:
+                raise util.CytoflowOpError("combine_order", "combine_order contains condition names that are not in the experiment: {0}".format(set_diff))
+
+
+            def get_combined_condition(row):
+                result = self.combined_condition_default
+                for con_name in self.combine_order:
+                    if row[con_name] == True:
+                        result = con_name
+                return result
+        
+            new_experiment.add_condition(self.combined_conditions_name, "string", new_experiment.data.apply(get_combined_condition, axis = 1))
         
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
@@ -125,15 +147,16 @@ if __name__ == '__main__':
 
     conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
     
-    bulkconditions = BulkConditionOp(conditions_df = conditions_df)
+    bulkconditions = BulkConditionOp(conditions_df = conditions_df, combine_order = ["syto", "singlets", "intact","cd19", "blast"])
 
     ex2 = bulkconditions.apply(ex)
 
     print(ex2.channels)
     print(ex2.conditions)
+    print(ex2["combined_conditions"])
 
     scatter_plot = flow.ScatterplotView(xchannel = 'CD19', ychannel = 'SSC-A', xscale = 'logicle')
-    scatter_plot.huefacet = "blast"
+    scatter_plot.huefacet = "combined_conditions"
     scatter_plot.plot(ex2)
     
     plt.show()
