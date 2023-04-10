@@ -18,10 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.operations.external_label
+cytoflow.operations.bulk_condition_op
 -----------------------------
 
-Adds a set of conditions from pandas.DataFrames to an `Experiment`. `external_label` has one class:
+Adds a set of conditions from a pandas.DataFrames to an `Experiment`. `bulk_condition_op` has one class:
 
 `ExternalLabelOp` -- Adds a set of conditions, given corresponding values in a pandas.DataFrame, to an `Experiment`.
 
@@ -43,7 +43,7 @@ from .i_operation import IOperation
 @provides(IOperation)
 class BulkConditionOp(HasStrictTraits):
     """
-    Applies external conditions to an cytometry experiment.
+    Applies given conditions to an cytometry experiment.
     
     Attributes
     ----------
@@ -52,7 +52,17 @@ class BulkConditionOp(HasStrictTraits):
         
     conditions : pd.DataFrame
         The labels to apply.
-        
+
+    combine_order : List(Str)
+        A list of conditions to combine in the given order. Results in a new condition with the name `combined_conditions_name`.
+        The new condition will be the name of last condition in `combine_order` that is true for a given measurement.
+    
+    combined_conditions_name : Str (default = "combined_conditions")
+        The name of the new condition created by combining the conditions in `combine_order`.
+    
+    combined_condition_default : Str (default = "No Condition")
+        The default value of an measurement for the new condition created by combining the conditions in `combine_order`.
+        This value will be applied if none of combine_order conditions are true for a given measurement.
     """
     
     # traits
@@ -77,10 +87,11 @@ class BulkConditionOp(HasStrictTraits):
         -------
         Experiment
             a new `Experiment`, the same as the old experiment but with 
-            a new columns of type ``bool`` with the same name as the operation 
-            `name`.  The new condition is ``True`` if the event's 
-            measurement in `channel` is greater than `threshold`;
-            it is ``False`` otherwise.
+            a new columns of type ``bool`` with the same name in the given dataframe.
+            The new condition is ``True`` if it's true in the given dataframe.
+            If 'combine_order' contains elements the resulting experiment will also have a new condition 
+            with the name `combined_conditions_name` that is the name of the last condition 
+            in `combine_order` that is true for a given measurement.
         """
         
         if experiment is None:
@@ -117,7 +128,7 @@ class BulkConditionOp(HasStrictTraits):
             new_experiment.add_condition(col, "bool", self.conditions_df[col])
 
         if self.combine_order is not None and len(self.combine_order) > 0:
-            
+            #combine_order given
             if len(self.combine_order) != len(set(self.combine_order)):
                 raise util.CytoflowOpError("combine_order", "combine_order contains duplicates")
             
