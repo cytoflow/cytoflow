@@ -49,6 +49,12 @@ class TestBulkCondition(unittest.TestCase):
         new_ex = cond_op.apply(self.ex)
         self.assertTrue("blast" in new_ex.data.columns)
 
+    def testApplyCondition_EmptyCombineOrderGiven_NoCombineColumnCreated(self):
+        cond_op = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/494_labels.csv')
+        new_ex = cond_op.apply(self.ex)
+        self.assertTrue("blast" in new_ex.data.columns)
+        self.assertTrue("combined_conditions" not in new_ex.data.columns)
+
     def testApplyCondition_CombineOrderGiven_CorrectCombineValueIsPresentForFirstTwoMeasurement(self):
         conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
         cond_op = flow.BulkConditionOp(conditions_df = conditions_df, combine_order = ["allevents","syto", "singlets", "intact","cd19", "blast"])
@@ -62,6 +68,7 @@ class TestBulkCondition(unittest.TestCase):
         cond_op.combined_conditions_name = "combined"
         new_ex = cond_op.apply(self.ex)
         self.assertTrue("combined" in new_ex.data.columns)
+        self.assertTrue("combined_conditions" not in new_ex.data.columns)
         self.assertEqual(new_ex.data['combined'][0],'allevents')
 
     def testApplyCondition_DifferentCombineDefaultValueGiven_CorrectDefaultValueIsPresent(self):
