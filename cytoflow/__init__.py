@@ -56,7 +56,7 @@ RUNNING_IN_GUI = False
 # basics
 from .experiment import Experiment
 from .operations.import_op import ImportOp, Tube
-from .operations.external_label import ExternalLabelOp
+from .operations.bulk_condition_op import BulkConditionOp
 
 # gates
 from .operations.threshold import ThresholdOp

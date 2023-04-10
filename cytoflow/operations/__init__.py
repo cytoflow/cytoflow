@@ -28,7 +28,7 @@ implementing `IOperation` whose `IOperation.apply` function takes an
 
 from .i_operation import IOperation
 from .import_op import ImportOp
-from .external_label import ExternalLabelOp
+from .bulk_condition_op import BulkConditionOp
  
 # gates
 from .threshold import ThresholdOp

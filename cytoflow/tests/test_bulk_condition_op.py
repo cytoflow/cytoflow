@@ -29,7 +29,7 @@ import pandas as pd
 from traits.trait_errors import TraitError
 
 
-class TestExternalLabel(unittest.TestCase):
+class TestBulkCondition(unittest.TestCase):
     def setUp(self):
         super().setUp()
         
@@ -39,13 +39,13 @@ class TestExternalLabel(unittest.TestCase):
     # region [postive tests]
 
     def testApplyLabel_ValidDataFrameGiven_LabelsArePresentInExperiment(self):
-        labels_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
-        labels = flow.ExternalLabelOp(labels = labels_df)
+        conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+        labels = flow.BulkConditionOp(conditions_df = conditions_df)
         new_ex = labels.apply(self.ex)
         self.assertTrue("blast" in new_ex.data.columns)
 
     def testApplyLabel_CorrectPathGiven_LabelsArePresentInExperiment(self):
-        labels = flow.ExternalLabelOp(labels_csv_path = './cytoflow/tests/data/vie14/494_labels.csv')
+        labels = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/494_labels.csv')
         new_ex = labels.apply(self.ex)
         self.assertTrue("blast" in new_ex.data.columns)
 
@@ -55,20 +55,20 @@ class TestExternalLabel(unittest.TestCase):
 
     def testApplyLabel_NoLabelsGiven_ThrowsTraitError(self):
         with self.assertRaises(util.CytoflowOpError):
-            labels = flow.ExternalLabelOp()
+            labels = flow.BulkConditionOp()
             new_ex = labels.apply(self.ex)
 
     def testApplyLabel_NumpyGiven_ThrowsTraitError(self):
         with self.assertRaises(TraitError):
-            labels_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
-            labels = flow.ExternalLabelOp(labels = labels_df.to_numpy())
+            conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+            labels = flow.BulkConditionOp(conditions_df = conditions_df.to_numpy())
             new_ex = labels.apply(self.ex)
         
         
 
     def testApplyLabel_NonExistingPathGiven_ThrowsCytoFlowOpException(self):
         with self.assertRaises(util.CytoflowOpError):
-            labels = flow.ExternalLabelOp(labels_csv_path = './cytoflow/tests/data/vie14/typo.csv')
+            labels = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/typo.csv')
             new_ex = labels.apply(self.ex)
     
     # endregion

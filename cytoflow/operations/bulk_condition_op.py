@@ -41,26 +41,26 @@ import cytoflow.utility as util
 from .i_operation import IOperation
 
 @provides(IOperation)
-class ExternalLabelOp(HasStrictTraits):
+class BulkConditionOp(HasStrictTraits):
     """
-    Applies external labels as conditions to an cytometry experiment.
+    Applies external conditions to an cytometry experiment.
     
     Attributes
     ----------
-    labels_csv_path : Str
+    conditions_csv_path : Str
         The path to a CSV file containing the labels.
         
-    labels : pd.DataFrame
+    conditions : pd.DataFrame
         The labels to apply.
         
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.external_label')
-    friendly_id = Constant("external label")
+    id = Constant('edu.mit.synbio.cytoflow.operations.bulk_condition')
+    friendly_id = Constant("bulk condition")
     
-    labels = Instance(pd.DataFrame, args=(), copy = "ref")
-    labels_csv_path = Str
+    conditions_df = Instance(pd.DataFrame, args=(), copy = "ref")
+    conditions_csv_path = Str
     
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -83,35 +83,35 @@ class ExternalLabelOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
-        if self.labels_csv_path is not None and self.labels_csv_path != "":
-            if not os.path.exists(self.labels_csv_path):
-                raise util.CytoflowOpError('labels_csv_path', "File {0} does not exist".format(self.labels_csv_path))
+        if self.conditions_csv_path is not None and self.conditions_csv_path != "":
+            if not os.path.exists(self.conditions_csv_path):
+                raise util.CytoflowOpError('conditions_csv_path', "File {0} does not exist".format(self.conditions_csv_path))
             
-            self.labels = pd.read_csv(self.labels_csv_path)
+            self.conditions_df = pd.read_csv(self.conditions_csv_path)
         
         # make sure labels got set!
-        if self.labels is None or self.labels.empty:
-            raise util.CytoflowOpError('labels', 
-                                       "You have to set the labels "
+        if self.conditions_df is None or self.conditions_df.empty:
+            raise util.CytoflowOpError('conditions_df', 
+                                       "You have to set the conditions_df "
                                        "before applying them!")
         
-        if not isinstance(self.labels, pd.DataFrame):
-            raise util.CytoflowOpError('labels', 
-                                       "labels is not a pandas.DataFrame")
+        if not isinstance(self.conditions_df, pd.DataFrame):
+            raise util.CytoflowOpError('conditions_df', 
+                                       "conditions_df is not a pandas.DataFrame")
             
         
         # make sure old_experiment doesn't already have a column named self.name
-        new_cols = set(self.labels.columns)
+        new_cols = set(self.conditions_df.columns)
         old_cols = set(experiment.data.columns)
         intersection = new_cols.intersection(old_cols)
         if(len(intersection) > 0):
-            raise util.CytoflowOpError("one or more columns in labels already exists in the experiment",
+            raise util.CytoflowOpError("one or more columns in conditions_df already exists in the experiment",
                                        "Experiment already contains column {0}"
                                        .format(list(intersection).join(", ")))
 
         new_experiment = experiment.clone(deep = False)
-        for col in self.labels.columns:
-            new_experiment.add_condition(col, "bool", self.labels[col])
+        for col in self.conditions_df.columns:
+            new_experiment.add_condition(col, "bool", self.conditions_df[col])
         
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
@@ -123,11 +123,11 @@ if __name__ == '__main__':
     tube1 = flow.Tube(file = './cytoflow/tests/data/vie14/494.fcs')
     ex = flow.ImportOp(tubes = [tube1]).apply()
 
-    labels_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+    conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
     
-    labels = ExternalLabelOp(labels = labels_df)
+    bulkconditions = BulkConditionOp(conditions_df = conditions_df)
 
-    ex2 = labels.apply(ex)
+    ex2 = bulkconditions.apply(ex)
 
     print(ex2.channels)
     print(ex2.conditions)
