@@ -30,7 +30,7 @@ amount of variance.  `UMAP` has one class:
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, Float, provides)
+                        Constant, List, BaseInt, provides)
 
 import numpy as np
 import pandas as pd
@@ -94,10 +94,14 @@ class UMAPOp(BaseDimensionalityReductionOp):
         ``Time`` and ``Dox``, setting `by` to ``["Time", "Dox"]`` will 
         fit the model separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
-        
-    whiten : Bool (default = False)
-        Scale each component to unit variance?  May be useful if you will
-        be using unsupervized clustering (such as K-means).
+
+    rescale_data : Bool (default = True)
+        Whether to rescale the data before estimating the model.
+
+    random_state : Int (default = None)
+        The random seed for the UMAP algorithm. Default None since UMAP is
+        considerably faster when random_state is not set. For more information
+        check out the UMAP documentation.
 
     Examples
     --------
@@ -177,8 +181,9 @@ class UMAPOp(BaseDimensionalityReductionOp):
     id = Constant('edu.mit.synbio.cytoflow.operations.umap')
     friendly_id = Constant("Uniform Manifold Approximation and Projection (UMAP)")
     
-    n_neighbors = util.PositiveInt(2, allow_zero = False)
+    n_neighbors = util.PositiveInt(15, allow_zero = False)
     min_dist = util.PositiveFloat(0.1, allow_zero = True)
+    random_state = BaseInt(None, allow_zero = True, allow_none = True)
 
     def _validate_estimate(self, experiment, subset = None):
         """
@@ -191,7 +196,7 @@ class UMAPOp(BaseDimensionalityReductionOp):
                                        "or equal to number of data points.")
     
     def _init_embedder(self, group, data_subset):
-        return umap.UMAP(n_neighbors=self.n_neighbors, n_components= self.num_components)
+        return umap.UMAP(n_neighbors=self.n_neighbors, n_components= self.num_components, min_dist= self.min_dist, random_state=self.random_state)
     
     
     def estimate(self, experiment, subset = None):

@@ -83,6 +83,9 @@ class PCAOp(BaseDimensionalityReductionOp):
     whiten : Bool (default = False)
         Scale each component to unit variance?  May be useful if you will
         be using unsupervized clustering (such as K-means).
+    
+    rescale_data : Bool (default = True)
+        Whether to rescale the data before estimating the model.
 
     Examples
     --------
@@ -194,7 +197,7 @@ class PCAOp(BaseDimensionalityReductionOp):
             ``experiment`` to use to parameterize the operation.
 
         """
-        super().estimate(experiment, subset)
+        return super().estimate(experiment, subset)
                           
          
     def apply(self, experiment):

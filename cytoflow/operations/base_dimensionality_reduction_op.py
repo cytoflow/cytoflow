@@ -39,6 +39,8 @@ import pandas as pd
 import cytoflow.utility as util
 from .i_operation import IOperation
 from abc import ABC, abstractmethod
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
 
 @provides(IOperation)
 class BaseDimensionalityReductionOp(HasStrictTraits):
@@ -78,6 +80,9 @@ class BaseDimensionalityReductionOp(HasStrictTraits):
         ``Time`` and ``Dox``, setting `by` to ``["Time", "Dox"]`` will 
         fit the model separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
+
+    rescale_data : Bool (default = True)
+        Whether to rescale the data before estimating the model.
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.base_dimensionality_reduction_op')
@@ -88,8 +93,10 @@ class BaseDimensionalityReductionOp(HasStrictTraits):
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(2, allow_zero = False)
     by = List(Str)
+    rescale_data = Bool(True)
     
     _embedder = Dict(Any, Any, transient = True)
+    _rescaler = Dict(Any, Any, transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
 
     def estimate(self, experiment, subset = None):
@@ -172,6 +179,7 @@ class BaseDimensionalityReductionOp(HasStrictTraits):
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
                     
         embedder = {}
+        rescaler = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError('by',
@@ -186,11 +194,16 @@ class BaseDimensionalityReductionOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
              
             embedder[group] = self._init_embedder(group, data_subset)
+            # use dummy rescaler if we're not rescaling the data
+            rescaler[group] = StandardScaler() if self.rescale_data else StandardScaler(with_mean=False, with_std=False)
             
-            embedder[group].fit(x)
+            x_scaled = rescaler[group].fit_transform(x)
+            embedder[group].fit(x_scaled)
         
         # set this atomically to support GUI
-        self._embedder = embedder                      
+        self._embedder = embedder
+        self._rescaler = rescaler   
+        return x                   
          
     def apply(self, experiment):
         """
@@ -277,25 +290,25 @@ class BaseDimensionalityReductionOp(HasStrictTraits):
                 x[c] = self._scale[c](x[c])
                  
             # which values are missing?
-   
             x_na = pd.Series([False] * len(x))
             for c in self.channels:
                 x_na[np.isnan(x[c]).values] = True
             x_na = x_na.values
-            x[x_na] = 0
             
-            group_idx = groupby.groups[group]
-            
+            #drop na in x since we don't want to transform them
+            x = x[~x_na]
+            idx_to_keep = x.index.values
+            x = self._rescaler[group].transform(x)
             emebedder = self._embedder[group]
             x_tf = emebedder.transform(x)
-            x_tf[x_na] = np.nan
             
+            group_idx = groupby.groups[group]
             for ci, c in enumerate(new_channels):
-                new_experiment.data.loc[group_idx, c] = x_tf[:, ci]
-
+                #fill only the values of the current group that have not been dropped
+                new_experiment.data.loc[group_idx.intersection(idx_to_keep), c]= x_tf[:, ci]
+        
         new_experiment.data.dropna(inplace = True)
         new_experiment.data.reset_index(drop = True, inplace = True)
-
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
 
