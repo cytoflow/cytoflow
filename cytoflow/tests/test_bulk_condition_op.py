@@ -106,10 +106,17 @@ class TestBulkCondition(unittest.TestCase):
             new_ex = cond_op.apply(self.ex)
     
     def testApplyCondition_DuplicateColumnInCombineOrderGiven_ThrowsCytoFlowOpException(self):
+        conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
         with self.assertRaises(util.CytoflowOpError):
-            conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
             cond_op = flow.BulkConditionOp(conditions_df = conditions_df, combine_order = ['blasts','blasts'])
             new_ex = cond_op.apply(self.ex)
+
+    def testApplyCondition_HasAlreadyBeenApplied_ThrowsCytoFlowOpException(self):
+        conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
+        cond_op = flow.BulkConditionOp(conditions_df = conditions_df)
+        new_ex = cond_op.apply(self.ex)
+        with self.assertRaises(util.CytoflowOpError):
+            new_ex2 = cond_op.apply(new_ex)
 
     # endregion
 

@@ -120,8 +120,8 @@ class BulkConditionOp(HasStrictTraits):
         intersection = new_cols.intersection(old_cols)
         if(len(intersection) > 0):
             raise util.CytoflowOpError("one or more columns in conditions_df already exists in the experiment",
-                                       "Experiment already contains column {0}"
-                                       .format(list(intersection).join(", ")))
+                                       "Experiment already contains columns {0}"
+                                       .format(list(intersection)))
 
         new_experiment = experiment.clone(deep = False)
         for col in self.conditions_df.columns:
