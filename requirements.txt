@@ -9,7 +9,7 @@ seaborn==0.11.2
 statsmodels==0.13.0
 natsort==7.1.1
 numba==0.53.1
-
+fcsparser==0.2.4
 traits==6.2.0
 traitsui==7.2.1
 pyface==7.3.0

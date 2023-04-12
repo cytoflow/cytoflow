@@ -42,7 +42,7 @@ import warnings, math
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum, Int)
 
-from fcsparser import fcsparser
+import fcsparser
 import numpy as np
 from pathlib import Path
 
