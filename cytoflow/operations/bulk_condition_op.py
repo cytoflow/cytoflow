@@ -144,7 +144,7 @@ class BulkConditionOp(HasStrictTraits):
                         result = con_name
                 return result
         
-            new_experiment.add_condition(self.combined_conditions_name, "string", new_experiment.data.apply(get_combined_condition, axis = 1))
+            new_experiment.add_condition(self.combined_conditions_name, "category", new_experiment.data.apply(get_combined_condition, axis = 1))
         
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment

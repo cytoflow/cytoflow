@@ -61,6 +61,7 @@ class TestBulkCondition(unittest.TestCase):
         new_ex = cond_op.apply(self.ex)
         self.assertEqual(new_ex.data['combined_conditions'][0],'allevents')
         self.assertEqual(new_ex.data['combined_conditions'][1],'blast')
+        self.assertEqual(new_ex.metadata['combined_conditions']["dtype"], 'category')
 
     def testApplyCondition_DifferentCombineConditionsNameGiven_CorrectColumnNameIsPresent(self):
         conditions_df = pd.read_csv('./cytoflow/tests/data/vie14/494_labels.csv')
