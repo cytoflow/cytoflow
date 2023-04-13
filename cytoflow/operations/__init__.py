@@ -59,3 +59,4 @@ from .color_translation import ColorTranslationOp
 
 # etc 
 from .binning import BinningOp
+from .subsample import SubsampleOp

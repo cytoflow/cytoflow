@@ -87,6 +87,8 @@ from .operations.xform_stat import TransformStatisticOp
 
 # misc
 from .operations.binning import BinningOp
+from .operations.subsample import SubsampleOp
+
 
 # views
 from .views.histogram import HistogramView
