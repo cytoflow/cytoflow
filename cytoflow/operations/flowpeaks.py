@@ -60,7 +60,7 @@ from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .base_op_views import By1DView, By2DView, AnnotatingView, NullView
+from .base_op_views import By1DView, By2DView, AnnotatingView, NullView, op_default_NDview_init
 
 @provides(IOperation)
 class FlowPeaksOp(HasStrictTraits):
@@ -810,30 +810,11 @@ class FlowPeaksOp(HasStrictTraits):
         `IView`
             an `IView`, call `plot` to see the diagnostic plot.
         """
-        channels = kwargs.pop('channels', self.channels)
-        scale = kwargs.pop('scale', self.scale)
         density = kwargs.pop('density', False)
         
-        for c in channels:
-            if c not in self.channels:
-                raise util.CytoflowViewError('channels',
-                                             "Channel {} isn't in the operation's channels"
-                                             .format(c))
-                
-        for s in scale:
-            if s not in self.channels:
-                raise util.CytoflowViewError('channels',
-                                             "Channel {} isn't in the operation's channels"
-                                             .format(s))
+        channels, scale = op_default_NDview_init(channels, scale, kwargs)
 
-        for c in channels:
-            if c not in scale:
-                scale[c] = util.get_default_scale()
-            
-        if len(channels) == 0:
-            raise util.CytoflowViewError('channels',
-                                         "Must specify at least one channel for a default view")
-        elif len(channels) == 1:
+        if len(channels) == 1:
             v = FlowPeaks1DView(op = self)
             v.trait_set(channel = channels[0], 
                         scale = scale[channels[0]], 
