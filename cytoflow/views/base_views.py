@@ -673,12 +673,7 @@ class BaseNDView(BaseDataView):
                                            .format(c))
        
         # get the scale
-        scale = {}
-        for c in self.channels:
-            if c in self.scale:
-                scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
-            else:
-                scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
+        scale = util.init_channel_scales(experiment, self.channels, self.scale)
 
         lim = kwargs.pop("lim", {})
         for c in self.channels:

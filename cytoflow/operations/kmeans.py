@@ -234,13 +234,7 @@ class KMeansOp(HasStrictTraits):
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
-        self._scale = {}
-        for c in self.channels:
-            if c in self.scale:
-                self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
-            else:
-                self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
-                    
+        self._scale = util.init_channel_scales(experiment, self.channels, self.scale)
                     
         kmeans = {}
         for group, data_subset in groupby:

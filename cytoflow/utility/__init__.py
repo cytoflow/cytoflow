@@ -35,7 +35,7 @@ from .algorithms import ci, polygon_contains
 from .cytoflow_errors import CytoflowError, CytoflowOpError, CytoflowViewError
 from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWarning
 
-from .scale import scale_factory, IScale, set_default_scale, get_default_scale
+from .scale import init_channel_scales, scale_factory, IScale, set_default_scale, get_default_scale
 from .custom_traits import (PositiveInt, PositiveCInt, PositiveFloat, 
                             PositiveCFloat, ScaleEnum, Deprecated, Removed,
                             FloatOrNone, CFloatOrNone, IntOrNone, CIntOrNone)

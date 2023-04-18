@@ -35,13 +35,14 @@ Base classes and functions for `cytoflow` scales.
 """
 
 import numbers
+from typing import Dict, List
 
 from traits.api import Interface, Str, Instance, Tuple, Array
 
 from .cytoflow_errors import CytoflowError
 from .util_functions import is_numeric
 from traits.has_traits import HasStrictTraits
-
+from ..experiment import Experiment
 class IScale(Interface):
     """
     An interface for various ways we could rescale flow data.
@@ -152,6 +153,37 @@ class ScaleMixin(HasStrictTraits):
 # maps name -> scale object
 _scale_mapping = {}
 _scale_default = "linear"
+
+def init_channel_scales(experiment : Experiment, channels : List[str], custom_scales : Dict[str, IScale]) -> Dict[str, IScale]:
+    """
+    Initialize the scales for a list of channels.
+    
+    Parameters
+    ----------
+    experiment : Experiment
+        The experiment to use to parameterize the new scale.
+        
+    channels : List[str]
+        The channels to initialize scales for.
+        
+    custom_scales : Dict[str, IScale]
+        A dictionary mapping channel names to scale objects.
+        
+    Returns
+    -------
+    scale : Dict[str, IScale]
+        A dictionary mapping channel names to scale objects.
+    """
+    
+    scale = {}
+    
+    for channel in channels:
+        if channel in custom_scales:
+            scale[channel] = scale_factory(custom_scales[channel], experiment = experiment, channel = channel)
+        else:
+            scale[channel] = scale_factory(get_default_scale(), experiment = experiment, channel = channel)
+            
+    return scale
 
 def scale_factory(scale, experiment, **scale_params):
     """

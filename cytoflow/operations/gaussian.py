@@ -293,14 +293,8 @@ class GaussianMixtureOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda _: True)
             
-        # get the scale. estimate the scale params for the ENTIRE data set,
-        # not subsets we get from groupby().  And we need to save it so that
-        # the data is transformed the same way when we apply()
-        for c in self.channels:
-            if c in self.scale:
-                self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
-            else:
-                self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
+        # get the scale. 
+        self._scale = util.init_channel_scales(experiment, self.channels, self.scale)
         
         gmms = {}
             
