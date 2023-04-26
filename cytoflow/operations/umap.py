@@ -8,12 +8,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -29,16 +29,21 @@ amount of variance.  `UMAP` has one class:
 """
 
 
-from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance,
                         Constant, List, BaseInt, provides)
 
-import numpy as np
-import pandas as pd
 import umap
-
+from ..operations.base_op_views import op_default_NDview_init
 import cytoflow.utility as util
-from .i_operation import IOperation
 from .base_dimensionality_reduction_op import BaseDimensionalityReductionOp
+from cytoflow.views import IView, ScatterplotView
+import cytoflow.utility as util
+
+from .i_operation import IOperation
+from .base_op_views import By2DView, AnnotatingView, Op2DView
+
+
+
 
 @provides(IOperation)
 class UMAPOp(BaseDimensionalityReductionOp):
@@ -228,3 +233,116 @@ class UMAPOp(BaseDimensionalityReductionOp):
 
         """
         return super().apply(experiment)
+    
+    def default_view(self, huefacet = None, **kwargs):
+        """
+        Returns
+        -------
+        ScatterplotView
+            A view of the UMAP projection.
+        """
+
+        if self.num_components > 3:
+            raise util.CytoflowViewError("UMAP view is only supports 2D and 3D projections.")
+
+        if self.num_components == 2:
+            v = UMAP2DView(op = self, huefacet = huefacet)
+            v.trait_set(
+                xchannel = self.name + "_1",
+                ychannel = self.name + "_2",
+                **kwargs)
+        
+        elif self.num_components == 3:
+            raise NotImplementedError()
+
+        return v
+        # flow.ScatterplotView(xchannel = "UMAP_1", ychannel = "UMAP_2", huefacet = "human_gt")
+
+@provides(IView)
+class UMAP2DView(Op2DView, AnnotatingView, ScatterplotView):
+        """
+        A two-dimensional diagnostic view for `UMAPOp`.  Plots a scatter-plot of the
+        embedded data. Optionally the huefacet can be used to color the data points.
+        In addition info about the UMAP parameters is displayed in the legend.
+        """
+        id = Constant("edu.mit.synbio.cytoflow.view.umap2dview")
+        friendly_id = Constant("UMAP 2D Plot")
+
+        xchannel = Str("UMAP_1")
+        ychannel = Str("UMAP_2")
+        xscale = util.ScaleEnum("linear")
+        yscale = util.ScaleEnum("linear")
+        huefacet = Str
+
+def plot(self, experiment, **kwargs):
+        """
+        Plot the plots.
+        
+        Parameters
+        ----------
+        
+        """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
+        
+
+        annotations = {}
+        for umap in self.op._embedder:
+            annotations[umap] = {"n_neighbors" : umap.n_neighbors,
+                                 "n_components" : umap.n_components,
+                                 "min_dist" : umap.min_dist  }
+                
+        view, trait_name = self._strip_trait(self.op.name)
+        
+        super(UMAP2DView, view).plot(experiment,
+                                          annotation_facet = self.op.name,
+                                          annotation_trait = trait_name,
+                                          annotations = annotations,
+                                        **kwargs)
+        
+def _annotation_plot(self, 
+                        axes, 
+                        annotation, 
+                        annotation_facet, 
+                        annotation_value, 
+                        annotation_color,
+                        **kwargs):
+    
+    ax = plt.gca()
+    leg = ax.legend()
+
+    # create additional handles and labels
+    handle1, = ax.plot([], [], linestyle='none', marker='s', color='r', label='marker 1')
+    handle2, = ax.plot([], [], linestyle='none', marker='^', color='g', label='marker 2')
+
+    # extend the legend
+    leg.legendHandles.extend([handle1, handle2])
+    leg.texts.extend([ax.text(0, 0, f"n_neighbors {annotation['n_neighbors']}"), ax.text(0, 0, "text2")])
+    
+
+if __name__ == '__main__':
+    import cytoflow as flow
+    import matplotlib.pyplot as plt
+    tube1 = flow.Tube(file = './cytoflow/tests/data/vie14/494.fcs')
+    ex = flow.ImportOp(tubes = [tube1]).apply()
+
+    bulkconditions = flow.BulkConditionOp(conditions_csv_path = './cytoflow/tests/data/vie14/494_labels.csv',
+                                        combine_order = ["syto", "singlets", "intact","cd19", "blast"],
+                                        combined_conditions_name="human_gt",
+                                        combined_condition_default ="other")
+
+    ex = bulkconditions.apply(ex)
+
+    ex_subsampled = flow.SubsampleOp(sampling_type = "relative", sampling_def = {"human_gt" : "0.01:FromEach"}).apply(ex)
+
+    umap = flow.UMAPOp(name = "UMAP",
+                    channels = ["CD19","CD45","CD10","CD34","CD20","SSC-A","FSC-A"],
+                    num_components = 2)
+
+    umap.estimate(ex_subsampled)
+    ex2 = umap.apply(ex_subsampled)
+
+    # flow.ScatterplotView(xchannel = "UMAP_1", ychannel = "UMAP_2", huefacet = "human_gt").plot(ex2, alpha = 0.75, s = 3)
+    umap.default_view(huefacet="human_gt").plot(ex2, alpha = 0.75, s = 3)
+    plt.show()
