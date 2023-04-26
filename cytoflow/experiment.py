@@ -516,7 +516,7 @@ class Experiment(HasStrictTraits):
         Examples
         --------
         >>> import cytoflow as flow
-        >>> from fcsparser import fcsparser
+        >>> import fcsparser
         >>> ex = flow.Experiment()
         >>> ex.add_condition("Time", "float")
         >>> ex.add_condition("Strain", "category")
@@ -581,7 +581,7 @@ class Experiment(HasStrictTraits):
             self.metadata[condition]['values'] = natsorted(self.data[condition].unique())
 
 if __name__ == "__main__":
-    from fcsparser import fcsparser
+    import fcsparser
     ex = Experiment()
     ex.add_conditions({"time" : "category"})
 

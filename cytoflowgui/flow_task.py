@@ -631,7 +631,7 @@ class FlowTask(Task):
     
     def _get_package_versions(self):    
         from cytoflow import __version__ as cf_version
-        from fcsparser.fcsparser import __version__ as fcs_version
+        from fcsparser import __version__ as fcs_version
         from pandas import __version__ as pd_version
         from numpy import __version__ as np_version
         from numexpr import __version__ as nxp_version

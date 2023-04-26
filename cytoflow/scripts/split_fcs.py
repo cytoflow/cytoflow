@@ -28,7 +28,7 @@ files using the provided FCS metadata.
 
 import argparse, warnings, pathlib, re
 from copy import copy
-from fcsparser import fcsparser
+import fcsparser
 import cytoflow as flow
 import cytoflow.utility as util
 
