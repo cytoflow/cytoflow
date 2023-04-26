@@ -49,19 +49,19 @@ class SubsampleOp(HasStrictTraits):
     ----------
     sampling_type : Str
         Defines weather the sampling is done by a fixed number of events or by a fraction of the total number of events. 
-        Must be either "absolute" or "relative".
+        Must be either `absolute` or `relative`.
 
     sampling_size : Float (default = None)
-        The number of events to sample if `sampling_type` is "absolute" or the fraction of events to sample if `sampling_type` is "relative".
+        The number of events to sample if `sampling_type` is `absolute` or the fraction of events to sample if `sampling_type` is `relative`.
         Used to simply sample a fixed number of events or a fraction of the total number of events.
 
     sampling_def : Dict(Str, Any) (default = None)
         A dictionary defining the sampling for given conditions.
         The keys are the names of the conditions and the values are either a string or another dictionary.
-        If the value is a string, it must follow the format "amount:retrieval_type" 
-        where "amount" is a float and "retrieval_type" is either "FromEach" or "InTotal".
-        If "retrieval_type" is "FromEach", "amount" defines the amount of events to sample from each unqiue value of the given condition.
-        If "retrieval_type" is "InTotal", "amount" defines the amount of events to sample in total from all unique values of the given condition.
+        If the value is a string, it must follow the format `amount:retrieval_type`
+        where `amount` is a float and `retrieval_type` is either `FromEach` or `InTotal`.
+        If `retrieval_type` is `FromEach`, `amount` defines the amount of events to sample from each unqiue value of the given condition.
+        If `retrieval_type` is `InTotal`, `amount` defines the amount of events to sample in total from all unique values of the given condition.
         In the second case the number of events per unqiue value of the given condition will be the same.
 
     replacement : Bool (default = True)
