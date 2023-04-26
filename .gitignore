@@ -43,3 +43,6 @@ _Logicle.cpython-34m.so
 /docs/dev_manual/examples/*
 !/docs/dev_manual/examples/examples.rst
 
+#vscode
+.vscode
+
