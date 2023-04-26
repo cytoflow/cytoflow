@@ -42,7 +42,6 @@ from traits.api import Interface, Str, Instance, Tuple, Array
 from .cytoflow_errors import CytoflowError
 from .util_functions import is_numeric
 from traits.has_traits import HasStrictTraits
-from ..experiment import Experiment
 class IScale(Interface):
     """
     An interface for various ways we could rescale flow data.
@@ -154,7 +153,7 @@ class ScaleMixin(HasStrictTraits):
 _scale_mapping = {}
 _scale_default = "linear"
 
-def init_channel_scales(experiment : Experiment, channels : List[str], custom_scales : Dict[str, IScale]) -> Dict[str, IScale]:
+def init_channel_scales(experiment, channels : List[str], custom_scales : Dict[str, IScale]) -> Dict[str, IScale]:
     """
     Initialize the scales for a list of channels.
     
