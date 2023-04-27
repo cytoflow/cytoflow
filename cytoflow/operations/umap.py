@@ -41,7 +41,7 @@ import cytoflow.utility as util
 
 from .i_operation import IOperation
 from .base_op_views import By2DView, AnnotatingView, Op2DView
-
+import matplotlib.pyplot as plt
 
 
 
@@ -260,21 +260,20 @@ class UMAPOp(BaseDimensionalityReductionOp):
 
 @provides(IView)
 class UMAP2DView(Op2DView, AnnotatingView, ScatterplotView):
-        """
-        A two-dimensional diagnostic view for `UMAPOp`.  Plots a scatter-plot of the
-        embedded data. Optionally the huefacet can be used to color the data points.
-        In addition info about the UMAP parameters is displayed in the legend.
-        """
-        id = Constant("edu.mit.synbio.cytoflow.view.umap2dview")
-        friendly_id = Constant("UMAP 2D Plot")
+    """
+    A two-dimensional diagnostic view for `UMAPOp`.  Plots a scatter-plot of the
+    embedded data. Optionally the huefacet can be used to color the data points.
+    In addition info about the UMAP parameters is displayed in the legend.
+    """
+    id = Constant("edu.mit.synbio.cytoflow.view.umap2dview")
+    friendly_id = Constant("UMAP 2D Plot")
 
-        xchannel = Str("UMAP_1")
-        ychannel = Str("UMAP_2")
-        xscale = util.ScaleEnum("linear")
-        yscale = util.ScaleEnum("linear")
-        huefacet = Str
+    xchannel = Str("UMAP_1")
+    ychannel = Str("UMAP_2")
+    xscale = util.ScaleEnum("linear")
+    yscale = util.ScaleEnum("linear")
 
-def plot(self, experiment, **kwargs):
+    def plot(self, experiment, **kwargs):
         """
         Plot the plots.
         
@@ -288,37 +287,48 @@ def plot(self, experiment, **kwargs):
         
 
         annotations = {}
-        for umap in self.op._embedder:
-            annotations[umap] = {"n_neighbors" : umap.n_neighbors,
-                                 "n_components" : umap.n_components,
-                                 "min_dist" : umap.min_dist  }
+        for key in self.op._embedder:
+            umap_obj = self.op._embedder[key]
+            annotations[key] = {"n_neighbors" : umap_obj.n_neighbors,
+                                    "n_components" : umap_obj.n_components,
+                                    "min_dist" : umap_obj.min_dist  }
                 
         view, trait_name = self._strip_trait(self.op.name)
+
+        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+
         
         super(UMAP2DView, view).plot(experiment,
-                                          annotation_facet = self.op.name,
-                                          annotation_trait = trait_name,
-                                          annotations = annotations,
+                                        annotation_facet = self.op.name,
+                                        annotation_trait = trait_name,
+                                        annotations = annotations,
+                                        xscale = xscale,
+                                        yscale = yscale,
                                         **kwargs)
+            
+    def _annotation_plot(self, 
+                            axes, 
+                            annotation, 
+                            annotation_facet, 
+                            annotation_value, 
+                            annotation_color,
+                            **kwargs):
         
-def _annotation_plot(self, 
-                        axes, 
-                        annotation, 
-                        annotation_facet, 
-                        annotation_value, 
-                        annotation_color,
-                        **kwargs):
-    
-    ax = plt.gca()
-    leg = ax.legend()
+        if not isinstance(axes, list) and not isinstance(axes, tuple):
+            axes = [axes]
+        
+        if annotation is not None and annotation != {}:
+            for ax in axes:
+                handles, labels = ([],[])
+                for key, value in annotation.items():
+                    new_handle = plt.Line2D([], [], linestyle='-', visible = False, label=f"{key} {value}")
+                    handles.append(new_handle)
+                    labels.append(new_handle.get_label())
 
-    # create additional handles and labels
-    handle1, = ax.plot([], [], linestyle='none', marker='s', color='r', label='marker 1')
-    handle2, = ax.plot([], [], linestyle='none', marker='^', color='g', label='marker 2')
+                legend = plt.legend(handles, labels, loc = 4)
 
-    # extend the legend
-    leg.legendHandles.extend([handle1, handle2])
-    leg.texts.extend([ax.text(0, 0, f"n_neighbors {annotation['n_neighbors']}"), ax.text(0, 0, "text2")])
+                ax.add_artist(legend)
     
 
 if __name__ == '__main__':
@@ -336,13 +346,12 @@ if __name__ == '__main__':
 
     ex_subsampled = flow.SubsampleOp(sampling_type = "relative", sampling_def = {"human_gt" : "0.01:FromEach"}).apply(ex)
 
-    umap = flow.UMAPOp(name = "UMAP",
+    umap_op = flow.UMAPOp(name = "UMAP",
                     channels = ["CD19","CD45","CD10","CD34","CD20","SSC-A","FSC-A"],
                     num_components = 2)
 
-    umap.estimate(ex_subsampled)
-    ex2 = umap.apply(ex_subsampled)
+    umap_op.estimate(ex_subsampled)
+    ex2 = umap_op.apply(ex_subsampled)
 
-    # flow.ScatterplotView(xchannel = "UMAP_1", ychannel = "UMAP_2", huefacet = "human_gt").plot(ex2, alpha = 0.75, s = 3)
-    umap.default_view(huefacet="human_gt").plot(ex2, alpha = 0.75, s = 3)
+    view = umap_op.default_view(huefacet="human_gt").plot(ex2, alpha = 0.75, s = 3)
     plt.show()
