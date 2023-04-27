@@ -45,6 +45,7 @@ from .kmeans import KMeansOp
 from .flowpeaks import FlowPeaksOp
 from .pca import PCAOp
 from .umap import UMAPOp
+from .hdbscan import HDBSCANOp
 
 # statistics
 from .channel_stat import ChannelStatisticOp
