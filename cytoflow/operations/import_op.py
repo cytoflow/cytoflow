@@ -39,6 +39,7 @@ There are a few utility functions as well:
 '''
 
 import warnings, math
+import pandas as pd
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum, Int)
 
@@ -265,6 +266,10 @@ class ImportOp(HasStrictTraits):
                                            "Tube {0} didn't have the same "
                                            "conditions as tube {1}"
                                            .format(tube.file, self.tubes[0].file))
+            
+            #check file type
+            if not tube.file.lower().endswith(".fcs") and not tube.file.lower().endswith(".csv"):
+                raise util.CytoflowOpError('tubes',f"Tube {tube.file} is not an FCS or CSV file")
 
         # make sure experimental conditions are unique
         for idx, i in enumerate(self.tubes[0:-1]):
@@ -288,22 +293,27 @@ class ImportOp(HasStrictTraits):
             # we'll figure that out below
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                tube0_meta = fcsparser.parse(self.tubes[0].file,
+                tube0_file = self.tubes[0].file
+                if tube0_file.endswith(".fcs"):
+                    tube0_meta = fcsparser.parse(tube0_file,
                                              data_set = self.data_set,
                                              meta_data_only = True,
                                              reformat_meta = True)
+                elif tube0_file.endswith(".csv"):
+                    tube0_meta, _ = _parse_tube_csv(tube0_file,metadata_only = True)
+                    self.name_metadata = "$PnS"
         except Exception as e:
             raise util.CytoflowOpError('tubes',
                                        "FCS reader threw an error reading metadata "
                                        "for tube {}: {}"
-                                       .format(self.tubes[0].file, str(e))) from e
+                                       .format(tube0_file, str(e))) from e
               
         meta_channels = tube0_meta["_channels_"]
         
         if self.name_metadata:
             experiment.metadata["name_metadata"] = self.name_metadata
         else:
-            experiment.metadata["name_metadata"] = autodetect_name_metadata(self.tubes[0].file,
+            experiment.metadata["name_metadata"] = autodetect_name_metadata(tube0_file,
                                                                             data_set = self.data_set)
 
         meta_channels['Index'] = meta_channels.index
@@ -328,14 +338,15 @@ class ImportOp(HasStrictTraits):
             experiment.metadata[channel]["fcs_name"] = channel
             
             # keep track of the channel's PMT voltage
-            if("$PnV" in meta_channels.loc[channel]):
+            if "$PnV" in meta_channels.loc[channel]:
                 v = meta_channels.loc[channel]['$PnV']
                 if v: experiment.metadata[channel]["voltage"] = v
                             
             # add the maximum possible value for this channel.
-            data_range = meta_channels.loc[channel]['$PnR']
-            data_range = float(data_range)
-            experiment.metadata[channel]['range'] = data_range
+            if "$PnR" in meta_channels.loc[channel]:
+                data_range = meta_channels.loc[channel]['$PnR']
+                data_range = float(data_range)
+                experiment.metadata[channel]['range'] = data_range
                 
                                 
         experiment.metadata['fcs_metadata'] = {}
@@ -404,7 +415,7 @@ class ImportOp(HasStrictTraits):
             # this catches an odd corner case where some instruments store
             # instrument-specific info in the "extra" bits.  we have to
             # clear them out.
-            if tube0_meta['$DATATYPE'] == 'I':
+            if '$DATATYPE'in tube0_meta.keys() and tube0_meta['$DATATYPE'] == 'I':
                 data_bits  = int(meta_channels.loc[channel]['$PnB'])
                 data_range = float(meta_channels.loc[channel]['$PnR'])
                 range_bits = int(math.ceil(math.log(data_range, 2)))
@@ -421,21 +432,22 @@ class ImportOp(HasStrictTraits):
                 
             # re-scale the data to linear if if's recorded as log-scaled with
             # integer channels
-            data_range = float(meta_channels.loc[channel]['$PnR'])
-            f1 = float(meta_channels.loc[channel]['$PnE'][0])
-            f2 = float(meta_channels.loc[channel]['$PnE'][1])
-            
-            if f1 > 0.0 and f2 == 0.0:
-                warnings.warn('Invalid $PnE = {},{} for channel {}, changing it to {},1.0'
-                              .format(f1, f2, channel, f1),
-                              util.CytoflowWarning)
-                f2 = 1.0
+            if '$PnE' in meta_channels.columns and '$PnR' in meta_channels.columns and '$DATATYPE' in tube0_meta.keys():
+                data_range = float(meta_channels.loc[channel]['$PnR'])
+                f1 = float(meta_channels.loc[channel]['$PnE'][0])
+                f2 = float(meta_channels.loc[channel]['$PnE'][1])
                 
-            if f1 > 0.0 and f2 > 0.0 and tube0_meta['$DATATYPE'] == 'I':
-                warnings.warn('Converting channel {} from logarithmic to linear'
-                              .format(channel),
-                              util.CytoflowWarning)
-                experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
+                if f1 > 0.0 and f2 == 0.0:
+                    warnings.warn('Invalid $PnE = {},{} for channel {}, changing it to {},1.0'
+                                .format(f1, f2, channel, f1),
+                                util.CytoflowWarning)
+                    f2 = 1.0
+                    
+                if f1 > 0.0 and f2 > 0.0 and tube0_meta['$DATATYPE'] == 'I':
+                    warnings.warn('Converting channel {} from logarithmic to linear'
+                                .format(channel),
+                                util.CytoflowWarning)
+                    experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
 
 
         # rename channels if necessary                     
@@ -584,7 +596,88 @@ def autodetect_name_metadata(filename, data_set = 0):
     
 
 # module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False):   
+def parse_tube(filename : str, experiment = None, data_set = 0, metadata_only = False):
+    """
+    Parses an FCS or CSV file containing fcm measurements.
+    
+    Parameters
+    ----------
+    filename : string
+        The file to parse.
+        
+    experiment : `Experiment` (optional, default: None)
+        If provided, check the tube's parameters against this experiment
+        first.
+        
+    data_set : int (optional, default: 0)
+        Which data set in the FCS file to parse? Only applies to FCS files.
+        
+    metadata_only : bool (optional, default: False)
+        If ``True``, only parse the metadata.  Because this is at the beginning
+        of the FCS file, this happens much faster than parsing the entire file.
+        
+    Returns
+    -------
+    tube_metadata : dict
+        The metadata from the FCS file (only channel names in case of CSV)
+        
+    tube_data : `pandas.DataFrame` 
+        The actual tabular data from the FCS or CSV file.  Each row is an event, and
+        each column is a channel.
+        
+    """
+
+    if filename.endswith(".fcs"):
+        return _parse_tube_fcs(filename, experiment, data_set, metadata_only)
+    elif filename.endswith(".csv"):
+        return _parse_tube_csv(filename, experiment, metadata_only)
+
+def _parse_tube_csv(filename, experiment = None, metadata_only = False):
+    """
+    Parses a CSV file containing fcm measurements.
+
+      Parameters
+    ----------
+    filename : string
+        The file to parse.
+        
+    experiment : `Experiment` (optional, default: None)
+        If provided, check the csv's channel names against this experiment
+        first.
+        
+    metadata_only : bool (optional, default: False)
+        If ``True``, only parse the metadata. (Only csv header)
+        
+    Returns
+    -------
+    tube_metadata : dict
+        The metadata from the FCS file (only channel names in case of CSV)
+        
+    tube_data : `pandas.DataFrame` 
+        The actual tabular data from the CSV file.  Each row is an event, and
+        each column is a channel.
+    """
+    
+    if metadata_only:
+        tube_data = pd.read_csv(filename, nrows = 1, index_col = 0)
+    else:
+        tube_data = pd.read_csv(filename, index_col = 0)
+    
+    tube_meta = {}
+    tube_meta["_channel_names_"] = tube_data.columns.tolist()
+    tube_meta["_channels_"] = pd.DataFrame(tube_data.columns.tolist(), columns=["$PnS"])
+
+    if experiment is not None:
+        if not set([experiment.metadata[c]["fcs_name"] for c in experiment.channels]) <= set(tube_meta["_channel_names_"]):
+            raise util.CytoflowError("Tube {0} doesn't have the same channels as the rest of the experiment"
+                                    .format(filename))
+    
+    if metadata_only:
+        return tube_meta, None
+    else:
+        return tube_meta, tube_data
+
+def _parse_tube_fcs(filename, experiment = None, data_set = 0, metadata_only = False):   
     """
     Parses an FCS file.  A thin wrapper over ``fcsparser.parse``.
     
@@ -647,5 +740,3 @@ def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False)
     del tube_meta['__header__']
             
     return tube_meta, tube_data
-
-
