@@ -616,7 +616,7 @@ class GaussianMixtureOp(HasStrictTraits):
         `IView`
             An `IView`, call `plot` to see the diagnostic plot.
         """
-        channels, scale = op_default_NDview_init(channels, scale, kwargs)
+        channels, scale = op_default_NDview_init(self.channels, self.scale, kwargs = kwargs)
         
         if len(channels) == 1:
             v = GaussianMixture1DView(op = self)

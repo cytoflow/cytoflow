@@ -35,6 +35,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 import cytoflow.utility as util
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 from .base_views import Base2DView
 
 @provides(IView)
@@ -119,15 +120,15 @@ class Histogram2DView(Base2DView):
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
         
-        lim = kwargs.pop('lim')
+        lim = try_get_kwarg(kwargs,'lim')
         xlim = lim[self.xchannel]
         ylim = lim[self.ychannel]
         
-        scale = kwargs.pop('scale')
+        scale = try_get_kwarg(kwargs,'scale')
         xscale = scale[self.xchannel]
         yscale = scale[self.ychannel]
         
-        gridsize = kwargs.pop('gridsize', 50)
+        gridsize = try_get_kwarg(kwargs,'gridsize', 50)
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
         ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
       
@@ -152,15 +153,15 @@ def _hist2d(x, y, xbins, ybins, legend_data, **kwargs):
 
     h, X, Y = np.histogram2d(x, y, bins=[xbins, ybins])
     
-    smoothed = kwargs.pop('smoothed', False)
-    smoothed_sigma = kwargs.pop('smoothed_sigma', 1)
+    smoothed = try_get_kwarg(kwargs,'smoothed', False)
+    smoothed_sigma = try_get_kwarg(kwargs,'smoothed_sigma', 1)
     
     if smoothed:
         h = gaussian_filter(h, sigma = smoothed_sigma)
 
     ax = plt.gca()
 
-    color = kwargs.pop("color")   
+    color = try_get_kwarg(kwargs,"color")   
     ax.pcolormesh(X, Y, h.T, cmap = AlphaColormap("AlphaColor", color), **kwargs)
     
     # Add legend data

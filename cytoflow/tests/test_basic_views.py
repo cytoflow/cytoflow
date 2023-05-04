@@ -30,6 +30,7 @@ import cytoflow as flow
 from .test_base import ImportedDataSmallTest
 
 
+
 class Test(ImportedDataSmallTest):
 
     def testBarChart(self):
@@ -163,6 +164,27 @@ class Test(ImportedDataSmallTest):
         flow.Stats2DView(xstatistic = ("StatsV", "mean"),
                          ystatistic = ("StatsY", "mean"),
                          variable = "Dox").plot(ex3)
+        
+    def testDefaultKWArgs_ChangeKWarg_AffectsPlot(self):
+        import matplotlib.pyplot as plt 
+
+        plt1 = flow.ScatterplotView(xchannel = "V2-A",
+                             ychannel = "Y2-A",
+                             xscale = "log",
+                             yscale = "log",
+                             huefacet = "Dox").plot(self.ex)
+        plot_height = plt.gcf().get_size_inches()[-1]
+
+        flow.DefaultKWArgs["height"] = 5
+
+        plt2 = flow.ScatterplotView(xchannel = "V2-A",
+                             ychannel = "Y2-A",
+                             huefacet = "Dox").plot(self.ex)
+        
+        plot_height2 = plt.gcf().get_size_inches()[-1]
+        
+        self.assertEqual(plot_height2, 5)
+        self.assertNotEqual(plot_height,plot_height2)
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'Test.testBarChart']

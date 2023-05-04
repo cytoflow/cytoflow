@@ -410,7 +410,7 @@ class KMeansOp(HasStrictTraits):
         -------
             IView : an IView, call `KMeans1DView.plot` to see the diagnostic plot.
         """
-        channels, scale = op_default_NDview_init(channels, scale, kwargs)
+        channels, scale = op_default_NDview_init(self.channels, self.scale, kwargs = kwargs)
         
         if len(channels) == 1:
             v = KMeans1DView(op = self)

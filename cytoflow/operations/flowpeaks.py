@@ -57,6 +57,7 @@ import pandas as pd
 import copy
 
 from cytoflow.views import IView, HistogramView, ScatterplotView
+from cytoflow.views import try_get_kwarg
 import cytoflow.utility as util
 
 from .i_operation import IOperation
@@ -810,9 +811,9 @@ class FlowPeaksOp(HasStrictTraits):
         `IView`
             an `IView`, call `plot` to see the diagnostic plot.
         """
-        density = kwargs.pop('density', False)
+        density = try_get_kwarg(kwargs,'density', False)
         
-        channels, scale = op_default_NDview_init(channels, scale, kwargs)
+        channels, scale = op_default_NDview_init(self.channels, self.scale, kwargs = kwargs)
 
         if len(channels) == 1:
             v = FlowPeaks1DView(op = self)
@@ -1082,17 +1083,17 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         # can't modify colormaps in place
         cmap = copy.copy(kwargs['cmap'])
         
-        under_color = kwargs.pop('under_color', None)
+        under_color = try_get_kwarg(kwargs,'under_color', None)
         if under_color is not None:
             cmap.set_under(color = under_color)
         else:
             cmap.set_under(color = cmap(0.0))
 
-        bad_color = kwargs.pop('bad_color', None)
+        bad_color = try_get_kwarg(kwargs,'bad_color', None)
         if bad_color is not None:
             cmap.set_bad(color = cmap(0.0))
         
-        gridsize = kwargs.pop('gridsize', 50)
+        gridsize = try_get_kwarg(kwargs,'gridsize', 50)
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
         ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
             
@@ -1123,18 +1124,18 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         kwargs = axes.fp_keywords
 
         # get rid of some kwargs that confuse pcolormesh
-        kwargs.pop('annotations', None)
-        kwargs.pop('annotation_facet', None)
-        kwargs.pop('plot_name', None)
+        try_get_kwarg(kwargs,'annotations', None)
+        try_get_kwarg(kwargs,'annotation_facet', None)
+        try_get_kwarg(kwargs,'plot_name', None)
         
         xscale = kwargs['scale'][self.xchannel]
         yscale = kwargs['scale'][self.ychannel]
         
-        kwargs.pop('scale')
-        kwargs.pop('lim')
+        try_get_kwarg(kwargs,'scale')
+        try_get_kwarg(kwargs,'lim')
         
-        smoothed = kwargs.pop('smoothed', False)
-        smoothed_sigma = kwargs.pop('smoothed_sigma', 1)
+        smoothed = try_get_kwarg(kwargs,'smoothed', False)
+        smoothed_sigma = try_get_kwarg(kwargs,'smoothed_sigma', 1)
 
         h = density(util.cartesian([xscale(xbins), yscale(ybins)]))
         h = np.reshape(h, (len(xbins), len(ybins)))
