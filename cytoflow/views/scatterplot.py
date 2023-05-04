@@ -34,6 +34,7 @@ import cytoflow.utility as util
 
 from .i_view import IView
 from .base_views import Base2DView
+from .view_kwargs import try_get_kwarg
 
 @provides(IView)
 class ScatterplotView(Base2DView):
@@ -109,11 +110,11 @@ class ScatterplotView(Base2DView):
         kwargs.setdefault('marker', 'o')
         kwargs.setdefault('antialiased', True)
         
-        lim = kwargs.pop('lim')
+        lim = try_get_kwarg(kwargs,'lim')
         xlim = lim[self.xchannel]
         ylim = lim[self.ychannel]
         
-        scale = kwargs.pop('scale')
+        scale = try_get_kwarg(kwargs,'scale')
         xscale = scale[self.xchannel]
         yscale = scale[self.ychannel]
 

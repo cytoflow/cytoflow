@@ -36,6 +36,7 @@ from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
 import cytoflow.utility as util
 
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 from .base_views import Base1DView
 
 @provides(IView)
@@ -133,8 +134,8 @@ class Kde1DView(Base1DView):
         kwargs.setdefault('shade', True)
         kwargs.setdefault('orientation', "vertical")
         
-        scale = kwargs.pop('scale')[self.channel]
-        lim = kwargs.pop('lim')[self.channel]
+        scale = try_get_kwarg(kwargs,'scale')[self.channel]
+        lim = try_get_kwarg(kwargs,'lim')[self.channel]
                   
         grid.map(_univariate_kdeplot, self.channel, scale = scale, **kwargs)
         
@@ -187,9 +188,9 @@ def _univariate_kdeplot(data, scale=None, shade=False, kernel="gaussian",
     y = np.exp(log_density)
 
     # Check if a label was specified in the call
-    label = kwargs.pop("label", None)
-    color = kwargs.pop("color", None)
-    alpha = kwargs.pop("alpha", 0.25)
+    label = try_get_kwarg(kwargs,"label", None)
+    color = try_get_kwarg(kwargs,"color", None)
+    alpha = try_get_kwarg(kwargs,"alpha", 0.25)
 
     # Draw the KDE plot and, optionally, shade
     if orientation == "vertical":

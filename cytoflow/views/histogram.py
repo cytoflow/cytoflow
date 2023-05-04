@@ -35,6 +35,7 @@ import bottleneck
 
 import cytoflow.utility as util
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 from .base_views import Base1DView
 
 @provides(IView)
@@ -131,11 +132,11 @@ class HistogramView(Base1DView):
 
         # estimate a "good" number of bins; see cytoflow.utility.num_hist_bins
         # for a reference.
-        scale = kwargs.pop('scale')[self.channel]
-        lim = kwargs.pop('lim')[self.channel]
+        scale = try_get_kwarg(kwargs,'scale')[self.channel]
+        lim = try_get_kwarg(kwargs,'lim')[self.channel]
         
         scaled_data = scale(experiment[self.channel])
-        num_bins = kwargs.pop('num_bins', util.num_hist_bins(scaled_data))
+        num_bins = try_get_kwarg(kwargs,'num_bins', util.num_hist_bins(scaled_data))
         num_bins = util.num_hist_bins(scaled_data) if num_bins is None else num_bins
         
         # clip num_bins to (100, 1000)

@@ -36,6 +36,7 @@ from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
 import cytoflow.utility as util
 
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 from .base_views import Base2DView
 
 @provides(IView)
@@ -124,11 +125,11 @@ class Kde2DView(Base2DView):
         kwargs.setdefault('max_alpha', 0.9)
         kwargs.setdefault('n_levels', 10)
         
-        lim = kwargs.pop('lim')
+        lim = try_get_kwarg(kwargs,'lim')
         xlim = lim[self.xchannel]
         ylim = lim[self.ychannel]
         
-        scale = kwargs.pop('scale')
+        scale = try_get_kwarg(kwargs,'scale')
         xscale = scale[self.xchannel]
         yscale = scale[self.ychannel]
 
@@ -158,7 +159,7 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
                        legend_data = None, **kwargs):
     
     ax = plt.gca()
-    label = kwargs.pop('label', None)
+    label = try_get_kwarg(kwargs,'label', None)
     
     # Determine the clipping
     clip = [(-np.inf, np.inf), (-np.inf, np.inf)]
@@ -196,15 +197,15 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
     z = z.reshape(xx.shape)
     z = np.exp(z)
 
-    n_levels = kwargs.pop("n_levels", 10)
-    color = kwargs.pop("color")
+    n_levels = try_get_kwarg(kwargs,"n_levels", 10)
+    color = try_get_kwarg(kwargs,"color")
     kwargs['colors'] = (color, )
     
-    min_alpha = kwargs.pop("min_alpha", 0.2)
+    min_alpha = try_get_kwarg(kwargs,"min_alpha", 0.2)
     if shade:
         min_alpha = 0
         
-    max_alpha = kwargs.pop("max_alpha", 0.9)
+    max_alpha = try_get_kwarg(kwargs,"max_alpha", 0.9)
     
     x_support = xscale.inverse(x_support)
     y_support = yscale.inverse(y_support)

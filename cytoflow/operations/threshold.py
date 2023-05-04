@@ -44,6 +44,7 @@ from cytoflow.views import ISelectionView, HistogramView
 
 from .i_operation import IOperation
 from .base_op_views import Op1DView
+from cytoflow.views import try_get_kwarg
 
 @provides(IOperation)
 class ThresholdOp(HasStrictTraits):
@@ -247,7 +248,7 @@ class ThresholdSelection(Op1DView, HistogramView):
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
         
-        self._line_props = kwargs.pop('line_props',
+        self._line_props = try_get_kwarg(kwargs,'line_props',
                                         {'color' : 'black',
                                          'linewidth' : 2})
 

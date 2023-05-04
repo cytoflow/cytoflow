@@ -38,6 +38,7 @@ from matplotlib.widgets import SpanSelector
 
 import cytoflow.utility as util
 from cytoflow.views import HistogramView, ISelectionView
+from cytoflow.views import try_get_kwarg
 
 from .i_operation import IOperation
 from .base_op_views import Op1DView
@@ -274,7 +275,7 @@ class RangeSelection(Op1DView, HistogramView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
             
-        self._line_props = kwargs.pop('line_props',
+        self._line_props = try_get_kwarg(kwargs,'line_props',
                                         {'color' : 'black',
                                          'linewidth' : 2})
 

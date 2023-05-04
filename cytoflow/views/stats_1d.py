@@ -34,6 +34,7 @@ import numpy as np
 
 import cytoflow.utility as util
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 from .base_views import Base1DStatisticsView
 
 @provides(IView)
@@ -175,8 +176,8 @@ class Stats1DView(Base1DStatisticsView):
     def _grid_plot(self, experiment, grid, **kwargs):
 
         data = grid.data
-        data_scale = kwargs.pop('scale')
-        variable_scale = kwargs.pop('variable_scale')
+        data_scale = try_get_kwarg(kwargs,'scale')
+        variable_scale = try_get_kwarg(kwargs,'variable_scale')
 
         stat = experiment.statistics[self.statistic]
         stat_name = stat.name
@@ -186,12 +187,12 @@ class Stats1DView(Base1DStatisticsView):
         else:
             err_stat = None
         
-        variable_lim = kwargs.pop("variable_lim", None)
+        variable_lim = try_get_kwarg(kwargs,"variable_lim", None)
         if variable_lim is None:
             variable_lim = (variable_scale.clip(data[self.variable].min() * 0.9),
                             variable_scale.clip(data[self.variable].max() * 1.1))
                       
-        lim = kwargs.pop("lim", None)
+        lim = try_get_kwarg(kwargs,"lim", None)
         if lim is None:
             lim = (data_scale.clip(data[stat_name].min() * 0.9),
                    data_scale.clip(data[stat_name].max() * 1.1))
@@ -205,10 +206,10 @@ class Stats1DView(Base1DStatisticsView):
                            data_scale.clip((data[stat_name].max() + data[err_stat_name].max()) * 1.1))
 
 
-        orientation = kwargs.pop('orientation', 'vertical')
-        capsize = kwargs.pop('capsize', None)
-        shade_error = kwargs.pop('shade_error', False)
-        shade_alpha = kwargs.pop('shade_alpha', 0.2)
+        orientation = try_get_kwarg(kwargs,'orientation', 'vertical')
+        capsize = try_get_kwarg(kwargs,'capsize', None)
+        shade_error = try_get_kwarg(kwargs,'shade_error', False)
+        shade_alpha = try_get_kwarg(kwargs,'shade_alpha', 0.2)
         
         if orientation == 'vertical':
             # plot the error bars first so the axis labels don't get overwritten

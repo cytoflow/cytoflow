@@ -24,6 +24,9 @@
 .project
 .pydevproject
 
+# Vscode bits
+/.vscode
+
 # logicle build bits
 Logicle_wrap.cpp
 _Logicle.cpython-34m.so

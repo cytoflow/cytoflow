@@ -39,7 +39,7 @@ import scipy.stats
 import scipy.ndimage.filters
 import pandas as pd
 
-from cytoflow.views import IView, DensityView
+from cytoflow.views import IView, DensityView, try_get_kwarg
 import cytoflow.utility as util
 
 from .i_operation import IOperation
@@ -473,7 +473,7 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
         
         """
         
-        contour_props = kwargs.pop('contour_props',
+        contour_props = try_get_kwarg(kwargs,'contour_props',
                                    {'colors' : 'w'})
         
         annotations = {}

@@ -25,6 +25,7 @@ Created on Feb 4, 2018
 import unittest
 import cytoflow as flow
 import pandas as pd
+import numpy as np
 from .test_base import ImportedDataSmallTest
 
 
@@ -66,6 +67,14 @@ class TestPCA(ImportedDataSmallTest):
 
         self.assertIn("PCA_1", ex2.channels)
         self.assertIn("PCA_2", ex2.channels)
+
+    def testApplyPCA_ApplyWithAndWithoutRescaling_EmbeddingDiffers(self):
+        self.op.estimate(self.ex)
+        ex1 = self.op.apply(self.ex)
+        self.op.rescale_data = False
+        self.op.estimate(self.ex)
+        ex2 = self.op.apply(self.ex)
+        self.assertFalse(np.all(ex1.data["PCA_1"] == ex2.data["PCA_1"]))
 
 
 if __name__ == "__main__":

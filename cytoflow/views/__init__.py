@@ -37,7 +37,7 @@ sns.set(context = "paper", style = "whitegrid",
 
 from .i_view import IView
 from .i_selectionview import ISelectionView
-
+from .view_kwargs import try_get_kwarg,  DefaultKWArgs
 from .base_views import Base1DView, Base2DView
 
 from .bar_chart import BarChartView

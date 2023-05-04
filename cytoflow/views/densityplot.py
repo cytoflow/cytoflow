@@ -35,6 +35,7 @@ import copy
 
 import cytoflow.utility as util
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 
 from .base_views import Base2DView
 
@@ -134,30 +135,30 @@ class DensityView(Base2DView):
         kwargs.setdefault('edgecolors', 'face')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
-        lim = kwargs.pop('lim')
+        lim = try_get_kwarg(kwargs,'lim')
         xlim = lim[self.xchannel]
         ylim = lim[self.ychannel]
         
-        scale = kwargs.pop('scale')
+        scale = try_get_kwarg(kwargs,'scale')
         xscale = scale[self.xchannel]
         yscale = scale[self.ychannel]
         
         # can't modify color maps in place!
         cmap = copy.copy(kwargs['cmap'])
         
-        under_color = kwargs.pop('under_color', None)
+        under_color = try_get_kwarg(kwargs,'under_color', None)
         if under_color is not None:
             cmap.set_under(color = under_color)
         else:
             cmap.set_under(cmap(0.0))
 
-        bad_color = kwargs.pop('bad_color', None)
+        bad_color = try_get_kwarg(kwargs,'bad_color', None)
         if bad_color is not None:
             cmap.set_bad(color = bad_color)
         else:
             cmap.set_bad(color = cmap(0.0))
             
-        gridsize = kwargs.pop('gridsize', 50)
+        gridsize = try_get_kwarg(kwargs,'gridsize', 50)
 
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
         ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
@@ -190,8 +191,8 @@ def _densityplot(x, y, xbins, ybins, **kwargs):
     
     h, X, Y = np.histogram2d(x, y, bins=[xbins, ybins])
     
-    smoothed = kwargs.pop('smoothed', False)
-    smoothed_sigma = kwargs.pop('smoothed_sigma', 1)
+    smoothed = try_get_kwarg(kwargs,'smoothed', False)
+    smoothed_sigma = try_get_kwarg(kwargs,'smoothed_sigma', 1)
     
     if smoothed:
         h = scipy.ndimage.filters.gaussian_filter(h, sigma = smoothed_sigma)

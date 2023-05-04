@@ -44,7 +44,7 @@ from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .base_op_views import By1DView, By2DView, AnnotatingView
+from .base_op_views import By1DView, By2DView, AnnotatingView, op_default_NDview_init
 
 @provides(IOperation)
 class KMeansOp(HasStrictTraits):
@@ -234,13 +234,7 @@ class KMeansOp(HasStrictTraits):
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
-        self._scale = {}
-        for c in self.channels:
-            if c in self.scale:
-                self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
-            else:
-                self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
-                    
+        self._scale = util.init_channel_scales(experiment, self.channels, self.scale)
                     
         kmeans = {}
         for group, data_subset in groupby:
@@ -416,29 +410,9 @@ class KMeansOp(HasStrictTraits):
         -------
             IView : an IView, call `KMeans1DView.plot` to see the diagnostic plot.
         """
-        channels = kwargs.pop('channels', self.channels)
-        scale = kwargs.pop('scale', self.scale)
+        channels, scale = op_default_NDview_init(self.channels, self.scale, kwargs = kwargs)
         
-        for c in channels:
-            if c not in self.channels:
-                raise util.CytoflowViewError('channels',
-                                             "Channel {} isn't in the operation's channels"
-                                             .format(c))
-                
-        for s in scale:
-            if s not in self.channels:
-                raise util.CytoflowViewError('scale',
-                                             "Channel {} isn't in the operation's channels"
-                                             .format(s))
-
-        for c in channels:
-            if c not in scale:
-                scale[c] = util.get_default_scale()
-            
-        if len(channels) == 0:
-            raise util.CytoflowViewError('channels',
-                                         "Must specify at least one channel for a default view")
-        elif len(channels) == 1:
+        if len(channels) == 1:
             v = KMeans1DView(op = self)
             v.trait_set(channel = channels[0], 
                         scale = scale[channels[0]], 

@@ -44,6 +44,7 @@ import pandas as pd
 
 import cytoflow.utility as util
 from cytoflow.views import ISelectionView, ScatterplotView, DensityView
+from cytoflow.views import try_get_kwarg
 
 from .i_operation import IOperation
 from .base_op_views import Op2DView
@@ -269,7 +270,7 @@ class QuadOp(HasStrictTraits):
             If `True`, return a density plot instead of a scatterplot.
         """ 
         
-        density = kwargs.pop('density', False)
+        density = try_get_kwarg(kwargs,'density', False)
         if density:
             self._selection_view = DensityQuadSelectionView(op = self)
         else:
@@ -300,7 +301,7 @@ class _QuadSelection(Op2DView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
             
-        self._line_props = kwargs.pop('line_props',
+        self._line_props = try_get_kwarg(kwargs,'line_props',
                                        {'color' : 'black',
                                         'linewidth' : 2})
         

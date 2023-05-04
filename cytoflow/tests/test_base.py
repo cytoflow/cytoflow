@@ -105,6 +105,16 @@ class ImportedDataSmallTest(ClosePlotsWhenDoneTest):
                                   tubes=[tube1, tube2])
         self.ex = import_op.apply()
 
+class ImportedDataSingleTubeSmallTest(ClosePlotsWhenDoneTest):
+    def setUp(self):
+        """Run once per test at the beginning"""
+        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
+        tube1 = flow.Tube(file=self.cwd + "YFP_Well_C7.fcs",
+                          conditions={"Dox": 1.0, "Well": "B"})
+        import_op = flow.ImportOp(conditions={"Dox": "float", "Well": "category"},
+                                  tubes=[tube1])
+        self.ex = import_op.apply()
+
 
 class TasbeTest(ClosePlotsWhenDoneTest):
     

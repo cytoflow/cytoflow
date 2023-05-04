@@ -35,6 +35,7 @@ import pandas as pd
 
 import cytoflow.utility as util
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 from .base_views import Base1DStatisticsView
 
 @provides(IView)
@@ -137,16 +138,16 @@ class BarChartView(Base1DStatisticsView):
                  
         # because the bottom of a bar chart is "0", masking out bad
         # values on a log scale doesn't work.  we must clip instead.
-        orientation = kwargs.pop('orientation', 'vertical')
+        orientation = try_get_kwarg(kwargs,'orientation', 'vertical')
         
         # statistic scale
-        scale = kwargs.pop('scale')
+        scale = try_get_kwarg(kwargs,'scale')
         
         if scale.name == "log":
             scale.mode = "clip"
             
         # limits
-        lim = kwargs.pop('lim', None)
+        lim = try_get_kwarg(kwargs,'lim', None)
                       
         stat = experiment.statistics[self.statistic]
         if orientation == 'vertical':
@@ -189,21 +190,21 @@ def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
     categories = data[view.variable].unique()
  
     # plot the bars
-    width = kwargs.pop('width', 0.8)
-    ax = kwargs.pop('ax', None)
+    width = try_get_kwarg(kwargs,'width', 0.8)
+    ax = try_get_kwarg(kwargs,'ax', None)
 
     if ax is None:
         ax = plt.gca()
     
     err_kws = {}
-    errwidth = kwargs.pop('errwidth', None)
+    errwidth = try_get_kwarg(kwargs,'errwidth', None)
     if errwidth:
         err_kws['lw'] = errwidth
     else:
         err_kws['lw'] = mpl.rcParams["lines.linewidth"]
          
-    errcolor = kwargs.pop('errcolor', '0.2')
-    capsize = kwargs.pop('capsize', None)
+    errcolor = try_get_kwarg(kwargs,'errcolor', '0.2')
+    capsize = try_get_kwarg(kwargs,'capsize', None)
 
     # Get the right matplotlib function depending on the orientation
     barfunc = ax.bar if orientation == "vertical" else ax.barh
