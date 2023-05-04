@@ -109,6 +109,7 @@ from .views.radviz import RadvizView
 from .views.parallel_coords import ParallelCoordinatesView
 
 from .views.export_fcs import ExportFCS
+from .views.view_kwargs import DefaultKWArgs
 
 # util
 from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,

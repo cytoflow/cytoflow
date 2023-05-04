@@ -37,6 +37,7 @@ import numpy as np
 
 import cytoflow.utility as util
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 
 from .base_views import BaseNDView
 
@@ -150,8 +151,8 @@ class RadvizView(BaseNDView):
         # plane onto which we are projecting.  the kwargs 'scale' and 'lim'
         # are the data scale and limits, respectively
         
-        scale = kwargs.pop('scale')
-        lim = kwargs.pop('lim')
+        scale = try_get_kwarg(kwargs,'scale')
+        lim = try_get_kwarg(kwargs,'lim')
         
         # optimize anchor order
         df = pd.DataFrame()
@@ -223,7 +224,7 @@ class RadvizView(BaseNDView):
     
 def _radviz_plot(*channels, ax_annotations, scale, lim, order, **kwargs):
 
-    color = kwargs.pop('color')
+    color = try_get_kwarg(kwargs,'color')
     
     df = pd.DataFrame()
     for c in channels:

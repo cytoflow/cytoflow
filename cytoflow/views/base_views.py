@@ -57,6 +57,7 @@ of a statistic.  See `BarChartView` for an example.
 of a statistic.  See `Stats2DView` for an example.
 """
 
+
 from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -69,6 +70,7 @@ from warnings import warn
 
 import cytoflow
 import cytoflow.utility as util
+from .view_kwargs import try_get_kwarg
 from .i_view import IView
 
 class BaseView(HasStrictTraits):
@@ -191,7 +193,7 @@ class BaseView(HasStrictTraits):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
 
-        col_wrap = kwargs.pop('col_wrap', None)
+        col_wrap = try_get_kwarg(kwargs,'col_wrap', None)
         
         if col_wrap is not None and self.yfacet:
             raise util.CytoflowViewError('yfacet',
@@ -205,43 +207,43 @@ class BaseView(HasStrictTraits):
             raise util.CytoflowViewError(None,
                                          "col_wrap must be None or > 1")
         
-        title = kwargs.pop("title", None)
-        xlabel = kwargs.pop("xlabel", None)       
-        ylabel = kwargs.pop("ylabel", None)
-        huelabel = kwargs.pop("huelabel", self.huefacet)
+        title = try_get_kwarg(kwargs,"title", None)
+        xlabel = try_get_kwarg(kwargs,"xlabel", None)       
+        ylabel = try_get_kwarg(kwargs,"ylabel", None)
+        huelabel = try_get_kwarg(kwargs,"huelabel", self.huefacet)
         if huelabel == "": huelabel = self.huefacet
         
-        sharex = kwargs.pop("sharex", True)
-        sharey = kwargs.pop("sharey", True)
+        sharex = try_get_kwarg(kwargs,"sharex", True)
+        sharey = try_get_kwarg(kwargs,"sharey", True)
         
-        height = kwargs.pop("height", 3)
-        aspect = kwargs.pop("aspect", 1.5)
+        height = try_get_kwarg(kwargs,"height", 3)
+        aspect = try_get_kwarg(kwargs,"aspect", 1.5)
         
-        legend = kwargs.pop('legend', True)
+        legend = try_get_kwarg(kwargs,'legend', True)
 
-        despine = kwargs.pop('despine', False)
-        palette = kwargs.pop('palette', None)
+        despine = try_get_kwarg(kwargs,'despine', False)
+        palette = try_get_kwarg(kwargs,'palette', None)
                
         if cytoflow.RUNNING_IN_GUI:
-            sns_style = kwargs.pop('sns_style', 'whitegrid')
-            sns_context = kwargs.pop('sns_context', 'talk')
+            sns_style = try_get_kwarg(kwargs,'sns_style', 'whitegrid')
+            sns_context = try_get_kwarg(kwargs,'sns_context', 'talk')
             sns.set_style(sns_style, rc = {"xtick.bottom": True, "ytick.left": True})
             sns.set_context(sns_context)
         else:
             if 'sns_style' in kwargs:
-                kwargs.pop('sns_style')
+                try_get_kwarg(kwargs,'sns_style')
                 warn("'sns_style' is ignored when not running in the GUI",
                      util.CytoflowViewWarning)
                 
             if 'sns_context' in kwargs:
-                kwargs.pop('sns_context')
+                try_get_kwarg(kwargs,'sns_context')
                 warn("'sns_context' is ignored when not running in the GUI",
                      util.CytoflowViewWarning)
                 
             
-        col_order = kwargs.pop("col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else None))
-        row_order = kwargs.pop("row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else None))
-        hue_order = kwargs.pop("hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet else None))
+        col_order = try_get_kwarg(kwargs,"col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else None))
+        row_order = try_get_kwarg(kwargs,"row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else None))
+        hue_order = try_get_kwarg(kwargs,"hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet else None))
         g = sns.FacetGrid(data, 
                           height = height,
                           aspect = aspect,
@@ -262,10 +264,10 @@ class BaseView(HasStrictTraits):
         
         kwargs.update(plot_ret)
         
-        xscale = kwargs.pop("xscale", None)
-        yscale = kwargs.pop("yscale", None)
-        xlim = kwargs.pop("xlim", None)
-        ylim = kwargs.pop("ylim", None)
+        xscale = try_get_kwarg(kwargs,"xscale", None)
+        yscale = try_get_kwarg(kwargs,"yscale", None)
+        xlim = try_get_kwarg(kwargs,"xlim", None)
+        ylim = try_get_kwarg(kwargs,"ylim", None)
         
         for ax in g.axes.flatten():
             if xscale:
@@ -309,9 +311,9 @@ class BaseView(HasStrictTraits):
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
 
-        cmap = kwargs.pop('cmap', None)
-        norm = kwargs.pop('norm', None)
-        legend_data = kwargs.pop('legend_data', None)
+        cmap = try_get_kwarg(kwargs,'cmap', None)
+        norm = try_get_kwarg(kwargs,'norm', None)
+        legend_data = try_get_kwarg(kwargs,'legend_data', None)
         
         if legend:
             if cmap and norm:
@@ -424,8 +426,8 @@ class BaseDataView(BaseView):
                                          .format(self.huefacet))
             
         # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
+        min_quantile = try_get_kwarg(kwargs,"min_quantile", 0.001)
+        max_quantile = try_get_kwarg(kwargs,"max_quantile", 1.0) 
          
         if min_quantile < 0.0 or min_quantile > 1:
             raise util.CytoflowViewError('min_quantile',
@@ -533,11 +535,11 @@ class Base1DView(BaseDataView):
                                          .format(self.channel))
         
         # get the scale
-        scale = kwargs.pop('scale', None)
+        scale = try_get_kwarg(kwargs,'scale', None)
         if scale is None:
             scale = util.scale_factory(self.scale, experiment, channel = self.channel)
 
-        lim = kwargs.pop("lim", None)
+        lim = try_get_kwarg(kwargs,"lim", None)
 
         super().plot(experiment,
                      lim = {self.channel : lim},
@@ -603,16 +605,16 @@ class Base2DView(BaseDataView):
                                     .format(self.ychannel))
         
         # get the scale
-        xscale = kwargs.pop('xscale', None)
+        xscale = try_get_kwarg(kwargs,'xscale', None)
         if xscale is None:
             xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
 
-        yscale = kwargs.pop('yscale', None)
+        yscale = try_get_kwarg(kwargs,'yscale', None)
         if yscale is None:
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
             
-        xlim = kwargs.pop('xlim', None)
-        ylim = kwargs.pop('ylim', None)
+        xlim = try_get_kwarg(kwargs,'xlim', None)
+        ylim = try_get_kwarg(kwargs,'ylim', None)
 
         super().plot(experiment, 
                      lim = {self.xchannel : xlim,
@@ -675,7 +677,7 @@ class BaseNDView(BaseDataView):
         # get the scale
         scale = util.init_channel_scales(experiment, self.channels, self.scale)
 
-        lim = kwargs.pop("lim", {})
+        lim = try_get_kwarg(kwargs,"lim", {})
         for c in self.channels:
             if c not in lim:
                 lim[c] = None

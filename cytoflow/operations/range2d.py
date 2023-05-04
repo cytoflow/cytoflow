@@ -44,6 +44,7 @@ from matplotlib.patches import Rectangle
 
 import cytoflow.utility as util
 from cytoflow.views import ScatterplotView, DensityView, ISelectionView
+from cytoflow.views import try_get_kwarg
 
 from .i_operation import IOperation
 from .base_op_views import Op2DView
@@ -273,7 +274,7 @@ class Range2DOp(HasStrictTraits):
             If `True`, return a density plot instead of a scatterplot.
         """ 
        
-        density = kwargs.pop('density', False)
+        density = try_get_kwarg(kwargs,'density', False)
 
         if density:
             self._selection_view = DensityRangeSelection2DView(op = self)
@@ -319,7 +320,7 @@ class _RangeSelection2D(Op2DView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
             
-        self._patch_props = kwargs.pop('patch_props',
+        self._patch_props = try_get_kwarg(kwargs,'patch_props',
                                         {'edgecolor' : 'black',
                                          'linewidth' : 2,
                                          'fill' : False})

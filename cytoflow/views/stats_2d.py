@@ -35,6 +35,7 @@ import matplotlib as mpl
 import cytoflow.utility as util
 
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 from .base_views import Base2DStatisticsView
 
 @provides(IView)
@@ -158,12 +159,12 @@ class Stats2DView(Base2DStatisticsView):
         else:
             y_error_stat = None
             
-        xscale = kwargs.pop('xscale')
-        yscale = kwargs.pop('yscale')
+        xscale = try_get_kwarg(kwargs,'xscale')
+        yscale = try_get_kwarg(kwargs,'yscale')
         
-        capsize = kwargs.pop('capsize', None)
+        capsize = try_get_kwarg(kwargs,'capsize', None)
         
-        xlim = kwargs.pop("xlim", None)
+        xlim = try_get_kwarg(kwargs,"xlim", None)
         if xlim is None:
             xlim = (xscale.clip(data[xname].min() * 0.9),
                     xscale.clip(data[xname].max() * 1.1))
@@ -176,7 +177,7 @@ class Stats2DView(Base2DStatisticsView):
                     xlim = (xscale.clip((data[xname].min() - data[x_error_name].min()) * 0.9), 
                             xscale.clip((data[xname].max() + data[x_error_name].max()) * 1.1))
                       
-        ylim = kwargs.pop("ylim", None)
+        ylim = try_get_kwarg(kwargs,"ylim", None)
         if ylim is None:
             ylim = (yscale.clip(data[yname].min() * 0.9),
                     yscale.clip(data[yname].max() * 1.1))

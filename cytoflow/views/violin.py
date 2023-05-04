@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import cytoflow.utility as util
 from .i_view import IView
 from .base_views import Base1DView
+from .view_kwargs import try_get_kwarg
 
 @provides(IView)
 class ViolinPlotView(Base1DView):
@@ -140,8 +141,8 @@ class ViolinPlotView(Base1DView):
 
         kwargs.setdefault('orientation', 'vertical')
         
-        scale = kwargs.pop('scale')[self.channel]
-        lim = kwargs.pop('lim')[self.channel]
+        scale = try_get_kwarg(kwargs,'scale')[self.channel]
+        lim = try_get_kwarg(kwargs,'lim')[self.channel]
                 
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in grid.axes.flatten():

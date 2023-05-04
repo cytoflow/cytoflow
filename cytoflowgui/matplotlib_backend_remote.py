@@ -51,6 +51,7 @@ import threading, logging, sys, traceback
 
 import matplotlib.pyplot
 from matplotlib.figure import Figure
+from cytoflow.views import try_get_kwarg
 
 #from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -192,8 +193,8 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                         with self.plot_lock:
                             old_size = self.figure.get_size_inches()
                             
-                            width = kwargs.pop('width')
-                            height = kwargs.pop('height')
+                            width = try_get_kwarg(kwargs,'width')
+                            height = try_get_kwarg(kwargs,'height')
                             self.figure.set_size_inches(width, height)
 
                             FigureCanvasAgg.print_figure(self, *args, **kwargs)
@@ -307,16 +308,16 @@ def new_figure_manager(num, *args, **kwargs):
     logger.debug("mpl_multiprocess_backend.new_figure_manager()")
     
     # get the pipe connection
-    parent_conn = kwargs.pop('parent_conn')
+    parent_conn = try_get_kwarg(kwargs,'parent_conn')
 
     # and the threading.Event for turning events on and off
-    process_events = kwargs.pop('process_events')
+    process_events = try_get_kwarg(kwargs,'process_events')
     
     # and the plot lock
-    plot_lock = kwargs.pop('plot_lock')
+    plot_lock = try_get_kwarg(kwargs,'plot_lock')
 
     # make a new figure
-    FigureClass = kwargs.pop('FigureClass', Figure)
+    FigureClass = try_get_kwarg(kwargs,'FigureClass', Figure)
     new_fig = FigureClass(*args, **kwargs)
  
     with singleton_lock:

@@ -246,7 +246,10 @@ class UMAPOp(BaseDimensionalityReductionOp):
             raise util.CytoflowViewError("UMAP view is only supports 2D and 3D projections.")
 
         if self.num_components == 2:
-            v = UMAP2DView(op = self, huefacet = huefacet)
+            if huefacet is not None:
+                v = UMAP2DView(op = self, huefacet = huefacet)
+            else:
+                v = UMAP2DView(op = self)
             v.trait_set(
                 xchannel = self.name + "_1",
                 ychannel = self.name + "_2",
@@ -256,7 +259,6 @@ class UMAPOp(BaseDimensionalityReductionOp):
             raise NotImplementedError()
 
         return v
-        # flow.ScatterplotView(xchannel = "UMAP_1", ychannel = "UMAP_2", huefacet = "human_gt")
 
 @provides(IView)
 class UMAP2DView(Op2DView, AnnotatingView, ScatterplotView):

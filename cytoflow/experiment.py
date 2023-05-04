@@ -571,7 +571,7 @@ class Experiment(HasStrictTraits):
                 self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
                 new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)
                 
-        self.data = pd.concat([self.data, new_data], ignore_index=True, sort = True)
+        self.data = pd.concat([self.data, new_data], ignore_index=True, sort = False)
         del new_data
         
         # update the metadata 'values'
