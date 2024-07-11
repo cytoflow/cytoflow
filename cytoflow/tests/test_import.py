@@ -92,6 +92,7 @@ class TestImport(unittest.TestCase):
                  'iCyt - Eclipse.lmd',
                  'Millipore - Guava.fcs',
                  'Miltenyi Biotec - MACSQuant Analyzer.fcs',
+                 'Partec - CyFlow v2.9.fcs',
                  'Partec - PAS.FCS',
                  'Stratedigm - S1400.fcs',
                  'System II listmode with extra info in bits D10-D15.LMD']
