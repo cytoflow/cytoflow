@@ -19,7 +19,6 @@ python-dateutil==2.8.2
 importlib_resources==5.2.0
 
 # qt, pyqt are not in pip - install through your package manager
-pyopengl==3.1.1a1
 
 # in the `cytoflow` conda channel
 camel==0.1.2

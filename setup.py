@@ -75,7 +75,6 @@ setup(
                         
                         # pyqt, qt are not in pip
                         # need to install through your package manager
-                        'pyopengl==3.1.1a1', 
 
                         'camel==0.1.2',
                         'yapf==0.30.0'],

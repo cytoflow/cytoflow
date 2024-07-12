@@ -24,9 +24,9 @@ dependencies:
     - python-dateutil==2.8.2
     - importlib_resources==5.2.0
 
-    - pyqt==5.9.2
-    - qt==5.9.7
-    - pyopengl==3.1.1a1
+    - qt==5.15.9
+    - pyqt==5.15.10
+    - pyqtwebengine==5.15.10 
 
     - camel==0.1.2
     - yapf==0.30.0
