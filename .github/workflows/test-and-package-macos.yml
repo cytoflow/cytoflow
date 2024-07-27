@@ -20,7 +20,7 @@ jobs:
       
   test-on-macos:
     name: Run nose2 on MacOS runner
-    runs-on: macos-10.15
+    runs-on: macos-13
     defaults:
       run:
         shell: bash -l {0}

@@ -19,7 +19,7 @@ on: [push]
 jobs:     
   test-on-windows:
     name: Run nose2 on Windows runner
-    runs-on: windows-2019
+    runs-on: windows-2022
     defaults:
       run:
         shell: bash -l {0}        

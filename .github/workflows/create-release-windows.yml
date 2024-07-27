@@ -22,7 +22,7 @@ on:
 jobs:     
   build-windows-conda-package:
     name: Build windows conda package
-    runs-on: windows-2019
+    runs-on: windows-2022
     defaults:
       run:
         shell: bash -l {0}

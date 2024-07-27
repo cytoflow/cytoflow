@@ -14,14 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-name: Release a new package (MacOS)
-on:
-  repository_dispatch:
-    types: [builds]
+name: Test and package on MacOS
+on: [push]
 jobs:
-  build-macos-conda-package:
-    name: Build and upload MacOS conda package
-    runs-on: macos-13
+      
+  test-on-macos:
+    name: Run nose2 on MacOS runner
+    runs-on: macos-13-xlarge
     defaults:
       run:
         shell: bash -l {0}
@@ -29,25 +28,59 @@ jobs:
     - name: Check out repo
       uses: actions/checkout@v2
       with:
-        ref: ${{ github.event.client_payload.ref }}
-        fetch-depth: 0
-        submodules: true
-        
-    - name: Query git tag
-      id: tag
-      run: echo "::set-output name=tag::$(git describe --tags)"
-       
-    - name: Show Tag
-      id: display
-      run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        submodules: true  
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
+         
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2
+    
+    - name: Install package locally
+      run: |
+        python setup.py build_ext --inplace
+        
+    - name: Install nose2
+      run: |
+        pip install nose2
+        
+    - name: Run cytoflow tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        nose2 -v -c package/nose2.cfg cytoflow.tests
 
+#     - name: Run cytoflowgui tests
+#       env:
+#         OMP_NUM_THREADS: 1
+#       run: |
+#         nose2 -v -c package/nose2.cfg cytoflowgui.tests -GUI        
+
+    
+  build-macos-conda-package:
+    name: Build MacOS conda package
+    runs-on: macos-10.15
+    needs: test-on-macos
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+         
     - name: Configure conda
       run: |
         conda install --yes --quiet swig==4.0.2 anaconda-client conda-build
@@ -62,37 +95,23 @@ jobs:
         mkdir dist
         python package/move_conda_package.py
         
+    - name: Copy environment.yml into the dist folder
+      run: |
+        cp environment.yml dist/
+        
     - name: List dist
       run: ls dist/
       
-    - name: Get file names
-      id: get_filenames
-      run: |
-        cd dist
-        echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
-
-    - name: Show file name
-      run: |
-        echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
-         
-    - name: Upload the conda package to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
       with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
-        asset_name: cytoflow-conda-${{ steps.tag.outputs.tag }}-macos.tar.bz2
-        asset_content_type: application/x-bzip2
-         
-    - name: Upload the conda package to anaconda.org
-      run: |
-        anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-        anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
-        anaconda logout
+        name: macos-conda-package
+        retention-days: 1
+        path: dist/*
 
   build-macos-wheels:
-    name: Build MacOS wheel, extension
+    name: Build MacOS wheels
+    needs: test-on-macos
     runs-on: macos-10.15
     defaults:
       run:
@@ -101,7 +120,6 @@ jobs:
     - name: Check out repo
       uses: actions/checkout@v2  
       with:
-        ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
       
@@ -130,36 +148,16 @@ jobs:
     - name: List dist
       run: ls dist/
       
-    - name: Get file names
-      id: get_filenames
-      run: |
-        cd dist
-        echo "::set-output name=extension::$(ls _Logicle*.so)"
-        echo "::set-output name=wheel::$(ls cytoflow*.whl)"
-
-    - name: Upload the MacOS extension to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
       with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.extension }}
-        asset_name: ${{ steps.get_filenames.outputs.extension }}
-        asset_content_type: application/x-sharedlib
- 
-    - name: Upload the MacOS wheel to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.wheel }}
-        asset_name: ${{ steps.get_filenames.outputs.wheel }}
-        asset_content_type: application/zip       
- 
+        name: macos-wheels
+        retention-days: 1
+        path: dist/*   
         
   build-macos-oneclick:
     name: Build macos one-click
+    needs: test-on-macos
     runs-on: macos-10.15
     defaults:
       run:
@@ -168,7 +166,6 @@ jobs:
     - name: Check out repo
       uses: actions/checkout@v2  
       with:
-        ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
         
@@ -186,7 +183,7 @@ jobs:
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
-         
+        
     - name: Configure conda
       run: |
         conda install --yes --quiet swig==4.0.2
@@ -215,18 +212,15 @@ jobs:
       run: |
         cd dist/
         mv Cytoflow.app Cytoflow-${{steps.tag.outputs.tag}}.app
-        zip -r cytoflow-gui-${{steps.tag.outputs.tag}}.macos.zip Cytoflow-${{steps.tag.outputs.tag}}.app/
+        zip -r cytoflow-${{steps.tag.outputs.tag}}.macos.zip Cytoflow-${{steps.tag.outputs.tag}}.app/
         rm -rf Cytoflow-${{steps.tag.outputs.tag}}.app cytoflow
         
     - name: List dist
       run: ls dist/
       
-    - name: Upload the point-and-click tarball to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
       with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${{steps.tag.outputs.tag}}.macos.zip
-        asset_name: cytoflow-gui-${{steps.tag.outputs.tag}}.macos.zip
-        asset_content_type: application/zip
+        name: macos-oneclick
+        retention-days: 1
+        path: dist/*

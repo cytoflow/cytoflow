@@ -19,7 +19,7 @@ on: [push]
 jobs:
   check-environment:
     name: Make sure environment.yml and meta.yaml are the same
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     
     - name: Check out repo
