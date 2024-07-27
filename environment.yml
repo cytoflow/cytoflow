@@ -3,7 +3,7 @@ channels:
  - cytoflow
  
 dependencies:
-    - python==3.8.12
+    - python==3.8
     - numpy==1.21.2
     - pandas==1.3.5
     - matplotlib==3.5.0
