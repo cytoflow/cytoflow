@@ -26,12 +26,12 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: true  
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
@@ -70,13 +70,13 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
@@ -118,13 +118,13 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4  
       with:
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
@@ -164,7 +164,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4  
       with:
         fetch-depth: 0
         submodules: true
@@ -179,7 +179,7 @@ jobs:
         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cytoflow
         environment-file: environment.yml

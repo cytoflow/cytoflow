@@ -28,7 +28,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -48,7 +48,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
@@ -105,7 +105,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -116,7 +116,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
@@ -179,7 +179,7 @@ jobs:
         shell: bash -l {0}
     steps:        
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -202,7 +202,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
