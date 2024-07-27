@@ -20,7 +20,7 @@ jobs:
       
   test-on-macos:
     name: Run nose2 on MacOS runner
-    runs-on: macos-13
+    runs-on: macos-14
     defaults:
       run:
         shell: bash -l {0}
@@ -63,7 +63,7 @@ jobs:
     
   build-macos-conda-package:
     name: Build MacOS conda package
-    runs-on: macos-10.15
+    runs-on: macos-14
     needs: test-on-macos
     defaults:
       run:
@@ -112,7 +112,7 @@ jobs:
   build-macos-wheels:
     name: Build MacOS wheels
     needs: test-on-macos
-    runs-on: macos-10.15
+    runs-on: macos-14
     defaults:
       run:
         shell: bash -l {0}
@@ -158,7 +158,7 @@ jobs:
   build-macos-oneclick:
     name: Build macos one-click
     needs: test-on-macos
-    runs-on: macos-10.15
+    runs-on: macos-14
     defaults:
       run:
         shell: bash -l {0}

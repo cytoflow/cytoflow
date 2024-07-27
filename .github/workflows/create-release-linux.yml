@@ -94,7 +94,7 @@ jobs:
        
   build-linux-wheels:
     name: Build and upload source dist, linux wheels
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash -l {0}
@@ -175,7 +175,7 @@ jobs:
         
   build-linux-oneclick:
     name: Build linux one-click
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash -l {0}
@@ -250,7 +250,7 @@ jobs:
         
   build-examples:
     name: Zip up examples
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Show client payload
       run: |
