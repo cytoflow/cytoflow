@@ -52,30 +52,29 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['numpy==1.21.2',
-                        'pandas==1.3.5',
-                        'matplotlib==3.5.0',
-                        'bottleneck==1.3.2',
-                        'numexpr==2.8.1',
-                        'scipy==1.7.3',
-                        'scikit-learn==1.0.1',
-                        'seaborn==0.11.2',
-                        'statsmodels==0.13.0',
+    install_requires = ['numpy==1.26.4',
+                        'pandas==2.2.2',
+                        'matplotlib==3.8.4',
+                        'bottleneck==1.3.7',
+                        'numexpr==2.8.7',
+                        'scipy==1.13.1',
+                        'scikit-learn==1.5.1',
+                        'seaborn==0.13.2',
+                        'statsmodels==0.14.2',
                         'natsort==7.1.1',
-                        'numba==0.53.1',
+                        'numba==0.60.0',
                         
                         'traits==6.2.0',
                         'traitsui==7.2.1',
                         'pyface==7.3.0',
                         'envisage==6.0.1',
-                        'nbformat==5.1.3',
-                        'python-dateutil==2.8.2',
-                        'importlib_resources==5.2.0',
+                        'nbformat==5.9.2',
+                        'python-dateutil==2.9.0post0',
+                        'importlib_resources==6.4.0',
 
                         
                         # pyqt, qt are not in pip
                         # need to install through your package manager
-                        'pyopengl==3.1.1a1', 
 
                         'camel==0.1.2',
                         'yapf==0.30.0'],
