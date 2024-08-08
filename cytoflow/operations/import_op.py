@@ -545,43 +545,41 @@ def autodetect_name_metadata(filename, data_set = 0):
             warnings.simplefilter("ignore")
             metadata = fcsparser.parse(filename,
                                        data_set = data_set,
-                                       meta_data_only = True,
-                                       reformat_meta = True)
+                                       meta_data_only = True)
     except Exception as e:
         warnings.warn("Trouble getting metadata from {}: {}".format(filename, str(e)),
                       util.CytoflowWarning)
         return '$PnS'
+
+    num_par = metadata["$PAR"]
+
+    try:
+        PnS = [metadata["$P{0}S".format(c)].rstrip() for c in range(1, num_par)]
+    except KeyError:
+        # if there aren't a complete set of $PnS keys, go with $PnN. sometimes not all 
+        # channels have $PnS -- but to be compliant with the spec, they should all have
+        # $PnN
+        return "$PnN"  
     
-    meta_channels = metadata["_channels_"]
+    try:
+        PnN = [metadata["$P{0}N".format(c)].rstrip() for c in range(1, num_par)]   
+    except KeyError:
+        # if there aren't a complete set of $PnN keys, go with $PnS. because sometimes 
+        # FCS files aren't spec-compliant.
+        return "$PnS"
     
-    if "$PnN" in meta_channels and not "$PnS" in meta_channels:
-        name_metadata = "$PnN"
-    elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
-        name_metadata = "$PnS"
+    # sometimes one is unique and the other isn't
+    if (len(set(PnN)) == len(PnN) and 
+        len(set(PnS)) != len(PnS)):
+        return "$PnN"
+    elif (len(set(PnN)) != len(PnN) and 
+          len(set(PnS)) == len(PnS)):
+        return "$PnS"
     else:
-        PnN = meta_channels["$PnN"]
-        PnS = meta_channels["$PnS"]
-        
-        # sometimes not all of the channels have a $PnS.  all the channels must 
-        # have a $PnN to be compliant with the spec
-        if None in PnS:
-            name_metadata = "$PnN"
-        
-        # sometimes one is unique and the other isn't
-        if (len(set(PnN)) == len(PnN) and 
-            len(set(PnS)) != len(PnS)):
-            name_metadata = "$PnN"
-        elif (len(set(PnN)) != len(PnN) and 
-              len(set(PnS)) == len(PnS)):
-            name_metadata = "$PnS"
-        else:
-            # as per fcsparser.api, $PnN is the "short name" (like FL-1)
-            # and $PnS is the "actual name" (like "FSC-H").  so let's
-            # use $PnS.
-            name_metadata = "$PnS"
-            
-    return name_metadata
-    
+        # as per fcsparser.api, $PnN is the "short name" (like FL-1)
+        # and $PnS is the "actual name" (like "FSC-H").  so let's
+        # use $PnS.
+        return "$PnS"    
 
 # module-level, so we can reuse it in other modules
 def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False):   
@@ -615,7 +613,7 @@ def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False)
         
     """
     
-    if experiment:
+    if experiment is not None:
         check_tube(filename, experiment)
         name_metadata = experiment.metadata["name_metadata"]
     else:
