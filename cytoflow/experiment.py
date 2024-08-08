@@ -246,7 +246,7 @@ class Experiment(HasStrictTraits):
                 if v not in list(self.conditions[c]):
                     raise util.CytoflowError("{} is not a value of condition {}".format(v, c))
 
-        g = self.data.groupby(conditions)
+        g = self.data.groupby(conditions, observed = True)
 
         ret = self.clone(deep = False)
         ret.data = g.get_group(values)
@@ -281,7 +281,7 @@ class Experiment(HasStrictTraits):
         """
         
         resolvers = {}
-        for name, col in self.data.iteritems():
+        for name, col in self.data.items():
             new_name = util.sanitize_identifier(name)
             if new_name in resolvers:
                 raise util.CytoflowError("Tried to sanitize column name {0} to "
@@ -573,7 +573,7 @@ class Experiment(HasStrictTraits):
                 
 
         
-        self.data = self.data.append(new_data, ignore_index = True, sort = True)
+        self.data = pd.concat([self.data, new_data], ignore_index = True, sort = True)
         del new_data
         
         # update the metadata 'values'
