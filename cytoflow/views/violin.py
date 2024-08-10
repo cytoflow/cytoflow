@@ -30,6 +30,7 @@ from traits.api import Str, provides, Constant
 
 import numpy as np
 import matplotlib.pyplot as plt
+from seaborn import violinplot
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -150,67 +151,52 @@ class ViolinPlotView(Base1DView):
             else:
                 ax.set_yscale(scale.name, **scale.get_mpl_params(ax.get_yaxis()))  
             
-        # this order-dependent thing weirds me out.      
-        if kwargs['orientation'] == 'horizontal':
-            violin_args = [self.channel, self.variable]
-        else:
-            violin_args = [self.variable, self.channel]
-            
-        if self.huefacet:
-            violin_args.append(self.huefacet)
-            
-        grid.map(_violinplot,   
-                 *violin_args,      
-                 order = np.sort(experiment[self.variable].unique()),
-                 hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet else None),
-                 data_scale = scale,
-                 **kwargs)
+        # if kwargs['orientation'] == 'horizontal':
+        #     violin_args = [self.channel, self.variable]
+        # else:
+        #     violin_args = [self.variable, self.channel]
         
         if kwargs['orientation'] == 'horizontal':
+            kwargs['x'] = self.channel
+            kwargs['y'] = self.variable
+            kwargs['orient'] = 'h'
+        else:
+            kwargs['x'] = self.variable
+            kwargs['y'] = self.channel
+            kwargs['orient'] = 'v'
+            
+        # sns.violinplot expects "orient", not "orientation"
+        del kwargs['orientation']
+                        
+        # the bw kwarg was deprecated in seaborn 0.13, but the meaning of bw_method
+        # is the same. there's also a scaling factor, bw_adjust, which can be 
+        # used but I haven't documented.
+        if 'bw' in kwargs:
+            kwargs['bw_method'] = kwargs['bw']
+            del kwargs['bw']
+            
+        # the scale_plot kwarg was deprecated in seaborn 0.13, but density_norm
+        # is a direct replacement.
+        if 'scale_plot' in kwargs:
+            kwargs['density_norm'] = kwargs['scale_plot']
+            del kwargs['scale_plot']
+            
+        # the scale_hue kwarg was deprecated in seaborn 0.13, but common_norm 
+        # is a direct replacement
+        if 'scale_hue' in kwargs:
+            kwargs['common_norm'] = kwargs['scale_hue']
+            del kwargs['scale_hue']
+            
+        grid.map_dataframe(violinplot,       
+                           order = np.sort(experiment[self.variable].unique()),
+                           hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet else None),
+                           **kwargs)
+        
+        if kwargs['orient'] == 'h':
             return {"xscale" : scale, "xlim" : lim}
         else:
             return {"yscale" : scale, "ylim" : lim}
         
-# this uses an internal interface to seaborn's violin plot.
-
-from seaborn.categorical import _ViolinPlotter
-
-def _violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
-                bw="scott", cut=2, scale_plot="area", scale_hue=True, gridsize=100,
-                width=.8, inner="box", split=False, dodge=True, orientation=None, linewidth=None,
-                color=None, palette=None, saturation=.75, ax=None, data_scale = None,
-                **kwargs):
-    
-    # discards kwargs
-    
-    if orientation and orientation == 'horizontal':
-        x = data_scale(x)
-    else:
-        y = data_scale(y)
-            
-    plotter = _ViolinPlotter(x, y, hue, data, order, hue_order,
-                             bw, cut, scale_plot, scale_hue, gridsize,
-                             width, inner, split, dodge, orientation, linewidth,
-                             color, palette, saturation)
-
-    for i in range(len(plotter.support)):
-        if plotter.hue_names is None:       
-            if plotter.support[i].shape[0] > 0:
-                plotter.support[i] = data_scale.inverse(plotter.support[i])
-        else:
-            for j in range(len(plotter.support[i])):
-                if plotter.support[i][j].shape[0] > 0:
-                    plotter.support[i][j] = data_scale.inverse(plotter.support[i][j])
-
-    for i in range(len(plotter.plot_data)):
-        plotter.plot_data[i] = data_scale.inverse(plotter.plot_data[i])
-
-    if ax is None:
-        ax = plt.gca()
-
-    plotter.plot(ax)
-    return ax
-
 
 util.expand_class_attributes(ViolinPlotView)
 util.expand_method_parameters(ViolinPlotView, ViolinPlotView.plot)
