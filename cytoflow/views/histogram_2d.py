@@ -28,6 +28,7 @@ Plot a 2D histogram.
 
 from traits.api import provides
 
+import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import Colormap
@@ -135,7 +136,9 @@ class Histogram2DView(Base2DView):
         
         legend_data = {}
            
-        grid.map(_hist2d, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, legend_data = legend_data, **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", ".*Legend does not support handles.*")
+            grid.map(_hist2d, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, legend_data = legend_data, **kwargs)
         
         return dict(xlim = xlim,
                     xscale = xscale,
@@ -177,11 +180,11 @@ class AlphaColormap(Colormap):
         self._max_alpha = max_alpha
         
     def _init(self):
-        self._lut = np.ones((self.N + 3, 4), np.float)
+        self._lut = np.ones((self.N + 3, 4), float)
         self._lut[:-3, 0] = self._color[0]
         self._lut[:-3, 1] = self._color[1]
         self._lut[:-3, 2] = self._color[2]
-        self._lut[:-3, 3] = np.linspace(self._min_alpha, self._max_alpha, num = self.N, dtype = np.float)
+        self._lut[:-3, 3] = np.linspace(self._min_alpha, self._max_alpha, num = self.N, dtype = float)
         self._isinit = True
         self._set_extremes()    
         
