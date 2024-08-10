@@ -263,9 +263,6 @@ class ExportFCS(HasStrictTraits):
         for group, data_subset in experiment.data.groupby(self.by):
             data_subset = data_subset[experiment.channels]
             
-            if len(self.by) == 1:
-                group = [group]
-            
             parts = []
             kws = copy(self.keywords)
             kws.update(common_metadata)

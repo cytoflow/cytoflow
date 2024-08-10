@@ -54,27 +54,27 @@ class TestGaussian2D(ImportedDataSmallTest):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
 
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.16641878, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][1], 0.14040044, places = 3)        
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.35156931, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][1], 0.1459792, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.16668259, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][1], 0.1328976, places = 3)        
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.23071522, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][1], 0.61858629, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[(1.0,)].means_[0][0], 0.16641878, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[(1.0,)].means_[0][1], 0.14040044, places = 3)        
+        self.assertAlmostEqual(self.gate._gmms[(1.0,)].means_[1][0], 0.35156931, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[(1.0,)].means_[1][1], 0.1459792, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[(10.0,)].means_[0][0], 0.16668259, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[(10.0,)].means_[0][1], 0.1328976, places = 3)        
+        self.assertAlmostEqual(self.gate._gmms[(10.0,)].means_[1][0], 0.23071522, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[(10.0,)].means_[1][1], 0.61858629, places = 3)
     
     def testApply(self):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertLess(abs(ex2.data.groupby("Gauss").size().loc["Gauss_1"] - 15565), 10)
-        self.assertLess(abs(ex2.data.groupby("Gauss").size().loc["Gauss_2"] - 4435), 10)
+        self.assertLess(abs(ex2.data.groupby("Gauss", observed = True).size().loc["Gauss_1"] - 15565), 10)
+        self.assertLess(abs(ex2.data.groupby("Gauss", observed = True).size().loc["Gauss_2"] - 4435), 10)
 
-        self.assertLess(abs(ex2.data.groupby("Gauss_1").size().loc[False] - 14793), 10)
-        self.assertLess(abs(ex2.data.groupby("Gauss_1").size().loc[True] - 5207), 10)
+        self.assertLess(abs(ex2.data.groupby("Gauss_1", observed = True).size().loc[False] - 14793), 10)
+        self.assertLess(abs(ex2.data.groupby("Gauss_1", observed = True).size().loc[True] - 5207), 10)
         
-        self.assertLess(abs(ex2.data.groupby("Gauss_2").size().loc[False] - 17992), 10)
-        self.assertLess(abs(ex2.data.groupby("Gauss_2").size().loc[True] - 2008), 10)
+        self.assertLess(abs(ex2.data.groupby("Gauss_2", observed = True).size().loc[False] - 17992), 10)
+        self.assertLess(abs(ex2.data.groupby("Gauss_2", observed = True).size().loc[True] - 2008), 10)
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
@@ -83,20 +83,20 @@ class TestGaussian2D(ImportedDataSmallTest):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0] - 5367), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10.0] - 5599), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1.0] - 4633), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10.0] - 4401), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"], observed = True).size().loc["Gauss_1", 1.0] - 5367), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"], observed = True).size().loc["Gauss_1", 10.0] - 5599), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"], observed = True).size().loc["Gauss_2", 1.0] - 4633), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss", "Dox"], observed = True).size().loc["Gauss_2", 10.0] - 4401), 10)
         
-        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 1.0] - 8128), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 10.0] - 8006), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 1.0] - 1872), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 10.0] - 1994), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"], observed = True).size().loc[False, 1.0] - 8128), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"], observed = True).size().loc[False, 10.0] - 8006), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"], observed = True).size().loc[True, 1.0] - 1872), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_1", "Dox"], observed = True).size().loc[True, 10.0] - 1994), 10)
         
-        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 1.0] - 7815), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 10.0] - 7987), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 1.0] - 2185), 10)
-        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 10.0] - 2013), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"], observed = True).size().loc[False, 1.0] - 7815), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"], observed = True).size().loc[False, 10.0] - 7987), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"], observed = True).size().loc[True, 1.0] - 2185), 10)
+        self.assertLess(abs(ex2.data.groupby(["Gauss_2", "Dox"], observed = True).size().loc[True, 10.0] - 2013), 10)
 
         
     def testStatistics(self): 

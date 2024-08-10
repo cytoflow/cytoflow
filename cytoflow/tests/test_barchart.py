@@ -160,5 +160,5 @@ class TestBarChart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBarChart.testSubset2']
+    # import sys;sys.argv = ['', 'TestBarChart.testErrorStat']
     unittest.main()

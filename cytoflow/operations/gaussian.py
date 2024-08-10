@@ -287,11 +287,11 @@ class GaussianMixtureOp(HasStrictTraits):
                                              .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = True)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = True)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -458,7 +458,7 @@ class GaussianMixtureOp(HasStrictTraits):
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
  
         if self.sigma is not None:
-            event_gate = {i : pd.Series([False] * len(experiment), dtype = "double")
+            event_gate = {i : pd.Series([False] * len(experiment), dtype = "bool")
                            for i in range(self.num_components)}
  
         if self.posteriors:
@@ -466,11 +466,11 @@ class GaussianMixtureOp(HasStrictTraits):
                                 for i in range(self.num_components)}
 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = True)
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda _: True)   
+            groupby = experiment.data.groupby(lambda _: True, observed = True)   
 
         # make the statistics       
         components = [x + 1 for x in range(self.num_components)]
@@ -499,14 +499,14 @@ class GaussianMixtureOp(HasStrictTraits):
                               index = corr_idx, 
                               dtype = np.dtype(object)).sort_index()  
                  
-        for group, data_subset in groupby:
+        for group, group_data in groupby:
             if group not in self._gmms:
                 # there weren't any events in this group, so we didn't get
                 # a gmm.
                 continue
              
             gmm = self._gmms[group]
-            x = data_subset.loc[:, self.channels[:]]
+            x = group_data.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
                 
@@ -518,7 +518,7 @@ class GaussianMixtureOp(HasStrictTraits):
                         
             x = x.values
             x_na = x_na.values
-            group_idx = groupby.groups[group]
+            group_idx = group_data.index
  
             if self.num_components > 1:
                 predicted = np.full(len(x), -1, "int")

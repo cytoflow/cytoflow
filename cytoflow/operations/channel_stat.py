@@ -223,7 +223,7 @@ class ChannelStatisticOp(HasStrictTraits):
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
-        groupby = experiment.data.groupby(self.by)
+        groupby = experiment.data.groupby(self.by, observed = True)
 
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -267,7 +267,10 @@ class ChannelStatisticOp(HasStrictTraits):
                      util.CytoflowOpWarning)
                     
         # try to convert to numeric, but if there are non-numeric bits ignore
-        stat = pd.to_numeric(stat, errors = 'ignore')
+        try:
+            stat = pd.to_numeric(stat)
+        except:  # if there are errors, ignore them
+            pass
         
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         new_experiment.statistics[stat_name] = stat

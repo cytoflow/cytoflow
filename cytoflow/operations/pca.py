@@ -368,7 +368,7 @@ class PCAOp(HasStrictTraits):
             x_na = x_na.values
             x[x_na] = 0
             
-            group_idx = groupby.groups[group]
+            group_idx = data_subset.index
             
             pca = self._pca[group]
             x_tf = pca.transform(x)

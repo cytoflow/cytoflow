@@ -406,7 +406,7 @@ class DensityGateOp(HasStrictTraits):
                 # an estimate
                 continue
             
-            group_idx = groupby.groups[group]
+            group_idx = group_data.index
             
             cX = pd.cut(group_data[self.xchannel], self._xbins, include_lowest = True, labels = False).reset_index(drop = True)
             cY = pd.cut(group_data[self.ychannel], self._ybins, include_lowest = True, labels = False).reset_index(drop = True)

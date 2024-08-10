@@ -178,8 +178,8 @@ def _parallel_coords_plot(*channels, ax_annotations, scale, lim, **kwargs):
     # faster than the higher-level plotting routines
     out = pd.Series()
     for i in range(len(df.columns) - 1):
-        new_series = df.apply( lambda x: [(i, x[i]), (i + 1, x[i + 1])], axis = 1)
-        out = out.append(new_series)
+        new_series = df.apply( lambda x: [(i, x.iloc[i]), (i + 1, x.iloc[i + 1])], axis = 1)
+        out = pd.concat([out, new_series])
         
     lc = matplotlib.collections.LineCollection(out.values, colors = color, antialiaseds = aa)
     lc.set_label(label)

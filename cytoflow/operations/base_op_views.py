@@ -312,7 +312,7 @@ class ByView(OpView):
                                                      groupby.groups.keys()))
                 
             experiment = experiment.clone()
-            experiment.data = groupby.get_group(plot_name)
+            experiment.data = groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
             experiment.data.reset_index(drop = True, inplace = True)
             
         super().plot(experiment, **kwargs)
@@ -404,7 +404,7 @@ class AnnotatingView(BaseDataView):
             facets = [x for x in [row_name, col_name, hue_name] if x is not None]
             
             if plot_name is not None:
-                if isinstance(plot_name, collections.Iterable) and not isinstance(plot_name, str):
+                if isinstance(plot_name, collections.abc.Iterable) and not isinstance(plot_name, str):
                     plot_name = list(plot_name)
                 else:
                     plot_name = [plot_name]
@@ -415,7 +415,7 @@ class AnnotatingView(BaseDataView):
                 
             annotation = None
             for group, a in annotations.items():
-                if isinstance(group, collections.Iterable) and not isinstance(group, str):
+                if isinstance(group, collections.abc.Iterable) and not isinstance(group, str):
                     g_set = set(group)
                 else:
                     g_set = set([group])

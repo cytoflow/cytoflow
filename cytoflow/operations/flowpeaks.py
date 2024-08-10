@@ -704,7 +704,7 @@ class FlowPeaksOp(HasStrictTraits):
                          
             x = x.values
             x_na = x_na.values
-            group_idx = groupby.groups[group]
+            group_idx = data_subset.index
             
             kmeans = self._kmeans[group]
   

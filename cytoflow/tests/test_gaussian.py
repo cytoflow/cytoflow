@@ -64,5 +64,5 @@ class TestGaussian(ImportedDataTest):
         self.op.default_view().plot(self.ex)
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestKMeans.testEstimateBy1Channel']
+    # import sys;sys.argv = ['', 'TestGaussian.testEstimateBy']
     unittest.main()

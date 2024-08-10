@@ -819,7 +819,7 @@ class BaseStatisticsView(BaseView):
                                              "be one of {}"
                                              .format(plot_name, list(groupby.groups.keys())))
                 
-            data = groupby.get_group(plot_name)
+            data = groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
         # FacetGrid needs a "long" data set
         data.reset_index(inplace = True)

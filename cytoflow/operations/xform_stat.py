@@ -228,9 +228,12 @@ class TransformStatisticOp(HasStrictTraits):
             
         if matched_series and len(self.by) > 0:
             new_stat = pd.concat(new_stat.values)
-            
+
         # try to convert to numeric, but if there are non-numeric bits ignore
-        new_stat = pd.to_numeric(new_stat, errors = 'ignore')
+        try:
+            stat = pd.to_numeric(stat)
+        except:  # if there are errors, ignore them
+            pass
         
         # sort the index, for performance
         new_stat = new_stat.sort_index()

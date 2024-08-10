@@ -50,10 +50,10 @@ class TestDensityGate(ImportedDataSmallTest):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
 
-        self.assertEqual(len(self.gate._keep_xbins[1.0]), 1145)
-        self.assertEqual(len(self.gate._keep_ybins[1.0]), 1145)
-        self.assertEqual(len(self.gate._keep_xbins[10.0]), 1350)
-        self.assertEqual(len(self.gate._keep_ybins[10.0]), 1350)
+        self.assertEqual(len(self.gate._keep_xbins[(1.0,)]), 1145)
+        self.assertEqual(len(self.gate._keep_ybins[(1.0,)]), 1145)
+        self.assertEqual(len(self.gate._keep_xbins[(10.0,)]), 1350)
+        self.assertEqual(len(self.gate._keep_ybins[(10.0,)]), 1350)
     
     def testApply(self):
         self.gate.estimate(self.ex)

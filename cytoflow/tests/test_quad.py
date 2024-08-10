@@ -41,10 +41,10 @@ class Test(ImportedDataSmallTest):
         ex2 = self.gate.apply(self.ex)
                 
         # how many events ended up in the gate?
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_1"], 3052)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_2"], 1132)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_3"], 10799)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_4"], 5017)
+        self.assertEqual(ex2.data.groupby("Quad", observed = True).size().loc["Quad_1"], 3052)
+        self.assertEqual(ex2.data.groupby("Quad", observed = True).size().loc["Quad_2"], 1132)
+        self.assertEqual(ex2.data.groupby("Quad", observed = True).size().loc["Quad_3"], 10799)
+        self.assertEqual(ex2.data.groupby("Quad", observed = True).size().loc["Quad_4"], 5017)
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         

@@ -202,9 +202,12 @@ class FrameStatisticOp(HasStrictTraits):
             if pd.Series(stat.loc[group]).isna().any():
                 warn("Category {} returned {}".format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)
-                    
+
         # try to convert to numeric, but if there are non-numeric bits ignore
-        stat = pd.to_numeric(stat, errors = 'ignore')
+        try:
+            stat = pd.to_numeric(stat)
+        except:  # if there are errors, ignore them
+            pass
 
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         new_experiment.statistics[stat_name] = stat

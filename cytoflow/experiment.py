@@ -249,7 +249,7 @@ class Experiment(HasStrictTraits):
         g = self.data.groupby(conditions, observed = True)
 
         ret = self.clone(deep = False)
-        ret.data = g.get_group(values)
+        ret.data = g.get_group(values if util.is_list_like(values) else (values,))
         ret.data.reset_index(drop = True, inplace = True)
         
         return ret    
@@ -556,7 +556,7 @@ class Experiment(HasStrictTraits):
         for meta_name, meta_value in conditions.items():
             meta_type = self.conditions[meta_name].dtype
             
-            if is_categorical_dtype(meta_type):
+            if isinstance(meta_type, pd.CategoricalDtype):
                 meta_type = CategoricalDtype([meta_value])
 
             new_data[meta_name] = \
@@ -565,7 +565,7 @@ class Experiment(HasStrictTraits):
                           dtype = meta_type)
             
             # if we're categorical, merge the categories
-            if is_categorical_dtype(meta_type) and meta_name in self.data:
+            if isinstance(meta_type, pd.CategoricalDtype) and meta_name in self.data:
                 cats = set(self.data[meta_name].cat.categories) | set(new_data[meta_name].cat.categories)
                 cats = sorted(cats) 
                 self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
