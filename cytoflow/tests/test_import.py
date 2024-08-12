@@ -75,33 +75,106 @@ class TestImport(unittest.TestCase):
                           tubes = [tube1],
                           channels = {'Y2-B' : "Blue"}).apply()
                           
-    def testManufacturers(self):
-        files = ['Accuri - C6.fcs',
-                 'Applied Biosystems - Attune.fcs',
-                 'BD - FACS Aria II.fcs',
-                 'Beckman Coulter - Cyan.fcs',
-                 'Beckman Coulter - Cytomics FC500.LMD',
-                 'Beckman Coulter - Gallios.LMD',
-                 'Beckman Coulter - MoFlo Astrios - linear settings.fcs',
-                 'Beckman Coulter - MoFlo Astrios - log settings.fcs',
-                 'Beckman Coulter - MoFlo XDP.fcs',
-                 'Cytek DxP10.fcs',
-                 'Cytek xP5.fcs',
-                 'Cytek NL-2000.fcs',
-                 'Guava Muse.fcs',
-                 'iCyt - Eclipse.lmd',
-                 'Millipore - Guava.fcs',
-                 'Miltenyi Biotec - MACSQuant Analyzer.fcs',
-                 'Partec - CyFlow v2.9.fcs',
-                 'Partec - PAS.FCS',
-                 'Stratedigm - S1400.fcs',
-                 'System II listmode with extra info in bits D10-D15.LMD']
+    def testAccuriC6(self):
+        path = self.cwd + '/data/instruments/' + 'Accuri - C6.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+
+    def testAttune(self):
+        path = self.cwd + '/data/instruments/' + 'Applied Biosystems - Attune.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
         
-        for file in files:
-            path = self.cwd + '/data/instruments/' + file
-            import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-            import_op.apply()
-            
+    def testFACSAriaII(self):
+        path = self.cwd + '/data/instruments/' + 'BD - FACS Aria II.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testCyan(self):
+        path = self.cwd + '/data/instruments/' + 'Beckman Coulter - Cyan.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testCytomicsLMD(self):
+        path = self.cwd + '/data/instruments/' + 'Beckman Coulter - Cytomics FC500.LMD'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testGalliosLMD(self):
+        path = self.cwd + '/data/instruments/' + 'Beckman Coulter - Gallios.LMD'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()    
+        
+    def testMoFloAstriosLinear(self):
+        path = self.cwd + '/data/instruments/' + 'Beckman Coulter - MoFlo Astrios - linear settings.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testMoFloAstriosLog(self):
+        path = self.cwd + '/data/instruments/' + 'Beckman Coulter - MoFlo Astrios - log settings.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testMoFlowXDP(self):
+        path = self.cwd + '/data/instruments/' + 'Beckman Coulter - MoFlo XDP.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testCytekDxP10(self):
+        path = self.cwd + '/data/instruments/' + 'Cytek DxP10.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testCytekXP5(self):
+        path = self.cwd + '/data/instruments/' + 'Cytek xP5.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testCytekNL2000(self):
+        path = self.cwd + '/data/instruments/' + 'Cytek NL-2000.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testGuavaMuse(self):
+        path = self.cwd + '/data/instruments/' +  'Guava Muse.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testICytEclipse(self):
+        path = self.cwd + '/data/instruments/' + 'iCyt - Eclipse.lmd'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testMilliporeGuava(self):
+        path = self.cwd + '/data/instruments/' + 'Millipore - Guava.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testMiltenyiMACSQuant(self):
+        path = self.cwd + '/data/instruments/' + 'Miltenyi Biotec - MACSQuant Analyzer.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testPartecCyFlow29(self):
+        path = self.cwd + '/data/instruments/' + 'Partec - CyFlow v2.9.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testPartecPAS(self):
+        path = self.cwd + '/data/instruments/' + 'Partec - PAS.FCS'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testStratedigmS1400(self):
+        path = self.cwd + '/data/instruments/' + 'Stratedigm - S1400.fcs'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()
+        
+    def testSystemIILMD(self):
+        path = self.cwd + '/data/instruments/' + 'System II listmode with extra info in bits D10-D15.LMD'
+        import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+        import_op.apply()    
+                    
     def testDataset(self):
         file = self.cwd + '/data/instruments/Guava Muse.fcs'
         ex1 = flow.ImportOp(tubes = [flow.Tube(file = file)],
