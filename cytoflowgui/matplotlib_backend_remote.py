@@ -54,6 +54,7 @@ from matplotlib.figure import Figure
 
 #from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.backend_bases import MouseEvent
 
 import numpy as np
 
@@ -160,32 +161,42 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                     dpi = payload
                     matplotlib.rcParams['figure.dpi'] = dpi
                     matplotlib.pyplot.clf()
+                    
                 elif msg == Msg.RESIZE_EVENT:
                     with self.plot_lock:
                         (winch, hinch) = payload
                         self.figure.set_size_inches(winch, hinch)
-                        FigureCanvasAgg.resize_event(self)
+                        # FigureCanvasAgg.resize_event(self)
                         self.draw()
+                        
                 elif msg == Msg.MOUSE_PRESS_EVENT:
                     (x, y, button) = payload
                     if self.process_events.is_set():
                         with self.plot_lock:
-                            FigureCanvasAgg.button_press_event(self, x, y, button)
+                            #FigureCanvasAgg.button_press_event(self, x, y, button)
+                            MouseEvent("button_press_event", self, x, y, button, modifiers = None, guiEvent = None)._process()
+
                 elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
                     (x, y, button) = payload
                     if self.process_events.is_set():
                         with self.plot_lock:
-                            FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
+                            #FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
+                            MouseEvent("button_press_event", self, x, y, button, dblclick = True, modifiers = None, guiEvent = None)._process()
+
                 elif msg == Msg.MOUSE_RELEASE_EVENT:
                     (x, y, button) = payload
                     if self.process_events.is_set():
                         with self.plot_lock:
-                            FigureCanvasAgg.button_release_event(self, x, y, button)
+                            #FigureCanvasAgg.button_release_event(self, x, y, button)
+                            MouseEvent("button_release_event", self, x, y, button, modifiers = None, guiEvent = None)._process()
+                            
                 elif msg == Msg.MOUSE_MOVE_EVENT:
                     (x, y) = payload
                     if self.process_events.is_set():
                         with self.plot_lock:
-                            FigureCanvasAgg.motion_notify_event(self, x, y)
+                            #FigureCanvasAgg.motion_notify_event(self, x, y)
+                            MouseEvent("motion_notify_event", self, x, y, modifiers = None, guiEvent = None)._process()
+                            
                 elif msg == Msg.PRINT:
                     (args, kwargs) = payload
                     if self.process_events.is_set():

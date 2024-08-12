@@ -113,7 +113,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         self.working_pixmap.setVisible(False)
         self.working_pixmap.setPixmap(working_pixmap)
         self.working_pixmap.setScaledContents(True)
-        wp_size = min([self.width(), self.height()]) / 5
+        wp_size = int(min([self.width(), self.height()]) / 5)
         self.working_pixmap.resize(wp_size, wp_size)
         self.working_pixmap.move(self.width() - wp_size,
                                  self.height() - wp_size)
@@ -303,10 +303,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         hinch = h / dpival
         
         self.figure.set_size_inches(winch, hinch)
-        FigureCanvasAgg.resize_event(self)
+        # FigureCanvasAgg.resize_event(self)
         QtGui.QWidget.resizeEvent(self, event)
         
-        wp_size = min([self.width(), self.height()]) / 5
+        wp_size = int(min([self.width(), self.height()]) / 5)
         self.working_pixmap.resize(wp_size, wp_size)
         self.working_pixmap.move(self.width() - wp_size,
                                  self.height() - wp_size)
@@ -350,8 +350,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         if self.blit_buffer is None:
             
             # convert the Agg rendered image -> qImage
-            qImage = QtGui.QImage(self.buffer, self.buffer_width,
-                                  self.buffer_height,
+            qImage = QtGui.QImage(self.buffer.tobytes(), 
+                                  int(self.buffer_width),
+                                  int(self.buffer_height),
                                   QtGui.QImage.Format_RGBA8888)
             # get the rectangle for the image
             rect = qImage.rect()
@@ -371,8 +372,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
  
             pixmap = QtGui.QPixmap.fromImage(qImage)
             p = QtGui.QPainter(self)
-            p.drawPixmap(QtCore.QPoint(self.blit_left, 
-                                       self.buffer_height - self.blit_top), 
+            p.drawPixmap(QtCore.QPoint(int(self.blit_left), 
+                                       int(self.buffer_height - self.blit_top)),
                          pixmap)
 
             p.end()
