@@ -250,7 +250,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.cmd_button.setText(self.name)
         self.cmd_button.setDescription(self.description)
         self.cmd_button.setIcon(ImageResource('ok').create_icon())
-        self.cmd_button.setIconSize(QtCore.QSize(dpi * 0.2, dpi * 0.2))
+        self.cmd_button.setIconSize(QtCore.QSize(int(dpi * 0.2), int(dpi * 0.2)))
         
         size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding,
                                         QtGui.QSizePolicy.Preferred)
@@ -266,7 +266,7 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.del_button.setEnabled(self.deletable)
             
             self.del_button.setIcon(ImageResource('close').create_icon())
-            self.del_button.setIconSize(QtCore.QSize(dpi * 0.1, dpi * 0.1))
+            self.del_button.setIconSize(QtCore.QSize(int(dpi * 0.1), int(dpi * 0.1)))
             
             self.del_button.clicked.connect(self._handle_close_button)
             buttons_layout.addWidget(self.del_button)

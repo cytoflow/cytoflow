@@ -24,7 +24,7 @@ cytoflowgui
 The `cytoflowgui` package contains the Qt GUI for `cytoflow`.
 """
 
-import sip  # @UnresolvedImport
+from PyQt5 import sip 
 
 sip.setapi(u'QDate', 2)
 sip.setapi(u'QDateTime', 2)

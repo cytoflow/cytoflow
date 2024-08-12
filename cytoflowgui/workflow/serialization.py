@@ -187,25 +187,30 @@ def _load_index(data, version):
                         data = data['values'],
                         dtype = data['dtype'])
 
-@camel_registry.dumper(pandas.Int64Index, 'pandas-int64index', version = 1)
-def _dump_int64index(d):
-    return dict(name = d.name,
-                values = d.values.tolist())
+
+# Int64Index went away in pandas 2.0
+# @camel_registry.dumper(pandas.Int64Index, 'pandas-int64index', version = 1)
+# def _dump_int64index(d):
+#     return dict(name = d.name,
+#                 values = d.values.tolist())
 
 @camel_registry.loader('pandas-int64index', version = 1)
 def _load_int64index(data, version):
-    return pandas.Int64Index(name = data['name'],
-                             data = data['values'])
+    return pandas.Index(name = data['name'],
+                        data = data['values'],
+                        dtype = numpy.int64)
 
-@camel_registry.dumper(pandas.Float64Index, 'pandas-float64index', version = 1)
-def _dump_float64index(d):
-    return dict(name = d.name,
-                values = d.values.tolist())
+# Float64Index went away in pandas 2.0
+# @camel_registry.dumper(pandas.Float64Index, 'pandas-float64index', version = 1)
+# def _dump_float64index(d):
+#     return dict(name = d.name,
+#                 values = d.values.tolist())
 
 @camel_registry.loader('pandas-float64index', version = 1)
 def _load_float64index(data, version):
-    return pandas.Float64Index(name = data['name'],
-                               data = data['values'])
+    return pandas.Index(name = data['name'],
+                        data = data['values'],
+                        dtype = numpy.float64)
 
 @camel_registry.dumper(pandas.CategoricalIndex, 'pandas-categoricalindex', version = 1)
 def _dump_categoricalindex(d):

@@ -144,7 +144,8 @@ class _VerticalListEditor(_ListEditor):
                 del_button.setEnabled(True)
                 
                 del_button.setIcon(ImageResource('close').create_icon())
-                del_button.setIconSize(QtCore.QSize(dpi * 0.1, dpi * 0.1))
+                del_button.setIconSize(QtCore.QSize(int(dpi * 0.1), 
+                                                    int(dpi * 0.1)))
                 
                 del_button.clicked.connect(self.delete_mapper.map)
                 self.delete_mapper.setMapping(del_button, index)

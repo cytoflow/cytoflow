@@ -99,7 +99,7 @@ class _ValueBoundsEditor(EditorWithList):
 
         # The default size is a bit too big and probably doesn't need to grow.
         sh = self._label_lo.sizeHint()
-        sh.setWidth(sh.width() / 2)
+        sh.setWidth(int(sh.width() / 2))
         self._label_lo.setMaximumSize(sh)
 
         self.control.slider = slider = RangeSlider(QtCore.Qt.Horizontal)
@@ -121,7 +121,7 @@ class _ValueBoundsEditor(EditorWithList):
 
         # The default size is a bit too big and probably doesn't need to grow.
         sh = self._label_hi.sizeHint()
-        sh.setWidth(sh.width() / 2)
+        sh.setWidth(int(sh.width() / 2))
         self._label_hi.setMaximumSize(sh)
 
         self.set_tooltip(slider)

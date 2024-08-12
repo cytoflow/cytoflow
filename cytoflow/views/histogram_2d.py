@@ -32,7 +32,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import Colormap
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage.filters import gaussian_filter  # @UnresolvedImport
 
 import cytoflow.utility as util
 from .i_view import IView

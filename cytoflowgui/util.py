@@ -54,20 +54,20 @@ class HintedMainWindow(QtGui.QMainWindow):
     hint_height = None
     
     def setFixedWidth(self, *args, **kwargs):
-        self.hint_width = args[0]
+        self.hint_width = int(args[0])
         return QtGui.QMainWindow.setFixedWidth(self, *args, **kwargs)
     
     def setFixedHeight(self, *args, **kwargs):
-        self.hint_height = args[0]
+        self.hint_height = int(args[0])
         return QtGui.QMainWindow.setFixedHeight(self, *args, **kwargs)
     
     def sizeHint(self, *args, **kwargs):
         hint = QtGui.QMainWindow.sizeHint(self, *args, **kwargs)
         if self.hint_width is not None:
-            hint.setWidth(self.hint_width)
+            hint.setWidth(int(self.hint_width))
             
         if self.hint_height is not None:
-            hint.setHeight(self.hint_height)
+            hint.setHeight(int(self.hint_height))
             
         return hint
     
@@ -85,20 +85,20 @@ class HintedWidget(QtGui.QWidget):
     hint_height = None
     
     def setFixedWidth(self, *args, **kwargs):
-        self.hint_width = args[0]
+        self.hint_width = int(args[0])
         return QtGui.QMainWindow.setFixedWidth(self, *args, **kwargs)
     
     def setFixedHeight(self, *args, **kwargs):
-        self.hint_height = args[0]
+        self.hint_height = int(args[0])
         return QtGui.QMainWindow.setFixedHeight(self, *args, **kwargs)
     
     def sizeHint(self, *args, **kwargs):
         hint = QtGui.QMainWindow.sizeHint(self, *args, **kwargs)
         if self.hint_width is not None:
-            hint.setWidth(self.hint_width)
+            hint.setWidth(int(self.hint_width))
             
         if self.hint_height is not None:
-            hint.setHeight(self.hint_height)
+            hint.setHeight(int(self.hint_height))
             
         return hint
 

@@ -64,46 +64,23 @@ def log_excepthook(typ, val, tb):
                          
 def run_gui():
     """Run the GUI!"""
+    import os
     
     try:
         # if we're running as a one-click from a MacOS app,
         # we need to reset the working directory
-        import os; os.chdir(sys._MEIPASS)  # @UndefinedVariable
+        os.chdir(sys._MEIPASS)  # @UndefinedVariable
     except:
         # if we're not running as a one-click, fail gracefully
         pass
     
-    # shut up the warning about Open GL (see below)
+    # disable OpenGL in the qt web engine
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
+    
     from pyface.qt import QtGui, QtCore
-    QtGui.QApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  
     
     # use high resolution pixmaps
     QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-
-    # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
-    # as their web renderer.  Chromium needs OpenGL.  if you don't
-    # initialize OpenGL here, things crash on some platforms.
-    
-    # so now i guess we depend on opengl too. 
-    
-    try:
-        from OpenGL import GL  # @UnresolvedImport @UnusedImport
-    except ImportError:
-        logger.info("Patching util.find_library for MacOS")
-        from ctypes import util
-        orig_find_library = util.find_library
-
-        def new_find_library(name):
-            res = orig_find_library(name)
-            if res: return res
-            return '/System/Library/Frameworks/' + name + '.framework/' + name
-        util.find_library = new_find_library
-        from OpenGL import GL
-        util.find_library = orig_find_library
-
-    # need to import these before a QCoreApplication is instantiated.  and that seems
-    # to happen in .... 'import cytoflow' ??
-    import pyface.qt.QtWebKit  # @UnusedImport  
 
     # take care of the 3 places in the cytoflow module that
     # need different behavior in a GUI
