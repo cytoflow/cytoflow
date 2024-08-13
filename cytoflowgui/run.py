@@ -336,7 +336,8 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     # this should only ever be main method after a spawn() call 
     # (not fork). So we should have a fresh logger to set up.
         
-    # messages that end up at the root logger to go log_q
+    # messages that end up at the root logger to go (only to) log_q
+    logging.getLogger().handlers.clear()
     from logging.handlers import QueueHandler
     h = QueueHandler(log_q) 
     logging.getLogger().addHandler(h)
