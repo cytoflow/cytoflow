@@ -203,7 +203,7 @@ class ByView(OpView):
                 self._returned = False
                 
                 if by:
-                    self._iter = experiment.data.groupby(by).__iter__()
+                    self._iter = experiment.data.groupby(by, observed = True).__iter__()
                 
             def __iter__(self):
                 return self
