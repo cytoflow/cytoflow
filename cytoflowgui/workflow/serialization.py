@@ -226,6 +226,19 @@ def _load_categoricalindex(data, version):
                                    categories = data['categories'],
                                    ordered = data['ordered'])
 
+@camel_registry.dumper(pandas.RangeIndex, 'pandas-rangeindex', version = 1)
+def _dump_rangeindex(d):
+    return dict(name = d.name,
+                start = d.start,
+                stop = d.stop,
+                step = d.step)
+    
+@camel_registry.loader('pandas-rangeindex', version = 1)
+def _load_rangeindex(data, version):
+    return pandas.RangeIndex(name = data['name'],
+                             start = data['start'],
+                             stop = data['stop'],
+                             step = data['step'])
     
 @camel_registry.dumper(pandas.Series, 'pandas-series', version = 1)
 def _dump_series_v1(s):
