@@ -218,12 +218,14 @@ def filter_unpicklable(obj):
         return [filter_unpicklable(x) for x in obj]
     elif type(obj) is dict:
         return {x: filter_unpicklable(obj[x]) for x in obj}
-    else:
-        if not hasattr(obj, '__getstate__') and not isinstance(obj,
-                  (str, int, float, tuple, list, set, dict)):
+    elif hasattr(obj, '__getstate__') and not isinstance(obj,
+                  (str, int, float, tuple, set)):
+        if obj.__getstate__() is None:
             return "Unpicklable: {}".format(type(obj))
         else:
             return obj
+    else:
+        return obj
 
     
 
@@ -984,7 +986,7 @@ class RemoteWorkflow(HasStrictTraits):
         logger.debug("RemoteWorkflow._workflow_item_changed :: {}".format(event))
               
         idx = self.workflow.index(event.object)
-        self.message_q.put((Msg.UPDATE_WI, (idx, event.name, event.new)))
+        self.message_q.put((Msg.UPDATE_WI, (idx, event.name, filter_unpicklable(event.new))))
         
     @observe('selected', post_init = True)
     def _on_selected_workflowitem_changed(self, event):
