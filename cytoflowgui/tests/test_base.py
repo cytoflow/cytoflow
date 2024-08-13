@@ -54,9 +54,7 @@ from cytoflowgui.workflow import LocalWorkflow, RemoteWorkflow
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.operations import ImportWorkflowOp, ChannelStatisticWorkflowOp, ThresholdWorkflowOp, ThresholdSelectionView
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
-from cytoflowgui.workflow.serialization import traits_eq, traits_hash
 from cytoflowgui.utility import CallbackHandler
-
 
 def remote_main(parent_workflow_conn, log_q, running_event):
     # this should only ever be main method after a spawn() call 
@@ -64,6 +62,7 @@ def remote_main(parent_workflow_conn, log_q, running_event):
         
     # messages that end up at the root logger go to log_q
     h = QueueHandler(log_q) 
+    logging.getLogger().handlers.clear()
     logging.getLogger().addHandler(h)
     
     # make sure that ALL messages get queued in the remote 
@@ -72,7 +71,15 @@ def remote_main(parent_workflow_conn, log_q, running_event):
     logging.getLogger().setLevel(logging.DEBUG)   
 
     running_event.set()
-    RemoteWorkflow().run(parent_workflow_conn)
+    
+    # some of the sklearn things get sad when there are lots of threads. 
+    # this is not an issue under normal conditions, but when testing, 
+    # reducing the number of allowed threads to 1 eliminates these
+    # random crashes.
+    
+    from threadpoolctl import threadpool_limits
+    with threadpool_limits(limits = 1):
+        RemoteWorkflow().run(parent_workflow_conn)
 
 class WorkflowTest(unittest.TestCase):
     
