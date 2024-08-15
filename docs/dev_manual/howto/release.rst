@@ -31,11 +31,12 @@ Documentation
 
 - Build the developers' manual and check it for completeness::
 
-      conda install "sphinx==4.2.0" pandoc
+      conda install sphinx pandoc
       python setup.py build_sphinx
   
 - Build the user manual and check it for completeness::
 
+	  sphinx-build docs/ build/manual
   	  sphinx-build docs/user_manual/reference cytoflowgui/help
   	  
 - Make sure that the ReadTheDocs build is working at 
