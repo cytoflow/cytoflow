@@ -1,0 +1,102 @@
+# build configuration is now split across three files: pyproject.toml,
+# setup.cfg and setup.py. yay.
+
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cytoflow"
+authors = [{name = "Brian Teague", email = "bpteague@gmail.com"}]
+description = "Python tools for quantitative, reproducible flow cytometry analysis"
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+keywords = ["flow", "cytometry", "scipy"]
+
+dynamic = ["version"]
+
+requires-python = ">= 3.11"
+
+dependencies = [
+    'numpy==1.26.4',
+    'pandas==2.2.2',
+    'matplotlib==3.8.4',
+    'bottleneck==1.3.7',
+    'numexpr==2.8.7',
+    'scipy==1.13.1',
+    'scikit-learn==1.5.1',
+    'seaborn==0.13.2',
+    'statsmodels==0.14.2',
+    'natsort==7.1.1',
+    'numba==0.60.0',
+                
+    'traits==6.2.0',
+    'traitsui==7.2.1',
+    'pyface==7.3.0',
+    'envisage==6.0.1',
+    'nbformat==5.9.2',
+    'python-dateutil==2.9.0post0',
+    'importlib_resources==6.4.0',
+
+                        
+     # pyqt, qt are not in pip
+     # need to install through your package manager
+
+      'camel==0.1.2',
+      'yapf==0.30.0'
+]
+
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Console',
+    'Environment :: MacOS X',
+    'Environment :: Win32 (MS Windows)',
+    'Environment :: X11 Applications :: Qt',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+    'Natural Language :: English',
+    'Operating System :: MacOS',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX :: Linux',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Topic :: Scientific/Engineering :: Bio-Informatics',
+    'Topic :: Software Development :: Libraries :: Python Modules'
+]
+
+[project.urls]
+Homepage = "https://cytoflow.github.io"
+Documentation = "https://cytoflow.readthedocs.org"
+Repository = "https://github.com/cytoflow/cytoflow"
+Issues = "https://github.com/cytoflow/cytoflow/issues"
+
+
+[project.scripts]
+cf-channel_voltages = 'cytoflow.scripts.channel_voltages:main'
+cf-fcs_metadata = 'cytoflow.scripts.fcs_metadata:main'
+cf-split_fcs = 'cytoflow.scripts.split_fcs:main'
+
+[project.gui-scripts]
+cytoflow = 'cytoflowgui.run:run_gui'
+
+[tool.setuptools]
+packages = ['cytoflow', 'cytoflowgui', 'fcsparser']
+
+[tool.setuptools.package-data]
+cytoflowgui = ['preferences.ini',
+               'images/*',
+               'op_plugins/images/*',
+               'view_plugins/images/*',
+               'editors/images/*',
+               'help/operations/*.html',
+               'help/views/*.html',
+               'help/_images/*.png',
+               'help/_static/*']
+               
+               
+[tool.setuptools_scm]
+
+
+
+
+
