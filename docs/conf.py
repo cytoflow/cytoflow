@@ -72,7 +72,7 @@ autosummary_generate = True
 
 # autodoc options
 autodoc_member_order = 'bysource'
-autodoc_mock_imports = ['traitsui', 'pyface']
+autodoc_mock_imports = ['traitsui']
 
 if on_rtd:
     autodoc_mock_imports.append('cytoflow.utility.logicle_ext.Logicle')
@@ -101,9 +101,9 @@ intersphinx_mapping = {'pandas' : ('https://pandas.pydata.org/pandas-docs/stable
                        'envisage' : ('https://docs.enthought.com/envisage/', None),
                        'seaborn' : ('https://seaborn.pydata.org/', None),
                        'python': ('https://docs.python.org/3', None),
-                       'matplotlib' : ('https://matplotlib.org/', None),
+                       'matplotlib' : ('https://matplotlib.org/stable/', None),
                        'numpy' : ('https://numpy.org/doc/stable/', None),
-                       'scipy' : ('https://docs.scipy.org/doc/scipy/reference/', None),
+                       'scipy' : ('https://docs.scipy.org/doc/scipy/', None),
                        'camel' : ('https://camel.readthedocs.io/en/latest/', None)} 
 
 

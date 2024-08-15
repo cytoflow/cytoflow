@@ -127,7 +127,7 @@ the appropriate file.
 
     conda config --add channels cytoflow
 
-* Clone the repository::
+* Clone the repository, including submodules::
 
     git clone --recurse-submodules https://github.com/cytoflow/cytoflow.git
 
@@ -158,13 +158,13 @@ the appropriate file.
     
 * Install ``cytoflow`` in developer's mode::
 
-    python setup.py develop
+    pip install --editable .
     
 * From the `GitHub releases page <https://github.com/cytoflow/cytoflow/releases>`_ 
   download the appropriate extension file for the version you're installing.
   
-  * **On Windows (64-bit)**: ``_Logicle.cp38-win_amd64.pyd``
-  * **On MacOS**: ``_Logicle.cpython-38m-darwin.so``
+  * **On Windows (64-bit)**: ``_Logicle.cp311-win_amd64.pyd``
+  * **On MacOS**: ``_Logicle.cpython-311m-darwin.so``
   
 * Copy the file you just download into the ``cytoflow/utility/logicle_ext/`` folder
   in your source tree.
@@ -173,7 +173,7 @@ the appropriate file.
 
     import cytoflow
     
-  If you don't get any errors, you're good to go.
+If you don't get any errors, you're good to go.
    
 
 Running the point-and-click GUI program
