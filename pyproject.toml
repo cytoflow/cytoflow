@@ -80,7 +80,9 @@ cf-split_fcs = 'cytoflow.scripts.split_fcs:main'
 cytoflow = 'cytoflowgui.run:run_gui'
 
 [tool.setuptools]
-packages = ['cytoflow', 'cytoflowgui', 'fcsparser']
+
+[tool.setuptools.packages.find]
+exclude = ["package", "package.qt"]
 
 [tool.setuptools.package-data]
 cytoflowgui = ['preferences.ini',
