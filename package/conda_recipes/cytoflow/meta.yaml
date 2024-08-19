@@ -20,6 +20,9 @@ build:
     - cf-fcs_metadata = cytoflow.scripts.fcs_metadata:main
 
 requirements:
+  build:
+    - {{ compiler('cxx') }}
+
   host:
     - python=3.11.9
     - numpy==1.26.4
@@ -52,7 +55,6 @@ requirements:
     # only install mkl libraries on windows, where they're required
     - nomkl # [not win]
 
-    # - {{compiler('cxx')}}
     - sphinx==7.3.7
     - bleach
     - swig==4.0.2
@@ -115,11 +117,16 @@ about:
   license: GPLv2
   license_file: GPL.txt
   summary: 'Quantitative analyses for flow cytometry'
+  description: |
+    Python tools for quantitative, reproducible flow cytometry analysis
+  dev_url: https://github.com/cytoflow/cytoflow
+  doc_url: https://cytoflow.readthedocs.org
 
 app:
     own_environment: True
     entry: cytoflow
     icon: icon.png
+    summary: "Flow cytometry analysis"
 
 # See
 # https://conda.io/docs/building/build.html for
