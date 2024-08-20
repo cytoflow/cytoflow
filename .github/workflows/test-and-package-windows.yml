@@ -112,7 +112,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.6
       with:
         name: windows-conda-package
         retention-days: 1
@@ -167,7 +167,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.6
       with:
         name: windows-wheels
         retention-days: 1
@@ -245,7 +245,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.6
       with:
         name: windows-oneclick
         retention-days: 1

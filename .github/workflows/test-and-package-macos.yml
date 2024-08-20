@@ -105,7 +105,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.6
       with:
         name: macos-conda-package
         retention-days: 1
@@ -156,7 +156,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.6
       with:
         name: macos-wheels
         retention-days: 1
@@ -227,7 +227,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.6
       with:
         name: macos-oneclick
         retention-days: 1
