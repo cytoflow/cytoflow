@@ -25,7 +25,7 @@ jobs:
         shell: bash -l {0}        
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2    
+      uses: actions/checkout@v4.1.7    
       with:
         submodules: true    
         
@@ -74,7 +74,7 @@ jobs:
     needs: test-on-windows
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4.1.7
       with:
         fetch-depth: 0
         submodules: true
@@ -127,7 +127,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4.1.7  
       with:
         fetch-depth: 0
         submodules: true
@@ -182,7 +182,7 @@ jobs:
         shell: bash -l {0}
     steps:        
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4.1.7  
       with:
         fetch-depth: 0
         submodules: true

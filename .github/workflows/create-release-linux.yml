@@ -28,7 +28,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4.1.7
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -101,7 +101,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4.1.7  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -187,7 +187,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4.1.7  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -265,7 +265,7 @@ jobs:
         echo "${{ github.event.client_payload.release_url }}"
 
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v4.1.7  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
