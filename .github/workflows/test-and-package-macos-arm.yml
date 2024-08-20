@@ -1,0 +1,234 @@
+# (c) Massachusetts Institute of Technology 2015-2018
+# (c) Brian Teague 2018-2022
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+name: Test and package on MacOS
+on: [push]
+jobs:
+      
+  test-on-macos:
+    name: Run nose2 on MacOS runner
+    runs-on: macos-14
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        submodules: true  
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v3.0.4
+      with:
+        auto-update-conda: true
+        activate-environment: cytoflow
+        environment-file: environment.yml
+         
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2
+    
+    - name: Install package locally
+      run: |
+        python setup.py build_ext --inplace
+        
+    - name: Install nose2
+      run: |
+        pip install nose2
+        
+    - name: Run cytoflow tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        nose2 -v -c package/nose2.cfg cytoflow.tests
+
+#     - name: Run cytoflowgui tests
+#       env:
+#         OMP_NUM_THREADS: 1
+#       run: |
+#         nose2 -v -c package/nose2.cfg cytoflowgui.tests -GUI        
+
+    
+  build-macos-conda-package:
+    name: Build MacOS conda package
+    runs-on: macos-14
+    needs: test-on-macos
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v3.0.4
+      with:
+        auto-update-conda: true
+        activate-environment: cytoflow
+        environment-file: environment.yml
+         
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build conda-verify
+        
+    - name: Build conda package
+      run: |
+        conda render package/conda_recipes/cytoflow
+        conda build --quiet package/conda_recipes/cytoflow
+        
+    - name: Move conda package into the dist folder
+      run: |
+        mkdir dist
+        python package/move_conda_package.py
+        
+    - name: Copy environment.yml into the dist folder
+      run: |
+        cp environment.yml dist/
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v4.3.6
+      with:
+        name: macos-conda-package
+        retention-days: 1
+        path: dist/*
+
+  build-macos-wheels:
+    name: Build MacOS wheels
+    needs: test-on-macos
+    runs-on: macos-14
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+        submodules: true
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v3.0.4
+      with:
+        auto-update-conda: true
+        activate-environment: cytoflow
+        environment-file: environment.yml
+        
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2 pip
+        
+    - name: Install packaging deps
+      run: |
+        pip install build
+            
+    - name: Install package locally
+      run: |
+        python setup.py build_ext --inplace
+        
+    - name: Build wheel
+      run: |
+        python -m build --wheel
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.so$"` dist/
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v4.3.6
+      with:
+        name: macos-wheels
+        retention-days: 1
+        path: dist/*   
+        
+  build-macos-oneclick:
+    name: Build macos one-click
+    needs: test-on-macos
+    runs-on: macos-14
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+        submodules: true
+        
+    - name: Query git tag
+      id: tag
+      run: echo "::set-output name=tag::$(git describe --tags)"
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v3.0.4
+      with:
+        auto-update-conda: true
+        activate-environment: cytoflow
+        environment-file: environment.yml
+        
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet swig==4.0.2
+            
+    - name: Install package locally
+      run: |
+        python setup.py build_ext --inplace
+        
+    - name: Install packaging deps
+      run: |
+        conda install --yes --quiet 'sphinx==7.3.7' pandoc
+        pip install "pyinstaller==6.10.0"
+        
+    - name: Build embedded help docs
+      run: |
+        sphinx-build docs/user_manual/reference cytoflowgui/help
+        
+    - name: Build GUI binary
+      run: |
+        pyinstaller package/pyinstaller.spec
+        
+    - name: List dist
+      run: ls dist/
+        
+    - name: Rename and zip Mac app
+      run: |
+        cd dist/
+        mv Cytoflow.app Cytoflow-${{steps.tag.outputs.tag}}.app
+        zip -r cytoflow-${{steps.tag.outputs.tag}}.macos.zip Cytoflow-${{steps.tag.outputs.tag}}.app/
+        rm -rf Cytoflow-${{steps.tag.outputs.tag}}.app cytoflow
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v4.3.6
+      with:
+        name: macos-oneclick
+        retention-days: 1
+        path: dist/*
