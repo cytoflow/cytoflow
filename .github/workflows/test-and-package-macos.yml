@@ -134,7 +134,11 @@ jobs:
         
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2
+        conda install --yes --quiet swig==4.0.2 pip
+        
+    - name: Install packaging deps
+      run: |
+        pip install build
             
     - name: Install package locally
       run: |
@@ -142,7 +146,7 @@ jobs:
         
     - name: Build wheel
       run: |
-        python setup.py bdist_wheel
+        python -m build --wheel
         
     - name: Move C++ extensions into the dist folder
       run: |
