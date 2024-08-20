@@ -21,7 +21,7 @@ on:
 jobs:
   build-macos-conda-package:
     name: Build and upload MacOS conda package
-    runs-on: macos-10.15
+    runs-on: macos-13
     defaults:
       run:
         shell: bash -l {0}
@@ -93,7 +93,7 @@ jobs:
 
   build-macos-wheels:
     name: Build MacOS wheel, extension
-    runs-on: macos-10.15
+    runs-on: macos-13
     defaults:
       run:
         shell: bash -l {0}
@@ -160,7 +160,7 @@ jobs:
         
   build-macos-oneclick:
     name: Build macos one-click
-    runs-on: macos-10.15
+    runs-on: macos-13
     defaults:
       run:
         shell: bash -l {0}

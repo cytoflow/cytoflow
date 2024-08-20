@@ -19,7 +19,7 @@ on: [push]
 jobs:
   check-environment:
     name: Make sure environment.yml and meta.yaml are the same
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     
     - name: Check out repo
@@ -34,7 +34,7 @@ jobs:
   test-on-linux:
     name: Run nose2 on linux runner
     needs: check-environment
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash -l {0}
@@ -82,7 +82,7 @@ jobs:
     
   build-linux-conda-package:
     name: Build linux conda package
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     needs: test-on-linux
     defaults:
       run:
@@ -131,7 +131,7 @@ jobs:
   build-linux-wheels:
     name: Build source dist, linux wheels
     needs: test-on-linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash -l {0}
@@ -181,7 +181,7 @@ jobs:
   build-linux-oneclick:
     name: Build linux one-click
     needs: test-on-linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash -l {0}
@@ -253,7 +253,7 @@ jobs:
   build-examples:
     name: Zip up examples
     needs: test-on-linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Check out repo
       uses: actions/checkout@v2  

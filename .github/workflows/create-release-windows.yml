@@ -22,7 +22,7 @@ on:
 jobs:     
   build-windows-conda-package:
     name: Build windows conda package
-    runs-on: windows-2019
+    runs-on: windows-2022
     defaults:
       run:
         shell: bash -l {0}
@@ -99,7 +99,7 @@ jobs:
 
   build-windows-wheels:
     name: Build windows wheel, extension
-    runs-on: windows-2019
+    runs-on: windows-2022
     defaults:
       run:
         shell: bash -l {0}
@@ -173,7 +173,7 @@ jobs:
         
   build-windows-oneclick:
     name: Build Windows one-click
-    runs-on: windows-2019
+    runs-on: windows-2022
     defaults:
       run:
         shell: bash -l {0}
