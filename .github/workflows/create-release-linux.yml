@@ -216,7 +216,7 @@ jobs:
     - name: Install packaging deps
       run: |
         conda install --yes --quiet 'sphinx==7.3.7' pandoc
-        pip install "pyinstaller==4.8"
+        pip install "pyinstaller==6.10.0"
         
     - name: Build embedded help docs
       run: |
