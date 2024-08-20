@@ -56,7 +56,7 @@ jobs:
                 
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build
+        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build conda-verify
         
     - name: Build conda package
       run: |
