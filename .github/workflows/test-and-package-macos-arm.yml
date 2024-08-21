@@ -82,6 +82,7 @@ jobs:
         auto-update-conda: true
         activate-environment: cytoflow
         environment-file: environment.yml
+        conda-solver: "classic"
          
     - name: Configure conda
       run: |
