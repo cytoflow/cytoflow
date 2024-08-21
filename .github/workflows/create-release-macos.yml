@@ -14,13 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-name: Release a new package (MacOS)
+name: Release a new package (MacOS Intel)
 on:
   repository_dispatch:
     types: [builds]
 jobs:
   build-macos-conda-package:
-    name: Build and upload MacOS conda package
+    name: Build and upload MacOS Intel conda package
     runs-on: macos-13
     defaults:
       run:
@@ -93,7 +93,7 @@ jobs:
         anaconda logout
 
   build-macos-wheels:
-    name: Build MacOS wheel, extension
+    name: Build MacOS Intel wheel, extension
     runs-on: macos-13
     defaults:
       run:
@@ -165,7 +165,7 @@ jobs:
  
         
   build-macos-oneclick:
-    name: Build macos one-click
+    name: Build MacOS Intel one-click
     runs-on: macos-13
     defaults:
       run:
@@ -222,7 +222,7 @@ jobs:
       run: |
         cd dist/
         mv Cytoflow.app Cytoflow-${$GIT_TAG}.app
-        zip -r cytoflow-gui-${$GIT_TAG}.macos.zip Cytoflow-${$GIT_TAG}.app/
+        zip -r cytoflow-gui-${$GIT_TAG}-macos_x86-64.zip Cytoflow-${$GIT_TAG}.app/
         rm -rf Cytoflow-${$GIT_TAG}.app cytoflow
         
     - name: List dist
@@ -234,6 +234,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${$GIT_TAG}.macos.zip
-        asset_name: cytoflow-gui-${$GIT_TAG}.macos.zip
+        asset_path: dist/cytoflow-gui-${$GIT_TAG}-macos_x86-64.zip
+        asset_name: cytoflow-gui-${$GIT_TAG}-macos_x86-64.zip
         asset_content_type: application/zip

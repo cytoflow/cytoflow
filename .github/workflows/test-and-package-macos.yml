@@ -14,12 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-name: Test and package on MacOS
+name: Test and package on MacOS (Intel)
 on: [push]
 jobs:
       
   test-on-macos:
-    name: Run nose2 on MacOS runner
+    name: Run nose2 on Intel MacOS runner
     runs-on: macos-13
     defaults:
       run:
@@ -63,7 +63,7 @@ jobs:
 
     
   build-macos-conda-package:
-    name: Build MacOS conda package
+    name: Build MacOS Intel conda package
     runs-on: macos-13
     needs: test-on-macos
     defaults:
@@ -113,7 +113,7 @@ jobs:
         path: dist/*
 
   build-macos-wheels:
-    name: Build MacOS wheels
+    name: Build MacOS Intel wheels
     needs: test-on-macos
     runs-on: macos-13
     defaults:
@@ -164,7 +164,7 @@ jobs:
         path: dist/*   
         
   build-macos-oneclick:
-    name: Build macos one-click
+    name: Build MacOS Intel one-click
     needs: test-on-macos
     runs-on: macos-13
     defaults:

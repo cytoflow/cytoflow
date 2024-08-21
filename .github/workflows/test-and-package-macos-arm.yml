@@ -14,12 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-name: Test and package on MacOS
+name: Test and package on MacOS (ARM)
 on: [push]
 jobs:
       
   test-on-macos:
-    name: Run nose2 on MacOS runner
+    name: Run nose2 on ARM MacOS runner
     runs-on: macos-14
     defaults:
       run:
@@ -63,7 +63,7 @@ jobs:
 
     
   build-macos-conda-package:
-    name: Build MacOS conda package
+    name: Build MacOS ARM conda package
     runs-on: macos-14
     needs: test-on-macos
     defaults:
@@ -113,7 +113,7 @@ jobs:
         path: dist/*
 
   build-macos-wheels:
-    name: Build MacOS wheels
+    name: Build MacOS ARM wheels
     needs: test-on-macos
     runs-on: macos-14
     defaults:
@@ -164,7 +164,7 @@ jobs:
         path: dist/*   
         
   build-macos-oneclick:
-    name: Build macos one-click
+    name: Build MacOS ARM one-click
     needs: test-on-macos
     runs-on: macos-14
     defaults:
