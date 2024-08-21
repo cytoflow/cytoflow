@@ -238,7 +238,7 @@ jobs:
     - name: Rename installer and remove remaining files
       run: |
         cd dist
-        mv cytoflow-installer.exe cytoflow-installer-${$GIT_TAG}-win-amd64.exe
+        mv cytoflow-installer.exe cytoflow-installer-${GIT_TAG}-win-amd64.exe
         rm -rf cytoflow
         
     - name: List dist

@@ -221,9 +221,9 @@ jobs:
     - name: Rename and zip Mac app
       run: |
         cd dist/
-        mv Cytoflow.app Cytoflow-${$GIT_TAG}.app
-        zip -r cytoflow-gui-${$GIT_TAG}-macos_x86-64.zip Cytoflow-${$GIT_TAG}.app/
-        rm -rf Cytoflow-${$GIT_TAG}.app cytoflow
+        mv Cytoflow.app Cytoflow-${GIT_TAG}.app
+        zip -r cytoflow-gui-${GIT_TAG}-macos_x86-64.zip Cytoflow-${GIT_TAG}.app/
+        rm -rf Cytoflow-${GIT_TAG}.app cytoflow
         
     - name: List dist
       run: ls dist/
@@ -234,6 +234,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${$GIT_TAG}-macos_x86-64.zip
-        asset_name: cytoflow-gui-${$GIT_TAG}-macos_x86-64.zip
+        asset_path: dist/cytoflow-gui-${GIT_TAG}-macos_x86-64.zip
+        asset_name: cytoflow-gui-${GIT_TAG}-macos_x86-64.zip
         asset_content_type: application/zip

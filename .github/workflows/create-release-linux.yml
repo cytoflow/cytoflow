@@ -284,9 +284,9 @@ jobs:
       run: |
         mkdir dist
         cd docs
-        zip -r cytoflow-${$GIT_TAG}-examples-basic.zip examples-basic
-        zip -r cytoflow-${$GIT_TAG}-examples-advanced.zip examples-advanced
-        mv cytoflow-${$GIT_TAG}-examples-*.zip ../dist
+        zip -r cytoflow-${GIT_TAG}-examples-basic.zip examples-basic
+        zip -r cytoflow-${GIT_TAG}-examples-advanced.zip examples-advanced
+        mv cytoflow-${GIT_TAG}-examples-*.zip ../dist
         cd ..
         
     - name: List dist/
@@ -298,8 +298,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-${$GIT_TAG}-examples-basic.zip
-        asset_name: cytoflow-${$GIT_TAG}-examples-basic.zip
+        asset_path: dist/cytoflow-${GIT_TAG}-examples-basic.zip
+        asset_name: cytoflow-${GIT_TAG}-examples-basic.zip
         asset_content_type: application/zip
         
     - name: Upload the the advanced examples to the GitHub release
@@ -308,8 +308,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-${$GIT_TAG}-examples-advanced.zip
-        asset_name: cytoflow-${$GIT_TAG}-examples-advanced.zip
+        asset_path: dist/cytoflow-${GIT_TAG}-examples-advanced.zip
+        asset_name: cytoflow-${GIT_TAG}-examples-advanced.zip
         asset_content_type: application/zip
 
         

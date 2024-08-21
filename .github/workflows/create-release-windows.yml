@@ -242,7 +242,7 @@ jobs:
     - name: Rename installer and remove remaining files
       run: |
         cd dist
-        mv cytoflow-installer.exe cytoflow-gui-${$GIT_TAG}-win_x86-64.exe
+        mv cytoflow-installer.exe cytoflow-gui-${GIT_TAG}-win_x86-64.exe
         rm -rf cytoflow
         
     - name: List dist
@@ -254,7 +254,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${$GIT_TAG}-win_x86-64.exe
-        asset_name: cytoflow-gui-${$GIT_TAG}-win_x86-64.exe
+        asset_path: dist/cytoflow-gui-${GIT_TAG}-win_x86-64.exe
+        asset_name: cytoflow-gui-${GIT_TAG}-win_x86-64.exe
         asset_content_type: application/x-ms-dos-executable
 
