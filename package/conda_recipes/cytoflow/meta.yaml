@@ -21,7 +21,6 @@ build:
 requirements:
   build:
     - {{ compiler('cxx') }}
-    - {{ stdlib('cxx') }}
     - swig
 
   host:
