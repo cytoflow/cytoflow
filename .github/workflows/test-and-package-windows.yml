@@ -97,7 +97,7 @@ jobs:
     - name: Build conda package
       run: |
         conda render package/conda_recipes/cytoflow
-        conda build --quiet package/conda_recipes/cytoflow
+        conda build --debug package/conda_recipes/cytoflow
         
     - name: Move conda package into the dist folder
       run: |
