@@ -20,8 +20,8 @@ build:
     - cf-fcs_metadata = cytoflow.scripts.fcs_metadata:main
 
 requirements:
-  build:
-    - {{ compiler('cxx') }}
+  #build:
+  #  - {{ compiler('cxx') }}
 
   host:
     - python=3.11.9
