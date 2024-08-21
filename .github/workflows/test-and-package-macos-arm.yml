@@ -179,12 +179,12 @@ jobs:
         
     - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags)"
+      run: echo "GIT_TAG=$(git describe --tags)" >> $GITHUB_ENV
         
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.0.4
@@ -220,9 +220,9 @@ jobs:
     - name: Rename and zip Mac app
       run: |
         cd dist/
-        mv Cytoflow.app Cytoflow-${{steps.tag.outputs.tag}}.app
-        zip -r cytoflow-${{steps.tag.outputs.tag}}.macos.zip Cytoflow-${{steps.tag.outputs.tag}}.app/
-        rm -rf Cytoflow-${{steps.tag.outputs.tag}}.app cytoflow
+        mv Cytoflow.app Cytoflow-${$GIT_TAG}.app
+        zip -r cytoflow-${$GIT_TAG}.macos.zip Cytoflow-${$GIT_TAG}.app/
+        rm -rf Cytoflow-${$GIT_TAG}.app cytoflow
         
     - name: List dist
       run: ls dist/

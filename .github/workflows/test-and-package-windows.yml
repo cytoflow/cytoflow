@@ -192,12 +192,12 @@ jobs:
       
     - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags)"
+      run: echo "GIT_TAG=$(git describe --tags)" >> $GITHUB_ENV
         
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        echo "Output from Find Tag: ${GIT_TAG}"
         
     - name: Remove nomkl
       run: |
@@ -238,7 +238,7 @@ jobs:
     - name: Rename installer and remove remaining files
       run: |
         cd dist
-        mv cytoflow-installer.exe cytoflow-installer-${{steps.tag.outputs.tag}}-win-amd64.exe
+        mv cytoflow-installer.exe cytoflow-installer-${$GIT_TAG}-win-amd64.exe
         rm -rf cytoflow
         
     - name: List dist

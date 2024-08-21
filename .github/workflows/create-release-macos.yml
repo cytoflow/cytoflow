@@ -35,12 +35,12 @@ jobs:
         
     - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags)"
-       
+      run: echo "GIT_TAG=$(git describe --tags)" >> $GITHUB_ENV
+        
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.0.4
@@ -70,11 +70,11 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
+        echo "CONDA_PACKAGE=$(ls cytoflow*.bz2)" >> $GITHUB_ENV        
 
     - name: Show file name
       run: |
-        echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
+        echo 'Output from get_filename: ${CONDA_PACKAGE}'
          
     - name: Upload the conda package to the GitHub release
       uses: actions/upload-release-asset@v1
@@ -82,14 +82,14 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
-        asset_name: cytoflow-conda-${{ steps.tag.outputs.tag }}-macos.tar.bz2
+        asset_path: dist/${CONDA_PACKAGE}
+        asset_name: cytoflow-conda-${GIT_TAG}-macos.tar.bz2
         asset_content_type: application/x-bzip2
          
     - name: Upload the conda package to anaconda.org
       run: |
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-        anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
+        anaconda upload --user cytoflow dist/${CONDA_PACKAGE}
         anaconda logout
 
   build-macos-wheels:
@@ -140,8 +140,8 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "::set-output name=extension::$(ls _Logicle*.so)"
-        echo "::set-output name=wheel::$(ls cytoflow*.whl)"
+        echo "EXTENSION_FILE=$(ls _Logicle*.so)" >> $GITHUB_ENV
+        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_ENV
 
     - name: Upload the MacOS extension to the GitHub release
       uses: actions/upload-release-asset@v1
@@ -149,8 +149,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.extension }}
-        asset_name: ${{ steps.get_filenames.outputs.extension }}
+        asset_path: dist/${EXTENSION_FILE}
+        asset_name: ${EXTENSION_FILE}
         asset_content_type: application/x-sharedlib
  
     - name: Upload the MacOS wheel to the GitHub release
@@ -159,8 +159,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.wheel }}
-        asset_name: ${{ steps.get_filenames.outputs.wheel }}
+        asset_path: dist/${WHEEL_FILE}
+        asset_name: ${WHEEL_FILE}
         asset_content_type: application/zip       
  
         
@@ -180,12 +180,12 @@ jobs:
         
     - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags)"
+      run: echo "GIT_TAG=$(git describe --tags)" >> $GITHUB_ENV
         
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.0.4
@@ -221,9 +221,9 @@ jobs:
     - name: Rename and zip Mac app
       run: |
         cd dist/
-        mv Cytoflow.app Cytoflow-${{steps.tag.outputs.tag}}.app
-        zip -r cytoflow-gui-${{steps.tag.outputs.tag}}.macos.zip Cytoflow-${{steps.tag.outputs.tag}}.app/
-        rm -rf Cytoflow-${{steps.tag.outputs.tag}}.app cytoflow
+        mv Cytoflow.app Cytoflow-${$GIT_TAG}.app
+        zip -r cytoflow-gui-${$GIT_TAG}.macos.zip Cytoflow-${$GIT_TAG}.app/
+        rm -rf Cytoflow-${$GIT_TAG}.app cytoflow
         
     - name: List dist
       run: ls dist/
@@ -234,6 +234,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${{steps.tag.outputs.tag}}.macos.zip
-        asset_name: cytoflow-gui-${{steps.tag.outputs.tag}}.macos.zip
+        asset_path: dist/cytoflow-gui-${$GIT_TAG}.macos.zip
+        asset_name: cytoflow-gui-${$GIT_TAG}.macos.zip
         asset_content_type: application/zip
