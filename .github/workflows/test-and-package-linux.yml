@@ -206,7 +206,7 @@ jobs:
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${GIT_TAG}'
+        echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.0.4
@@ -244,7 +244,7 @@ jobs:
       run: |
         cd dist
         mv cytoflow cytoflow-${GIT_TAG}
-        tar -cjf cytoflow-gui-${GIT_TAG}.linux_x86-64.tar.bz2 cytoflow-${{steps.tag.outputs.tag}}
+        tar -cjf cytoflow-gui-${GIT_TAG}.linux_x86-64.tar.bz2 cytoflow-${GIT_TAG}
         rm -rf cytoflow-${GIT_TAG}
         
     - name: List dist/
@@ -276,7 +276,7 @@ jobs:
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${GIT_TAG}'
+        echo "Output from Find Tag: ${GIT_TAG}"
         
     - name: Zip up examples
       run: |
