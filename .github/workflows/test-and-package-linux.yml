@@ -201,12 +201,12 @@ jobs:
       
     - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags)"
+      run: echo "GIT_TAG=$(git describe --tags)" >> $GITHUB_ENV
         
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        echo 'Output from Find Tag: ${GIT_TAG}'
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.0.4
@@ -243,9 +243,9 @@ jobs:
     - name: Rename directory and make a tarball
       run: |
         cd dist
-        mv cytoflow cytoflow-${{steps.tag.outputs.tag}}
-        tar -cjf cytoflow-gui-${{steps.tag.outputs.tag}}.linux_x86-64.tar.bz2 cytoflow-${{steps.tag.outputs.tag}}
-        rm -rf cytoflow-${{steps.tag.outputs.tag}}
+        mv cytoflow cytoflow-${GIT_TAG}
+        tar -cjf cytoflow-gui-${GIT_TAG}.linux_x86-64.tar.bz2 cytoflow-${{steps.tag.outputs.tag}}
+        rm -rf cytoflow-${GIT_TAG}
         
     - name: List dist/
       run: ls dist/
@@ -271,20 +271,20 @@ jobs:
       
     - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags)"
+      run: echo "GIT_TAG=$(git describe --tags)" >> $GITHUB_ENV
         
     - name: Show Tag
       id: display
       run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        echo 'Output from Find Tag: ${GIT_TAG}'
         
     - name: Zip up examples
       run: |
         mkdir dist
         cd docs
-        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip examples-basic
-        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
-        mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
+        zip -r cytoflow-${GIT_TAG}-examples-basic.zip examples-basic
+        zip -r cytoflow-${GIT_TAG}-examples-advanced.zip examples-advanced
+        mv cytoflow-${GIT_TAG}-examples-*.zip ../dist
         cd ..
         
     - name: List dist/
