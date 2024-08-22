@@ -102,7 +102,7 @@ jobs:
         
     - name: Zip up the build directory
       run: |
-        zip -r conda-build.zip "C:\Miniconda\envs\cytoflow\conda-bld\"
+        zip -r conda-build.zip /c/Miniconda/envs/cytoflow/conda-bld/
                 
     - name: Save the contents of the conda-build folder as artifacts
       uses: actions/upload-artifact@v4.3.6
