@@ -11,9 +11,9 @@ build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   string: {{ "py311" }}
   script:
-    - python setup.py build_ext --inplace
-    - sphinx-build docs/user_manual/reference cytoflowgui/help
-    - pip install -v -v .
+    - python setup.py build_ext --inplace 2>&1
+    - sphinx-build docs/user_manual/reference cytoflowgui/help 2>&1
+    - pip install -v -v . 2>&1
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui
     - cf-channel_voltages = cytoflow.scripts.channel_voltages:main
