@@ -21,8 +21,9 @@ build:
 
 requirements:
   build:
-    - {{ compiler('cxx') }}
+    # - {{ compiler('cxx') }}
     - swig
+    - pip
 
   host:
     - python=3.11.9
