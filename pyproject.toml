@@ -82,7 +82,6 @@ cytoflow = 'cytoflowgui.run:run_gui'
 [tool.setuptools]
 
 [tool.setuptools.packages.find]
-include = ["cytoflow.utility.logicle_ext"]
 exclude = ["package", "package.qt"]
 
 [tool.setuptools.package-data]
