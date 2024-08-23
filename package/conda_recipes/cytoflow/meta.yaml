@@ -53,8 +53,6 @@ requirements:
     - nomkl # [not win]
 
     # build deps
-    - {{ compiler('cxx') }}
-    - swig
     - sphinx==7.3.7
     - bleach
     - pip
