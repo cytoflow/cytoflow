@@ -20,10 +20,6 @@ build:
     - cf-fcs_metadata = cytoflow.scripts.fcs_metadata:main
 
 requirements:
-  build:
-    # - {{ compiler('cxx') }}
-    - swig
-
   host:
     - python=3.11.9
     - numpy==1.26.4
@@ -56,6 +52,9 @@ requirements:
     # only install mkl libraries on windows, where they're required
     - nomkl # [not win]
 
+    # build deps
+    - {{ compiler('cxx') }}
+    - swig
     - sphinx==7.3.7
     - bleach
     - pip
