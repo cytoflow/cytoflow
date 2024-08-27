@@ -108,7 +108,7 @@ jobs:
 #       uses: actions/upload-artifact@v4.3.6
 #       with:
 #         name: windows-conda-build-dir
-#         retention-days: 1
+#         retention-days: 7
 #         path: conda-build.zip
         
     - name: Move conda package into the dist folder
@@ -127,7 +127,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: windows-conda-package
-        retention-days: 1
+        retention-days: 7
         path: dist/*
 
   build-windows-wheels:
@@ -182,7 +182,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: windows-wheels
-        retention-days: 1
+        retention-days: 7
         path: dist/*   
         
   build-windows-oneclick:
@@ -260,6 +260,6 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: windows-oneclick
-        retention-days: 1
+        retention-days: 7
         path: dist/*
 

@@ -102,7 +102,7 @@ jobs:
 #       uses: actions/upload-artifact@v4.3.6
 #       with:
 #         name: macos-arm-conda-build-dir
-#         retention-days: 1
+#         retention-days: 7
 #         path: conda-build.zip
         
     - name: Move conda package into the dist folder
@@ -121,7 +121,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: macos-conda-package
-        retention-days: 1
+        retention-days: 7
         path: dist/*
 
   build-macos-wheels:
@@ -172,7 +172,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: macos-wheels
-        retention-days: 1
+        retention-days: 7
         path: dist/*   
         
   build-macos-oneclick:
@@ -243,5 +243,5 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: macos-oneclick
-        retention-days: 1
+        retention-days: 7
         path: dist/*

@@ -120,7 +120,7 @@ jobs:
 #       uses: actions/upload-artifact@v4.3.6
 #       with:
 #         name: linux-conda-build-dir
-#         retention-days: 1
+#         retention-days: 7
 #         path: conda-build.zip
         
     - name: Move conda package into the dist folder
@@ -139,7 +139,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: linux-conda-package
-        retention-days: 1
+        retention-days: 7
         path: dist/*
 
   build-linux-wheels:
@@ -194,7 +194,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: linux-wheels
-        retention-days: 1
+        retention-days: 7
         path: dist/*   
         
   build-linux-oneclick:
@@ -267,7 +267,7 @@ jobs:
       with:
         name: linux-oneclick
         path: dist/*
-        retention-days: 1
+        retention-days: 7
         
         
   build-examples:
@@ -306,6 +306,6 @@ jobs:
       uses: actions/upload-artifact@v4.3.6
       with:
         name: examples
-        retention-days: 1
+        retention-days: 7
         path: dist/*
         
