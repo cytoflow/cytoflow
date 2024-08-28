@@ -51,15 +51,19 @@ a = Analysis(['../cytoflowgui/run.py'],
              runtime_hooks=['package/hooks/rthook_qtapi.py',],
              excludes=[
              	# Unused modules
-                'IPython',
-                'docutils',
-                'ipykernel',
-                'jupyter_client',
-                'prompt_toolkit',
-                'sphinx',
-                'tkinter',
-                'tornado',
-                'zmq'],
+                'IPython', 'docutils', 'ipykernel', 'jupyter_client', 
+                'prompt_toolkit', 'sphinx', 'tkinter', 'tornado',
+                'zmq'
+                
+             	# Unused Qt5 libraries
+                'PyQt5.QtBluetooth', 'PyQt5.QtDesigner',
+                'PyQt5.QtHelp', 'PyQt5.QtLocation',
+                'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNfc', 
+                'PyQt5.QtQml', 'PyQt5.QtQuick', 'PyQt5.QtQuickWidgets',
+                'PyQt5.QtSensors', 'PyQt5.QtSerialPort', 'PyQt5.QtSql',
+                'PyQt5.QtTest', 'PyQt5.QtWebSockets', 'PyQt5.QtXml',
+                'PyQt5.QtXmlPatterns',
+                ],
                 
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
