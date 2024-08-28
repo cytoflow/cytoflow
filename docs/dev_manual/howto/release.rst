@@ -28,14 +28,10 @@ Tests
     
 Documentation
 -------------
-
-- Build the developers' manual and check it for completeness::
-
-      conda install sphinx pandoc
-      python setup.py build_sphinx
   
 - Build the user manual and check it for completeness::
 
+      conda install sphinx pandoc  # only necessary once
 	  sphinx-build docs/ build/manual
   	  sphinx-build docs/user_manual/reference cytoflowgui/help
   	  
