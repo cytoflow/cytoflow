@@ -40,6 +40,8 @@ passed to `ByView.plot`'s ``plot_name`` parameter.
 plots some annotations on top of it.
 '''
 
+from typing import Dict, Tuple
+import typing
 from warnings import warn
 import collections
 from natsort import natsorted
@@ -47,9 +49,10 @@ from natsort import natsorted
 from traits.api import (provides, Instance, Property, List, DelegatesTo)
 
 import cytoflow.utility as util
+from cytoflow.utility.scale import IScale
 
 from .i_operation import IOperation
-from cytoflow.views import IView
+from cytoflow.views import IView, try_get_kwarg
 from cytoflow.views.base_views import BaseDataView, Base1DView, Base2DView
 
 @provides(IView)
@@ -363,8 +366,8 @@ class AnnotatingView(BaseDataView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        annotation_facet = kwargs.pop('annotation_facet', None)
-        annotation_trait = kwargs.pop('annotation_trait', None)
+        annotation_facet = try_get_kwarg(kwargs,'annotation_facet', None)
+        annotation_trait = try_get_kwarg(kwargs,'annotation_trait', None)
                 
         if annotation_facet is not None and annotation_facet in experiment.data:
             if annotation_trait:
@@ -384,9 +387,9 @@ class AnnotatingView(BaseDataView):
         # pop the annotation stuff off of kwargs so the underlying data plotter 
         # doesn't get confused
         
-        annotation_facet = kwargs.pop('annotation_facet', None)
-        annotations = kwargs.pop('annotations', None)
-        plot_name = kwargs.pop('plot_name', None)
+        annotation_facet = try_get_kwarg(kwargs,'annotation_facet', None)
+        annotations = try_get_kwarg(kwargs,'annotations', None)
+        plot_name = try_get_kwarg(kwargs,'plot_name', None)
         color = kwargs.get('color', None)
 
         # plot the underlying data plots
@@ -468,3 +471,34 @@ class AnnotatingView(BaseDataView):
         for n, v in traits.items():
             if v == val:
                 return n
+
+
+def op_default_NDview_init(channels : typing.List[str], scale : Dict[str, IScale], **kwargs) -> Tuple[typing.List[str], Dict[str, IScale]]:
+    """
+    Validates the paramters for default viwe of ND operations.
+    returns the channels and scale parameters.
+    """
+    channels = try_get_kwarg(kwargs,'channels', channels)
+    scale = try_get_kwarg(kwargs,'scale', scale)
+    
+    for c in channels:
+        if c not in channels:
+            raise util.CytoflowViewError('channels',
+                                            "Channel {} isn't in the operation's channels"
+                                            .format(c))
+            
+    for s in scale:
+        if s not in channels:
+            raise util.CytoflowViewError('scale',
+                                            "Channel {} isn't in the operation's channels"
+                                            .format(s))
+        
+    for c in channels:
+        if c not in scale:
+            scale[c] = util.get_default_scale()
+        
+    if len(channels) == 0:
+        raise util.CytoflowViewError('channels',
+                                        "Must specify at least one channel for a default view")
+    
+    return channels, scale

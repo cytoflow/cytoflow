@@ -26,6 +26,7 @@ Created on Dec 1, 2015
 import unittest
 import os
 import cytoflow as flow
+import cytoflow.utility as util
 
 class TestImport(unittest.TestCase):
     
@@ -122,6 +123,22 @@ class TestImport(unittest.TestCase):
                             data_set = 3).apply()
                             
         self.assertNotEqual(len(ex3), len(ex4))
+
+    def testImportCSVTube_TubesAsCSVpathGiven_ImportData(self):
+        tube = flow.Tube(file = './cytoflow/tests/data/vie14/494.csv')
+
+        ex1 = flow.ImportOp(tubes = [tube]).apply()
+        
+        self.assertEqual(len(ex1), 83411)
+        self.assertEqual(len(ex1.channels), 12)
+        self.assertEqual(ex1.channels, ['APC-CY7-A', 'CD10', 'CD19', 'CD20', 'CD34', 'CD38', 'CD45', 'FSC-A', 'FSC-W', 'SSC-A', 'SY41', 'TIME'])
+
+    def testImportCSVTube_TubesWithWrongFileExtentionGiven_ExceptionThrown(self):
+        tube = flow.Tube(file = './cytoflow/tests/data/vie14/494.wrong')
+
+        importOp = flow.ImportOp(tubes = [tube])
+        with self.assertRaises(util.CytoflowError):
+            ex1 = importOp.apply()
 
                             
 if __name__ == "__main__":

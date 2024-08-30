@@ -56,6 +56,7 @@ RUNNING_IN_GUI = False
 # basics
 from .experiment import Experiment
 from .operations.import_op import ImportOp, Tube
+from .operations.bulk_condition_op import BulkConditionOp
 
 # gates
 from .operations.threshold import ThresholdOp
@@ -77,6 +78,8 @@ from .operations.gaussian import GaussianMixtureOp
 from .operations.kmeans import KMeansOp
 from .operations.flowpeaks import FlowPeaksOp
 from .operations.pca import PCAOp
+from .operations.umap import UMAPOp
+from .operations.hdbscan import HDBSCANOp
 
 # channels
 from .operations.channel_stat import ChannelStatisticOp
@@ -85,6 +88,8 @@ from .operations.xform_stat import TransformStatisticOp
 
 # misc
 from .operations.binning import BinningOp
+from .operations.subsample import SubsampleOp
+
 
 # views
 from .views.histogram import HistogramView
@@ -104,6 +109,7 @@ from .views.radviz import RadvizView
 from .views.parallel_coords import ParallelCoordinatesView
 
 from .views.export_fcs import ExportFCS
+from .views.view_kwargs import DefaultKWArgs
 
 # util
 from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,

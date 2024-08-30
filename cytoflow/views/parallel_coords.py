@@ -36,6 +36,7 @@ import numpy as np
 
 import cytoflow.utility as util
 from .i_view import IView
+from .view_kwargs import try_get_kwarg
 
 from .base_views import BaseNDView
 
@@ -123,8 +124,8 @@ class ParallelCoordinatesView(BaseNDView):
         # plane onto which we are projecting.  the kwargs 'scale' and 'lim'
         # are the data scale and limits, respectively
         
-        scale = kwargs.pop('scale')
-        lim = kwargs.pop('lim')
+        scale = try_get_kwarg(kwargs,'scale')
+        lim = try_get_kwarg(kwargs,'lim')
         
         # TODO - some way to optimize attribute order
         # TODO - allow changing attribute spacing
@@ -149,11 +150,11 @@ class ParallelCoordinatesView(BaseNDView):
     
 def _parallel_coords_plot(*channels, ax_annotations, scale, lim, **kwargs):
 
-    color = kwargs.pop('color')
-    alpha = kwargs.pop('alpha', 0.02)
-    aa = kwargs.pop('antialiased', True)
+    color = try_get_kwarg(kwargs,'color')
+    alpha = try_get_kwarg(kwargs,'alpha', 0.02)
+    aa = try_get_kwarg(kwargs,'antialiased', True)
     color = tuple(list(color) + [alpha])
-    label = kwargs.pop('label', None)
+    label = try_get_kwarg(kwargs,'label', None)
         
     df = pd.DataFrame()
     for c in channels:
@@ -170,7 +171,7 @@ def _parallel_coords_plot(*channels, ax_annotations, scale, lim, **kwargs):
     
     # adapted from pandas.plotting._misc
     
-    axvlines_kwds = kwargs.pop('axvlines_kwds', {'linewidth' : 1, 'color' : 'black'})
+    axvlines_kwds = try_get_kwarg(kwargs,'axvlines_kwds', {'linewidth' : 1, 'color' : 'black'})
     
     ax = plt.gca()
     
