@@ -1,5 +1,6 @@
 name: cytoflow
 channels:
+ - defaults
  - cytoflow
  
 dependencies:
