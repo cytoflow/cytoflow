@@ -286,9 +286,13 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             t = int(b) + h
             l = int(l)
         
-            reg = self.copy_from_bbox(bbox)
+            region = self.copy_from_bbox(bbox)
             
-            self.blit_buffer = reg.to_string_argb()
+            #self.blit_buffer = region.to_string_argb()
+            self.blit_buffer = np.asarray(region)
+            
+            # convert from RGBA to ARGB
+            self.blit_buffer = np.take(self.blit_buffer, [2, 1, 0, 3], axis = 2)
             self.blit_width = w
             self.blit_height = h
             self.blit_top = t

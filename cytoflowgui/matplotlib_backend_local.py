@@ -350,7 +350,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         if self.blit_buffer is None:
             
             # convert the Agg rendered image -> qImage
-            qImage = QtGui.QImage(self.buffer.tobytes(), 
+            qImage = QtGui.QImage(self.buffer, 
                                   int(self.buffer_width),
                                   int(self.buffer_height),
                                   QtGui.QImage.Format_RGBA8888)
