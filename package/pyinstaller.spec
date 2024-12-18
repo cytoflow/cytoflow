@@ -87,6 +87,33 @@ logging.info("Removing binaries: {}".format(remove_binaries))
 
 a.binaries = list(set(a.binaries) - set(remove_binaries))
 
+# the following remove "cruft" files from the install
+# this is important because they make the windows uninstaller REALLY slow
+
+# the pytz zoneinfo files aren't used afaict
+remove_strs = ['pytz/zoneinfo']
+
+# setuptools cruft
+# remove_strs.append('dist-info')
+
+# sphinx cruft
+remove_strs.append('.doctrees')
+
+# matplotlib cruft
+remove_strs.append('mpl-data/sample_data')
+
+# sklearn cruft
+remove_strs.append('sklearn/datasets')
+
+# unused (??) Qt translations
+# remove_strs.append('Qt5/translations')
+
+lol = [ [x for x in a.datas if x[0].find(y) >= 0] for y in remove_strs]
+remove_datas = [item for sublist in lol for item in sublist]
+logging.info("Removing datas: {}".format(remove_datas))
+
+a.datas = list(set(a.datas) - set(remove_datas))
+
 # replace the module cytoflow/_version.py with a fixed version from versioneer
 #logging.info("Freezing dynamic version")
 #a.pure -= [('cytoflow._version', None, None)]
