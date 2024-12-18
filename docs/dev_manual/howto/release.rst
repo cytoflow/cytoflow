@@ -75,11 +75,6 @@ Test the packaging
       conda install ./cytoflow-*******-tar.bz2
       python -c "import cytoflow"
       cytoflow
-      
-  
-  
-
-
 
 Versioning and dependencies
 ---------------------------
