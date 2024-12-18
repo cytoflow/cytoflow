@@ -92,6 +92,8 @@ Versioning and dependencies
 
   	pandoc --from=markdown --to=rst --output=README.rst README.md
   	
+- Update the version integers in ``package/installer.nsis``
+  	
 Tag and upload the release
 --------------------------
   
