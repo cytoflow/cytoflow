@@ -149,7 +149,7 @@ class Kde2DView(Base2DView):
                     legend_data = legend_data)
         
     def _update_legend(self, legend):
-        for lh in legend.legendHandles:
+        for lh in legend.legend_handles:
             lh.set_alpha(0.5)
         
 # yoinked from seaborn/distributions.py, with modifications for scaling.

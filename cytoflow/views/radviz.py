@@ -216,7 +216,7 @@ class RadvizView(BaseNDView):
         return {}
     
     def _update_legend(self, legend):
-        for lh in legend.legendHandles:
+        for lh in legend.legend_handles:
             lh.set_alpha(0.5)
             lh.set_sizes([10.0])
             
