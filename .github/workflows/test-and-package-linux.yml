@@ -45,7 +45,7 @@ jobs:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.0.4
+      uses: conda-incubator/setup-miniconda@v3.1.0
       with:
         auto-update-conda: true
         activate-environment: cytoflow
@@ -96,7 +96,7 @@ jobs:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.0.4
+      uses: conda-incubator/setup-miniconda@v3.1.0
       with:
         auto-update-conda: true
         activate-environment: cytoflow
@@ -157,7 +157,7 @@ jobs:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.0.4
+      uses: conda-incubator/setup-miniconda@v3.1.0
       with:
         auto-update-conda: true
         activate-environment: cytoflow
@@ -221,7 +221,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.0.4
+      uses: conda-incubator/setup-miniconda@v3.1.0
       with:
         auto-update-conda: true
         activate-environment: cytoflow
