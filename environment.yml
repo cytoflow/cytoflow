@@ -31,7 +31,7 @@ dependencies:
     - camel==0.1.2
     - yapf==0.30.0
     
-    - ipyml
+    - ipympl
     - notebook
     
     - nomkl # [not win]
