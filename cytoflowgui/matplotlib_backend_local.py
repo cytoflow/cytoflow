@@ -106,6 +106,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         FigureCanvasQTAgg.__init__(self, figure)
         self._drawRect = None
         self.child_conn = child_conn
+        self.render_dpi = 300
         
         # set up the "working" pixmap
         self.working = False
@@ -151,10 +152,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         t.daemon = True
         t.start()
         
-        dpi = self.physicalDpiX()
-        figure.dpi = dpi
-        matplotlib.rcParams['figure.dpi'] = dpi
-        self.child_conn.send((Msg.DPI, dpi))
+        figure.dpi = self.render_dpi
+        matplotlib.rcParams['figure.dpi'] = self.render_dpi
+        self.child_conn.send((Msg.DPI, self.render_dpi))
         
     def listen_for_remote(self):
         """
@@ -354,13 +354,15 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                                   int(self.buffer_width),
                                   int(self.buffer_height),
                                   QtGui.QImage.Format_RGBA8888)
+            
             # get the rectangle for the image
             rect = qImage.rect()
             p = QtGui.QPainter(self)
             # reset the image area of the canvas to be the back-ground color
             p.eraseRect(rect)
             # draw the rendered image on to the canvas
-            p.drawPixmap(QtCore.QPoint(0, 0), QtGui.QPixmap.fromImage(qImage))
+            p.drawPixmap(QtCore.QRect(0, 0, self.size().width(), self.size().height()), 
+                         QtGui.QPixmap.fromImage(qImage))
 
             p.end()
             
