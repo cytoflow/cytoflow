@@ -103,8 +103,6 @@ class _VerticalListEditor(_ListEditor):
         self._dispose_items()
 
         layout = self.control.layout()
-        dpi = self.control.physicalDpiX()
-
 
         # Create all of the list item trait editors:
         trait_handler = self._trait_handler
@@ -144,8 +142,7 @@ class _VerticalListEditor(_ListEditor):
                 del_button.setEnabled(True)
                 
                 del_button.setIcon(ImageResource('close').create_icon())
-                del_button.setIconSize(QtCore.QSize(int(dpi * 0.1), 
-                                                    int(dpi * 0.1)))
+                del_button.setIconSize(QtCore.QSize(16, 16))
                 
                 del_button.clicked.connect(self.delete_mapper.map)
                 self.delete_mapper.setMapping(del_button, index)

@@ -154,7 +154,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         dpi = self.physicalDpiX()
         figure.dpi = dpi
         matplotlib.rcParams['figure.dpi'] = dpi
-        self.child_conn.send((Msg.DPI, self.physicalDpiX()))
+        self.child_conn.send((Msg.DPI, dpi))
         
     def listen_for_remote(self):
         """

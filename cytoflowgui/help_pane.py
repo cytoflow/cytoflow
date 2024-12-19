@@ -31,11 +31,12 @@ from traits.api import Instance, List, observe, Str, HTML
 from traitsui.api import View, Item
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.qt import QtGui
+from traitsui.editors.html_editor import HTMLEditor
+
 
 from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
 from cytoflowgui.util import HintedWidget
-from cytoflowgui.editors import ZoomableHTMLEditor
 
 class HelpDockPane(TraitsDockPane):
     """
@@ -67,7 +68,7 @@ class HelpDockPane(TraitsDockPane):
     """The HTML trait containing the current help page"""
     
     traits_view = View(Item('pane.html',
-                            editor = ZoomableHTMLEditor(base_url = pathlib.PurePath(__file__).parent.joinpath('help').joinpath('operations').as_posix()),
+                            editor = HTMLEditor(base_url = pathlib.PurePath(__file__).parent.joinpath('help').joinpath('operations').as_posix()),
                             show_label = False))
     
     def create_contents(self, parent):

@@ -49,22 +49,15 @@ class WorkflowDockPane(TraitsDockPane):
     
     # controller
     handler = Instance(WorkflowController)
-    
-    # the size of the plugin toolbar images IN INCHES
-    image_size = Tuple((0.33, 0.33))
 
     def create_contents(self, parent):
         """ 
         Create and return the toolkit-specific contents of the dock pane.
         """
-         
-        dpi = self.control.physicalDpiX()
-        image_size = (int(self.image_size[0] * dpi),
-                      int(self.image_size[1] * dpi))
  
         self.toolbar = ToolBarManager(orientation='vertical',
                                       show_tool_names = False,
-                                      image_size = image_size)
+                                      image_size = (32, 32))
                  
         for plugin in self.plugins:
             

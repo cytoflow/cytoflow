@@ -271,12 +271,12 @@ class FlowTask(Task):
         Returns the default layout for the dock panes.
         """
         
-        dpi = self.application.dpi
-        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane", width = int(dpi * 3)),
-                                           PaneItem("edu.mit.synbio.cytoflowgui.experiment_pane", width = int(dpi * 3)),
-                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = int(dpi * 3), height = int(dpi * 3))),
-                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane", width = int(dpi * 3)),
-                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = int(dpi * 3), height = int(dpi * 3))),
+        pane_size = 400
+        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane", width = pane_size),
+                                           PaneItem("edu.mit.synbio.cytoflowgui.experiment_pane", width = pane_size),
+                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = pane_size, height = pane_size)),
+                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane", width = pane_size),
+                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = pane_size, height = pane_size)),
                           top_left_corner = 'left',
                           bottom_left_corner = 'left',
                           top_right_corner = 'right',
@@ -291,8 +291,7 @@ class FlowTask(Task):
         # place control passes back to user code before the toolbar
         # is created.
         
-        self.tool_bars[0].image_size = (int(0.33 * self.application.dpi), 
-                                        int(0.33 * self.application.dpi))
+        self.tool_bars[0].image_size = (32, 32)
         
         return FlowTaskPane(canvas = self.application.canvas,
                             model = self.application.model, 

@@ -79,6 +79,9 @@ def run_gui():
     
     from pyface.qt import QtGui, QtCore
     
+    # enable high DPI scaling
+    QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    
     # use high resolution pixmaps
     QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 

@@ -70,10 +70,6 @@ class CytoflowApplication(TasksApplication):
 
     always_use_default_layout = Property(Bool)
     """Restore the previous application-level layout?"""
-    
-    # We need this enough places that let's make it a property
-    dpi = Property(Int)
-    """The application's DPI"""
 
     # A the moment, just for sending logs to the console
     debug = Bool
@@ -233,7 +229,7 @@ class CytoflowApplication(TasksApplication):
         tasks = [ factory.id for factory in self.task_factories ]
         return [ TaskWindowLayout(*tasks,
                                   active_task = active_task,
-                                  size = (12 * self.dpi, 9 * self.dpi)) ]
+                                  size = (2000, 1125)) ]
 
     def _preferences_helper_default(self):
         return CytoflowPreferences(preferences = self.preferences)
@@ -242,12 +238,7 @@ class CytoflowApplication(TasksApplication):
  
     def _get_always_use_default_layout(self):
         return self.preferences_helper.always_use_default_layout
-    
-    def _get_dpi(self):
-        if self.canvas:
-            return self.canvas.physicalDpiX()
-        else:
-            return None
+
 
     
     

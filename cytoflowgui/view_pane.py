@@ -62,9 +62,6 @@ class ViewDockPane(TraitsDockPane):
     
     # controller
     handler = Instance(WorkflowController)
-
-    # the size of the toolbar icons IN INCHES
-    image_size = Tuple((0.33, 0.33))
     
     # task actions associated with views
     _actions = Dict(Str, TaskAction)
@@ -78,14 +75,10 @@ class ViewDockPane(TraitsDockPane):
         """ 
         Create and return the toolkit-specific contents of the dock pane.
         """
-        
-        dpi = self.control.physicalDpiX()
-        image_size = (int(self.image_size[0] * dpi),
-                      int(self.image_size[1] * dpi))
-        
+                
         self.toolbar = ToolBarManager(orientation = 'vertical',
                                       show_tool_names = False,
-                                      image_size = image_size)
+                                      image_size = (32, 32))
         
         self._default_action = TaskAction(name = "Setup View",
                                           on_perform = lambda: self.handler.activate_view('default'),
