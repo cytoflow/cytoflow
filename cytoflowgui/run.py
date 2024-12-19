@@ -81,6 +81,8 @@ def run_gui():
     
     # enable high DPI scaling
     QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    QtGui.QApplication.setHighDpiScaleFactorRoundingPolicy(
+                QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     
     # use high resolution pixmaps
     QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
