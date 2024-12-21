@@ -109,8 +109,8 @@ class RangeSlider(QtGui.QSlider):
             else:
                 opt.activeSubControls = self.hover_control
 
-            opt.sliderPosition = value
-            opt.sliderValue = value
+            opt.sliderPosition = int(value)
+            opt.sliderValue = int(value)
             style.drawComplexControl(QtGui.QStyle.CC_Slider, opt, painter, self)
 
 
@@ -133,7 +133,7 @@ class RangeSlider(QtGui.QSlider):
             self.active_slider = -1
 
             for i, value in self.sliderOrderForMove():
-                opt.sliderPosition = value
+                opt.sliderPosition = int(value)
                 hit = style.hitTestComplexControl(style.CC_Slider, opt, event.pos(), self)
                 if hit == style.SC_SliderHandle:
                     self.active_slider = i
