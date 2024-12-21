@@ -106,7 +106,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         FigureCanvasQTAgg.__init__(self, figure)
         self._drawRect = None
         self.child_conn = child_conn
-        self.render_dpi = 300
         
         # set up the "working" pixmap
         self.working = False
@@ -152,6 +151,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         t.daemon = True
         t.start()
         
+        # overrender four-fold to deal with low-DPI aliasing
+        self.render_dpi = self.physicalDpiX() * 2
         figure.dpi = self.render_dpi
         matplotlib.rcParams['figure.dpi'] = self.render_dpi
         self.child_conn.send((Msg.DPI, self.render_dpi))
