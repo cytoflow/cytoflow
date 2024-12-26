@@ -13,7 +13,13 @@ Welcome to a different style of flow cytometry analysis.  Take a look at some ex
 
 or some [screenshots from the GUI](http://cytoflow.github.io/screenshots.html)
 
-## Note: My 'day job' is teaching at a regional comprehensive college, so during the semester I may not have a huge amount of time to respond to bugs and feature requests. I'm still activately developing Cytoflow, so please continue to file bugs!
+## Cytoflow is developed sporadically. 
+
+My 'day job' is teaching at a regional comprehensive college, so during the semester I may not have a huge amount of time to respond to bugs and feature requests. I'm still activately developing Cytoflow, so please continue to file bugs!
+
+## Cytoflow's development isn't free -- your support is appreciated.
+
+I pay several hundred dollars a year to sign the code so it can be installed on Windows and Mac systems. If you have found it useful, consider [contributing a few dollars on Ko-Fi?](https://ko-fi.com/bteague)
 
 ### What's wrong with other packages?  
 
@@ -85,9 +91,10 @@ A few things.
   can install it from http://cytoflow.github.io/**
 
 See the [installation notes](http://cytoflow.readthedocs.org/en/stable/INSTALL.html) 
-on [ReadTheDocs](http://cytoflow.readthedocs.org/).  Installation has been tested
-on Linux, Windows (x86_64) and Mac.  Cytoflow is distributed as an [Anaconda](https://www.anaconda.com/)
-package **(recommended)** as well as a [traditional Python package](https://pypi.org/project/cytoflow/).
+on [ReadTheDocs](http://cytoflow.readthedocs.org/).  Installation has been 
+testedon Linux, Windows (x86_64) and Mac (both Intel and Apple Silicon).  
+Cytoflow is distributed as an [Anaconda](https://www.anaconda.com/) package 
+**(recommended)** as well as a [traditional Python package](https://pypi.org/project/cytoflow/).
 
 ### Documentation
 
