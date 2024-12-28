@@ -198,5 +198,5 @@ class TestImport(unittest.TestCase):
 
                             
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestImport.testManufacturers']
+    import sys;sys.argv = ['', 'TestImport.testCategories']
     unittest.main()

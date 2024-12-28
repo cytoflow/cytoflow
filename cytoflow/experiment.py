@@ -31,7 +31,7 @@ from natsort import natsorted
 
 from pandas.api.types import CategoricalDtype, is_categorical_dtype
 from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
-                       Property, Tuple)
+                       Property, Tuple, Int, cached_property)
 
 import cytoflow.utility as util
 
@@ -175,8 +175,8 @@ class Experiment(HasStrictTraits):
     
     history = List(Any, copy = "shallow")
     
-    channels = Property(List)
-    conditions = Property(Dict)
+    channels = Property(List, observe = 'metadata.items, data.items')
+    conditions = Property(Dict, observe = 'metadata.items, data.items')
             
     def __getitem__(self, key):
         """Override __getitem__ so we can reference columns like ex.column"""
@@ -192,10 +192,12 @@ class Experiment(HasStrictTraits):
         """Return the length of the underlying `pandas.DataFrame`"""
         return len(self.data)
 
+    @cached_property
     def _get_channels(self):
         """Getter for the `channels` property"""
         return sorted([x for x in self.data if self.metadata[x]['type'] == "channel"])
     
+    @cached_property
     def _get_conditions(self):
         """Getter for the `conditions` property"""
         return {x : pd.Series(self.data[x].unique().copy()).sort_values() for x in self.data
