@@ -74,8 +74,9 @@ def run_gui():
         # if we're not running as a one-click, fail gracefully
         pass
     
-    # disable OpenGL in the qt web engine
+    # disable OpenGL in the qt web engine 
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
+    os.environ["QMLSCENE_DEVICE"] = "softwarecontext"
     
     from pyface.qt import QtGui, QtCore
     
