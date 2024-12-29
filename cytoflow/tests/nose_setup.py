@@ -17,11 +17,11 @@ log = logging.getLogger(__name__)
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'null'
 
-# use the sphinx autodoc module-mocker to mock out traitsui.qt4
+# use the sphinx autodoc module-mocker to mock out traitsui.qt
 # because when it's imported, it starts a Qt Application
 
 from cytoflowgui.tests.sphinx_mock import MockFinder
-sys.meta_path.insert(0, MockFinder(['traitsui.qt4']))  
+sys.meta_path.insert(0, MockFinder(['traitsui.qt']))  
 
 import matplotlib
 import matplotlib.backends
@@ -58,11 +58,11 @@ class NoseSetup(Plugin):
         from traits.etsconfig.api import ETSConfig
         ETSConfig.toolkit = 'null'
         
-        # use the sphinx autodoc module-mocker to mock out traitsui.qt4
+        # use the sphinx autodoc module-mocker to mock out traitsui.qt
         # because when it's imported, it starts a Qt Application
         
         from cytoflowgui.tests.sphinx_mock import MockFinder
-        import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt4']))   
+        import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt']))   
 
     def startTestRun(self, event):
         log.warning('Loading customized nose2 configuration')
@@ -86,10 +86,10 @@ class NoseSetup(Plugin):
         from traits.etsconfig.api import ETSConfig
         ETSConfig.toolkit = 'null'
         
-        # use the sphinx autodoc module-mocker to mock out traitsui.qt4
+        # use the sphinx autodoc module-mocker to mock out traitsui.qt
         
         from cytoflowgui.tests.sphinx_mock import MockFinder
-        import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt4']))  
+        import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt']))  
 
     def setGui(self, val):
         # tell cytoflow that we are in a GUI, to test GUI-specific things!

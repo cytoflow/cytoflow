@@ -38,8 +38,8 @@ from pyface.api import ImageResource
 from traits.api import Instance
 
 from traitsui.api import ListEditor
-from traitsui.qt4.list_editor import CustomEditor as _ListEditor
-from traitsui.qt4.helper import IconButton
+from traitsui.qt.list_editor import CustomEditor as _ListEditor
+from traitsui.qt.helper import IconButton
 
 from traitsui.editors.list_editor import ListItemProxy
 

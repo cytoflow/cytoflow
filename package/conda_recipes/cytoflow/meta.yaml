@@ -28,16 +28,16 @@ requirements:
     - bottleneck==1.4.2
     - numexpr==2.10.1
     - scipy==1.14.1
-    - scikit-learn==1.5.1
+    - scikit-learn==1.5.2
     - seaborn==0.13.2
     - statsmodels==0.14.4
     - natsort==7.1.1
     - numba==0.60.0
 
     - traits==6.2.0
-    - traitsui==7.2.1
-    - pyface==7.3.0
-    - envisage==6.0.1
+    - conda-forge::traitsui==8.0.0
+    - conda-forge::pyface==8.0.0
+    - conda-forge::envisage==7.0.3
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
@@ -46,8 +46,8 @@ requirements:
     - pyqt==5.15.*
     - pyqtwebengine=5.15.*
 
-    - camel==0.1.2
-    - yapf==0.30.0
+    - cytoflow::camel==0.1.2
+    - yapf==0.40.2
     
     # only install mkl libraries on windows, where they're required
     - nomkl # [not win]
@@ -65,16 +65,16 @@ requirements:
     - bottleneck==1.4.2
     - numexpr==2.10.1
     - scipy==1.14.1
-    - scikit-learn==1.5.1
+    - scikit-learn==1.5.2
     - seaborn==0.13.2
     - statsmodels==0.14.4
     - natsort==7.1.1
     - numba==0.60.0
 
     - traits==6.2.0
-    - traitsui==7.2.1
-    - pyface==7.3.0
-    - envisage==6.0.1
+    - conda-forge::traitsui==8.0.0
+    - conda-forge::pyface==8.0.0
+    - conda-forge::envisage==7.0.3
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
@@ -83,8 +83,8 @@ requirements:
     - pyqt==5.15.*
     - pyqtwebengine=5.15.*
 
-    - camel==0.1.2
-    - yapf==0.30.0
+    - cytoflow::camel==0.1.2
+    - yapf==0.40.2
 
     # make sure some compatible version of the jupyter notebook
     # gets installed, along with matplotlib widgets

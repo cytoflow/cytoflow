@@ -29,7 +29,7 @@ from pyface.qt import QtGui
 
 from traits.api import HasTraits, Callable
 from traitsui.api import InstanceEditor, Handler
-from traitsui.qt4.instance_editor import CustomEditor as _InstanceEditor
+from traitsui.qt.instance_editor import CustomEditor as _InstanceEditor
 
 class _InstanceHandlerEditor(_InstanceEditor):
     """

@@ -27,7 +27,7 @@ of the text.
 """
 
 from pyface.qt import QtGui, QtCore
-from traitsui.qt4.editor_factory import ReadonlyEditor
+from traitsui.qt.editor_factory import ReadonlyEditor
 from traitsui.api import BasicEditorFactory
 from traits.api import Color, Instance, Str, Undefined
 

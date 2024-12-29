@@ -33,7 +33,7 @@ from traitsui.basic_editor_factory import BasicEditorFactory
 from traits.api import Bool, Any, List, Instance, Undefined, on_trait_change, Str, Callable
 from traits.trait_base import user_name_for
 from traitsui.ui_traits import AView
-from traitsui.qt4.editor import Editor
+from traitsui.qt.editor import Editor
 
 from .vertical_notebook import VerticalNotebook
 

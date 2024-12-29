@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
 from traits.api import Str, Property
 from traitsui.basic_editor_factory import BasicEditorFactory
-from traitsui.qt4.editor import Editor
+from traitsui.qt.editor import Editor
 
 from pyface.qt import QtGui
 

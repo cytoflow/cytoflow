@@ -35,7 +35,7 @@ https://github.com/enthought/traitsui/blob/master/traitsui/qt4/html_editor.py
 from pyface.qt import QtGui, QtWebKit
 
 from traitsui.editors.html_editor import ToolkitEditorFactory
-from traitsui.qt4.html_editor import SimpleEditor as _HTMLEditor  # @UnresolvedImport
+from traitsui.qt.html_editor import SimpleEditor as _HTMLEditor  # @UnresolvedImport
 
 class _ZoomableHTMLEditor(_HTMLEditor):
     """ Simple style editor for zoomable HTML.

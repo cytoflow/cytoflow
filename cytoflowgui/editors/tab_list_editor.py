@@ -26,9 +26,9 @@ A `traitsui.editors.enum_editor.EnumEditor` whose widget is a tab bar.
 
 from pyface.qt import QtGui
 
-from traitsui.qt4.enum_editor import BaseEditor as BaseEnumerationEditor
+from traitsui.qt.enum_editor import BaseEditor as BaseEnumerationEditor
 from traitsui.editor_factory import EditorWithListFactory
-from traitsui.qt4.constants import ErrorColor
+from traitsui.qt.constants import ErrorColor
 
 class _TabListEditor(BaseEnumerationEditor):
     

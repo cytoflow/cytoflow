@@ -142,8 +142,8 @@ def run_gui():
     pyface.resource.resource_manager.ResourceManager.IMAGE_EXTENSIONS.append('.svg')
     
     # monkey patch checklist editor to stop lowercasing
-    import traitsui.qt4.check_list_editor  # @UnusedImport
-    traitsui.qt4.check_list_editor.capitalize = lambda s: s
+    import traitsui.qt.check_list_editor  # @UnusedImport
+    traitsui.qt.check_list_editor.capitalize = lambda s: s
     
     # define and install a message handler for Qt errors
     from traits.api import push_exception_handler

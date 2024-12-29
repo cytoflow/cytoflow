@@ -35,11 +35,11 @@ ETSConfig.toolkit = 'null'
 from traits.trait_notifiers import set_ui_handler
 set_ui_handler(lambda *x, **y: None)
 
-# use the sphinx autodoc module-mocker to mock out traitsui.qt4
+# use the sphinx autodoc module-mocker to mock out traitsui.qt
 # because when it's imported, it starts a Qt Application
 
 from cytoflowgui.tests.sphinx_mock import MockFinder
-import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt4']))  
+import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt']))  
 
 # make sure that even if we're running locally, we're using the Agg output
 import matplotlib

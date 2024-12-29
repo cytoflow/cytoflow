@@ -28,7 +28,7 @@ A `traitsui.editors.enum_editor.EnumEditor` that allows **_names** to be extende
 
 from traits.api import Dict
 
-from traitsui.qt4.enum_editor import SimpleEditor as _EnumEditor
+from traitsui.qt.enum_editor import SimpleEditor as _EnumEditor
 from traitsui.editors.enum_editor import EnumEditor
 
 class _ExtendableEnumEditor(_EnumEditor):

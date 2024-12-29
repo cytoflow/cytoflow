@@ -36,7 +36,7 @@ from pyface.qt import QtGui, QtCore
 from traits.api import Any, Str, List, Bool
 from traitsui.editors.api import RangeEditor
 from traitsui.editor_factory import EditorWithListFactory
-from traitsui.qt4.editor import EditorWithList
+from traitsui.qt.editor import EditorWithList
 
 from .range_slider import RangeSlider
 

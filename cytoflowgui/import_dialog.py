@@ -71,7 +71,7 @@ from traitsui.api import (View, Item, TableEditor, Controller, InstanceEditor,
 
 from traitsui.menu import OKCancelButtons
 
-from traitsui.qt4.table_editor import TableEditor as TableEditorQt
+from traitsui.qt.table_editor import TableEditor as TableEditorQt
 
 from pyface.api import FileDialog, error, warning, confirm, YES
 

@@ -25,10 +25,10 @@ A few utility classes for `cytoflowgui`
 '''
 
 from traits.api import Str
-from pyface.ui.qt4.file_dialog import FileDialog
+from pyface.ui.qt.file_dialog import FileDialog
 
 class DefaultFileDialog(FileDialog):
-    """A ``pyface.ui.qt4.file_dialog.FileDialog`` with a default suffix"""
+    """A ``pyface.ui.qt.file_dialog.FileDialog`` with a default suffix"""
     
     default_suffix = Str
     
