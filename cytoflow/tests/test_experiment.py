@@ -27,7 +27,6 @@ from cytoflow import utility as util
 import pandas as pd
 from .test_base import ImportedDataTest
 
-
 class TestExperiment(ImportedDataTest):
     def testConditions(self):
         self.assertEqual(len(self.ex['Dox'].unique()), 3)
@@ -96,10 +95,23 @@ class TestExperiment(ImportedDataTest):
          
         self.assertEqual(ex2['B1-A'].at[100], 100.0)
         self.assertNotEqual(self.ex['B1-A'].at[100], 100.0)
-         
-
-
+        
+        
+    def testPickle(self):
+        import pickle, pandas.testing
+        ex2 = pickle.loads(pickle.dumps(self.ex))
+        
+        pandas.testing.assert_frame_equal(self.ex.data, ex2.data)
+        self.assertDictEqual(self.ex.metadata, ex2.metadata)
+        self.assertDictEqual(self.ex.statistics, ex2.statistics)
+        self.assertListEqual(self.ex.history, ex2.history)
+        
+        from cytoflow import ThresholdOp
+        op = ThresholdOp(name = "t", channel = "FSC-A", threshold = 100)
+        ex_t = op.apply(self.ex)
+        ex2_t = op.apply(ex2)
+        
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+    #import sys;sys.argv = ['', 'TestExperiment.testPickle']
     unittest.main()
