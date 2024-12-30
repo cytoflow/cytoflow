@@ -31,14 +31,14 @@ run this and put the result in `cytoflow.operations.bead_calibration`)
 # first line, first col: name
 # second line, first col: URL of the source spreadsheet
 # following lines: first col is calibrant, remaining cols are values
-# ...until a blank line
+# ...adds last bead set after last empty delimited row ,,,,,etc
 
 import sys
 import pandas as pd
 from yapf.yapflib.yapf_api import FormatCode
 
 def main():
-    csv = pd.read_csv(sys.argv[1],  header = None)
+    csv = pd.read_csv(sys.argv[1], header = None)
     
     beads = {}
     curr_beads_name = ""
@@ -56,6 +56,7 @@ def main():
             continue
             
         curr_beads[row[0]] = [v for v in row[1:] if not pd.isnull(v)]
+        #print(curr_beads)
         
     print(FormatCode(repr(beads))[0])
 
