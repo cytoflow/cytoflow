@@ -81,23 +81,29 @@ the estimation looks good.  There must be at least two channels corrected.
     ex2 = bl_op.apply(ex2)  
 '''
 from natsort import natsorted
+import pandas as pd, itertools as it
 
-from traits.api import provides, Event, Property, List, Str
-from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller
+from traits.api import provides, Event, Property, List, Str, Instance
+from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, \
+                         EnumEditor, Controller, OKCancelButtons
+from traitsui.ui_editors.data_frame_editor import DataFrameEditor, DataFrameAdapter
+from traitsui.tabular_adapter import AnITabularAdapter
+
+
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
 from ..editors import ColorTextEditor, InstanceHandlerEditor, VerticalListEditor, SubsetListEditor
-from ..workflow.operations import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, BleedthroughControl
+from ..workflow.operations import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, BleedthroughChannel
 from ..subset_controllers import subset_handler_factory
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
 from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
 
-class ControlHandler(Controller):
-    control_view = View(HGroup(Item('channel',
+class ChannelHandler(Controller):
+    channel_view = View(HGroup(Item('channel',
                                     editor = EnumEditor(name = 'context_handler.channels')),
                                Item('file',
                                     editor = FileEditor(dialog_style = 'open'),
@@ -105,25 +111,26 @@ class ControlHandler(Controller):
     
     
 class BleedthroughLinearHandler(OpHandler):
-    add_control = Event
-    remove_control = Event
+    add_channel = Event
+    remove_channel = Event
+    edit_matrix = Event
         
     channels = Property(List(Str), observe = 'context.channels')
      
     operation_traits_view = \
-        View(VGroup(
-             Item('controls_list',
-                  editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'control_view',
-                                                                             handler_factory = ControlHandler),
+        View(VGroup(VGroup(
+             Item('channels_list',
+                  editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'channel_view',
+                                                                             handler_factory = ChannelHandler),
                                               style = 'custom',
                                               mutable = False)),
-             Item('handler.add_control',
+             Item('handler.add_channel',
                   editor = ButtonEditor(value = True,
                                         label = "Add a control")),
-             Item('handler.remove_control',
+             Item('handler.remove_channel',
                   editor = ButtonEditor(value = True,
                                         label = "Remove a control")),
-             label = "Controls",
+             label = "Channels",
              show_labels = False),
              VGroup(Item('subset_list',
                          show_label = False,
@@ -133,21 +140,30 @@ class BleedthroughLinearHandler(OpHandler):
                     label = "Subset",
                     show_border = False,
                     show_labels = False),
-             Item('do_estimate',
-                  editor = ButtonEditor(value = True,
-                                        label = "Estimate!"),
-                  show_label = False),
-             shared_op_traits_view)
+             HGroup(Item('handler.edit_matrix',
+                         editor = ButtonEditor(value = True,
+                                               label = "Edit matrix..."),
+                         show_label = False),
+                    Item('do_estimate',
+                         editor = ButtonEditor(value = True,
+                                               label = "Estimate!"),
+                         show_label = False)),
+             shared_op_traits_view))
         
 
     # MAGIC: called when add_control is set
-    def _add_control_fired(self):
-        self.model.controls_list.append(BleedthroughControl())
+    def _add_channel_fired(self):
+        self.model.channels_list.append(BleedthroughChannel())
         
     # MAGIC: called when remove_control is set
-    def _remove_control_fired(self):
-        if self.model.controls_list:
-            self.model.controls_list.pop()
+    def _remove_channel_fired(self):
+        if self.model.channels_list:
+            self.model.channels_list.pop()
+            
+    # MAGIC: called when edit_matrix is set
+    def _edit_matrix_fired(self):
+        handler = BleedthroughMatrixHandler(model = self.model)
+        handler.edit_traits(kind = 'modal') 
             
     # MAGIC: returns the value of the 'channels' property
     def _get_channels(self):
@@ -171,6 +187,46 @@ class BleedthroughLinearViewHandler(ViewHandler):
                                            background_color = "#ff9191")))
 
     view_params_view = View()
+    
+
+class BleedthroughAdapter(DataFrameAdapter):
+    def set_text(self, object, trait, row, column, text):
+        if column == 2:
+            self._result_for("set_text", object, trait, row, column, text)    
+
+    # def get_can_edit(self, object, trait, row):
+    #     if self.column_id == 'spillover':
+    #         return True
+    #     else:
+    #         return False
+
+class BleedthroughMatrixHandler(Controller):
+    
+    spillover_frame = Property(Instance(pd.DataFrame))
+    
+    matrix_view = \
+        View(Item('handler.spillover_frame',
+                  editor = DataFrameEditor(columns = [("From Channel", 'from'),
+                                                      ("To Channel", 'to'),
+                                                      ("Spillover", 'spillover')],
+                                           #adapter = BleedthroughAdapter(),
+                                           editable = True,
+                                           show_index = False),
+                  show_label = False),
+             buttons = OKCancelButtons,
+             width = 600, 
+             height = 400)
+        
+    
+    def _get_spillover_frame(self):
+        channels = list(it.permutations([c.channel for c in self.model.channels_list], 2))
+        return pd.DataFrame( {'from' : [c[0] for c in channels],
+                              'to' : [c[1] for c in channels],
+                              'spillover' : [self.model.spillover.get(c, 0.0) for c in channels]})
+    
+    def _set_spillover_frame(self, x):
+        self.model.spillover = {(c[0], c[1]) : c[2] for c in x.itertuples(index = False,
+                                                                          name = None)}
 
 
 @provides(IOperationPlugin)
