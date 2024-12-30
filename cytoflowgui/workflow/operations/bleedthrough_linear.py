@@ -40,7 +40,7 @@ from .operation_base import IWorkflowOperation, WorkflowOperation
 BleedthroughLinearOp.__repr__ = traits_repr
 
 
-class Control(HasTraits):
+class Channel(HasTraits):
     channel = Str
     file = File
 
@@ -48,15 +48,15 @@ class Control(HasTraits):
         return traits_repr(self)
     
 
-@provides(IWorkflowOperation )
+@provides(IWorkflowOperation)
 class BleedthroughLinearWorkflowOp(WorkflowOperation, BleedthroughLinearOp):
     # add some metadata
-    controls_list = List(Control, estimate = True)
-    spillover = Dict(Tuple(Str, Str), Float, transient = True, estimate_result = True)
+    channels_list = List(Channel, estimate = True)
+    spillover = Dict(Tuple(Str, Str), Float, estimate_result = True)
         
-    @observe('controls_list:items,controls_list:items.+type', post_init = True)
-    def _on_controls_changed(self, _):
-        self.changed = 'controls_list'
+    @observe('channels_list:items,channels_list:items.+type', post_init = True)
+    def _on_channels_changed(self, _):
+        self.changed = 'channels_list'
         
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
@@ -76,11 +76,11 @@ class BleedthroughLinearWorkflowOp(WorkflowOperation, BleedthroughLinearOp):
         return BleedthroughLinearWorkflowView(op = self, **kwargs)
     
     def estimate(self, experiment):
-        for i, control_i in enumerate(self.controls_list):
-            for j, control_j in enumerate(self.controls_list):
-                if control_i.channel == control_j.channel and i != j:
+        for i, channel_i in enumerate(self.channels_list):
+            for j, channel_j in enumerate(self.channels_list):
+                if channel_i.channel == channel_j.channel and i != j:
                     raise util.CytoflowOpError("Channel {0} is included more than once"
-                                               .format(control_i.channel))
+                                               .format(channel_i.channel))
                     
         # check for experiment metadata used to estimate operations in the
         # history, and bail if we find any
@@ -94,8 +94,8 @@ class BleedthroughLinearWorkflowOp(WorkflowOperation, BleedthroughLinearOp):
                                                    "set to an experimental condition.")
                                                
         self.controls = {}
-        for control in self.controls_list:
-            self.controls[control.channel] = control.file
+        for channel in self.channels_list:
+            self.controls[channel.channel] = channel.file
             
         if not self.subset:
             warnings.warn("Are you sure you don't want to specify a subset "
@@ -170,14 +170,18 @@ def _dump(op):
 def _load(data, version):
     return BleedthroughLinearWorkflowOp(**data)
 
-@camel_registry.dumper(Control, 'bleedthrough-linear-control', version = 1)
-def _dump_control(control):
-    return dict(channel = control.channel,
-                file = control.file)
+@camel_registry.dumper(Channel, 'bleedthrough-linear-channel', version = 1)
+def _dump_channel(channel):
+    return dict(channel = channel.channel,
+                file = channel.file)
     
+@camel_registry.loader('bleedthrough-linear-channel', version = 1)
+def _load_channel(data, version):
+    return Channel(**data)
+
 @camel_registry.loader('bleedthrough-linear-control', version = 1)
 def _load_control(data, version):
-    return Control(**data)
+    return Channel(**data)
 
 @camel_registry.dumper(BleedthroughLinearWorkflowView, 'bleedthrough-linear-view', version = 1)
 def _dump_view(view):
