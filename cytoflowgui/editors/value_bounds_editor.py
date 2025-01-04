@@ -55,7 +55,7 @@ class _ValueBoundsEditor(EditorWithList):
     high = Any
     
     # a format string for the text boxes
-    format = Str
+    format_str = Str
 
     # the slider positions.  either synchronized to low, high immediately or 
     # when the slider is released, depending on whether auto_set is True or not
@@ -80,7 +80,7 @@ class _ValueBoundsEditor(EditorWithList):
         if not factory.high_name:
             self.high = factory.high
 
-        self.format = factory.format
+        self.format_str = factory.format_str
 
         self.evaluate = factory.evaluate
         self.sync_value( factory.evaluate_name, 'evaluate', 'from' )
@@ -92,7 +92,7 @@ class _ValueBoundsEditor(EditorWithList):
         panel = QtGui.QHBoxLayout(self.control)
         panel.setContentsMargins(0, 0, 0, 0)
 
-        self._label_lo = QtGui.QLineEdit(self.format % self.low)
+        self._label_lo = QtGui.QLineEdit(self.format_str % self.low)
         self._label_lo.editingFinished.connect(self.update_low_on_enter)
 
         panel.addWidget(self._label_lo)
@@ -114,7 +114,7 @@ class _ValueBoundsEditor(EditorWithList):
         
         panel.addWidget(slider)
 
-        self._label_hi = QtGui.QLineEdit(self.format % self.high)
+        self._label_hi = QtGui.QLineEdit(self.format_str % self.high)
         self._label_hi.editingFinished.connect(self.update_high_on_enter)
 
         panel.addWidget(self._label_hi)
@@ -165,11 +165,11 @@ class _ValueBoundsEditor(EditorWithList):
                     low = self.evaluate(low)
             except:
                 low = self.low
-                self._label_lo.setText(self.format % self.low)
+                self._label_lo.setText(self.format_str % self.low)
 
             if low > self.high:
                 low = self.high
-                self._label_lo.setText(self.format % low)
+                self._label_lo.setText(self.format_str % low)
 
             if low not in self.values:
                 low = min(self.values, key = lambda x: abs(x - low))
@@ -188,11 +188,11 @@ class _ValueBoundsEditor(EditorWithList):
                     high = self.evaluate(high)
             except:
                 high = self.high
-                self._label_hi.setText(self.format % self.high)
+                self._label_hi.setText(self.format_str % self.high)
 
             if high < self.low:
                 high = self.low
-                self._label_hi.setText(self.format % high)
+                self._label_hi.setText(self.format_str % high)
 
             if high not in self.values:
                 high = min(self.values, key = lambda x: abs(x - high))
@@ -271,7 +271,7 @@ class _ValueBoundsEditor(EditorWithList):
             return
         
         if self._label_lo is not None:
-            self._label_lo.setText(self.format % low)
+            self._label_lo.setText(self.format_str % low)
 
         self.low_invalid = False
 
@@ -294,7 +294,7 @@ class _ValueBoundsEditor(EditorWithList):
             return
         
         if self._label_hi is not None:
-            self._label_hi.setText(self.format % high)
+            self._label_hi.setText(self.format_str % high)
             
         self.high_invalid = False
 

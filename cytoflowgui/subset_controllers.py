@@ -63,7 +63,7 @@ class RangeSubsetHandler(Controller):
                                      name = 'values',
                                      low_name = 'low',
                                      high_name = 'high',
-                                     format = '%g',
+                                     format_str = '%g',
                                      auto_set = False)))
         
         
