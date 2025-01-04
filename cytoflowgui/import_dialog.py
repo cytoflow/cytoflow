@@ -301,7 +301,7 @@ class ExperimentDialogModel(HasStrictTraits):
     """
 
     tubes = List(Tube)
-    """T he list of Tubes (rows in the table)"""
+    """The list of Tubes (rows in the table)"""
 
     tube_traits = List(TubeTrait)
     """A list of the traits that have been added to Tube instances (columns in the table)"""
