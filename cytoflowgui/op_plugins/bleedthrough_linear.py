@@ -81,13 +81,12 @@ the estimation looks good.  There must be at least two channels corrected.
     ex2 = bl_op.apply(ex2)  
 '''
 from natsort import natsorted
-import pandas as pd, itertools as it
+import itertools as it
 
-from traits.api import provides, Event, Property, List, Str, Instance
+from traits.api import HasTraits, provides, Event, Property, List, Str, BaseFloat
 from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, \
-                         EnumEditor, Controller, OKCancelButtons
-from traitsui.ui_editors.data_frame_editor import DataFrameEditor, DataFrameAdapter
-from traitsui.tabular_adapter import AnITabularAdapter
+                         EnumEditor, Controller, OKCancelButtons, TableEditor, \
+                         ObjectColumn
 
 
 from envisage.api import Plugin
@@ -163,7 +162,7 @@ class BleedthroughLinearHandler(OpHandler):
     # MAGIC: called when edit_matrix is set
     def _edit_matrix_fired(self):
         handler = BleedthroughMatrixHandler(model = self.model)
-        handler.edit_traits(kind = 'modal') 
+        handler.edit_traits(kind = 'livemodal') 
             
     # MAGIC: returns the value of the 'channels' property
     def _get_channels(self):
@@ -188,45 +187,56 @@ class BleedthroughLinearViewHandler(ViewHandler):
 
     view_params_view = View()
     
-
-class BleedthroughAdapter(DataFrameAdapter):
-    def set_text(self, object, trait, row, column, text):
-        if column == 2:
-            self._result_for("set_text", object, trait, row, column, text)    
-
-    # def get_can_edit(self, object, trait, row):
-    #     if self.column_id == 'spillover':
-    #         return True
-    #     else:
-    #         return False
+    
+class UnitFloat(BaseFloat):
+    def validate(self, obj, name, value):
+        value = super().validate(obj, name, value)
+        if value < 0.0:
+            return 0.0
+        if value > 1.0:
+            return 1.0
+        return value
+    
+    
+class Spillover(HasTraits):
+    from_channel = Str
+    to_channel = Str
+    spillover = UnitFloat
+    
 
 class BleedthroughMatrixHandler(Controller):
     
-    spillover_frame = Property(Instance(pd.DataFrame))
-    
-    matrix_view = \
-        View(Item('handler.spillover_frame',
-                  editor = DataFrameEditor(columns = [("From Channel", 'from'),
-                                                      ("To Channel", 'to'),
-                                                      ("Spillover", 'spillover')],
-                                           #adapter = BleedthroughAdapter(),
-                                           editable = True,
-                                           show_index = False),
-                  show_label = False),
-             buttons = OKCancelButtons,
-             width = 600, 
-             height = 400)
+    spillover_list = List(Spillover)
         
-    
-    def _get_spillover_frame(self):
+    matrix_view = \
+        View(Item('handler.spillover_list',
+                  editor = TableEditor(columns = [ObjectColumn(name = 'from_channel',
+                                                               label = "From",
+                                                               editable = False),
+                                                  ObjectColumn(name = 'to_channel',
+                                                               label = "To",
+                                                               editable = False),
+                                                  ObjectColumn(name = 'spillover',
+                                                               label = "Spillover")],
+                                       rows = 5,
+                                       editable = True,
+                                       auto_size = True,
+                                       configurable = False),
+                  show_label = False),
+             buttons = OKCancelButtons)
+        
+    def init(self, _) -> bool:
         channels = list(it.permutations([c.channel for c in self.model.channels_list], 2))
-        return pd.DataFrame( {'from' : [c[0] for c in channels],
-                              'to' : [c[1] for c in channels],
-                              'spillover' : [self.model.spillover.get(c, 0.0) for c in channels]})
+        self.spillover_list = [Spillover(from_channel = c[0],
+                                         to_channel = c[1],
+                                         spillover = self.model.spillover.get(c, 0.0)) for c in channels]
+        return True
     
-    def _set_spillover_frame(self, x):
-        self.model.spillover = {(c[0], c[1]) : c[2] for c in x.itertuples(index = False,
-                                                                          name = None)}
+    def closed(self, _, is_ok):
+        if is_ok:
+            self.model.spillover = {(s.from_channel, s.to_channel) : s.spillover for s in self.spillover_list}
+        
+        return True
 
 
 @provides(IOperationPlugin)
