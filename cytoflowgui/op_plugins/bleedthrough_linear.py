@@ -36,9 +36,19 @@ To use, specify the single-color control files and which channels they should
 be measured in, then click **Estimate**.  Check the diagnostic plot to make sure
 the estimation looks good.  There must be at least two channels corrected.
 
-.. object:: Add Control, Remove Control
+You can also edit the spillover matrix directly. If you would like to set it
+manually, without estimating using single-color controls, you can; however,
+if you want to estimate it, you must provide a single-color control for *each*
+channel you are correcting.
 
-    Add or remove single-color controls.
+.. object:: Add Channel, Remove Channel
+
+    Add or remove channels to be corrected.
+    
+.. object:: Spillover Matrix
+
+    The matrix of bleedthrough values, presented as a list. The matrix does not
+    need to be symmetric, or even non-zero.
     
 .. object: Subset
 
@@ -83,10 +93,10 @@ the estimation looks good.  There must be at least two channels corrected.
 from natsort import natsorted
 import itertools as it
 
-from traits.api import HasTraits, provides, Event, Property, List, Str, BaseFloat
-from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, \
-                         EnumEditor, Controller, OKCancelButtons, TableEditor, \
-                         ObjectColumn
+from traits.api import provides, Event, Property, List, Str, observe
+from traitsui.api import (View, Item, VGroup, ButtonEditor, FileEditor, HGroup, 
+                          EnumEditor, Controller, TableEditor, ObjectColumn, 
+                          TextEditor)
 
 
 from envisage.api import Plugin
@@ -94,7 +104,7 @@ from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
 from ..editors import ColorTextEditor, InstanceHandlerEditor, VerticalListEditor, SubsetListEditor
-from ..workflow.operations import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, BleedthroughChannel
+from ..workflow.operations import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, BleedthroughChannel, BleedthroughSpillover
 from ..subset_controllers import subset_handler_factory
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
@@ -112,42 +122,57 @@ class ChannelHandler(Controller):
 class BleedthroughLinearHandler(OpHandler):
     add_channel = Event
     remove_channel = Event
-    edit_matrix = Event
         
     channels = Property(List(Str), observe = 'context.channels')
      
     operation_traits_view = \
-        View(VGroup(VGroup(
-             Item('channels_list',
-                  editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'channel_view',
-                                                                             handler_factory = ChannelHandler),
-                                              style = 'custom',
-                                              mutable = False)),
-             Item('handler.add_channel',
-                  editor = ButtonEditor(value = True,
-                                        label = "Add a control")),
-             Item('handler.remove_channel',
-                  editor = ButtonEditor(value = True,
-                                        label = "Remove a control")),
-             label = "Channels",
-             show_labels = False),
-             VGroup(Item('subset_list',
-                         show_label = False,
-                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
-                                                   editor = InstanceHandlerEditor(view = 'subset_view',
-                                                                                  handler_factory = subset_handler_factory))),
-                    label = "Subset",
-                    show_border = False,
-                    show_labels = False),
-             HGroup(Item('handler.edit_matrix',
-                         editor = ButtonEditor(value = True,
-                                               label = "Edit matrix..."),
+        View(
+            VGroup(
+                VGroup(
+                        Item('channels_list',
+                             editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'channel_view',
+                                                                                        handler_factory = ChannelHandler),
+                                                         style = 'custom',
+                                                         mutable = False)),
+                        Item('handler.add_channel',
+                             editor = ButtonEditor(value = True,
+                                                   label = "Add a channel")),
+                        Item('handler.remove_channel',
+                             editor = ButtonEditor(value = True,
+                                                   label = "Remove a channel")),
+                        label = "Channels",
+                        show_labels = False),
+                VGroup(
+                    Item('spillover_list',
+                         editor = TableEditor(columns = [ObjectColumn(name = 'from_channel',
+                                                                      label = "From",
+                                                                      editable = False),
+                                                         ObjectColumn(name = 'to_channel',
+                                                                      label = "To",
+                                                                      editable = False),
+                                                         ObjectColumn(name = 'spillover',
+                                                                      label = "Spillover",
+                                                                      editor = TextEditor(evaluate = float,
+                                                                                          auto_set = False))],
+                                              rows = 5,
+                                              editable = True,
+                                              auto_size = True,
+                                              configurable = False),
                          show_label = False),
-                    Item('do_estimate',
-                         editor = ButtonEditor(value = True,
-                                               label = "Estimate!"),
-                         show_label = False)),
-             shared_op_traits_view))
+                    label = "Spillover Matrix"),
+                VGroup(Item('subset_list',
+                            show_label = False,
+                            editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                      editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                     handler_factory = subset_handler_factory))),
+                            label = "Subset",
+                            show_border = False,
+                            show_labels = False),
+                Item('do_estimate',
+                     editor = ButtonEditor(value = True,
+                                           label = "Estimate!"),
+                     show_label = False),
+                shared_op_traits_view))
         
 
     # MAGIC: called when add_control is set
@@ -158,18 +183,33 @@ class BleedthroughLinearHandler(OpHandler):
     def _remove_channel_fired(self):
         if self.model.channels_list:
             self.model.channels_list.pop()
-            
-    # MAGIC: called when edit_matrix is set
-    def _edit_matrix_fired(self):
-        handler = BleedthroughMatrixHandler(model = self.model)
-        handler.edit_traits(kind = 'livemodal') 
-            
+
     # MAGIC: returns the value of the 'channels' property
     def _get_channels(self):
         if self.context and self.context.channels:
             return natsorted(self.context.channels)
         else:
             return [] 
+        
+    # update the spillover list when the channels list or spillover matrix changes, only on the local thread
+    @observe('model:channels_list, model:channels_list.items, model:channels_list.items.channel')
+    def _update_spillover_list_items(self, _):
+        channels = list(it.permutations([c.channel for c in self.model.channels_list], 2))
+        self.model.spillover_list = [BleedthroughSpillover(from_channel = c[0],
+                                                           to_channel = c[1],
+                                                           spillover = self.model.spillover.get(c, 0.0)) for c in channels]
+        self.model.changed = 'spillover_list'
+
+    @observe('model:spillover')
+    def _update_spillover_list_items_from_matrix(self, _):
+        channels = list(it.permutations([c.channel for c in self.model.channels_list], 2))
+        self.model.spillover_list = [BleedthroughSpillover(from_channel = c[0],
+                                                           to_channel = c[1],
+                                                           spillover = self.model.spillover.get(c, 0.0)) for c in channels]
+        
+    @observe('model:spillover_list:items:spillover')
+    def _set_spillover(self, _):
+        self.model.changed = 'spillover_list'
 
 
 class BleedthroughLinearViewHandler(ViewHandler):
@@ -187,57 +227,6 @@ class BleedthroughLinearViewHandler(ViewHandler):
 
     view_params_view = View()
     
-    
-class UnitFloat(BaseFloat):
-    def validate(self, obj, name, value):
-        value = super().validate(obj, name, value)
-        if value < 0.0:
-            return 0.0
-        if value > 1.0:
-            return 1.0
-        return value
-    
-    
-class Spillover(HasTraits):
-    from_channel = Str
-    to_channel = Str
-    spillover = UnitFloat
-    
-
-class BleedthroughMatrixHandler(Controller):
-    
-    spillover_list = List(Spillover)
-        
-    matrix_view = \
-        View(Item('handler.spillover_list',
-                  editor = TableEditor(columns = [ObjectColumn(name = 'from_channel',
-                                                               label = "From",
-                                                               editable = False),
-                                                  ObjectColumn(name = 'to_channel',
-                                                               label = "To",
-                                                               editable = False),
-                                                  ObjectColumn(name = 'spillover',
-                                                               label = "Spillover")],
-                                       rows = 5,
-                                       editable = True,
-                                       auto_size = True,
-                                       configurable = False),
-                  show_label = False),
-             buttons = OKCancelButtons)
-        
-    def init(self, _) -> bool:
-        channels = list(it.permutations([c.channel for c in self.model.channels_list], 2))
-        self.spillover_list = [Spillover(from_channel = c[0],
-                                         to_channel = c[1],
-                                         spillover = self.model.spillover.get(c, 0.0)) for c in channels]
-        return True
-    
-    def closed(self, _, is_ok):
-        if is_ok:
-            self.model.spillover = {(s.from_channel, s.to_channel) : s.spillover for s in self.spillover_list}
-        
-        return True
-
 
 @provides(IOperationPlugin)
 class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
