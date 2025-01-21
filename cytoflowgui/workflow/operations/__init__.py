@@ -45,6 +45,6 @@ from .pca import PCAWorkflowOp, Channel as PCAChannel
 
 from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkflowView
 from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, Unit as BeadCalibrationUnit
-from .bleedthrough_linear import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, Channel as BleedthroughChannel
+from .bleedthrough_linear import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, Channel as BleedthroughChannel, Spillover as BleedthroughSpillover
 from .color_translation import ColorTranslationWorkflowOp, ColorTranslationWorkflowView, Control as ColorTranslationControl
 from .tasbe import TasbeWorkflowOp, TasbeWorkflowView

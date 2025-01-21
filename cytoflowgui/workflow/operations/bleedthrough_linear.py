@@ -25,7 +25,8 @@ cytoflowgui.workflow.operations.bleedthrough_linear
 
 import warnings
 from traits.api import (HasTraits, provides, Str, observe, Instance,
-                        List, Dict, File, Float, Property, Tuple)
+                        List, Dict, File, Float, Property, Tuple,
+                        BaseFloat)
 
 from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp, BleedthroughLinearDiagnostic
 import cytoflow.utility as util
@@ -47,17 +48,44 @@ class Channel(HasTraits):
     def __repr__(self):
         return traits_repr(self)
     
+    
+class UnitFloat(BaseFloat):
+    def validate(self, obj, name, value):
+        value = super().validate(obj, name, value)
+        if value < 0.0:
+            return 0.0
+        if value > 1.0:
+            return 1.0
+        return value
+    
+    
+class Spillover(HasTraits):
+    from_channel = Str
+    to_channel = Str
+    spillover = UnitFloat
+    
+    def __repr__(self):
+        return traits_repr(self)
+    
 
 @provides(IWorkflowOperation)
 class BleedthroughLinearWorkflowOp(WorkflowOperation, BleedthroughLinearOp):
     # add some metadata
     channels_list = List(Channel, estimate = True)
-    spillover = Dict(Tuple(Str, Str), Float, estimate_result = True)
+    spillover_list = List(Spillover)
+    spillover = Dict(Tuple(Str, Str), Float, estimate_result = True, status = True)
         
-    @observe('channels_list:items,channels_list:items.+type', post_init = True)
-    def _on_channels_changed(self, _):
+    @observe('channels_list:items, channels_list:items.+type', post_init = True)
+    def _on_channels_items_changed(self, _):
         self.changed = 'channels_list'
-        
+     
+    # when the spillover list is updated, update the spillover matrix
+    # this should only happen on the remote thread
+    @observe('spillover_list', post_init = True)
+    def _on_spillover_list_changed(self, _):
+        self.spillover = {(s.from_channel, s.to_channel) : s.spillover 
+                          for s in self.spillover_list}
+
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
     subset = Property(Str, observe = "subset_list.items.str")
@@ -106,7 +134,8 @@ class BleedthroughLinearWorkflowOp(WorkflowOperation, BleedthroughLinearOp):
     
     def apply(self, experiment):
         if not self.spillover:
-            raise util.CytoflowOpError(None, 'Click "Estimate"!')
+            raise util.CytoflowOpError(None, 'Need to add at least two channels')
+
         return super().apply(experiment)
         
     def should_clear_estimate(self, changed, payload):

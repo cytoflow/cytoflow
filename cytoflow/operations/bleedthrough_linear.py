@@ -178,7 +178,7 @@ class BleedthroughLinearOp(HasStrictTraits):
 
         if len(channels) < 2:
             raise util.CytoflowOpError('channels',
-                                       "Need at least two channels to correct bleedthrough.")
+                                       "Need at least two channels to estimate bleedthrough.")
 
         # make sure the control files exist
         for channel in channels:
