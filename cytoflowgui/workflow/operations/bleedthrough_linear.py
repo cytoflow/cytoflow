@@ -152,8 +152,8 @@ class BleedthroughLinearWorkflowOp(WorkflowOperation, BleedthroughLinearOp):
         op = BleedthroughLinearOp()
         op.copy_traits(self, op.copyable_trait_names())
 
-        for control in self.controls_list:
-            op.controls[control.channel] = control.file        
+        for channel in self.channels_list:
+            op.controls[channel.channel] = channel.file        
 
         return dedent("""
         op_{idx} = {repr}
@@ -190,14 +190,31 @@ class BleedthroughLinearWorkflowView(WorkflowView, BleedthroughLinearDiagnostic)
                 prev_idx = idx - 1))
 
 ### Serialization
-@camel_registry.dumper(BleedthroughLinearWorkflowOp, 'bleedthrough-linear', version = 1)
+@camel_registry.dumper(BleedthroughLinearWorkflowOp, 'bleedthrough-linear', version = 2)
 def _dump(op):
-    return dict(controls_list = op.controls_list,
+    return dict(channels_list = op.channels_list,
+                spillover_list = op.spillover_list,
                 subset_list = op.subset_list)
-                
-@camel_registry.loader('bleedthrough-linear', version = 1)
+
+@camel_registry.loader('bleedthrough-linear', version = 2)
 def _load(data, version):
     return BleedthroughLinearWorkflowOp(**data)
+                
+@camel_registry.loader('bleedthrough-linear', version = 1)
+def _load_v1(data, version):
+    data['channels_list'] = data['controls_list']
+    del data['controls_list']
+    return BleedthroughLinearWorkflowOp(**data)
+
+@camel_registry.dumper(Spillover, 'bleedthrough-linear-spillover', version = 1)
+def _dump_spillover(spillover):
+    return dict(from_channel = spillover.from_channel,
+                to_channel = spillover.to_channel,
+                spillover = spillover.spillover)
+    
+@camel_registry.loader('bleedthrough-linear-spillover', version = 1)
+def _load_spillover(data, version):
+    return Spillover(**data)
 
 @camel_registry.dumper(Channel, 'bleedthrough-linear-channel', version = 1)
 def _dump_channel(channel):

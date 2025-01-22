@@ -905,6 +905,8 @@ class RemoteWorkflow(HasStrictTraits):
                 
     @observe('workflow:items:operation:+status')
     def _on_operation_status_changed(self, event):
+        logger.debug("RemoteWorkflow._operation_status_changed :: {}".format(event))
+
         wi = next((x for x in self.workflow if x.operation is event.object))
         idx = self.workflow.index(wi)
         self.message_q.put((Msg.UPDATE_OP, (idx, event.name, event.new)))
