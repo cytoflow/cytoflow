@@ -24,11 +24,11 @@ cytoflowgui.workflow_pane
 The pane that has the operation toolbar and the workflow.
 """
 
-from traits.api import provides, Instance, List, Tuple
+from traits.api import provides, Instance, List
 
 from pyface.qt import QtCore
-from pyface.tasks.api import TraitsDockPane, IDockPane
-from pyface.action.api import ToolBarManager
+from pyface.tasks.api import TraitsDockPane, IDockPane  # @UnresolvedImport
+from pyface.action.api import ToolBarManager  # @UnresolvedImport
 from pyface.tasks.action.api import TaskAction
 
 from .op_plugins import IOperationPlugin

@@ -64,7 +64,7 @@ non-fluorescent, and that the module found the population median.
 from traits.api import provides, List
 from traitsui.api import View, Item, VGroup, CheckListEditor, ButtonEditor, FileEditor
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
 from ..editors import SubsetListEditor, ColorTextEditor, InstanceHandlerEditor

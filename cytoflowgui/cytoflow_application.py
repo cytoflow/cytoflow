@@ -30,12 +30,12 @@ The `pyface.tasks` application.
 
 import logging, io, os, pickle
 
-from traits.api import Bool, Instance, List, Property, Str, Any, File, Int
+from traits.api import Bool, Instance, List, Property, Str, Any, File
 
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
 
-from pyface.api import error, ImageResource
+from pyface.api import error, ImageResource  # @UnresolvedImport
 from pyface.tasks.api import TaskWindowLayout
 from pyface.qt import QtGui
 

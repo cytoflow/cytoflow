@@ -42,12 +42,12 @@ import nbformat as nbf
 from yapf.yapflib.yapf_api import FormatCode
 
 from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo
-from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter
+from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter  # @UnresolvedImport
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup, SGroup
 # from pyface.tasks.action.dock_pane_toggle_group import DockPaneToggleGroup, DockPaneToggleAction, ActionItem
-from pyface.api import (FileDialog, ImageResource, AboutDialog, 
-                        confirm, OK, YES, ConfirmationDialog, warning,
-                        error)
+from pyface.api import (FileDialog, ImageResource, AboutDialog,  # @UnresolvedImport
+                        confirm, OK, YES, ConfirmationDialog, warning,  # @UnresolvedImport
+                        error)  # @UnresolvedImport
 from pyface.qt import QtGui
 
 from envisage.ui.tasks.api import TaskFactory
@@ -257,13 +257,13 @@ class FlowTask(Task):
         Called after the task has been activated in a TaskWindow.  Initialize the
         model with an import operation and activate the central pane.
         """
-        
+    
         # add the import op
         if not self.model.workflow:
             self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import') 
-        
+    
         self.window.central_pane.activate()
-                            
+    
         self.model.modified = False
     
     def _default_layout_default(self):
@@ -286,13 +286,13 @@ class FlowTask(Task):
         """
         Initialize the toolbar image size and return the central `FlowTaskPane`
         """
-         
+    
         # this isn't really the right place for this, but it's the only
         # place control passes back to user code before the toolbar
         # is created.
-        
+    
         self.tool_bars[0].image_size = (32, 32)
-        
+    
         return FlowTaskPane(canvas = self.application.canvas,
                             model = self.application.model, 
                             handler = self.handler)
@@ -423,7 +423,7 @@ class FlowTask(Task):
             def quit_app(app):
                 app.exit(force = True)
                 
-            from pyface.timer.api import do_after
+            from pyface.timer.api import do_after  # @UnresolvedImport
             do_after(5*1000, quit_app, self.application)
             return
             
@@ -640,10 +640,10 @@ class FlowTask(Task):
         from scipy import __version__ as scipy_version  # @UnresolvedImport
         from sklearn import __version__ as skl_version
         from statsmodels import __version__ as stats_version
-        from pyface import __version__ as pyf_version
-        from envisage import __version__ as env_version
+        from pyface import __version__ as pyf_version  # @UnresolvedImport
+        from envisage import __version__ as env_version  # @UnresolvedImport
         from traits import __version__ as trt_version
-        from traitsui import __version__ as trt_ui_version
+        from traitsui import __version__ as trt_ui_version  # @UnresolvedImport
         from yapf import __version__ as yapf_version
         from nbformat import __version__ as nb_version
         from yaml import __version__ as yaml_version

@@ -25,7 +25,7 @@ A dock pane with an experiment browser.
 """
 
 from traits.api import Instance
-from pyface.tasks.api import TraitsDockPane
+from pyface.tasks.api import TraitsDockPane  # @UnresolvedImport
 
 from .workflow_controller import WorkflowController
 

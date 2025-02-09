@@ -55,7 +55,7 @@ of the files that will be created.
 from traits.api import provides, Event, observe, List
 from traitsui.api import (View, Item, VGroup, ButtonEditor, CheckListEditor)
 from envisage.api import Plugin
-from pyface.api import ImageResource, DirectoryDialog, OK
+from pyface.api import ImageResource, DirectoryDialog, OK  # @UnresolvedImport
 
 from ..workflow.views import ExportFCSWorkflowView
 from ..editors import SubsetListEditor, ColorTextEditor, InstanceHandlerEditor

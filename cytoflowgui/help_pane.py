@@ -29,7 +29,7 @@ import pathlib
 
 from traits.api import Instance, List, observe, Str, HTML
 from traitsui.api import View, Item
-from pyface.tasks.api import TraitsDockPane, Task
+from pyface.tasks.api import TraitsDockPane, Task  # @UnresolvedImport
 from pyface.qt import QtGui
 from traitsui.editors.html_editor import HTMLEditor
 

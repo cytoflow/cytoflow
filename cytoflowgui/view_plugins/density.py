@@ -74,7 +74,7 @@ Plots a 2-dimensional density plot.
 from traits.api import provides, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import DensityWorkflowView, DensityPlotParams
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor

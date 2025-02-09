@@ -93,7 +93,7 @@ import pandas as pd
 from traits.api import provides, Property, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import BarChartWorkflowView, BarChartPlotParams
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor

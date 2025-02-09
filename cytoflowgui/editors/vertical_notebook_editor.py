@@ -271,7 +271,7 @@ if __name__ == '__main__':
 
     from traitsui.api import View, Group, Item
     from traits.api import Button
-    from pyface.qt import QtGui
+    from pyface.qt import QtGui  # @UnusedImport
 
     class TestPageClass(HasTraits):
         trait1 = Str

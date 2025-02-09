@@ -31,11 +31,11 @@ that are passed to `IView.plot`.
   `IView.plot`. 
 """
 
-from traits.api import Instance, List, Str, Dict, Tuple, observe
-from pyface.tasks.api import TraitsDockPane, Task
-from pyface.action.api import ToolBarManager
+from traits.api import Instance, List, Str, Dict, observe
+from pyface.tasks.api import TraitsDockPane, Task  # @UnresolvedImport
+from pyface.action.api import ToolBarManager  # @UnresolvedImport
 from pyface.tasks.action.api import TaskAction
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 from pyface.qt import QtGui, QtCore
 
 from .workflow_controller import WorkflowController
@@ -95,7 +95,7 @@ class ViewDockPane(TraitsDockPane):
             self._actions[plugin.view_id] = task_action
             self.toolbar.append(task_action)
             
-        # see the comment in cytoflowgui.view_pane for an explanation of this
+        # see the comments in cytoflowgui.util for an explanation of this
         # HintedMainWindow business.
         
         self._window = window = HintedMainWindow()

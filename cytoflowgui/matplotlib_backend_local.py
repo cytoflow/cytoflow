@@ -52,7 +52,6 @@ import time, threading, logging, sys, traceback
 import matplotlib
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from pyface.qt import QtCore, QtGui
 

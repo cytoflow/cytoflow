@@ -98,7 +98,7 @@ click-and-drag on the plot.
 from traits.api import provides, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
 from ..view_plugins.scatterplot import ScatterplotParamsHandler

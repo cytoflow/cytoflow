@@ -31,10 +31,10 @@ from cytoflowgui.workflow.operations.channel_stat import summary_functions
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 # we need these to exec() code in testNotebook
-from cytoflow import ci, geom_mean
-from numpy import mean, median, std
-from scipy.stats import sem
-from pandas import Series
+from cytoflow import ci, geom_mean  # @UnusedImport
+from numpy import mean, median, std  # @UnusedImport
+from scipy.stats import sem  # @UnusedImport
+from pandas import Series  # @UnusedImport
 
 class TestChannelStat(ImportedDataTest):
     

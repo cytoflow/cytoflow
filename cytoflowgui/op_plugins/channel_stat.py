@@ -51,7 +51,7 @@ in **By**, then applies **Function** to the **Channel** in each group.
 
 from traits.api import provides, List
 from traitsui.api import (View, Item, TextEditor, VGroup, EnumEditor, CheckListEditor)
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 from envisage.api import Plugin
                        
 from ..workflow.operations import ChannelStatisticWorkflowOp

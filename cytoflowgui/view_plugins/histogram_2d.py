@@ -81,7 +81,7 @@ events in a bin change the bin's opacity, so you can use different colors.
 from traits.api import provides, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import Histogram2DWorkflowView, Histogram2DPlotParams
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor

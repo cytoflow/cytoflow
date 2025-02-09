@@ -38,11 +38,11 @@ import pathlib
 from traits.api import Instance, Event, CFloat, CInt, observe, provides, List
 from traitsui.api import ButtonEditor, View, TextEditor, Item
 
-from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane, VSplitter, ITaskPane, TaskPane
+from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane, VSplitter, ITaskPane, TaskPane  # @UnresolvedImport
 from pyface.tasks.action.api import SMenuBar, SMenu, TaskToggleGroup
 from envisage.api import Plugin
 from envisage.ui.tasks.api import TaskFactory
-from pyface.api import FileDialog, OK, error
+from pyface.api import FileDialog, OK, error  # @UnresolvedImport
 from pyface.qt import QtGui
 
 

@@ -73,7 +73,7 @@ from traitsui.menu import OKCancelButtons
 
 from traitsui.qt.table_editor import TableEditor as TableEditorQt
 
-from pyface.api import FileDialog, error, warning, confirm, YES
+from pyface.api import FileDialog, error, warning, confirm, YES  # @UnresolvedImport
 
 from pyface.constant import OK as PyfaceOK
 

@@ -82,7 +82,7 @@ from natsort import natsorted
 from traits.api import provides, Event, Property, List, Str
 from traitsui.api import View, Item, EnumEditor, VGroup, HGroup, TextEditor, Controller, ButtonEditor
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import (ParallelCoordinatesWorkflowView, 
                               ParallelCoordinatesPlotParams, 

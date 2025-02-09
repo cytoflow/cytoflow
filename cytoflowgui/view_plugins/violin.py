@@ -81,7 +81,7 @@ Plots a violin plot, which is a nice way to compare several distributions.
 from traits.api import provides, List
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import ViolinPlotWorkflowView, ViolinPlotParams
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor

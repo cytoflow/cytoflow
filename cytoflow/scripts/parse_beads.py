@@ -43,7 +43,7 @@ def main():
     beads = {}
     curr_beads_name = ""
     curr_beads = {}
-    for i, row in csv.iterrows():
+    for _, row in csv.iterrows():
         
         if str(row[0]).startswith('http'):
             continue

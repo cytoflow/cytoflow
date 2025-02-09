@@ -34,10 +34,10 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
 
 from pyface.qt import QtGui, QtCore
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from traits.api import (HasTraits, HasPrivateTraits, Instance, List, Str, Bool, 
-                        Property, Any, cached_property, Int, on_trait_change)
+                        Property, Any, cached_property, on_trait_change)
 
 from traitsui.api import UI, Editor
 
@@ -577,7 +577,6 @@ if __name__ == '__main__':
                     resizable = True)
 
     from cytoflowgui.utility import record_events 
-    import os
             
     with record_events() as container:
         test = TestList()

@@ -114,8 +114,8 @@ class TestExperiment(ImportedDataTest):
         
         from cytoflow import ThresholdOp
         op = ThresholdOp(name = "t", channel = "FSC-A", threshold = 100)
-        ex_t = op.apply(self.ex)
-        ex2_t = op.apply(ex2)
+        ex_t = op.apply(self.ex)  # @UnusedVariable
+        ex2_t = op.apply(ex2)  # @UnusedVariable
         
 
 if __name__ == "__main__":

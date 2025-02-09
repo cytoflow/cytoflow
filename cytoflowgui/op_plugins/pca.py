@@ -69,7 +69,7 @@ from traits.api import provides, Event, Property, List, Str
 from traitsui.api import (View, Item, EnumEditor, HGroup, VGroup, TextEditor, 
                           CheckListEditor, ButtonEditor, Controller)
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..editors import SubsetListEditor, InstanceHandlerEditor, VerticalListEditor
 from ..workflow.operations import PCAWorkflowOp, PCAChannel

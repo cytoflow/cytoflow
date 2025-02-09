@@ -93,7 +93,7 @@ from natsort import natsorted
 from traits.api import provides, Event, Property, List, Str
 from traitsui.api import View, Item, VGroup, TextEditor, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
 from ..editors import ColorTextEditor, InstanceHandlerEditor, VerticalListEditor

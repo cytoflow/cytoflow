@@ -164,7 +164,7 @@ translation) into one easy-use-interface.
 from traits.api import provides, Property, List
 from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller, CheckListEditor, TextEditor
 from envisage.api import Plugin
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from cytoflow.operations.bead_calibration import BeadCalibrationOp
 

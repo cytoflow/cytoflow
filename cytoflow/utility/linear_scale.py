@@ -28,7 +28,7 @@ A scale that doesn't transform data at all -- a "default" scale.
 
 import matplotlib.colors
 
-from traits.api import Instance, Str, Dict, provides, Constant, Tuple, Array
+from traits.api import Instance, Str, provides, Constant, Tuple, Array
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
 

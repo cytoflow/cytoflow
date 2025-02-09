@@ -33,7 +33,7 @@ with the same API.
 """
 
 from pyface.qt import QtCore, QtGui
-from pyface.api import ImageResource
+from pyface.api import ImageResource  # @UnresolvedImport
 
 from traits.api import Instance
 

@@ -81,7 +81,7 @@ import pandas as pd
 from traits.api import provides, Property, Event, observe, List
 from traitsui.api import View, Item, EnumEditor, VGroup, ButtonEditor
 from envisage.api import Plugin
-from pyface.api import ImageResource, FileDialog, OK
+from pyface.api import ImageResource, FileDialog, OK  # @UnresolvedImport
 
 from ..workflow.views import TableWorkflowView
 from ..util import DefaultFileDialog
