@@ -17,9 +17,9 @@ dependencies:
     - numba==0.60.0
 
     - traits==6.2.0
-    - conda-forge::traitsui==8.0.0
-    - conda-forge::pyface==8.0.0
-    - conda-forge::envisage==7.0.3
+    - traitsui==8.0.0
+    - pyface==8.0.0
+    - envisage==7.0.3
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
