@@ -57,6 +57,12 @@ class TestExperiment(ImportedDataTest):
         self.assertEqual(len(ex2['Dox'].unique()), 1)
         self.assertEqual(len(ex2['Well'].unique()), 1)
         self.assertEqual(len(ex2), 100)
+
+    def testSubset2(self):
+        ex2 = self.ex.subset('Dox', 100.0)
+        self.assertEqual(len(ex2['Dox'].unique()), 1)
+        self.assertEqual(len(ex2['Well'].unique()), 3)
+        self.assertEqual(len(ex2), 300)
         
     def testQuery(self):
         ex2 = self.ex.query('Dox == 100.0 and Well == "C"')
@@ -113,5 +119,5 @@ class TestExperiment(ImportedDataTest):
         
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'TestExperiment.testPickle']
+    #import sys;sys.argv = ['', 'TestExperiment.testSubset2']
     unittest.main()

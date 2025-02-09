@@ -232,7 +232,6 @@ class Experiment(HasStrictTraits):
                   for details.
             
         """
-        conditions = list(conditions)
         
         if isinstance(conditions, str):
             c = conditions
@@ -251,7 +250,7 @@ class Experiment(HasStrictTraits):
         g = self.data.groupby(conditions, observed = True)
 
         ret = self.clone(deep = False)
-        ret.data = g.get_group(values if util.is_list_like(values) else (values,))
+        ret.data = g.get_group(values)
         ret.data.reset_index(drop = True, inplace = True)
         
         return ret    
