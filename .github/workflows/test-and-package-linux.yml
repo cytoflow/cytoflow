@@ -126,7 +126,7 @@ jobs:
     - name: Move conda package into the dist folder
       run: |
         mkdir dist
-        python package/move_conda_package.py
+        mv `conda build --output package/conda_recipes/cytoflow/` dist
         
     - name: Copy environment.yml into the dist folder
       run: |
