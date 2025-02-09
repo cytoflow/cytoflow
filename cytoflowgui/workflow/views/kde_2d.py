@@ -58,7 +58,7 @@ class Kde2DWorkflowView(WorkflowFacetView, Kde2DView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
+                plot = ".subset(" + repr(self.plotfacet) + ", " + repr(self.current_plot) + ")" if self.current_plot else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
 ### Serialization

@@ -74,7 +74,7 @@ class RadvizWorkflowView(WorkflowFacetView, RadvizView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
+                plot = ".subset(" + repr(self.plotfacet) + ", " + repr(self.current_plot) + ")" if self.current_plot else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
     @observe('[channels_list:items,channels_list:items:channel,channels_list:items:scale]')

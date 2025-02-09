@@ -705,8 +705,7 @@ class FlowTask(Task):
         
         # todo serialize here
         header = dedent("""\
-            from cytoflow import *
-            %matplotlib inline""")
+            from cytoflow import *""")
         nb['cells'].append(nbf.v4.new_code_cell(header))
             
         for i, wi in enumerate(workflow):

@@ -457,6 +457,12 @@ class Base1DViewTest(BaseDataViewTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view.xfacet = "Well"
+        self.view.yfacet = "Dox"
+        self.view.plotfacet = "IP"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yfacet = ""
         self.view.huefacet = "Dox"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
