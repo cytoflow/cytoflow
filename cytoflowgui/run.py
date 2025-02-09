@@ -145,6 +145,25 @@ def run_gui():
     import traitsui.qt.check_list_editor  # @UnusedImport
     traitsui.qt.check_list_editor.capitalize = lambda s: s
     
+    # monkey patch ApplicationWindow to fix toolbar bug
+    from traits.api import observe
+    @observe("tool_bar_managers.items")
+    def _update_tool_bar_managers(self, event):
+        if self.control is not None:
+            # Remove the old toolbars.
+            for child in self.control.children():
+                if isinstance(child, QtGui.QToolBar):
+                    self.control.removeToolBar(child)
+                    child.deleteLater()
+
+            # Add the new toolbars.
+            if event.new is not None:
+                self._create_tool_bar(self.control)
+                
+    from pyface.ui.qt.application_window import ApplicationWindow
+    ApplicationWindow._update_tool_bar_managers = _update_tool_bar_managers
+    
+    
     # define and install a message handler for Qt errors
     from traits.api import push_exception_handler
                              
