@@ -111,6 +111,3 @@ from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
 from .utility.algorithms import (ci, percentiles)
 from .utility.scale import set_default_scale, get_default_scale
 
-import importlib.metadata
-__version__ = importlib.metadata.version(__name__)
-

@@ -114,17 +114,6 @@ logging.info("Removing datas: {}".format(remove_datas))
 
 a.datas = list(set(a.datas) - set(remove_datas))
 
-# replace the module cytoflow/_version.py with a fixed version from versioneer
-#logging.info("Freezing dynamic version")
-#a.pure -= [('cytoflow._version', None, None)]
-#sys.path.insert(0, os.getcwd())
-#from versioneer import get_versions, write_to_version_file
-#version_file = os.path.join(os.getcwd(), '_version.py')
-#open(version_file, 'a').close()
-#versions = get_versions()
-#write_to_version_file(version_file, versions)
-#a.pure += [('cytoflow._version', version_file, 'PYMODULE')]
-
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 # get rid of the leftover version file once it's compiled

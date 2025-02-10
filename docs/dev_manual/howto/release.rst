@@ -60,7 +60,7 @@ Test the packaging
 - Make sure that the :mod:`pyinstaller` distribution will build on your local 
   machine (back in your development environment).  ::
 
-  	  pip install pyinstaller==6.11.1
+  	  pip install pyinstaller==6.12.0
   	  pyinstaller package/pyinstaller.spec 
   
 - Make sure that :mod:`pyinstaller` built the executables on all three supported
@@ -79,7 +79,7 @@ Test the packaging
 Versioning and dependencies
 ---------------------------
 
-- We're using ``versioneer`` to manage versions.  No manual versions required.
+- We're using ``setuptools-scm`` to manage versions.  No manual versions required.
 
 - If there are dependencies that don't have packages on Anaconda, add recipes
   to ``package/conda_recipes`` (using ``conda skeleton``) and upload them to
