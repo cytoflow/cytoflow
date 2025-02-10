@@ -46,6 +46,7 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.1.0
       with:
         auto-update-conda: true
+        channels: cytoflow
         activate-environment: cytoflow
         environment-file: environment.yml
 
@@ -110,6 +111,7 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.1.0
       with:
         auto-update-conda: true
+        channels: cytoflow
         activate-environment: cytoflow
         environment-file: environment.yml
         
@@ -191,6 +193,7 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.1.0
       with:
         auto-update-conda: true
+        channels: cytoflow
         activate-environment: cytoflow
         environment-file: environment.yml
          
