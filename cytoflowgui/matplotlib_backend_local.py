@@ -344,8 +344,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         if self.buffer is None:
             return
 
-        logger.debug('FigureCanvasQtAggLocal.paintEvent: '
-                      .format(self, self.get_width_height()))
+        logger.debug('FigureCanvasQtAggLocal.paintEvent: {}'
+                      .format(self.get_width_height()))
     
         if self.blit_buffer is None:
             
