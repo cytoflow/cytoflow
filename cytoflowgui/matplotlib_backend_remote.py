@@ -273,7 +273,8 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         
         # If bbox is None, blit the entire canvas. Otherwise
         # blit only the area defined by the bbox.
-        logger.debug("FigureCanvasAggRemote.blit()")
+        logger.debug("FigureCanvasAggRemote.blit() {}"
+                     .format(bbox))
         
         if bbox is None and self.figure:
             logger.info("bbox was none")
@@ -281,6 +282,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
 
         with self.blit_lock:
             l, b, r, t = bbox.extents
+
             w = int(r) - int(l)
             h = int(t) - int(b)
             t = int(b) + h

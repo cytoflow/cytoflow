@@ -151,7 +151,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         t.start()
         
         # overrender four-fold to deal with low-DPI aliasing
-        self.render_dpi = self.physicalDpiX() * 2
+        self.scale = 2
+        self.render_dpi = self.physicalDpiX() * self.scale
         figure.dpi = self.render_dpi
         matplotlib.rcParams['figure.dpi'] = self.render_dpi
         self.child_conn.send((Msg.DPI, self.render_dpi))
@@ -232,9 +233,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         logger.debug('FigureCanvasQTAggLocal.mousePressEvent: {}'
                       .format(event.button()))
-        x = event.pos().x()
+        x = event.pos().x() * self.scale
         # flip y so y=0 is bottom of canvas
-        y = self.height() - event.pos().y()
+        y = (self.height() - event.pos().y()) * self.scale
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_PRESS_EVENT, (x, y, button))
@@ -248,9 +249,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         logger.debug('FigureCanvasQTAggLocal.mouseDoubleClickEvent: {}'
                       .format(event.button()))
-        x = event.pos().x()
+        x = event.pos().x() * self.scale
         # flipy so y=0 is bottom of canvas
-        y = self.height() - event.pos().y()
+        y = (self.height() - event.pos().y()) * self.scale
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_DOUBLE_CLICK_EVENT, (x, y, button))
@@ -264,9 +265,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
 #         if DEBUG:
 #             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
-        self.move_x = event.x()
+        self.move_x = event.x() * self.scale
         # flip y so y=0 is bottom of canvas
-        self.move_y = self.height() - event.y()
+        self.move_y = (self.height() - event.y()) * self.scale 
         self.send_event.set()
 
 
@@ -278,9 +279,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         logger.debug('FigureCanvasQTAggLocal.mouseReleaseEvent: {}'
                       .format(event.button()))
         
-        x = event.x()
+        x = event.x() * self.scale
         # flip y so y=0 is bottom of canvas
-        y = self.height() - event.y()
+        y = (self.height() - event.y()) * self.scale
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_RELEASE_EVENT, (x, y, button))
@@ -374,8 +375,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
  
             pixmap = QtGui.QPixmap.fromImage(qImage)
             p = QtGui.QPainter(self)
-            p.drawPixmap(QtCore.QPoint(int(self.blit_left), 
-                                       int(self.buffer_height - self.blit_top)),
+            p.drawPixmap(int(self.blit_left / self.scale), 
+                         int((self.buffer_height - self.blit_top) / self.scale),
+                         int(self.blit_width / self.scale),
+                         int(self.blit_height / self.scale), 
                          pixmap)
 
             p.end()
