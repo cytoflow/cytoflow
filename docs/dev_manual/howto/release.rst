@@ -15,12 +15,12 @@ Tests
   
 - Make sure that the :mod:`cytoflow` tests pass, both locally and on GitHub::
 
-  	  nose2 -c package/nose2.cfg cytoflow.tests -N 8
+  	  nose2 -c package/nose2.cfg -N 8 cytoflow.tests 
   
 - Make sure the :mod:`cytoflowgui` tests pass.  
   **You must do this locally; I'm still working on why it doesn't run on the CI platform.** ::
 
-  	  nose2 -c package/nose2.cfg cytoflowgui.tests -N 8
+  	  nose2 -c package/nose2.cfg -N 8 cytoflowgui.tests
   	  
 - Make sure the GitHub Actions are running to completion, at 
   https://github.com/cytoflow/cytoflow/actions
