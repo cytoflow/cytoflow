@@ -87,11 +87,7 @@ Versioning and dependencies
   the Anaconda Cloud.  Unless there's a really (really!) good reason, please
   make them no-arch.
   
-- Make sure ``install_requires`` in ``setup.py`` matches ``requirements.txt``
-
-- Update the README.rst from the README.md.  From the project root, say::
-
-  	pandoc --from=markdown --to=rst --output=README.rst README.md
+- Make sure ``install_requires`` in ``pyproject.toml`` matches ``requirements.txt``
   	
 - Update the version integers in ``package/installer.nsis``
   	
