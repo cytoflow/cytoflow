@@ -629,23 +629,24 @@ class FlowTask(Task):
         
     
     def _get_package_versions(self):    
-        from cytoflow import __version__ as cf_version
+        from importlib.metadata import version
+        cf_version = version('cytoflow')
         from fcsparser.fcsparser import __version__ as fcs_version
-        from pandas import __version__ as pd_version
-        from numpy import __version__ as np_version
-        from numexpr import __version__ as nxp_version
-        from bottleneck import __version__ as btl_version
-        from seaborn import __version__ as sns_version
-        from matplotlib import __version__ as mpl_version  # @UnresolvedImport
-        from scipy import __version__ as scipy_version  # @UnresolvedImport
-        from sklearn import __version__ as skl_version
-        from statsmodels import __version__ as stats_version
-        from pyface import __version__ as pyf_version  # @UnresolvedImport
-        from envisage import __version__ as env_version  # @UnresolvedImport
-        from traits import __version__ as trt_version
-        from traitsui import __version__ as trt_ui_version  # @UnresolvedImport
-        from yapf import __version__ as yapf_version
-        from nbformat import __version__ as nb_version
+        pd_version = version('pandas')
+        np_version = version('numpy')
+        nxp_version = version('numexpr')
+        btl_version = version('bottleneck')
+        sns_version = version('seaborn')
+        mpl_version = version('matplotlib')
+        scipy_version = version('scipy')
+        skl_version = version('scikit-learn')
+        stats_version = version('statsmodels')
+        pyf_version = version('pyface')
+        env_version = version('envisage')
+        trt_version = version('traits')
+        trt_ui_version = version('traitsui')
+        yapf_version = version('yapf')
+        nb_version = version('nbformat')
         from yaml import __version__ as yaml_version
         
         return {"python" : sys.version,
