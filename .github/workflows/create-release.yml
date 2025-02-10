@@ -38,7 +38,7 @@ jobs:
           prerelease: false
           
       - name: Dispatch builds
-        uses: peter-evans/repository-dispatch@v3.0
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           event-type: builds
