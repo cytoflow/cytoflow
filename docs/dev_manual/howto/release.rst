@@ -57,11 +57,12 @@ Test the packaging
       python -c "import cytoflow"
       cytoflow    
 
-- Make sure that the :mod:`pyinstaller` distribution will build on your local 
+- Make sure that the :mod:`pyinstaller` distribution will build and run on your local 
   machine (back in your development environment).  ::
 
   	  pip install pyinstaller==6.12.0
   	  pyinstaller package/pyinstaller.spec 
+  	  dist/cytoflow/cytoflow
   
 - Make sure that :mod:`pyinstaller` built the executables on all three supported
   platforms. On each of the three supported platforms:
