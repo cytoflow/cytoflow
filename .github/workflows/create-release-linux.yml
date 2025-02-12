@@ -17,7 +17,7 @@
 name: Release a new package (Linux)
 on:
   repository_dispatch:
-    types: [builds]
+    types: [create-release-builds]
       
 jobs:
   build-linux-conda-package:
@@ -28,7 +28,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -72,26 +72,26 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "CONDA_PACKAGE=$(ls cytoflow*.bz2)" >> $GITHUB_ENV     
+        echo "CONDA_PACKAGE=$(ls cytoflow*.conda)" >> $GITHUB_ENV 
 
     - name: Show file name
       run: |
         echo 'Output from get_filename: ${CONDA_PACKAGE}'
         
-    - name: Upload the conda package to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${CONDA_PACKAGE}
-        asset_name: cytoflow-conda-${GIT_TAG}-linux_x86-64.tar.bz2
-        asset_content_type: application/x-bzip2
+#     - name: Upload the conda package to the GitHub release
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#       with:
+#         upload_url: ${{ github.event.client_payload.release_url }} 
+#         asset_path: dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_name: ${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_content_type: application/zip
         
     - name: Upload the conda package to anaconda.org
       run: |
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-        anaconda upload --user cytoflow dist/${CONDA_PACKAGE}
+        anaconda upload --user cytoflow dist/$CONDA_PACKAGE
         anaconda logout
        
   build-linux-wheels:
@@ -102,7 +102,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout@v4 
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -134,7 +134,7 @@ jobs:
         
     - name: Build wheel
       run: |
-        python -m build wheel
+        python -m build --wheel
         
     - name: Move C++ extensions into the dist folder
       run: |
@@ -147,9 +147,9 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "EXTENSION_FILE=$(ls _Logicle*.so)" >> $GITHUB_ENV
-        echo "WHEEL_FILE$(ls cytoflow*.whl)" >> $GITHUB_ENV
-        echo "TARBALL_FILE$(ls cytoflow*.tar.gz)" >> $GITHUB_ENV
+        echo "EXTENSION_FILE=$(ls _Logicle*.so)" >> $GITHUB_OUTPUT
+        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_OUTPUT
+        echo "SDIST_FILE=$(ls cytoflow*.tar.gz)" >> $GITHUB_OUTPUT
  
     - name: Upload the Linux extension to the GitHub release
       uses: actions/upload-release-asset@v1
@@ -157,8 +157,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${EXTENSION_FILE}
-        asset_name: ${EXTENSION_FILE}
+        asset_path: dist/${{ steps.get_filenames.outputs.EXTENSION_FILE }}
+        asset_name: ${{ steps.get_filenames.outputs.EXTENSION_FILE }}
         asset_content_type: application/x-sharedlib
  
     - name: Upload the Linux wheel to the GitHub release
@@ -167,8 +167,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${WHEEL_FILE}
-        asset_name: ${WHEEL_FILE}
+        asset_path: dist/${{ steps.get_filenames.outputs.WHEEL_FILE }}
+        asset_name: ${{ steps.get_filenames.outputs.WHEEL_FILE }}
         asset_content_type: application/zip       
  
     - name: Upload the source tarball to the GitHub release
@@ -177,8 +177,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${TARBALL_FILE}
-        asset_name: ${TARBALL_FILE}
+        asset_path: dist/${{ steps.get_filenames.outputs.SDIST_FILE }}
+        asset_name: ${{ steps.get_filenames.outputs.SDIST_FILE }}
         asset_content_type: application/x-compressed-tar
         
   build-linux-oneclick:
@@ -238,11 +238,13 @@ jobs:
 #        xvfb-run dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
 
     - name: Rename directory and make a tarball
+      id: make_tarball
       run: |
         cd dist
         mv cytoflow cytoflow-${GIT_TAG}
         tar -cjf cytoflow-gui-${GIT_TAG}.linux_x86-64.tar.bz2 cytoflow-${GIT_TAG}
         rm -rf cytoflow-${GIT_TAG}
+        echo "GUI_FILE=$(ls cytoflow*.tar.bz2)" >> $GITHUB_OUTPUT
         
     - name: List dist/
       run: ls dist/
@@ -253,8 +255,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${GIT_TAG}.linux_x86-64.tar.bz2
-        asset_name: cytoflow-gui-${GIT_TAG}.linux_x86-64.tar.bz2
+        asset_path: dist/${{ steps.make_tarball.outputs.GUI_FILE }}
+        asset_name: ${{ steps.make_tarball.outputs.GUI_FILE }}
         asset_content_type: application/x-bzip-compressed-tar
         
         
@@ -284,11 +286,14 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
         
     - name: Zip up examples
+      id: zip_examples
       run: |
         mkdir dist
         cd docs
         zip -r cytoflow-${GIT_TAG}-examples-basic.zip examples-basic
+        echo "BASIC_FILE=cytoflow-${GIT_TAG}-examples-basic.zip" >> $GITHUB_OUTPUT
         zip -r cytoflow-${GIT_TAG}-examples-advanced.zip examples-advanced
+        echo "ADVANCED_FILE=cytoflow-${GIT_TAG}-examples-advanced.zip" >> $GITHUB_OUTPUT
         mv cytoflow-${GIT_TAG}-examples-*.zip ../dist
         cd ..
         
@@ -301,8 +306,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-${GIT_TAG}-examples-basic.zip
-        asset_name: cytoflow-${GIT_TAG}-examples-basic.zip
+        asset_path: dist/${{ steps.zip_examples.outputs.BASIC_FILE }}
+        asset_name: ${{ steps.zip_examples.outputs.BASIC_FILE }}
         asset_content_type: application/zip
         
     - name: Upload the the advanced examples to the GitHub release
@@ -311,8 +316,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-${GIT_TAG}-examples-advanced.zip
-        asset_name: cytoflow-${GIT_TAG}-examples-advanced.zip
+        asset_path: dist/${{ steps.zip_examples.outputs.ADVANCED_FILE }}
+        asset_name: ${{ steps.zip_examples.outputs.ADVANCED_FILE }}
         asset_content_type: application/zip
 
         

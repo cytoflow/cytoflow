@@ -41,6 +41,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          event-type: builds
+          event-type: create-release-builds
           client-payload: '{"release_url": "${{ steps.create_release.outputs.upload_url }}", "ref": "${{ github.ref }}"}'
        

@@ -17,7 +17,7 @@
 name: Release a new package (MacOS Intel)
 on:
   repository_dispatch:
-    types: [builds]
+    types: [create-release-builds]
 jobs:
   build-macos-conda-package:
     name: Build and upload MacOS Intel conda package
@@ -71,26 +71,26 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "CONDA_PACKAGE=$(ls cytoflow*.bz2)" >> $GITHUB_ENV        
+        echo "CONDA_PACKAGE=$(ls cytoflow*.conda)" >> $GITHUB_ENV 
 
     - name: Show file name
       run: |
         echo 'Output from get_filename: ${CONDA_PACKAGE}'
          
-    - name: Upload the conda package to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${CONDA_PACKAGE}
-        asset_name: cytoflow-conda-${GIT_TAG}-macos.tar.bz2
-        asset_content_type: application/x-bzip2
+#     - name: Upload the conda package to the GitHub release
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ github.event.client_payload.release_url }} 
+#         asset_path: dist/dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_name: dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_content_type: application/x-bzip2
          
     - name: Upload the conda package to anaconda.org
       run: |
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-        anaconda upload --user cytoflow dist/${CONDA_PACKAGE}
+        anaconda upload --user cytoflow dist/$CONDA_PACKAGE
         anaconda logout
 
   build-macos-wheels:
@@ -142,8 +142,9 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "EXTENSION_FILE=$(ls _Logicle*.so)" >> $GITHUB_ENV
-        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_ENV
+        mv `ls _Logicle*.so` _Logicle-macos-x86_64.so
+        echo "EXTENSION_FILE=$(ls _Logicle*.so)" >> $GITHUB_OUTPUT
+        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload the MacOS extension to the GitHub release
       uses: actions/upload-release-asset@v1
@@ -151,8 +152,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${EXTENSION_FILE}
-        asset_name: ${EXTENSION_FILE}
+        asset_path: dist/${{ steps.get_filenames.outputs.EXTENSION_FILE }}
+        asset_name: ${{ steps.get_filenames.outputs.EXTENSION_FILE }}
         asset_content_type: application/x-sharedlib
  
     - name: Upload the MacOS wheel to the GitHub release
@@ -161,8 +162,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${WHEEL_FILE}
-        asset_name: ${WHEEL_FILE}
+        asset_path: dist/${{ steps.get_filenames.outputs.WHEEL_FILE }}
+        asset_name: ${{ steps.get_filenames.outputs.WHEEL_FILE }}
         asset_content_type: application/zip       
  
         
@@ -227,6 +228,7 @@ jobs:
         mv Cytoflow.app Cytoflow-${GIT_TAG}.app
         zip -r cytoflow-gui-${GIT_TAG}-macos_x86-64.zip Cytoflow-${GIT_TAG}.app/
         rm -rf Cytoflow-${GIT_TAG}.app cytoflow
+        echo "GUI_FILE=cytoflow-gui-${GIT_TAG}-macos_x86-64.zip" >> $GITHUB_OUTPUT
         
     - name: List dist
       run: ls dist/
@@ -237,6 +239,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${GIT_TAG}-macos_x86-64.zip
-        asset_name: cytoflow-gui-${GIT_TAG}-macos_x86-64.zip
+        asset_path: dist/${{ steps.make_tarball.outputs.GUI_FILE }}
+        asset_name: ${{ steps.make_tarball.outputs.GUI_FILE }}
         asset_content_type: application/zip
