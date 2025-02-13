@@ -11,6 +11,8 @@ build:
       python: miniconda3-3.12-24.1
       
    jobs:
+     post_create_environment:
+       - conda install --yes --quiet swig==4.0.2
      post_install:
        - pip install --editable .
 
