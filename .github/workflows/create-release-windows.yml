@@ -156,8 +156,8 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "EXTENSION_FILE=$(ls _Logicle*.pyd)" >> $GITHUB_ENV
-        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_ENV
+        echo "EXTENSION_FILE=$(ls _Logicle*.pyd)" >> $GITHUB_OUTPUT
+        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload the Windows extension to the GitHub release
       uses: actions/upload-release-asset@v1
@@ -165,8 +165,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${EXTENSION_FILE}
-        asset_name: ${EXTENSION_FILE}
+        asset_path: dist/${{ steps.get_filenames.outputs.EXTENSION_FILE }}
+        asset_name: ${{ steps.get_filenames.outputs.EXTENSION_FILE }}
         asset_content_type: application/x-ms-dos-executable
  
     - name: Upload the Windows wheel to the GitHub release
@@ -175,8 +175,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${WHEEL_FILE}
-        asset_name: ${WHEEL_FILE}
+        asset_path: dist/${{ steps.get_filenames.outputs.WHEEL_FILE }}
+        asset_name: ${{ steps.get_filenames.outputs.WHEEL_FILE }}
         asset_content_type: application/zip    
         
   build-windows-oneclick:
@@ -243,9 +243,11 @@ jobs:
         "C:\Program Files (x86)\NSIS\makensis.exe" //NOCD package/installer.nsis
         
     - name: Rename installer and remove remaining files
+      id: rename_installer
       run: |
         cd dist
         mv cytoflow-installer.exe cytoflow-gui-${GIT_TAG}-win_x86-64.exe
+        echo "GUI_FILE=cytoflow-gui-${GIT_TAG}-win_x86-64.exe" >> $GITHUB_OUTPUT
         rm -rf cytoflow
         
     - name: List dist
@@ -257,7 +259,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-gui-${GIT_TAG}-win_x86-64.exe
-        asset_name: cytoflow-gui-${GIT_TAG}-win_x86-64.exe
+        asset_path: dist/${{ steps.rename_installer.outputs.GUI_FILE }}
+        asset_name: ${{ steps.rename_installer.outputs.GUI_FILE }}
         asset_content_type: application/x-ms-dos-executable
 
