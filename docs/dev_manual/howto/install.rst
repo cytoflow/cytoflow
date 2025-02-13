@@ -164,10 +164,13 @@ the appropriate file.
   download the appropriate extension file for the version you're installing.
   
   * **On Windows (64-bit)**: ``_Logicle.cp311-win_amd64.pyd``
-  * **On MacOS**: ``_Logicle.cpython-311m-darwin.so``
+  * **On MacOS (Intel)**: ``_Logicle-macos-x86_64.so``
+  * **Onw MacOS (Apple Silicon)**: ``_Logicle-macos-arm64.so``
   
 * Copy the file you just download into the ``cytoflow/utility/logicle_ext/`` folder
   in your source tree.
+  
+* **On MacOS only**, rename the file to ``_Logicle.so``.
   
 * Test that everything works.  Start a ``python`` interpreter and say::
 
