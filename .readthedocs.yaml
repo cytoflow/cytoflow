@@ -9,6 +9,10 @@ build:
    os: ubuntu-24.04
    tools:
       python: miniconda3-3.12-24.1
+      
+   jobs:
+     post_install:
+       - pip install --editable .
 
 sphinx:
    configuration: docs/conf.py
@@ -23,3 +27,4 @@ submodules:
 
 conda:
   environment: environment.yml
+  
