@@ -13,4 +13,3 @@ from .toggle_button import ToggleButtonEditor
 from .value_bounds_editor import ValuesBoundsEditor
 from .vertical_list_editor import VerticalListEditor
 from .vertical_notebook_editor import VerticalNotebookEditor
-from .zoomable_html_editor import ZoomableHTMLEditor
