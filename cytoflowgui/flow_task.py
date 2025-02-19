@@ -629,42 +629,50 @@ class FlowTask(Task):
         
     
     def _get_package_versions(self):    
+        
+        # if you add anything here, you should also make sure the package is
+        # added to hook-yapf.py
+        
         from importlib.metadata import version as get_version
         cf_version = get_version('cytoflow')
         from fcsparser.fcsparser import __version__ as fcs_version
-        pd_version = get_version('pandas')
         np_version = get_version('numpy')
-        nxp_version = get_version('numexpr')
-        btl_version = get_version('bottleneck')
-        sns_version = get_version('seaborn')
+        pd_version = get_version('pandas')
         mpl_version = get_version('matplotlib')
+        btl_version = get_version('bottleneck')
+        nxp_version = get_version('numexpr')
         scipy_version = get_version('scipy')
         skl_version = get_version('scikit-learn')
+        sns_version = get_version('seaborn')
         stats_version = get_version('statsmodels')
-        pyf_version = get_version('pyface')
-        env_version = get_version('envisage')
+        natsort_version = get_version('natsort')
+        numba_version = get_version('numba')
         trt_version = get_version('traits')
         trt_ui_version = get_version('traitsui')
-        yapf_version = get_version('yapf')
+        pyf_version = get_version('pyface')
+        env_version = get_version('envisage')
         nb_version = get_version('nbformat')
+        yapf_version = get_version('yapf')
         from yaml import __version__ as yaml_version
         
         return {"python" : sys.version,
                 "cytoflow" : cf_version,
                 "fcsparser" : fcs_version,
-                "pandas" : pd_version,
                 "numpy" : np_version,
-                "numexpr" : nxp_version,
-                "bottleneck" : btl_version,
-                "seaborn" : sns_version,
+                "pandas" : pd_version,
                 "matplotlib" : mpl_version,
+                "bottleneck" : btl_version,
+                "numexpr" : nxp_version,
                 "scipy" : scipy_version,
                 "scikit-learn" : skl_version,
+                "seaborn" : sns_version,
                 "statsmodels" : stats_version,
-                "pyface" : pyf_version,
-                "envisage" : env_version,
+                "natsort" : natsort_version,
+                "numba" : numba_version,
                 "traits" : trt_version,
                 "traitsui" : trt_ui_version,
+                "pyface" : pyf_version,
+                "envisage" : env_version,
                 "nbformat" : nb_version,
                 "yapf" : yapf_version,
                 "yaml" : yaml_version}

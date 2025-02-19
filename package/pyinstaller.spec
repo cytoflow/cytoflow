@@ -1,41 +1,8 @@
 import sys, os, re, weakref, glob, logging
 from PyInstaller.compat import is_win, is_darwin, is_linux
 
-#from PyInstaller.building.datastruct import TOC, unique_name
-#
-#def toc_setitem(self, key, value):
-#    if isinstance(key, slice):
-#        if key == slice(None, None, None):
-#            # special case: set the entire list
-#            self.filenames = set()
-#            self.clear()
-#            self.extend(value)
-#            return
-#        else:
-#            raise KeyError("TOC.__setitem__ doesn't handle slices")
-#
-#    else:
-#        old_value = self[key]
-#        old_name = unique_name(old_value)
-#        self.filenames.remove(old_name)
-#
-#        new_name = unique_name(value)
-#        if new_name not in self.filenames:
-#            self.filenames.add(new_name)
-#            super(TOC, self).__setitem__(key, value)
-#        
-#TOC.__setitem__ = toc_setitem
-#
-#def toc_iadd(self, other):
-#    for entry in other:
-#        self.append(entry)
-#    return self
-#    
-#TOC.__iadd_= toc_iadd
-
 a = Analysis(['../cytoflowgui/run.py'],
              pathex=['cytoflowgui/'],
-#             binaries=[('d3dcompiler_47.dll', '.')] if is_win else None,
              binaries=None,
              datas=[('../cytoflowgui/preferences.ini', 'cytoflowgui'),
                     ('../cytoflowgui/images', '.'),
@@ -68,7 +35,7 @@ a = Analysis(['../cytoflowgui/run.py'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=None)
-
+             
 # remove a few libraries that cause crashes if we don't use the system
 # versions
 
