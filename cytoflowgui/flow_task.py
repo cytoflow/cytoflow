@@ -566,7 +566,7 @@ class FlowTask(Task):
         Opens a webbrowser to the online manual at readthedocs.io
         """
         
-        webbrowser.open_new_tab("https://cytoflow.readthedocs.io/en/stable/manual.html")
+        webbrowser.open_new_tab("https://cytoflow.readthedocs.io/en/stable/user_manual/user_manual.html")
 
     
     def on_problem(self):
