@@ -139,12 +139,14 @@ Views
    * - :doc:`Table View <views/table>`
    
        .. figure:: /views/table-1.png
+       
+     - :doc:`Long Table View <views/long_table>`
+     
+       .. figure:: /views/long_table-1.png
           
      - :doc:`Violin Plot <views/violin>`
    
        .. figure:: /views/violin-1.png
-       
-     -
        
      -
 

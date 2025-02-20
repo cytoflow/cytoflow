@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Table
+Long Table
 -----
 
 Make a long ("tidy") table out of a statistic.  The table can then be exported.
