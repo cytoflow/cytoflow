@@ -15,8 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 name: Create a new release
-on: [create]
-
+on:
+  push:
+    # Pattern matched against refs/tags
+    tags:        
+      - '*'
 
 jobs:
   create-release:
