@@ -43,8 +43,7 @@ def main():
     beads = {}
     curr_beads_name = ""
     curr_beads = {}
-    for _, row in csv.iterrows():
-        
+    for _, row in csv.iterrows():        
         if str(row[0]).startswith('http'):
             continue
             
@@ -57,6 +56,7 @@ def main():
             
         curr_beads[row[0]] = [v for v in row[1:] if not pd.isnull(v)]
         
+    beads[curr_beads_name] = curr_beads
     print(FormatCode(repr(beads))[0])
 
 
