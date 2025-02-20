@@ -28,7 +28,7 @@ import pandas as pd
 
 from cytoflowgui.tests.test_base import TasbeTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, BleedthroughControl
+from cytoflowgui.workflow.operations import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, BleedthroughChannel
 from cytoflowgui.workflow.subset import BoolSubset
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
@@ -39,16 +39,16 @@ class TestBleedthroughLinear(TasbeTest):
         
         self.addTypeEqualityFunc(BleedthroughLinearWorkflowOp, 'assertHasTraitsEqual')
         self.addTypeEqualityFunc(BleedthroughLinearWorkflowView, 'assertHasTraitsEqual')
-        self.addTypeEqualityFunc(BleedthroughControl, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(BleedthroughChannel, 'assertHasTraitsEqual')
                  
         self.op = op = BleedthroughLinearWorkflowOp()
         
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        op.controls_list = [BleedthroughControl(channel = "FITC-A",
+        op.channels_list = [BleedthroughChannel(channel = "FITC-A",
                                      file = self.cwd + '/../../cytoflow/tests/data/tasbe/eyfp.fcs'),
-                            BleedthroughControl(channel = "PE-Tx-Red-YG-A",
+                            BleedthroughChannel(channel = "PE-Tx-Red-YG-A",
                                      file = self.cwd + '/../../cytoflow/tests/data/tasbe/mkate.fcs'),
-                            BleedthroughControl(channel = "Pacific Blue-A",
+                            BleedthroughChannel(channel = "Pacific Blue-A",
                                      file = self.cwd + '/../../cytoflow/tests/data/tasbe/ebfp.fcs')]
         
         op.subset_list.append(BoolSubset(name = "Morpho"))
@@ -71,7 +71,7 @@ class TestBleedthroughLinear(TasbeTest):
 
     def testChangeControls(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.controls_list.pop()
+        self.op.channels_list.pop()
         self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))        
         
@@ -82,7 +82,7 @@ class TestBleedthroughLinear(TasbeTest):
   
     def testChangeControlsValue(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.controls_list[2].channel = "AmCyan-A"
+        self.op.channels_list[2].channel = "AmCyan-A"
         self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))   
         
