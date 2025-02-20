@@ -185,6 +185,15 @@ class LongTableView(HasStrictTraits):
 
         row_i = 1
         for row_idx, row_data in data.iterrows():
+            
+            # if there's only one level in the index, row_idx will be a single
+            # value, not an iterable.
+            
+            try:
+                iter(row_idx)
+            except TypeError:
+                row_idx = [row_idx]
+                
             for idx_i, idx in enumerate(row_idx):
                 try:
                     text = "{:g}".format(idx)
@@ -273,6 +282,15 @@ class LongTableView(HasStrictTraits):
             
         row_i = 1
         for row_idx, row_data in data.iterrows():
+            
+            # if there's only one level in the index, row_idx will be a single
+            # value, not an iterable.
+            
+            try:
+                iter(row_idx)
+            except TypeError:
+                row_idx = [row_idx]
+                
             for idx_i, idx in enumerate(row_idx):
                 try:
                     text = "{:g}".format(idx)
