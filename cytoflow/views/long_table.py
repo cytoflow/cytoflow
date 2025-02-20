@@ -182,6 +182,11 @@ class LongTableView(HasStrictTraits):
                        height = height,
                        text = name)
             
+        t.add_cell(0, 
+                   len(names),
+                   width = width[len(names)],
+                   height = height,
+                   text = "Value")
 
         row_i = 1
         for row_idx, row_data in data.iterrows():

@@ -227,6 +227,7 @@ def run_gui():
                                           Kde2DPlugin,
                                           ViolinPlotPlugin,
                                           TablePlugin, 
+                                          LongTablePlugin,
                                           Stats2DPlugin, 
                                           DensityPlugin,
                                           ParallelCoordinatesPlugin,
@@ -250,6 +251,7 @@ def run_gui():
                     Stats1DPlugin(),
                     Stats2DPlugin(),
                     TablePlugin(),
+                    LongTablePlugin(),
                     ExportFCSPlugin()]
     
     plugins.extend(view_plugins)
