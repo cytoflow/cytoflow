@@ -32,8 +32,8 @@ Documentation
 - Build the user manual and check it for completeness::
 
       conda install sphinx pandoc  # only necessary once
-	  sphinx-build docs/ build/manual
-  	  sphinx-build docs/user_manual/reference cytoflowgui/help
+      sphinx-build docs/ build/manual
+      sphinx-build docs/user_manual/reference cytoflowgui/help
   	  
 - Make sure that the ReadTheDocs build is working at 
   https://readthedocs.org/projects/cytoflow/builds/
@@ -133,13 +133,23 @@ This requires a hardware crypto token, so it must be done locally.
 
 - After the wizard closes, double-check that the signing process was completed by right-clicking on the executable and checking the "Digital Signatures" tab.
 
-Upload the artifacts and update the homepage
---------------------------------------------
+Sign the Mac applications
+-------------------------
+Recent versions of MacOS will simply refuse to run an unsigned application. Some day we may have this
+in the CI, but at the moment it must be done locally -- and the *build* has to happen on the same machine
+that the *signing* does. Ugh.
 
-- Upload artifacts as appropriate to GitHub, Anaconda, and the Python Package Index.  
-  (Make sure that in the case of Anaconda, you're uploading to the organization account, not
-  your personal account!) The GitHub action should take care of the GitHub and Anaconda packages,
-  but not PyPI.
+- Following `the installation instructions on ReadTheDocs <https://cytoflow.readthedocs.io/en/stable/dev_manual/howto/install.html#to-hack-on-the-code>`_, 
+  build a developer environment and make sure it works.
+
+- Following `the release instructions on ReadTheDocs <https://cytoflow.readthedocs.io/en/stable/dev_manual/howto/release.html>`_, build the online help
+  docs and the .app bundle.
+
+- Following `this gist <https://gist.github.com/bpteague/750906b9a02094e7389427d308ba1002>`_, sign and notarize the .app bundle. Zip it back up with
+  ``ditto`` and upload it to the GitHub release.
+
+Update the homepage
+--------------------------------------------
 
 - At https://github.com/cytoflow/cytoflow.github.io, update the version in 
   ``_config.yml``. Push these changes to update the main download links on 
