@@ -57,3 +57,4 @@ from .color_translation import ColorTranslationOp
 
 # etc 
 from .binning import BinningOp
+from cytoflow.operations.flowclean import FlowCleanOp
