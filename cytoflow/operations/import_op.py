@@ -449,7 +449,6 @@ class ImportOp(HasStrictTraits):
                 experiment.metadata[new_name]["fcs_name"] = channel
                 del experiment.metadata[channel]
 
-        experiment.history.append(self.clone_traits(transient = lambda _: True))
         return experiment
 
 

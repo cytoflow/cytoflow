@@ -85,7 +85,6 @@ from .operations.xform_stat import TransformStatisticOp
 
 # misc
 from .operations.binning import BinningOp
-from cytoflow.operations.flowclean import FlowCleanOp
 
 # views
 from .views.histogram import HistogramView
