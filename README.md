@@ -90,7 +90,7 @@ A few things.
 **If you just want the point-and-click version (not the Python modules), you 
   can install it from http://cytoflow.github.io/**
 
-See the [installation notes](http://cytoflow.readthedocs.org/en/stable/INSTALL.html) 
+See the [installation notes](https://cytoflow.readthedocs.io/en/stable/dev_manual/howto/install.html) 
 on [ReadTheDocs](http://cytoflow.readthedocs.org/).  Installation has been 
 testedon Linux, Windows (x86_64) and Mac (both Intel and Apple Silicon).  
 Cytoflow is distributed as an [Anaconda](https://www.anaconda.com/) package 
