@@ -168,7 +168,8 @@ class FlowCleanOp(HasStrictTraits):
     
     name = Str
     time_channel = Str
-    channels = Dict(Str, util.ScaleEnum)
+    channels = List(Str)
+    scale = Dict(Str, util.ScaleEnum)
     
     segment_size = Int(500)
     density_cutoff = Float(0.05)
@@ -182,34 +183,99 @@ class FlowCleanOp(HasStrictTraits):
 
     _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy)    
     _bin_density = Dict(Tube, Instance(np.ndarray))
+    _bin_kept = Dict(Tube, Instance(np.ndarray))
     _bin_means = Dict(Tube, Dict(Str, Instance(np.ndarray)))
     _bin_measures = Dict(Tube, Instance(np.ndarray))
+    _bin_kept = Dict(Tube, Instance(np.ndarray))
+    
+    _scale = Dict(Str, Instance(util.IScale), transient = True)
     
     def estimate(self, experiment, subset = None):
         # check that subset is None
         if subset is not None:
             raise util.CytoflowOpError(None,
                                        "'subset' must be None for FlowCutOp.estimate().")
+            
+        if experiment is None:
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
+        
+        if len(self.channels) == 0:
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
+
+        if len(self.channels) != len(set(self.channels)):
+            raise util.CytoflowOpError('channels', 
+                                       "Must not duplicate channels")
+
+        if self.time_channel not in experiment.data:
+            raise util.CytoflowOpError('time_channel',
+                                       "Time channel {} not found in experiment"
+                                       .format(self.time_channel))
+
+        for c in self.channels:
+            if c not in experiment.data:
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
+                                      .format(c))
+                
+        for c in self.scale:
+            if c not in self.channels:
+                raise util.CytoflowOpError('channels',
+                                           "Scale set for channel {0}, but it isn't "
+                                           "in the 'channels'"
+                                           .format(c))        
         
         # TODO - double-check that events in the tube groups are monotonic in the
         # time channel
         
+        # instantiate scales. estimate the scale params for the ENTIRE data set,
+        # not subsets we get from groupby().  And we need to save it so that
+        # the data is transformed the same way when we apply()
+        for c in self.channels:
+            if c in self.scale:
+                self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
+#                 if self.scale[c] == 'log':
+#                     self._scale[c].mode = 'mask'
+            else:
+                self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
+        
         conditions = list(experiment.history[0].tubes[0].conditions.keys())
         g = experiment.data.groupby(conditions, observed = True)
+        
         for tube in experiment.history[0].tubes:
             tube_events = g.get_group(tuple(tube.conditions.values()))
+            num_events = len(tube_events)
             num_segments = int(len(tube_events) / self.segment_size)
             segment_size = int(len(tube_events) / num_segments)
             labels = np.repeat(range(0, num_segments), segment_size)
             np.append(labels, [num_segments - 1] * (len(tube_events) - len(labels)))
             self._tube_bins[tube] = tube_events.groupby(labels)
+            self._bin_kept[tube] = np.full((num_segments), True)
+            self._bin_density[tube] = np.zeros((num_segments))
+            self._bin_means[tube] = {channel : np.zeros((num_segments)) for channel in self.channels}
+            self._bin_measures[tube] = np.zeros((num_segments))
+
+            # compute density for each bin            
+            for bin, events in self._tube_bins[tube]:                
+                start_time = events[self.time_channel].iat[0]
+                end_time = events[self.time_channel].iat[len(events) - 1]
+                assert(end_time >= start_time)
+                self._bin_density[tube][bin] = len(events) / (end_time - start_time)
+              
+            # find the quantile for the density cutoff. 
+            density_cutoff_quantile = np.quantile(self._bin_density[tube], (self.density_cutoff))
             
+            # trim the low-density bins
             for bin, events in self._tube_bins[tube]:
-                measure_sum = 0
-                
-                # compute density
-                
-                # compute means and measures
+                if self._bin_density[tube][bin] <= density_cutoff_quantile:
+                    self._bin_kept[tube][bin] = False
+                    
+            # compute means of the fluorescence channels' bins
+            for bin, events in self._tube_bins[tube]:
+                for channel in self.channels:
+                    self._bin_means[tube][channel][bin] = self._scale[channel](events[channel]).mean() 
+            
                  
             
             

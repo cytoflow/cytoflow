@@ -288,7 +288,7 @@ class FlowPeaksOp(HasStrictTraits):
             if c not in self.channels:
                 raise util.CytoflowOpError('scale',
                                            "Scale set for channel {0}, but it isn't "
-                                           "in the experiment"
+                                           "in 'channels'"
                                            .format(c))
        
         for b in self.by:
