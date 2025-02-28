@@ -1097,7 +1097,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     Attributes
     ----------
     op : Instance(`BeadCalibrationOp`)
-        The operation instance whose parameters we're plotting.  Set 
+        The operation instance whose diagnostic we're plotting.  Set 
         automatically if you created the instance using 
         `BeadCalibrationOp.default_view`.
 

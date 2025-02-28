@@ -1024,7 +1024,7 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
             y = self.op._scale[self.xchannel].inverse(peak[1])
             plt.plot(x, y, 'o', color = "magenta")
                 
-                
+@provides(IView)          
 class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
     """
     A two-dimensional diagnostic view for `FlowPeaksOp`.  Plots the
