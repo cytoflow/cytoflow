@@ -38,7 +38,9 @@ import numpy as np
 import scipy.stats
 import scipy.ndimage.filters
 import scipy.signal
+import scipy.optimize
 import sklearn.neighbors
+import sklearn.mixture
 import statsmodels.nonparametric.bandwidths
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -188,8 +190,9 @@ class FlowCleanOp(HasStrictTraits):
     max_mean_drift = Float(0.13)
     max_discontinuity = Float(0.1)
     
-    min_segment_weight = 0.95
-    detect_worst_channels = Union(Tuple(Int, Int), None)
+    min_segment_probability = 0.05
+    
+    # detect_worst_channels = Union(Tuple(Int, Int), None)
     measures = List(Str, value = ("5th_percentile", "20th_percentile", "50th_percentile", "80th_percentile", "95th_percentile", "mean", "variance", "skewness"))
     force_clean = Bool(False)
 
@@ -202,7 +205,9 @@ class FlowCleanOp(HasStrictTraits):
     _channel_max_discontinuity_post = Dict(Tube, Dict(Str, Float))
     _channel_measures_cutoff = Dict(Tube, Dict(Str, Float))
     _kde = Dict(Tube, Any)
+    _pdf = Dict(Tube, Any)
     _peaks = Dict(Tube, Any)
+    
     
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
@@ -296,16 +301,17 @@ class FlowCleanOp(HasStrictTraits):
                     
             # compute bin means
             bin_means = {channel : np.zeros((num_segments)) for channel in self.channels}
+            kept_bin_means = {}
             for channel in self.channels:
                 for bin, events in self._tube_bins[tube]:
                     bin_means[channel][bin] = events[channel].mean()
-            bin_means[channel] = np.compress(self._bin_kept[tube], bin_means[channel])
+                kept_bin_means[channel] = np.compress(self._bin_kept[tube], bin_means[channel])
 
             # compute each channel's drift and see if it is in spec or whether
             # the tube needs cleaning
             self._channel_drift_pre[tube] = {}
             for channel in self.channels:
-                drift = (np.max(bin_means[channel]) - np.min(bin_means[channel])) / (tube_events[channel].quantile(0.98) - tube_events[channel].quantile(0.02))
+                drift = (np.max(kept_bin_means[channel]) - np.min(kept_bin_means[channel])) / (tube_events[channel].quantile(0.98) - tube_events[channel].quantile(0.02))
                 self._channel_drift_pre[tube][channel] = drift
                 if drift > self.max_drift:
                     self.tube_status[tube] = "UNCLEAN"
@@ -320,8 +326,8 @@ class FlowCleanOp(HasStrictTraits):
             self._channel_max_discontinuity_pre[tube] = {}
             for channel in self.channels:
                 max_discontinuity = 0.0
-                for i in range(1, len(bin_means[channel])):
-                    d = abs(bin_means[channel][i] - bin_means[channel][i-1]) / bin_means[channel][i-1]
+                for i in range(1, len(kept_bin_means[channel])):
+                    d = abs(kept_bin_means[channel][i] - kept_bin_means[channel][i-1]) / kept_bin_means[channel][i-1]
                     if d > max_discontinuity:
                         max_discontinuity = d
                 self._channel_max_discontinuity_pre[tube][channel] = max_discontinuity
@@ -367,19 +373,100 @@ class FlowCleanOp(HasStrictTraits):
             support_max = measure_sum.max() + bandwidth * 3
             support = np.linspace(support_min, support_max, 100)
             kde = sklearn.neighbors.KernelDensity(kernel = "gaussian", bandwidth = bandwidth).fit(measure_sum[:, np.newaxis])
-            density = kde.score_samples(support[:, np.newaxis])
+            log_density = kde.score_samples(support[:, np.newaxis])
+            density = np.exp(log_density)
             self._kde[tube] = (support, density)
+            print(density)
 
             # find peaks in the kde
-            peaks, _ = scipy.signal.find_peaks(density)
+            peaks, peak_props = scipy.signal.find_peaks(density,
+                                                        prominence = 1)
+            peaks = [support[x] for x in peaks]
             print(peaks)
-            self._peaks[tube] = [support[x] for x in peaks]
+            self._peaks[tube] = peaks
+
+            # fit a gaussian with the mean at the maximum peak
+            max_peak_idx = np.argmax(peak_props['prominences'])
+            max_peak = self._peaks[tube][max_peak_idx]            
+            pdf = lambda x, sd: scipy.stats.norm.pdf(x, loc = max_peak, scale = sd)
+            opt_sd = scipy.optimize.curve_fit(pdf, support, density)[0][0]
+
+            # compute the probability of observing each element in measure_sum
+            self._pdf[tube] = (max_peak, opt_sd)
+            measure_probability = scipy.stats.norm.pdf(measure_sum, loc = max_peak, scale = opt_sd)
             
-            if(len(peaks)) == 1:
-                warn("Tube {} needs cleaning, but its density is unimodal! Skipping."
-                     .format(tube.file),
-                     util.CytoflowWarning)
-                continue
+            # remove low-probability bins
+            for bin, _ in self._tube_bins[tube]:
+                if measure_probability[bin] < self.min_segment_probability:
+                    print("drop {}".format(bin))
+                    self._bin_kept[tube][bin] = False
+                    
+            kept_bin_means = {}
+            for channel in self.channels:
+                kept_bin_means[channel] = np.compress(self._bin_kept[tube], bin_means[channel])
+
+            # now, re-check the tube with the kept bins
+            self.tube_status[tube] = "CLEANED"
+
+            # compute each channel's drift and see if it is in spec or whether
+            # the tube needs cleaning
+            self._channel_drift_post[tube] = {}
+            for channel in self.channels:
+                drift = (np.max(kept_bin_means[channel]) - np.min(kept_bin_means[channel])) / (tube_events[channel].quantile(0.98) - tube_events[channel].quantile(0.02))
+                self._channel_drift_post[tube][channel] = drift
+                if drift > self.max_drift:
+                    self.tube_status[tube] = "UNCLEAN"
+
+            # compute the mean of the means and see whether it's in spec, or
+            # the tube needs to be cleaned
+            mean_drift = np.mean(list(self._channel_drift_post[tube].values()))
+            if mean_drift > self.max_mean_drift:
+                self.tube_status[tube] = "UNCLEAN"
+            
+            # check for discontinuities in the channel means
+            self._channel_max_discontinuity_post[tube] = {}
+            for channel in self.channels:
+                max_discontinuity = 0.0
+                for i in range(1, len(kept_bin_means[channel])):
+                    d = abs(kept_bin_means[channel][i] - kept_bin_means[channel][i-1]) / kept_bin_means[channel][i-1]
+                    if d > max_discontinuity:
+                        max_discontinuity = d
+                self._channel_max_discontinuity_post[tube][channel] = max_discontinuity
+                    
+                if max_discontinuity > self.max_discontinuity:
+                    self.tube_status[tube] = "UNCLEAN"
+                        
+            # sd = [x * (support[1] - support[0]) for x in peak_props['widths']]
+            #
+            # max_sd = sd[max_peak_idx]
+            #
+            # print(max_peak, max_sd)
+            # measure_probability = scipy.stats.norm.pdf(measure_sum, loc = max_peak, scale = max_sd)
+            # self._pdf[tube] = (support, scipy.stats.norm.pdf(support, loc = max_peak, scale = max_sd))
+            # print(np.min(measure_probability))
+            #
+            #
+
+            
+            # fit a gaussian mixture model
+            # gmm = sklearn.mixture.GaussianMixture(n_components = len(peaks),
+            #                                       means_init = peaks[:, np.newaxis],
+            #                                       random_state = 1)
+            # labels = gmm.fit_predict(measure_sum[:, np.newaxis])
+            # print(gmm.means_)
+            # print(measure_sum)
+            # print(labels)
+            
+            # peaks, _ = scipy.signal.find_peaks(hist)
+            # print(peaks)
+            # self._peaks[tube] = [edges[x] + 1 for x in peaks]
+            #
+
+            # if(len(peaks)) == 1:
+            #     warn("Tube {} needs cleaning, but its density is unimodal! Skipping."
+            #          .format(tube.file),
+            #          util.CytoflowWarning)
+            #     continue
             
             
             
@@ -464,7 +551,16 @@ class FlowCleanDiagnostic(HasStrictTraits):
         for peak in self.op._peaks[tube]:
             print(peak)
             plt.axvline(peak, color = 'r')
-        plt.tight_layout(pad = 0.8)
+        
+        loc, scale = self.op._pdf[tube]
+        plt.plot(support, 
+                 scipy.stats.norm.pdf(support, loc = loc, scale = scale),
+                 color = 'r',
+                 linestyle = 'dotted')
+        # support, pdf = self.op._pdf[tube]
+        # plt.plot(support, pdf, color = 'r')
+        # plt.tight_layout(pad = 0.8)
+
 
         
             
