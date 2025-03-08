@@ -144,8 +144,9 @@ class FlowCleanOp(HasStrictTraits):
     1. Bin the events along the time they were collected. The bin size is 
        determined by `segment_size`.
        
-    2. Compute the density (events per unit time) of each bin, and remove the 
-       lowest `density_cutoff` proportion of them.
+    2. Compute the density (events per unit time) of each bin, estimate the
+       density of that distribution, and remove bins whose density's CDF is
+       less than `density_cutoff`.
        
     3. For each channel, compute the mean intensity in each bin (after scaling 
        the data), then compute the mean drift and the differences between 
@@ -205,9 +206,12 @@ class FlowCleanOp(HasStrictTraits):
     _tube_channels = Dict(Tube, List(Str))
     _channel_stats = Dict(Tube, Instance(pd.DataFrame))
     
-    _kde = Dict(Tube, Any)
-    _pdf = Dict(Tube, Any)
-    _peaks = Dict(Tube, Any)
+    _density_kde = Dict(Tube, Any)
+    _density_peaks = Dict(Tube, Any)
+    _density_pdf = Dict(Tube, Any)
+    _measures_kde = Dict(Tube, Any)
+    _measures_pdf = Dict(Tube, Any)
+    _measures_peaks = Dict(Tube, Any)
     
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
@@ -315,15 +319,46 @@ class FlowCleanOp(HasStrictTraits):
                 end_time = events[self.time_channel].iat[len(events) - 1]
                 assert(end_time >= start_time)
                 bin_density[bin] = len(events) / (end_time - start_time)
-              
-            # find the quantile for the density cutoff. 
-            density_cutoff_quantile = np.quantile(bin_density, (self.density_cutoff))
             
-            # trim the low-density bins
-            for bin, events in self._tube_bins[tube]:
-                if bin_density[bin] <= density_cutoff_quantile:
+            ### Remove low-density bins
+            
+            # estimate the densith with a gaussian kernel
+            bandwidth = statsmodels.nonparametric.bandwidths.bw_scott(bin_density, "gaussian")
+            support_min = bin_density.min() - bandwidth * 3
+            support_max = bin_density.max() + bandwidth * 3
+            support = np.linspace(support_min, support_max, 100)
+            kde = sklearn.neighbors.KernelDensity(kernel = "gaussian", bandwidth = bandwidth).fit(bin_density[:, np.newaxis])
+            log_density = kde.score_samples(support[:, np.newaxis])
+            density = np.exp(log_density)
+            self._density_kde[tube] = (support, density)
+
+            # find peaks in the kde
+            peaks, peak_props = scipy.signal.find_peaks(density, prominence = 0)
+            peaks = [support[x] for x in peaks]
+            self._density_peaks[tube] = peaks
+            
+            if len(peaks) == 0:
+                warn("No peaks found in the density KDE for {}".format(tube.file),
+                     util.CytoflowOpWarning)
+                continue
+
+            # fit a gaussian with the mean at the maximum peak
+            max_peak_idx = np.argmax(peak_props['prominences'])
+            max_peak = self._density_peaks[tube][max_peak_idx]            
+            pdf = lambda x, sd: scipy.stats.norm.pdf(x, loc = max_peak, scale = sd)
+            opt_sd = scipy.optimize.curve_fit(pdf, support, density)[0][0]
+
+            # compute the probability of observing each element in measure_sum
+            self._density_pdf[tube] = (max_peak, opt_sd)
+            density_probability = scipy.stats.norm.cdf(bin_density, loc = max_peak, scale = opt_sd)
+            
+            # remove low-probability bins
+            for bin, _ in self._tube_bins[tube]:
+                if density_probability[bin] < self.density_cutoff:
                     self._bin_kept[tube][bin] = False
-                    
+                                        
+            ### Evaluate drift
+            
             # compute bin means
             bin_means = {channel : np.zeros((num_segments)) for channel in self.channels}
             kept_bin_means = {}
@@ -383,7 +418,8 @@ class FlowCleanOp(HasStrictTraits):
             if self.tube_status[tube] == "CLEAN" and not self.force_clean:
                 continue
             
-            # time for cleaning. first, compute all the measures and sum them
+            ### Cleaning
+            
             measure_sum = np.zeros((num_segments))
             for bin, events in self._tube_bins[tube]:
                 for channel in channels:
@@ -411,7 +447,7 @@ class FlowCleanOp(HasStrictTraits):
                     if 'skewness' in self.measures:
                         measure_sum[bin] += events[channel].skew()
                         
-            # kernel density estimator
+            # estimate the densith with a gaussian kernel
             bandwidth = statsmodels.nonparametric.bandwidths.bw_scott(measure_sum, "gaussian")
             support_min = measure_sum.min() - bandwidth * 3
             support_max = measure_sum.max() + bandwidth * 3
@@ -419,13 +455,12 @@ class FlowCleanOp(HasStrictTraits):
             kde = sklearn.neighbors.KernelDensity(kernel = "gaussian", bandwidth = bandwidth).fit(measure_sum[:, np.newaxis])
             log_density = kde.score_samples(support[:, np.newaxis])
             density = np.exp(log_density)
-            self._kde[tube] = (support, density)
+            self._measures_kde[tube] = (support, density)
 
             # find peaks in the kde
-            peaks, peak_props = scipy.signal.find_peaks(density,
-                                                        prominence = 0)
+            peaks, peak_props = scipy.signal.find_peaks(density, prominence = 0)
             peaks = [support[x] for x in peaks]
-            self._peaks[tube] = peaks
+            self._measures_peaks[tube] = peaks
             
             if len(peaks) == 0:
                 warn("No peaks found for {}".format(tube.file),
@@ -434,12 +469,12 @@ class FlowCleanOp(HasStrictTraits):
 
             # fit a gaussian with the mean at the maximum peak
             max_peak_idx = np.argmax(peak_props['prominences'])
-            max_peak = self._peaks[tube][max_peak_idx]            
+            max_peak = self._measures_peaks[tube][max_peak_idx]            
             pdf = lambda x, sd: scipy.stats.norm.pdf(x, loc = max_peak, scale = sd)
             opt_sd = scipy.optimize.curve_fit(pdf, support, density)[0][0]
 
             # compute the probability of observing each element in measure_sum
-            self._pdf[tube] = (max_peak, opt_sd)
+            self._measures_pdf[tube] = (max_peak, opt_sd)
             measure_probability = scipy.stats.norm.pdf(measure_sum, loc = max_peak, scale = opt_sd)
             
             # remove low-probability bins
@@ -451,7 +486,8 @@ class FlowCleanOp(HasStrictTraits):
             for channel in channels:
                 kept_bin_means[channel] = np.compress(self._bin_kept[tube], bin_means[channel])
 
-            # now, re-check the tube with the kept bins
+            ### Re-evaluate drift
+            
             self.tube_status[tube] = "CLEANED"
 
             # compute each channel's drift and see if it is in spec or whether
@@ -638,8 +674,9 @@ class FlowCleanDiagnostic(HasStrictTraits):
                                          "Tube {} was not found in the operation -- did you call estimate()?"
                                          .format(tube.file))
         
-        num_plots = len(self.op._tube_channels[tube])
-        if tube in self.op._kde:
+        num_channels = len(self.op._tube_channels[tube])
+        num_plots = num_channels + 1  # plus one for the density plot
+        if tube in self.op._measures_kde:
             num_plots += 1
         nrow = math.ceil(num_plots / 2)
                             
@@ -671,22 +708,32 @@ class FlowCleanDiagnostic(HasStrictTraits):
                             c = 'tab:blue' if self.op._bin_kept[tube][bin] else 'tab:orange',
                             **kwargs)         
 
-        if tube in self.op._kde:
+        ax = plt.subplot(nrow, 2, num_channels + 1, title = "Bin Density Distribution")
+        support, density = self.op._density_kde[tube]
+        plt.plot(support, density)
+        for peak in self.op._density_peaks[tube]:
+            plt.axvline(peak, color = 'r')
+    
+        if tube in self.op._density_pdf:
+            loc, scale = self.op._density_pdf[tube]
+            plt.plot(support, 
+                     scipy.stats.norm.pdf(support, loc = loc, scale = scale),
+                     color = 'r',
+                     linestyle = 'dotted')
+
+        if tube in self.op._measures_kde:
             ax = plt.subplot(nrow, 2, num_plots, title = "Measures Distribution")
-            support, density = self.op._kde[tube]
+            support, density = self.op._measures_kde[tube]
             plt.plot(support, density)
-            for peak in self.op._peaks[tube]:
+            for peak in self.op._measures_peaks[tube]:
                 plt.axvline(peak, color = 'r')
         
-            if tube in self.op._pdf:
-                loc, scale = self.op._pdf[tube]
+            if tube in self.op._measures_pdf:
+                loc, scale = self.op._measures_pdf[tube]
                 plt.plot(support, 
                          scipy.stats.norm.pdf(support, loc = loc, scale = scale),
                          color = 'r',
                          linestyle = 'dotted')
-            support, pdf = self.op._pdf[tube]
-            plt.plot(support, pdf, color = 'r')
-                        
 
         plt.tight_layout(pad = 0.8)
 
