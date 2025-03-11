@@ -26,7 +26,7 @@ The `flowclean` module has two classes:
 `FlowCleanOp` -- gates an `Experiment` based on a variation in fluorescence
 channels over time.
 
-`FlowCleanView` -- diagnostic views for FlowCleanOp.
+`FlowCleanDiagnostic` -- diagnostic views for FlowCleanOp.
 
 """
 
@@ -96,7 +96,7 @@ class FlowCleanOp(HasStrictTraits):
         The number of events in each bin in the analysis.
 
     density_cutoff : Float (default = 0.05)
-        The proportion of low-density bins to filter.
+        The minimum density CDF to keep.
         
     max_discontinuity : Float (default = 0.1)
         The critical "continuity" -- determines how "different" an adjacent
@@ -110,10 +110,11 @@ class FlowCleanOp(HasStrictTraits):
         The maximum the mean of all channels' drift can be before the tube is
         flagged as needing to be cleaned.
         
-    min_segment_weight : Float (default = 0.95)
+    segment_cutoff : Float (default = 0.05)
+        The minimum sum-of-measures' CDF to keep.
                
     detect_worst_channels : Union(Tuple(Int, Int), None) (default = None)
-        Should `FlowCutOp` try to detect the worst channels and use them to 
+        Should `FlowCleanOp` try to detect the worst channels and use them to 
         flag tubes or trim events? If this attribute is defined, it must be
         a 2-tuple of integers, each of which is 0 or greater. The first
         integer is the number of channels to choose using the range of the 
@@ -125,26 +126,29 @@ class FlowCleanOp(HasStrictTraits):
         Which measures should be considered when comparing segments? Must be
         a subset of the default. 
         
+    dont_clean : Bool (default = False)
+        If ``True``, never clean -- just remove low-density bins.
+        
     force_clean : Bool (default = False)
         If ``True``, force cleaning even if the tube passes the original quality checks.
         Remember, the operation **always** removes low-density bins.
         
-    TODO - document metadata
-    
+    tube_status : Dict(Tube : {"CLEAN", "UNCLEAN", "CLEANED"})
+        Set by `estimate`, has the status of each tube. If the tube didn't
+        need cleaning, it's set to **CLEAN**. If the tube was cleaned
+        and then passed the drift and max discontinuity tests, it's set to
+        **CLEANED**. Otherwise, the tube status is set to **UNCLEAN**.
+            
     Notes
     -----
     
-    This is a fairly direct implementation of the flowCut algorithm in the 
-    Bioconductor package ``flowCut``, by Justin Meskas and Sherrie Wang. 
-    The Bioconductor package page is 
-    https://www.bioconductor.org/packages/release/bioc/html/flowCut.html.
-    
-    The algorithm works in the following way:
+    This is inspired by the falgorithm in the Bioconductor package 
+    ``flowCut`` [1]_. The algorithm works in the following way:
     
     1. Bin the events along the time they were collected. The bin size is 
        determined by `segment_size`.
        
-    2. Compute the density (events per unit time) of each bin, estimate the
+    2. Compute the density (events per unit time) of each bin, estimate a kernel
        density of that distribution, and remove bins whose density's CDF is
        less than `density_cutoff`.
        
@@ -152,33 +156,93 @@ class FlowCleanOp(HasStrictTraits):
        the data), then compute the mean drift and the differences between 
        adjacent bins. The mean drift is the (difference between the maximum 
        and minimum mean) divided by the (98th - 2nd percentile difference). If
-       the mean drift is greater than `max_channel_drift`, flag the tube as 
-       needing to be cleaned.
+       the mean drift is greater than `max_drift`, set the `tube_status`
+       to **UNCLEAN**.
        
     4. Compute the mean drift across all channels. If the mean drift is greater
-       than `max_mean_channel_drift`, flag the tube as needing to be cleaned.
+       than `max_mean_drift`, set the tube status to **UNCLEAN**.
        
     5. For each channel, see if any adjacent bins have differences in their mean
-       fluorescence more than `max_discontinuity`. If so, flag the tube as
-       needing to be cleaned.
+       fluorescence more than `max_discontinuity`. If so, set the tube status as
+       **UNCLEAN**. Otherwise, set the tube status as **CLEAN**.
        
-    6. If the file needs to be cleaned, compute the measures from `measures`
+    6. If the tube needs to be cleaned, compute the measures from `measures`
        for each bin in each channel, then sum them over all the channels to obtain 
-       a single number for each bin. Smooth this distribution using 
-       `scipy.signal.savgol_filter`, then find peaks with 
-       `scipy.signal.find_peaks_cwt`. (This bit is different than the canonical 
-       flowCut algorithm.) Finally, compute a gaussian mixture model using the peaks
-       as the means. Choose the largest peak as the set of bins to keep, and discard
-       bins that don't have a weight of `min_segment_weight` in that component.
+       a single number for each bin. Estimate a kernel density of that distribution
+       and find the peak with the largest prominence. Fit a normal curve with that
+       peak as the center and discard any bins whose sume-of-measures' two-sided
+       CDF is less than `segment_cutoff`.
        
-    7. Re-compute the drift in each channel and add it to the experiments' metadata,
-       along a flag about whether the tube was CLEAN, CLEANED, or UNCLEAN.
+    7. Re-compute the drift in each channel, the mean drift and maximum drift, and
+       the maximum discontinuity. If any of these are outside of spec, leave the
+       tube status as **UNCLEAN**. Else, set the tube status as **CLEANED**.
        
+    References
+    ----------
+    
+    .. [1] Meskas J, Wang S (2024). flowCut: Automated Removal of Outlier Events and 
+           Flagging of Files Based on Time Versus Fluorescence Analysis. 
+           R package version 1.16.0.
+           https://www.bioconductor.org/packages/release/bioc/html/flowCut.html
+
+    Examples
+    --------
+    
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> fc_op = flow.FlowCleanOp(name = 'FlowClean',
+        ...                          time_channel = 'HDR-T',
+        ...                          channels = ['V2-A', 'Y2-A'],
+        ...                          scale = {'V2-A' : 'log',
+        ...                                   'Y2-A' : 'log'})
+        
+    Set the gate of events that need to be cleaned
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> fc_op.estimate(ex)
+        
+    Plot a diagnostic view for each tube.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> fc_op.default_view().plot(ex, plot_name = "Plate01/RFP_Well_A3.fcs")
+
+    .. plot::
+        :context: close-figs
+        
+        >>> fc_op.default_view().plot(ex, plot_name = "Plate01/CFP_Well_A4.fcs")
+
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = fc_op.apply(ex)
        
    """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.flowcut')
-    friendly_id = Constant("FlowCut Cleaning")
+    id = Constant('edu.mit.synbio.cytoflow.operations.flowclean')
+    friendly_id = Constant("FlowClean Data Cleaning")
     
     name = Str
     time_channel = Str
@@ -193,12 +257,13 @@ class FlowCleanOp(HasStrictTraits):
     max_mean_drift = Float(0.13)
     max_discontinuity = Float(0.1)
     
-    min_segment_probability = 0.05
+    segment_cutoff = Float(0.05)
     
     detect_worst_channels_range = Int(0)
     detect_worst_channels_sd = Int(0)
     measures = List(Str, value = ("5th percentile", "20th percentile", "50th percentile", "80th percentile", "95th percentile", "mean", "variance", "skewness"))
     force_clean = Bool(False)
+    dont_clean = Bool(False)
 
     _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy)    
     _bin_kept = Dict(Tube, Instance(np.ndarray))
@@ -219,7 +284,7 @@ class FlowCleanOp(HasStrictTraits):
         # check that subset is None
         if subset is not None:
             raise util.CytoflowOpError(None,
-                                       "'subset' must be None for FlowCutOp.estimate().")
+                                       "'subset' must be None.")
             
         if experiment is None:
             raise util.CytoflowOpError('experiment',
@@ -249,7 +314,12 @@ class FlowCleanOp(HasStrictTraits):
                 raise util.CytoflowOpError('channels',
                                            "Scale set for channel {0}, but it isn't "
                                            "in the 'channels'"
-                                           .format(c))     
+                                           .format(c))   
+            if c == "linear":
+                warn("Linear scale set for channel {}. FlowClean works a LOT "
+                     "better on scaled data; consider scaling with log or "
+                     "logicle.".format(c),
+                     util.CytoflowOpWarning)  
                 
         if self.detect_worst_channels_range and self.detect_worst_channels_range > len(self.channels):
             raise util.CytoflowOpError('detect_worst_channels_range',
@@ -260,6 +330,10 @@ class FlowCleanOp(HasStrictTraits):
             raise util.CytoflowOpError('detect_worst_channels_sd',
                                        "detect_worst_channels_sd can't be "
                                        "more than {}".format(length(self.channels)))   
+            
+        if self.force_clean and self.dont_clean:
+            raise util.CytoflowOpError('force_clean',
+                                       "Can't set both `force_clean` and `dont_clean`!")
         
         # instantiate scales. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -356,6 +430,9 @@ class FlowCleanOp(HasStrictTraits):
             for bin, _ in self._tube_bins[tube]:
                 if density_probability[bin] < self.density_cutoff:
                     self._bin_kept[tube][bin] = False
+                    
+            if self.dont_clean:
+                continue
                                         
             ### Evaluate drift
             
@@ -475,11 +552,11 @@ class FlowCleanOp(HasStrictTraits):
 
             # compute the probability of observing each element in measure_sum
             self._measures_pdf[tube] = (max_peak, opt_sd)
-            measure_probability = scipy.stats.norm.pdf(measure_sum, loc = max_peak, scale = opt_sd)
+            measures_cdf = scipy.stats.norm.cdf(measure_sum, loc = max_peak, scale = opt_sd)
             
             # remove low-probability bins
             for bin, _ in self._tube_bins[tube]:
-                if measure_probability[bin] < self.min_segment_probability:
+                if min(measures_cdf[bin], 1 - measures_cdf[bin]) < self.segment_cutoff:
                     self._bin_kept[tube][bin] = False
                     
             kept_bin_means = {}
@@ -577,7 +654,7 @@ class FlowCleanOp(HasStrictTraits):
                     
     def default_view(self, **kwargs):
         """
-        Returns diagnostic plots of `FlowCutOp`'s actions.
+        Returns diagnostic plots of `FlowCleanOp`'s actions.
         
         Returns
         -------
@@ -604,7 +681,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
         if you create the instance using `FlowCleanOp.default_view`.
     """
 
-    id = Constant("edu.mit.synbio.cytoflow.view.flowcleanview")
+    id = Constant("edu.mit.synbio.cytoflow.view.flowcleandiagnostic")
     friendly_id = Constant("FlowClean Diagnostic")
     
     op = Instance(FlowCleanOp)
@@ -613,8 +690,9 @@ class FlowCleanDiagnostic(HasStrictTraits):
     def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
-        produce -- in this case, the `Tube` filenames.  The values returned 
-        can be passed to the ``plot_name`` keyword of `plot`.
+        produce -- in this case, the `cytoflow.operations.import_op.Tube` 
+        filenames.  The values returned can be passed to the ``plot_name`` 
+        keyword of `plot`.
         
         Parameters
         ----------
@@ -626,7 +704,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
     
     def plot(self, experiment, **kwargs):
         """
-        Make a diagnostic plot for a `FlowCleanView` operation.
+        Make a diagnostic plot for a `FlowCleanOp` operation.
         
         Parameters
         ----------
