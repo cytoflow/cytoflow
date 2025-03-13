@@ -33,7 +33,6 @@ channels over time.
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Int, Float, Bool)
 
-import copy
 import math
 import numpy as np
 import scipy.stats
@@ -776,9 +775,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
                             
         if len(experiment.history[0].tubes) > 1:
             experiment = experiment.subset(list(tube.conditions.keys()), tuple(tube.conditions.values()))
-        
-        plt.tight_layout(pad = 0.8)
-        
+                            
         for idx, channel in enumerate(self.op._tube_channels[tube]):
             
             if self.op.tube_status[tube] == "CLEANED" or self.op.tube_status[tube] == "UNCLEAN":
@@ -832,6 +829,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
                          color = 'r',
                          linestyle = 'dotted')
 
+        plt.tight_layout(pad = 0.8)
 
 
         

@@ -19,7 +19,7 @@
 
 """
 Long Table
------
+----------
 
 Make a long ("tidy") table out of a statistic.  The table can then be exported.
 

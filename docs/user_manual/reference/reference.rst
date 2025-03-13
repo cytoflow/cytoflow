@@ -83,7 +83,16 @@ Operations
        .. figure:: /operations/threshold-1.png
        
      - :doc:`Transform Statistic <operations/xform_stat>`
-   
+     
+   * - :doc:`FlowClean <operations/flowclean>`
+  
+       .. figure:: /operations/flowclean-1.png
+
+     -
+     
+     -
+     
+     -
    
 Views
 =====

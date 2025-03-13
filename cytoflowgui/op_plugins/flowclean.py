@@ -36,12 +36,15 @@ This operation is applied to every tube independently -- that is, to every
 subset of events with a unique combination of experimental metadata.
 
 .. object:: Name
+
    The name of the gate you can subsequently use to exclude "unclean" events.
     
 .. object:: Time channel
+
    The channel that represents time -- often ``HDR-T`` or similar.
         
 .. object:: Channels 
+
    Which fluorescence channel or channels are analyzed for variation,
    and how should they be scaled before cleaning, and how they should
    be scaled.
@@ -50,45 +53,56 @@ subset of events with a unique combination of experimental metadata.
       channels are using a scale other than `linear`!
     
 .. object:: Segment Size (default = 500)
+
    The number of events in each bin in the analysis.
 
 .. object:: Density Cutoff (default = 0.05)
+
     The minimum density CDF to keep.
         
 .. object:: Max Discontinuity (default = 0.1)
+
    The critical "continuity" -- determines how "different" an adjacent
    segment must be to be for a tube to be flagged as suspicious.
 
 .. object:: Max Drift : Float (default = 0.15)
+
    The maximum any individual channel can drift before being flagged as
    needing cleaning.
         
 .. object:: Max Mean Drift : Float (default = 0.13)
+
    The maximum the mean of all channels' drift can be before the tube is
    flagged as needing to be cleaned.
         
 .. object:: Segment Cutoff (default = 0.05)
+
    The minimum sum-of-measures' CDF to keep.
    
-.. object:: Detect Worst Channels (Range) (default = 0)    
+.. object:: Detect Worst Channels (Range) (default = 0)   
+ 
    Try to detect the worst channels and use them to flag tubes 
    / trim events. If this attribute is greater than 0, choose channels
    using the range of the mean of the bins' fluorescence distribution.
    Often used in combination with **Detect Worst Channels (SD)**.
 
 .. object:: Detect Worst Channels (SD) (default = 0)
+
    Try to detect the worst channels and use them to flag tubes 
    / trim events. If this attribute is greater than 0, choose channels
    using the standard deviation of the mean of the bins' fluorescence distribution.
    Often used in combination with **Detect Worst Channels (Range)**.
                
 .. object:: Measures (default = ("5th percentile", "20th percentile", "50th percentile", "80th percentile", "95th percentile", "mean", "variance", "skewness") ).
+
    Which measures should be considered when comparing segments?
         
 .. object:: Don't Clean (default = False)
+
    If ``True``, never clean -- just remove low-density bins.
       
 .. object:: Force Clean (default = False)  
+
    If ``True``, force cleaning even if the tube passes the original quality checks.
    Remember, the operation **always** removes low-density bins.
    
@@ -117,7 +131,7 @@ from natsort import natsorted
 
 from traits.api import provides, Event, Property, List, Str, Bool
 from traitsui.api import (View, Item, EnumEditor, HGroup, VGroup, TextEditor, 
-                          ButtonEditor, Controller, VFold, CheckListEditor)
+                          ButtonEditor, Controller, CheckListEditor)
 from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
