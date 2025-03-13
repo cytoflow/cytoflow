@@ -115,14 +115,14 @@ subset of events with a unique combination of experimental metadata.
 
 from natsort import natsorted
 
-from traits.api import provides, Event, Property, List, Str
+from traits.api import provides, Event, Property, List, Str, Bool
 from traitsui.api import (View, Item, EnumEditor, HGroup, VGroup, TextEditor, 
-                          CheckListEditor, ButtonEditor, Controller, VFold)
+                          ButtonEditor, Controller, VFold, CheckListEditor)
 from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
-from ..editors import InstanceHandlerEditor, VerticalListEditor, ColorTextEditor
+from ..editors import InstanceHandlerEditor, VerticalListEditor, ColorTextEditor, ToggleButtonEditor
 from ..workflow.operations import FlowCleanWorkflowOp, FlowCleanChannel, FlowCleanWorkflowView
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
@@ -136,10 +136,11 @@ class ChannelHandler(Controller):
     
 class FlowCleanHandler(OpHandler):
 
-    
     add_channel = Event
     remove_channel = Event
     channels = Property(List(Str), observe = 'context.channels')
+    
+    show_advanced_options = Bool(False)
     
     operation_traits_view = \
         View(Item('name',
@@ -148,8 +149,7 @@ class FlowCleanHandler(OpHandler):
                          editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'channel_view',
                                                                                     handler_factory = ChannelHandler),
                                                      style = 'custom',
-                                                     mutable = False,
-                                                     label = "Fluorescence Channels")),
+                                                     mutable = False)),
              Item('handler.add_channel',
                   editor = ButtonEditor(value = True,
                                         label = "Add a channel"),
@@ -161,13 +161,70 @@ class FlowCleanHandler(OpHandler):
              Item('time_channel',
                   editor=EnumEditor(name='context_handler.previous_channels'),
                   label = "Time Channel"),
-             VFold(Item('segment_size',
+             VGroup(Item('handler.show_advanced_options',
+                         editor = ToggleButtonEditor(label = "Advanced options..."),
+                         show_label = False),
+                    show_labels = False),
+             VGroup(Item('segment_size',
                         editor = TextEditor(auto_set = False,
                                             evaluate = int,
                                             format_func = lambda x: "" if x is None else str(x),
                                             placeholder = "None"),
                         label = "Segment Size"),
-                   label = "Advanced Options"),
+                    Item('density_cutoff',
+                        editor = TextEditor(auto_set = False,
+                                            evaluate = float,
+                                            format_func = lambda x: "" if x is None else str(x),
+                                            placeholder = "None"),
+                        label = "Density Cutoff"),
+                    Item('max_drift',
+                        editor = TextEditor(auto_set = False,
+                                            evaluate = float,
+                                            format_func = lambda x: "" if x is None else str(x),
+                                            placeholder = "None"),
+                        label = "Max Drift"),
+                    Item('max_mean_drift',
+                        editor = TextEditor(auto_set = False,
+                                            evaluate = float,
+                                            format_func = lambda x: "" if x is None else str(x),
+                                            placeholder = "None"),
+                        label = "Max Mean Drift"),
+                    Item('max_discontinuity',
+                        editor = TextEditor(auto_set = False,
+                                            evaluate = float,
+                                            format_func = lambda x: "" if x is None else str(x),
+                                            placeholder = "None"),
+                        label = "Max Discontinuity"),
+                    Item('segment_cutoff',
+                        editor = TextEditor(auto_set = False,
+                                            evaluate = float,
+                                            format_func = lambda x: "" if x is None else str(x),
+                                            placeholder = "None"),
+                        label = "Segment Cutoff"),
+                    Item('detect_worst_channels_range',
+                        editor = TextEditor(auto_set = False,
+                                            evaluate = int,
+                                            format_func = lambda x: "" if x is None else str(x),
+                                            placeholder = "None"),
+                        label = "Detect Worst\nChannels (Range)"),
+                    Item('detect_worst_channels_sd',
+                        editor = TextEditor(auto_set = False,
+                                            evaluate = int,
+                                            format_func = lambda x: "" if x is None else str(x),
+                                            placeholder = "None"),
+                        label = "Detect Worst\nChannels (StDev)"),
+                    Item('measures',
+                         editor = CheckListEditor(cols = 2,
+                                                  values = ["5th percentile", "20th percentile", 
+                                                            "50th percentile", "80th percentile", 
+                                                            "95th percentile", "mean", 
+                                                            "variance", "skewness"]),
+                         label = "Measures"),
+                    Item('force_clean',
+                         label = "Force clean?"),
+                    Item('dont_clean',
+                         label = "Don't clean?"),
+                    visible_when = "handler.show_advanced_options"),
              Item('do_estimate',
                   editor = ButtonEditor(value = True,
                                         label = "Estimate!"),

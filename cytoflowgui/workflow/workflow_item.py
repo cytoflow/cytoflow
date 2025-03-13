@@ -237,7 +237,10 @@ class WorkflowItem(HasStrictTraits):
             self.plot_names_label = ""
         else:
             self.plot_names = plot_names
-            self.plot_names_label = ", ".join(plot_iter.by)
+            try:
+                self.plot_names_label = ", ".join(plot_iter.by)
+            except AttributeError:
+                self.plot_names_label = ""
         
         
     def estimate(self):

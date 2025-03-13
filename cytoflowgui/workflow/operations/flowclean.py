@@ -26,7 +26,8 @@ cytoflowgui.workflow.operations.pca
 import pandas as pd
 import numpy as np
 from traits.api import (HasTraits, provides, Str, Property, observe, 
-                        List, Dict, Any, Bool, Float, Int, Instance)
+                        List, Dict, Any, Bool, Float, Int, Instance,
+                        Event)
 
 from cytoflow.operations.flowclean import FlowCleanOp, FlowCleanDiagnostic
 from cytoflow.operations.import_op import Tube
@@ -72,29 +73,15 @@ class FlowCleanWorkflowOp(WorkflowOperation, FlowCleanOp):
     detect_worst_channels_range = Int(0, estimate = True)
     detect_worst_channels_sd = Int(0, estimate = True)
     measures = List(Str, 
-                    value = ("5th percentile", "20th percentile", 
+                    value = ["5th percentile", "20th percentile", 
                              "50th percentile", "80th percentile", 
                              "95th percentile", "mean", 
-                             "variance", "skewness"),
+                             "variance", "skewness"],
                     estimate = True)
     force_clean = Bool(False, estimate = True)
     dont_clean = Bool(False, estimate = True)
     
-    # add the 'estimate_result', 'transient' metadata
-    
-    _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy, estimate_result = True, transient = True)
-    _bin_means = Dict(Tube, Any, estimate_result = True, transient = True)    
-    _bin_kept = Dict(Tube, Instance(np.ndarray), estimate_result = True, transient = True)
-    _bin_measures = Dict(Tube, Instance(np.ndarray), estimate_result = True, transient = True)
-    _tube_channels = Dict(Tube, List(Str), estimate_result = True, transient = True)
-    
-    _bin_means = Dict(Tube, Any, estimate_result = True, transient = True)    
-    _density_kde = Dict(Tube, Any, estimate_result = True, transient = True)
-    _density_peaks = Dict(Tube, Any, estimate_result = True, transient = True)
-    _density_pdf = Dict(Tube, Any, estimate_result = True, transient = True)
-    _measures_kde = Dict(Tube, Any, estimate_result = True, transient = True)
-    _measures_pdf = Dict(Tube, Any, estimate_result = True, transient = True)
-    _measures_peaks = Dict(Tube, Any, estimate_result = True, transient = True)
+    estimated = Event(estimate_result = True)
     
     # bits for channels
     @observe('[channels_list:items,channels_list:items.channel,channels_list:items.scale]')
@@ -121,6 +108,10 @@ class FlowCleanWorkflowOp(WorkflowOperation, FlowCleanOp):
                                            .format(self.time_channel))
             
         super().estimate(experiment)
+        self.estimated = True
+        
+    def default_view(self, **kwargs):
+        return FlowCleanWorkflowView(op = self, **kwargs)
         
     def apply(self, experiment):
         if not self._tube_bins:
@@ -131,14 +122,14 @@ class FlowCleanWorkflowOp(WorkflowOperation, FlowCleanOp):
         self._tube_bins = {}
         self._bin_means = {}
         self._bin_kept = {}
-        self.bin_measures = {}
+        self._bin_measures = {}
         self._tube_channels = {}
         self._bin_means = {}
         self._density_kde = {}
         self._density_peaks = {}
         self._density_pdf = {}
         self._measures_kde = {}
-        self._measures.pdf = {}
+        self._measures_pdf = {}
         self._measures_peaks = {}    
         
     def get_notebook_code(self, idx):
@@ -165,15 +156,19 @@ class FlowCleanWorkflowView(WorkflowView, FlowCleanDiagnostic):
         
         return False
     
+    def plot(self, experiment, **kwargs):
+        super().plot(experiment, plot_name = self.current_plot, **kwargs)
+    
     def get_notebook_code(self, idx):
         view = FlowCleanDiagnostic()
         view.copy_traits(self, view.copyable_trait_names())
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot})
         """
         .format(traits = traits_str(view),
                 idx = idx,
+                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 prev_idx = idx - 1))
         
 

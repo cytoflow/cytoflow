@@ -161,7 +161,6 @@ class Msg(object):
     UPDATE_VIEW = "UPDATE_VIEW"
     
     CHANGE_CURRENT_VIEW = "CHANGE_CURRENT_VIEW"
-    CHANGE_CURRENT_PLOT = "CHANGE_CURRENT_PLOT"
     
     # send an update to a WorkflowItem.  payload:
     # - the WorkflowItem index
@@ -770,11 +769,6 @@ class RemoteWorkflow(HasStrictTraits):
                         else:
                             wi.views.append(view)
                             wi.current_view = view
-                                                
-                elif msg == Msg.CHANGE_CURRENT_PLOT:
-                    (idx, plot) = payload
-                    wi = self.workflow[idx]
-                    wi.current_plot = plot
                     
                 elif msg == Msg.ESTIMATE:
                     idx = payload
