@@ -78,6 +78,9 @@ def run_gui():
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
     os.environ["QMLSCENE_DEVICE"] = "softwarecontext"
     
+    # disable OpenGL on raster surfaces on linux / XCB
+    os.environ["QT_XCB_GL_INTEGRATION"] = "none"
+
     from pyface.qt import QtGui, QtCore
     
     # enable high DPI scaling
