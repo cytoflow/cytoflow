@@ -265,12 +265,14 @@ class FlowCleanOp(HasStrictTraits):
     force_clean = Bool(False)
     dont_clean = Bool(False)
 
-    _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy)    
+    _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy)
+    _bin_means = Dict(Tube, Any)    
     _bin_kept = Dict(Tube, Instance(np.ndarray))
     _bin_measures = Dict(Tube, Instance(np.ndarray))
     _tube_channels = Dict(Tube, List(Str))
     _channel_stats = Dict(Tube, Instance(pd.DataFrame))
     
+    _bin_means = Dict(Tube, Any)    
     _density_kde = Dict(Tube, Any)
     _density_peaks = Dict(Tube, Any)
     _density_pdf = Dict(Tube, Any)
@@ -324,12 +326,12 @@ class FlowCleanOp(HasStrictTraits):
         if self.detect_worst_channels_range and self.detect_worst_channels_range > len(self.channels):
             raise util.CytoflowOpError('detect_worst_channels_range',
                                        "detect_worst_channels_range can't be "
-                                       "more than {}".format(length(self.channels)))   
+                                       "more than {}".format(len(self.channels)))   
             
         if self.detect_worst_channels_sd and self.detect_worst_channels_sd > len(self.channels):
             raise util.CytoflowOpError('detect_worst_channels_sd',
                                        "detect_worst_channels_sd can't be "
-                                       "more than {}".format(length(self.channels)))   
+                                       "more than {}".format(len(self.channels)))   
             
         if self.force_clean and self.dont_clean:
             raise util.CytoflowOpError('force_clean',
@@ -437,15 +439,15 @@ class FlowCleanOp(HasStrictTraits):
             ### Evaluate drift
             
             # compute bin means
-            bin_means = {channel : np.zeros((num_segments)) for channel in self.channels}
+            self._bin_means[tube] = {channel : np.zeros((num_segments)) for channel in self.channels}
             kept_bin_means = {}
             for channel in self.channels:
                 for bin, events in self._tube_bins[tube]:
-                    bin_means[channel][bin] = events[channel].mean()
-                kept_bin_means[channel] = np.compress(self._bin_kept[tube], bin_means[channel])
+                    self._bin_means[tube][channel][bin] = events[channel].mean()
+                kept_bin_means[channel] = np.compress(self._bin_kept[tube], self._bin_means[tube][channel])
                 channel_stats.loc[channel, 'Bin Mean Range'] = np.ptp(kept_bin_means[channel])
                 channel_stats.loc[channel, 'Bin Mean SD'] = np.std(kept_bin_means[channel])
-
+            
             # find the "worst" channels
             worst_channels_range = []
             if self.detect_worst_channels_range:
@@ -561,7 +563,7 @@ class FlowCleanOp(HasStrictTraits):
                     
             kept_bin_means = {}
             for channel in channels:
-                kept_bin_means[channel] = np.compress(self._bin_kept[tube], bin_means[channel])
+                kept_bin_means[channel] = np.compress(self._bin_kept[tube], self._bin_means[tube][channel])
 
             ### Re-evaluate drift
             
@@ -775,16 +777,17 @@ class FlowCleanDiagnostic(HasStrictTraits):
                              .format(channel, 
                                      self.op._channel_stats[tube].loc[channel, "Drift Pre"],
                                      self.op._channel_stats[tube].loc[channel, "Max Discontinuity Pre"])
-            ax = plt.subplot(nrow, 2, idx + 1, title = title)
+            plt.subplot(nrow, 2, idx + 1, title = title)
 
-            # TODO - subset by _kept_bins instead of assuming that `experiment` is the result
-            # of this op's apply() call
-            
             for bin, events in self.op._tube_bins[tube]:                
                 plt.scatter(x = events[self.op.time_channel],
-                            y = self.op._scale[channel](events[channel]),
+                            y = events[channel],
                             c = 'tab:blue' if self.op._bin_kept[tube][bin] else 'tab:orange',
-                            **kwargs)         
+                            **kwargs)   
+                
+                plt.plot([min(events[self.op.time_channel]), max(events[self.op.time_channel])],
+                         [self.op._bin_means[tube][channel][bin], self.op._bin_means[tube][channel][bin]],
+                         "brown")
 
         ax = plt.subplot(nrow, 2, num_channels + 1, title = "Bin Density Distribution")
         support, density = self.op._density_kde[tube]
@@ -800,7 +803,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
                      linestyle = 'dotted')
 
         if tube in self.op._measures_kde:
-            ax = plt.subplot(nrow, 2, num_plots, title = "Measures Distribution")
+            plt.subplot(nrow, 2, num_plots, title = "Measures Distribution")
             support, density = self.op._measures_kde[tube]
             plt.plot(support, density)
             for peak in self.op._measures_peaks[tube]:
