@@ -42,6 +42,7 @@ from .density import DensityGateWorkflowOp, DensityGateWorkflowView
 from .kmeans import KMeansWorkflowOp, KMeansWorkflowView
 from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
 from .pca import PCAWorkflowOp, Channel as PCAChannel
+from .flowclean import FlowCleanWorkflowOp, Channel as FlowCleanChannel, FlowCleanWorkflowView
 
 from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkflowView
 from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, Unit as BeadCalibrationUnit

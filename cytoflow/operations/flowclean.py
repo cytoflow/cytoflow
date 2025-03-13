@@ -31,32 +31,24 @@ channels over time.
 """
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, provides, Array, Int, Float,
-                        Union, Tuple, Bool)
+                        Constant, List, provides, Int, Float, Bool)
 
 import math
 import numpy as np
 import scipy.stats
-import scipy.ndimage.filters
 import scipy.signal
 import scipy.optimize
 import sklearn.neighbors
-import sklearn.mixture
 import statsmodels.nonparametric.bandwidths
 import pandas as pd
 import matplotlib.pyplot as plt
 from warnings import warn
 
-from cytoflow.experiment import Experiment
 from cytoflow.operations.import_op import Tube
-from cytoflow.views import IView, DensityView, ScatterplotView
 import cytoflow.utility as util
 import cytoflow.views
-from .base_op_views import OpView
-
 
 from .i_operation import IOperation
-from .base_op_views import By2DView, AnnotatingView
 
 @provides(IOperation)
 class FlowCleanOp(HasStrictTraits):
@@ -72,8 +64,7 @@ class FlowCleanOp(HasStrictTraits):
     Cleanliness is then assessed again. After calling `estimate()`, `tube_status` 
     is set for each tube, indicating whether it was CLEAN (clean before the operation),
     CLEANED (clean after the gated events are dropped), or UNCLEAN (still unclean 
-    after the gated events are dropped.) Additional metadata is also added about the 
-    results of the cleaning algorithm.
+    after the gated events are dropped.)
     
     This operation is applied to every tube independently -- that is, to every
     subset of events with a unique combination of experimental metadata 
@@ -88,9 +79,16 @@ class FlowCleanOp(HasStrictTraits):
     time_channel : Str
         The channel that represents time -- often ``HDR-T`` or similar.
         
-    channels : Dict(Str : {"linear", "logicle", "log"})
-        Which fluorescence channel or channels are analyzed for variation,
-        and how should they be scaled before cleaning.
+    channels : List(Str)
+        Which fluorescence channel or channels are analyzed for variation?
+        
+    scale : Dict(Str : {"linear", "logicle", "log"})
+        Re-scale the data in the specified channels before cleaning.  If a 
+        channel is in `channels` but not in `scale`, the current 
+        package-wide default (set with `set_default_scale`) is used.
+        
+        .. important:: This algorithm works *much* better when fluorescence 
+           channels are scaled (and not just left `linear`.)
     
     segment_size : Int (default = 500)
         The number of events in each bin in the analysis.
@@ -113,14 +111,17 @@ class FlowCleanOp(HasStrictTraits):
     segment_cutoff : Float (default = 0.05)
         The minimum sum-of-measures' CDF to keep.
                
-    detect_worst_channels : Union(Tuple(Int, Int), None) (default = None)
+    detect_worst_channels_range : Int (default = 0)    
         Should `FlowCleanOp` try to detect the worst channels and use them to 
-        flag tubes or trim events? If this attribute is defined, it must be
-        a 2-tuple of integers, each of which is 0 or greater. The first
-        integer is the number of channels to choose using the range of the 
-        mean of the bins' fluorescence distribution, and the second
-        is the number of channels choose when evaluating the standard
-        deviation. ``(1, 2)`` often seems to work well.
+        flag tubes or trim events? If this attribute is greater than 0, choose
+        channels using the range of the mean of the bins' fluorescence distribution.
+        Often used in combination with `detect_worst_channels_sd`.
+
+    detect_worst_channels_sd : Int (default = 0)
+        Should `FlowCleanOp` try to detect the worst channels and use them to 
+        flag tubes or trim events? If this attribute is greater than 0, choose
+        channels using the standard deviation of the mean of the bins' fluorescence 
+        distribution. Often used in combination with `detect_worst_channels_range`.
         
     measures : List(String) (default = ("5th percentile", "20th percentile", "50th percentile", "80th percentile", "95th percentile", "mean", "variance", "skewness") ).
         Which measures should be considered when comparing segments? Must be
@@ -265,20 +266,20 @@ class FlowCleanOp(HasStrictTraits):
     force_clean = Bool(False)
     dont_clean = Bool(False)
 
-    _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy)
-    _bin_means = Dict(Tube, Any)    
-    _bin_kept = Dict(Tube, Instance(np.ndarray))
-    _bin_measures = Dict(Tube, Instance(np.ndarray))
-    _tube_channels = Dict(Tube, List(Str))
-    _channel_stats = Dict(Tube, Instance(pd.DataFrame))
+    _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy, transient = True)
+    _bin_means = Dict(Tube, Any, transient = True)    
+    _bin_kept = Dict(Tube, Instance(np.ndarray), transient = True)
+    _bin_measures = Dict(Tube, Instance(np.ndarray), transient = True)
+    _tube_channels = Dict(Tube, List(Str), transient = True)
+    _channel_stats = Dict(Tube, Instance(pd.DataFrame), transient = True)
     
-    _bin_means = Dict(Tube, Any)    
-    _density_kde = Dict(Tube, Any)
-    _density_peaks = Dict(Tube, Any)
-    _density_pdf = Dict(Tube, Any)
-    _measures_kde = Dict(Tube, Any)
-    _measures_pdf = Dict(Tube, Any)
-    _measures_peaks = Dict(Tube, Any)
+    _bin_means = Dict(Tube, Any, transient = True)    
+    _density_kde = Dict(Tube, Any, transient = True)
+    _density_peaks = Dict(Tube, Any, transient = True)
+    _density_pdf = Dict(Tube, Any, transient = True)
+    _measures_kde = Dict(Tube, Any, transient = True)
+    _measures_pdf = Dict(Tube, Any, transient = True)
+    _measures_peaks = Dict(Tube, Any, transient = True)
     
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
@@ -645,8 +646,8 @@ class FlowCleanOp(HasStrictTraits):
         event_assignments = pd.Series([True] * len(experiment), dtype = "bool")
         for tube, tube_bins in self._tube_bins.items():
             for bin, events in tube_bins:
-                 if not self._bin_kept[tube][bin]:
-                     event_assignments.loc[events.index] = False
+                if not self._bin_kept[tube][bin]:
+                    event_assignments.loc[events.index] = False
                     
         new_experiment = experiment.clone(deep = False)
         new_experiment.add_condition(self.name, "bool", event_assignments)
@@ -674,7 +675,20 @@ class FlowCleanDiagnostic(HasStrictTraits):
     """
     A diagnostic view for `FlowCleanOp`.
     
-    Plots.... TODO
+    Each fluorescence channel is plotted with a scatterplot. Bin means are
+    shown with green line segments, and dropped bins are plotted in orange
+    instead of blue. The plot title shows the channel drift and maximum 
+    discontinuity before cleaning, as well as the drift and max discontinuity
+    after cleaning (if cleaning was applied.)
+    
+    There are one or two additional distributions also plotted. The first
+    shows the KDE estimate of bin densities, the peaks that the peak finding
+    algorithm found, and the normal distribution used to determine if a bin
+    density was "abnormal". If the tube needed cleaning, the second shows 
+    a KDE estimate of the sum-of-measures distribution, with peaks and the
+    normal distribution used to determine if a bin was to be excluded.
+    (The actual cutoffs are determined by `density_cutoff` and `segment_cutoff`,
+    respectively.
     
     Attributes
     ----------
@@ -683,7 +697,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
         if you create the instance using `FlowCleanOp.default_view`.
     """
 
-    id = Constant("edu.mit.synbio.cytoflow.view.flowcleandiagnostic")
+    id = Constant('edu.mit.synbio.cytoflow.view.flowcleandiagnostic')
     friendly_id = Constant("FlowClean Diagnostic")
     
     op = Instance(FlowCleanOp)
@@ -789,7 +803,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
                          [self.op._bin_means[tube][channel][bin], self.op._bin_means[tube][channel][bin]],
                          "brown")
 
-        ax = plt.subplot(nrow, 2, num_channels + 1, title = "Bin Density Distribution")
+        plt.subplot(nrow, 2, num_channels + 1, title = "Bin Density Distribution")
         support, density = self.op._density_kde[tube]
         plt.plot(support, density)
         for peak in self.op._density_peaks[tube]:

@@ -52,6 +52,7 @@ from .density import DensityGatePlugin
 from .flowpeaks import FlowPeaksPlugin
 from .kmeans import KMeansPlugin
 from .pca import PCAPlugin
+from .flowclean import FlowCleanPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin

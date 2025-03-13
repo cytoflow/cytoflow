@@ -215,7 +215,8 @@ def run_gui():
                                         RatioPlugin,
                                         FlowPeaksPlugin,
                                         KMeansPlugin,
-                                        PCAPlugin)
+                                        PCAPlugin,
+                                        FlowCleanPlugin)
     
     from cytoflowgui.view_plugins import (ViewPluginManager,
                                           HistogramPlugin, 
@@ -273,6 +274,7 @@ def run_gui():
                   KMeansPlugin(),
                   FlowPeaksPlugin(),
                   PCAPlugin(),
+                  FlowCleanPlugin(),
                   AutofluorescencePlugin(),
                   BleedthroughLinearPlugin(),
                   BeadCalibrationPlugin(),
