@@ -80,12 +80,12 @@ class FlowCleanWorkflowOp(WorkflowOperation, FlowCleanOp):
                     estimate = True)
     force_clean = Bool(False, estimate = True)
     dont_clean = Bool(False, estimate = True)
-    
-    estimated = Event(estimate_result = True)
+        
+    tube_status = Dict(Tube, Str, estimate_result = True)
     
     # bits for channels
     @observe('[channels_list:items,channels_list:items.channel,channels_list:items.scale]')
-    def _channels_updated(self, event):
+    def _channels_updated(self, _):
         self.changed = 'channels_list'
         
     def _get_channels(self):
@@ -108,7 +108,6 @@ class FlowCleanWorkflowOp(WorkflowOperation, FlowCleanOp):
                                            .format(self.time_channel))
             
         super().estimate(experiment)
-        self.estimated = True
         
     def default_view(self, **kwargs):
         return FlowCleanWorkflowView(op = self, **kwargs)
@@ -131,6 +130,7 @@ class FlowCleanWorkflowOp(WorkflowOperation, FlowCleanOp):
         self._measures_kde = {}
         self._measures_pdf = {}
         self._measures_peaks = {}    
+        self.tube_status = {}
         
     def get_notebook_code(self, idx):
         op = FlowCleanOp()
@@ -150,11 +150,11 @@ class FlowCleanWorkflowOp(WorkflowOperation, FlowCleanOp):
 class FlowCleanWorkflowView(WorkflowView, FlowCleanDiagnostic):
     plot_params = Instance(HasTraits, ())
     
-    def should_plot(self, changed, payload):
-        if changed == Changed.ESTIMATE_RESULT:
-            return True
-        
-        return False
+    # def should_plot(self, changed, payload):
+    #     if changed == Changed.ESTIMATE_RESULT:
+    #         return True
+    #
+    #     return False
     
     def plot(self, experiment, **kwargs):
         super().plot(experiment, plot_name = self.current_plot, **kwargs)
