@@ -376,7 +376,7 @@ class FlowCleanOp(HasStrictTraits):
             num_segments = int(len(tube_events) / self.segment_size)
             segment_size = int(len(tube_events) / num_segments)
             labels = np.repeat(range(0, num_segments), segment_size)
-            np.append(labels, [num_segments - 1] * (len(tube_events) - len(labels)))
+            labels = np.append(labels, [num_segments - 1] * (len(tube_events) - len(labels)))
             self._tube_bins[tube] = tube_events.groupby(labels)
             self._bin_kept[tube] = np.full((num_segments), True)
             self._bin_measures[tube] = np.zeros((num_segments))
