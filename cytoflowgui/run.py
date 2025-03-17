@@ -61,6 +61,7 @@ def log_excepthook(typ, val, tb):
     tb_str = traceback.format_tb(tb)[-1]
     logging.error("Error: {0}: {1}\nLocation: {2}Thread: Main"
                   .format(typ, val, tb_str))
+    
                          
 def run_gui():
     """Run the GUI!"""
@@ -219,7 +220,8 @@ def run_gui():
                                         FlowPeaksPlugin,
                                         KMeansPlugin,
                                         PCAPlugin,
-                                        FlowCleanPlugin)
+                                        FlowCleanPlugin, 
+                                        tSNEPlugin)
     
     from cytoflowgui.view_plugins import (ViewPluginManager,
                                           HistogramPlugin, 
@@ -278,6 +280,7 @@ def run_gui():
                   KMeansPlugin(),
                   FlowPeaksPlugin(),
                   PCAPlugin(),
+                  tSNEPlugin(),
                   AutofluorescencePlugin(),
                   BleedthroughLinearPlugin(),
                   BeadCalibrationPlugin(),
@@ -377,6 +380,25 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     # make sure the root logger has a level of DEBUG -- we'll sort out what
     # to show or not on the local logger
     logging.getLogger().setLevel(logging.DEBUG)
+    
+    # capture everything sent to stdout in the log too
+    class StreamToLogger(object):
+        """
+        Fake file-like stream object that redirects writes to a logger instance.
+        """
+        def __init__(self, logger, level):
+            self.logger = logger
+            self.level = level
+            self.linebuf = ''
+    
+        def write(self, buf):
+            for line in buf.rstrip().splitlines():
+                self.logger.log(self.level, line.rstrip())
+    
+        def flush(self):
+            pass
+        
+    sys.stdout = StreamToLogger(logging.getLogger(),logging.INFO)
     
     # We want matplotlib to use our backend .... in both the GUI and the
     # remote process.  Must be called BEFORE cytoflow is imported

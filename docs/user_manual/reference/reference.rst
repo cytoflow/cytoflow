@@ -88,8 +88,9 @@ Operations
   
        .. figure:: /operations/flowclean-1.png
 
-     -
+     - :doc:`t-Stochastic Neighbor Embedding <operations/tsne>`
      
+       .. figure:: /operations/tsne-1.png
      -
      
      -

@@ -53,6 +53,7 @@ from .flowpeaks import FlowPeaksPlugin
 from .kmeans import KMeansPlugin
 from .pca import PCAPlugin
 from .flowclean import FlowCleanPlugin
+from .tsne import tSNEPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin

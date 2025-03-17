@@ -28,6 +28,7 @@ dependencies = [
     'statsmodels==0.14.4',
     'natsort==7.1.1',
     'numba==0.60.0',
+    'opentsne==1.0.1',
                 
     'traits==6.2.0',
     'traitsui==8.0.0',
@@ -89,6 +90,7 @@ depends = ["cytoflow/utility/logicle_ext/FastLogicle.cpp",
            "cytoflow/utility/logicle_ext/Logicle.i",
            "cytoflow/utility/logicle_ext/logicle.h"]
 swig-opts=['-c++', '-python']
+optional = true
 
 [tool.setuptools.packages.find]
 exclude = ["package", "package.qt"]

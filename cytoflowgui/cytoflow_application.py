@@ -28,7 +28,7 @@ The `pyface.tasks` application.
 `cytoflow` Qt GUI
 """
 
-import logging, io, os, pickle
+import logging, io, os, pickle, sys
 
 from traits.api import Bool, Instance, List, Property, Str, Any, File
 
@@ -136,6 +136,25 @@ class CytoflowApplication(TasksApplication):
         gui_handler = CallbackHandler(lambda rec, app = self: gui_handler_callback(rec.getMessage(), app))
         gui_handler.setLevel(logging.ERROR)
         logging.getLogger().addHandler(gui_handler)
+        
+        ## anything that gets printed to stdout, capture that too!
+        class StreamToLogger(object):
+            """
+            Fake file-like stream object that redirects writes to a logger instance.
+            """
+            def __init__(self, logger, level):
+                self.logger = logger
+                self.level = level
+                self.linebuf = ''
+        
+            def write(self, buf):
+                for line in buf.rstrip().splitlines():
+                    self.logger.log(self.level, line.rstrip())
+        
+            def flush(self):
+                pass
+            
+        sys.stdout = StreamToLogger(logging.getLogger(),logging.INFO)
          
         # must redirect to the gui thread
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
