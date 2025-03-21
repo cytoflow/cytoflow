@@ -33,6 +33,7 @@ requirements:
     - statsmodels==0.14.4
     - natsort==7.1.1
     - numba==0.60.0
+    - opentsne==1.0.1
 
     - traits==6.2.0
     - traitsui==8.0.0
@@ -70,6 +71,7 @@ requirements:
     - statsmodels==0.14.4
     - natsort==7.1.1
     - numba==0.60.0
+    - opentsne==1.0.1
 
     - traits==6.2.0
     - traitsui==8.0.0

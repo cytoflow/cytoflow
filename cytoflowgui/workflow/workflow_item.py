@@ -373,8 +373,10 @@ class WorkflowItem(HasStrictTraits):
                 plot_params = self.current_view.plot_params.trait_get()
                 
                 if self.result:
+                    plt.clf()
                     self.current_view.plot(self.result, **plot_params)
                 elif self.previous_wi and self.previous_wi.result:
+                    plt.clf()
                     self.current_view.plot(self.previous_wi.result, **plot_params)
                     warnings.warn("Warning: plotting previous operation's result")
                 else:

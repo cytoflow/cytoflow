@@ -46,8 +46,8 @@ import matplotlib.text
 import logging
 
         
-from .utility.logging import MplFilter
-matplotlib.text._log.addFilter(MplFilter())
+from cytoflow.utility.logging_ext import MplFilter
+matplotlib.text._log.addFilter(MplFilter())  # @UndefinedVariable
 
 # keep track of whether we're running in the GUI.
 # there is the occasional place where we differ in behavior
@@ -77,6 +77,7 @@ from .operations.gaussian import GaussianMixtureOp
 from .operations.kmeans import KMeansOp
 from .operations.flowpeaks import FlowPeaksOp
 from .operations.pca import PCAOp
+from .operations.tsne import tSNEOp
 
 # channels
 from .operations.channel_stat import ChannelStatisticOp

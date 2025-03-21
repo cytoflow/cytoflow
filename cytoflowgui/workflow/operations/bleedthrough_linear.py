@@ -49,20 +49,10 @@ class Channel(HasTraits):
         return traits_repr(self)
     
     
-class UnitFloat(BaseFloat):
-    def validate(self, obj, name, value):
-        value = super().validate(obj, name, value)
-        if value < 0.0:
-            return 0.0
-        if value > 1.0:
-            return 1.0
-        return value
-    
-    
 class Spillover(HasTraits):
     from_channel = Str
     to_channel = Str
-    spillover = UnitFloat
+    spillover = util.UnitFloat
     
     def __repr__(self):
         return traits_repr(self)

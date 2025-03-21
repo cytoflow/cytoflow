@@ -146,6 +146,20 @@ class CFloatOrNone(BaseCFloat):
             return None
         else:
             return super().validate(obj, name, value)
+        
+    
+class UnitFloat(BaseFloat):
+    """
+    Defines a trait whose value must be a float between 0 and 1 (inclusive)
+    """
+    
+    def validate(self, obj, name, value):
+        value = super().validate(obj, name, value)
+        if value < 0.0:
+            return 0.0
+        if value > 1.0:
+            return 1.0
+        return value
 
 class IntOrNone(BaseInt):
     """

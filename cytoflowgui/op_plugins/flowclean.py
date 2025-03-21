@@ -123,7 +123,7 @@ subset of events with a unique combination of experimental metadata.
                                    "mRuby-A" : "logicle",
                                    "mTurquoise2-A" : "logicle"})
                                    
-    fc.estimate(ex)
+    fc.estimate(ex) 
     fc.default_view().plot(experiment = ex, plot_name = "module_examples/stabilize.fcs")
 '''
 
