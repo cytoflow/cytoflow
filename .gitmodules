@@ -7,3 +7,6 @@
 	path = fcsparser
 	url = https://github.com/cytoflow/fcsparser.git
 	branch = cytoflow1.2
+[submodule "sklearn-som"]
+	path = sklearn-som
+	url = git@github.com:bpteague/sklearn-som.git

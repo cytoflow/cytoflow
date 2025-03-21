@@ -78,6 +78,7 @@ from .operations.kmeans import KMeansOp
 from .operations.flowpeaks import FlowPeaksOp
 from .operations.pca import PCAOp
 from .operations.tsne import tSNEOp
+from .operations.som import SOMOp
 
 # channels
 from .operations.channel_stat import ChannelStatisticOp

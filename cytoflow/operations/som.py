@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3.8
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2025
+# (c) Brian Teague 2018-2022
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,58 +18,88 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.operations.tsne
+cytoflow.operations.som
 -----------------------
 
-Apply t-Distributed Stochastic Neighbor Embedding (tSNE) to flow data. This is 
-similar to principle component analysis, in that it is a dimensionality
-reduction algorithm. Unlike PCA, it is non-linear and (supposedly) retains
-internal structure better than PCA. `tsne` has one class:
+Use self-organizing maps to cluster events in any number of dimensions.
+`som` has one classes:
 
-`tSNEOp` -- the `IOperation` that applies tSNE to an `Experiment`.
+`SOMOp` -- the `IOperation` to perform the clustering.
+
 """
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, Float, Enum, provides)
+                        Constant, List, Int, Float, provides)
 
 import numpy as np
 import pandas as pd
-from openTSNE import TSNE
 
+# have to use importlib because the package name has a hyphen :(
+import importlib
+som = importlib.import_module("sklearn-som.sklearn_som.som")
+
+from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
+
 from .i_operation import IOperation
+from .base_op_views import By1DView, By2DView, AnnotatingView
 
 @provides(IOperation)
-class tSNEOp(HasStrictTraits):
+class SOMOp(HasStrictTraits):
     """
-    Use t-Distributed Stochastic Neighbor Embedding to reduce the
-    dimensionality of the data set.
+    Use a self-organizing map to cluster events.  
     
-    Call `estimate` to compute the embedding.
+    Call `estimate` to create the map, often using a random subset of the
+    events that will eventually be clustered.
       
-    Calling `apply` creates new "channels" named ``{name}_1`` and ``{name}_n``,
-    where ``name`` is the `name` attribute. (Unlike PCA, tSNE only decomposes to
-    two components.)
+    Calling `apply` creates a new categorical metadata variable 
+    named `name`, with possible values ``{name}_1`` .... ``name_n`` where 
+    ``n`` is the product of the height and width of the map.
 
-    The same decomposition may not be appropriate for different subsets of the data set.
+    The same model may not be appropriate for different subsets of the data set.
     If this is the case, you can use the `by` attribute to specify 
     metadata by which to aggregate the data before estimating (and applying) a 
-    model.  The tSNE parameters such as the perplexity are the same across
-    each subset, though
+    model.  The  number of clusters (and other clustering parameters) is the 
+    same across each subset, though.
 
     Attributes
     ----------
     name : Str
-        The operation name; determines the name of the new columns.
+        The operation name; determines the name of the new metadata column
         
     channels : List(Str)
-        The channels to apply the decomposition to.
+        The channels to apply the clustering algorithm to.
 
     scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
         channel is in `channels` but not in `scale`, the current 
         package-wide default (set with `set_default_scale`) is used.
+    
+        .. note::
+           Sometimes you may see events labeled ``{name}_None`` -- this results 
+           from events for which the selected scale is invalid. For example, if
+           an event has a negative measurement in a channel and that channel's
+           scale is set to "log", this event will be set to ``{name}_None``.
+
+    width : Int (default = 10)
+        What is the width of the map? The number of clusters used is the product
+        of ``width`` and ``height``.
+        
+    height : Int (default = 10)
+        What is the height of the map? The number of clusters used is the product
+        of ``width`` and ``height``.
+        
+    learning_rate : Float (default = 1.0)
+        The initial step size for updating SOM weights. Changes as the map is
+        learned.
+        
+    sigma : Float (default = 1.0)
+        The magnitude of each update. Fixed over the course of the run -- 
+        higher values mean more aggressive updates.
+        
+    max_iterations : Int (default = 3000)
+        The maximum number of update steps to take before learning stops.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -78,33 +108,20 @@ class tSNEOp(HasStrictTraits):
         fit the model separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
         
-    metric : Enum("euclidean", "cosine") (default = "euclidian")
-        How to compute "distance"? If using many channels, suggest change
-        to "cosine".
-        
-    perplexity : Float (default = 10)
-        The balance between the local and global structure of the data. Larger 
-        datasets benefit from higher perplexity, but be warned -- runtime
-        scales linearly with perplexity!
-        
     sample : Float (default = 0.01)
         What proportion of the data set to use for training? Defaults to 1%
         of the dataset to help with runtime.
         
-            
+    
     Notes
     -----
-    Uses ``openTSNE`` by Pavlin G. Policar, Martin Strazar and Blaz Zupan [1]_
     
-    References
-    ----------
+    Uses SOM code from https://github.com/rileypsmith/sklearn-som -- thanks!
     
-    .. [1] Poliar, PG and Strazar, M and Zupan, Blaz (2024). 
-           openTSNE: A Modular Python Library for t-SNE Dimensionality Reduction and Embedding
-           Journal of Statistical Software 109: 1-30.
-           https://www.jstatsoft.org/index.php/jss/article/view/v109i03
-        
-        
+    If you'd like to learn more about self-organizing maps and how to use
+    them effectively, check out https://rubikscode.net/2018/08/20/introduction-to-self-organizing-maps/
+      
+    
     Examples
     --------
     
@@ -127,75 +144,60 @@ class tSNEOp(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> tsne = flow.tSNEOp(name = 'tSNE',
-        ...                    channels = ['V2-A', 'V2-H', 'Y2-A', 'Y2-H'],
-        ...                    scale = {'V2-A' : 'log',
-        ...                             'V2-H' : 'log',
-        ...                             'Y2-A' : 'log',
-        ...                             'Y2-H' : 'log'},
-        ...                    by = ["Dox"])
+        >>> som_op = flow.SOMOp(name = 'SOM',
+        ...                     channels = ['V2-A', 'Y2-A'],
+        ...                     scale = {'V2-A' : 'log',
+        ...                              'Y2-A' : 'log'})
         
-    Estimate the decomposition
+    Estimate the clusters
     
     .. plot::
         :context: close-figs
         
-        >>> tsne.estimate(ex)
+        >>> som_op.estimate(ex)
         
-    Apply the operation
+    Plot a diagnostic view
     
     .. plot::
         :context: close-figs
         
-        >>> ex2 = tsne.apply(ex)
+        >>> som_op.default_view().plot(ex)
 
-    Plot a scatterplot of the decomposition.  Compare to a scatterplot of 
-    the underlying channels.
+    Apply the gate
     
     .. plot::
         :context: close-figs
         
-        >>> flow.ScatterplotView(xchannel = "V2-A",
-        ...                      xscale = "log",
-        ...                      ychannel = "Y2-A",
-        ...                      yscale = "log",
-        ...                      subset = "Dox == 1.0").plot(ex2)
+        >>> ex2 = som_op.apply(ex)
 
-        >>> flow.ScatterplotView(xchannel = "tSNE_1",
-        ...                      ychannel = "tSNE_2",
-        ...                      subset = "Dox == 1.0").plot(ex2)
-       
+    Plot a diagnostic view with the event assignments
+    
     .. plot::
         :context: close-figs
         
-        >>> flow.ScatterplotView(xchannel = "V2-A",
-        ...                      xscale = "log",
-        ...                      ychannel = "Y2-A",
-        ...                      yscale = "log",
-        ...                      subset = "Dox == 10.0").plot(ex2) 
-
-        >>> flow.ScatterplotView(xchannel = "tSNE_1",
-        ...                      ychannel = "tSNE_2",
-        ...                      subset = "Dox == 10.0").plot(ex2)
+        >>> km_op.default_view().plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.tsne')
-    friendly_id = Constant("t-Stochastic Neighbor Embedding")
+    id = Constant('edu.mit.synbio.cytoflow.operations.som')
+    friendly_id = Constant("Self Organizing Maps Clustering")
     
     name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
-    perplexity = util.PositiveFloat(10)
-    sample = util.UnitFloat(0.01)
-    metric = Enum("euclidean", "cosine", "manhattan", "hamming", "dot", "l1", "l2", "taxicab")
+    width = Int(10)
+    height = Int(10)
+    learning_rate = Float(1.0)
+    sigma = Float(1.0)
+    max_iterations = Int(3000)
     by = List(Str)
+    sample = util.UnitFloat(0.01)
     
-    _tsne = Dict(Any, Any, transient = True)
+    _som = Dict(Any, Instance("sklearn-som.sklearn_som.som.SOM"), transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
     def estimate(self, experiment, subset = None):
         """
-        Estimate the decomposition
+        Estimate the self-organized map
         
         Parameters
         ----------
@@ -205,12 +207,39 @@ class tSNEOp(HasStrictTraits):
         subset : str (default = None)
             A Python expression that specifies a subset of the data in 
             ``experiment`` to use to parameterize the operation.
-
         """
 
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
+        
+        if self.width < 1:
+            raise util.CytoflowOpError('width',
+                                       "width must be >= 1")
+            
+        if self.height < 1:
+            raise util.CytoflowOpError('height',
+                                       "height must be >= 1")
+            
+        if self.learning_rate <= 0:
+            raise util.CytoflowOpError('learning_rate',
+                                       "learning_rate must be > 0")
+            
+        if self.sigma < 0:
+            raise util.CytoflowOpError('sigma',
+                                       "sigma must be >= 0")
+            
+        if self.learning_rate <= 0:
+            raise util.CytoflowOpError('learning_rate',
+                                       "learning_rate must be > 0")
+            
+        if self.max_iterations < 1:
+            raise util.CytoflowOpError('max_iterations',
+                                       "max_iterations must be >= 1")
+            
+        if self.sample <= 0:
+            raise util.CytoflowOpError('sample',
+                                       "sample must be > 0")
         
         if len(self.channels) == 0:
             raise util.CytoflowOpError('channels',
@@ -230,7 +259,7 @@ class tSNEOp(HasStrictTraits):
             if c not in self.channels:
                 raise util.CytoflowOpError('scale',
                                            "Scale set for channel {0}, but it isn't "
-                                           "in `channels`"
+                                           "in the experiment"
                                            .format(c))
        
         for b in self.by:
@@ -254,22 +283,24 @@ class tSNEOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = True)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = True)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
+        self._scale = {}
         for c in self.channels:
             if c in self.scale:
                 self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
             else:
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
                     
-        tsne = {}
+                    
+        soms = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError('by',
@@ -282,46 +313,61 @@ class tSNEOp(HasStrictTraits):
             # drop data that isn't in the scale range
             for c in self.channels:
                 x = x[~(np.isnan(x[c]))]
-                             
-            tsne[group] = \
-                TSNE(perplexity = self.perplexity,
-                     metric = self.metric, 
-                     verbose = True, 
-                     n_jobs = 8).fit(x.values)
-                    
-        # set this atomically to support GUI
-        self._tsne = tsne                      
+            x = x.values
+            
+            soms[group] = som.SOM(m = self.height,
+                                 n = self.width,
+                                 dim = len(self.channels),
+                                 lr = self.learning_rate,
+                                 sigma = self.sigma,
+                                 max_iter = self.max_iterations)
+            
+            soms[group].fit(x)
+            
+        # do this so the UI can pick up that the estimate changed
+        self._som = soms                    
          
     def apply(self, experiment):
         """
-        Apply the tSNE decomposition to the data.
+        Apply the self-organizing maps clustering to the data.
         
         Returns
         -------
         Experiment
-            a new Experiment with additional `Experiment.channels` 
-            named ``name_1`` and ``name_2``
-
+            a new Experiment with one additional entry in `Experiment.conditions` 
+            named `name`, of type ``category``.  The new category has 
+            values  ``name_1``, ``name_2``, etc to indicate which k-means cluster 
+            an event is a member of.
+            
+            The new `Experiment` also has one new statistic called
+            ``centers``, which is a list of tuples encoding the centroids of each
+            k-means cluster.
         """
  
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
-            
-        if not self._tsne:
-            raise util.CytoflowOpError(None,
-                                       "No tSNE found.  Did you forget to call estimate()?")
          
         # make sure name got set!
         if not self.name:
             raise util.CytoflowOpError('name',
-                                       "You have to set the operation's name "
+                                       "You have to set the gate's name "
                                        "before applying it!")
             
         if self.name != util.sanitize_identifier(self.name):
             raise util.CytoflowOpError('name',
                                        "Name can only contain letters, numbers and underscores."
                                        .format(self.name)) 
+         
+        if self.name in experiment.data.columns:
+            raise util.CytoflowOpError('name',
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
+            
+        if not self._som:
+            raise util.CytoflowOpError(None, 
+                                       "No components found.  Did you forget to "
+                                       "call estimate()?")
          
         if len(self.channels) == 0:
             raise util.CytoflowOpError('channels',
@@ -346,55 +392,71 @@ class tSNEOp(HasStrictTraits):
                                            "Aggregation metadata {} not found, "
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
-                                 
+        
+                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = True)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
-            
-        # need deep = True because of the data.dropna below
-        new_experiment = experiment.clone(deep = True)       
-        new_channels = []   
-        for i in [0,1]:
-            cname = "{}_{}".format(self.name, i + 1)
-            if cname in experiment.data:
-                raise util.CytoflowOpError('name',
-                                           "Channel {} is already in the experiment"
-                                           .format(cname))
-                                           
-            new_experiment.add_channel(cname, pd.Series(index = experiment.data.index))
-            new_channels.append(cname)            
-                   
+            groupby = experiment.data.groupby(lambda _: True, observed = True)
+                 
+        event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
+                     
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError('by',
                                            "Group {} had no data"
                                            .format(group))
+            
+            if group not in self._som:
+                raise util.CytoflowOpError('by',
+                                           "Group {} not found in the estimated model. "
+                                           "Do you need to re-run estimate()?"
+                                           .format(group))    
+            
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
                  
             # which values are missing?
-   
+ 
             x_na = pd.Series([False] * len(x))
             for c in self.channels:
                 x_na[np.isnan(x[c]).values] = True
+                         
+            x = x.values
             x_na = x_na.values
-            x[x_na] = 0
-            
             group_idx = data_subset.index
             
-            tsne = self._tsne[group]
-            x_tf = tsne.transform(x)
-            x_tf[x_na] = np.nan
-            
-            for ci, c in enumerate(new_channels):
-                new_experiment.data.loc[group_idx, c] = x_tf[:, ci]
-
-        new_experiment.data.dropna(inplace = True)
-        new_experiment.data.reset_index(drop = True, inplace = True)
-
+            som = self._som[group]
+  
+            predicted = np.full(len(x), -1, "int")
+            predicted[~x_na] = som.predict(x[~x_na])
+                 
+            predicted_str = pd.Series(["(none)"] * len(predicted))
+            for c in np.unique(predicted):
+                predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
+            predicted_str[predicted == -1] = "{0}_None".format(self.name)
+            predicted_str.index = group_idx
+      
+            event_assignments.iloc[group_idx] = predicted_str
+         
+        new_experiment = experiment.clone(deep = False)          
+        new_experiment.add_condition(self.name, "category", event_assignments)
+        
+        # TODO - add a statistic with the proportion of events in each cluster
+         
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
+    
+
+    def default_view(self, **kwargs):
+        """
+        Returns a diagnostic plot of the self-organized maps clustering.
+         
+        Returns
+        -------
+            IView : an IView, call `SOM1DView.plot` to see the diagnostic plot.
+        """
+        pass
