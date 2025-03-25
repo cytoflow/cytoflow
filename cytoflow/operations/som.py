@@ -30,14 +30,10 @@ Use self-organizing maps to cluster events in any number of dimensions.
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, Int, Float, provides)
+                        Constant, List, Int, Float, Enum, provides)
 
 import numpy as np
 import pandas as pd
-
-# have to use importlib because the package name has a hyphen :(
-import importlib
-som = importlib.import_module("sklearn-som.sklearn_som.som")
 
 from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
@@ -90,7 +86,12 @@ class SOMOp(HasStrictTraits):
         What is the height of the map? The number of clusters used is the product
         of ``width`` and ``height``.
         
-    learning_rate : Float (default = 1.0)
+    distance : Enum (default = "euclidean")
+        The distance measure that activates the map. Defaults to "euclidean".
+        "cosine" is recommended for >3 channels. Possible values are "euclidean", 
+        "cosine", "manhattan", "chebyshev"
+        
+    learning_rate : Float (default = 0.5)
         The initial step size for updating SOM weights. Changes as the map is
         learned.
         
@@ -98,8 +99,8 @@ class SOMOp(HasStrictTraits):
         The magnitude of each update. Fixed over the course of the run -- 
         higher values mean more aggressive updates.
         
-    max_iterations : Int (default = 3000)
-        The maximum number of update steps to take before learning stops.
+    num_iterations : Int (default = 100)
+        How many times to update the neuron weights?
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -186,13 +187,14 @@ class SOMOp(HasStrictTraits):
     scale = Dict(Str, util.ScaleEnum)
     width = Int(10)
     height = Int(10)
-    learning_rate = Float(1.0)
+    distance = Enum("euclidean", "cosine", "chebyshev", "manhattan")
+    learning_rate = Float(0.5)
     sigma = Float(1.0)
-    max_iterations = Int(3000)
+    num_iterations = Int(100)
     by = List(Str)
-    sample = util.UnitFloat(0.01)
+    sample = util.UnitFloat(0.1)
     
-    _som = Dict(Any, Instance("sklearn-som.sklearn_som.som.SOM"), transient = True)
+    _som = Dict(Any, Instance("cytoflow.utility.minisom.MiniSom"), transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
     def estimate(self, experiment, subset = None):
@@ -233,9 +235,9 @@ class SOMOp(HasStrictTraits):
             raise util.CytoflowOpError('learning_rate',
                                        "learning_rate must be > 0")
             
-        if self.max_iterations < 1:
-            raise util.CytoflowOpError('max_iterations',
-                                       "max_iterations must be >= 1")
+        if self.num_iterations <= 0:
+            raise util.CytoflowOpError('num_iterations',
+                                       "num_iterations must be > 0")
             
         if self.sample <= 0:
             raise util.CytoflowOpError('sample',
@@ -259,7 +261,7 @@ class SOMOp(HasStrictTraits):
             if c not in self.channels:
                 raise util.CytoflowOpError('scale',
                                            "Scale set for channel {0}, but it isn't "
-                                           "in the experiment"
+                                           "in `channels`"
                                            .format(c))
        
         for b in self.by:
@@ -315,14 +317,14 @@ class SOMOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
             
-            soms[group] = som.SOM(m = self.height,
-                                 n = self.width,
-                                 dim = len(self.channels),
-                                 lr = self.learning_rate,
-                                 sigma = self.sigma,
-                                 max_iter = self.max_iterations)
+            soms[group] = util.MiniSom(x = self.width,
+                                       y = self.height,
+                                       input_len = x.shape[1],
+                                       learning_rate = self.learning_rate,
+                                       sigma = self.sigma,
+                                       activation_distance = self.distance)
             
-            soms[group].fit(x)
+            soms[group].train(x, self.num_iterations, use_epochs = True)
             
         # do this so the UI can pick up that the estimate changed
         self._som = soms                    
@@ -432,7 +434,10 @@ class SOMOp(HasStrictTraits):
             som = self._som[group]
   
             predicted = np.full(len(x), -1, "int")
-            predicted[~x_na] = som.predict(x[~x_na])
+            predicted[~x_na] = \
+                np.apply_along_axis(lambda x: som.winner(x),
+                                    1,
+                                    x[~x_na])
                  
             predicted_str = pd.Series(["(none)"] * len(predicted))
             for c in np.unique(predicted):
