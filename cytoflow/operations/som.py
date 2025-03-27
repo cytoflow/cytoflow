@@ -30,10 +30,12 @@ Use self-organizing maps to cluster events in any number of dimensions.
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, Int, Float, Enum, provides)
+                        Constant, List, Int, Float, Enum, Bool,
+                        provides)
 
 import numpy as np
 import pandas as pd
+import sklearn.cluster
 
 from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
@@ -77,6 +79,10 @@ class SOMOp(HasStrictTraits):
            from events for which the selected scale is invalid. For example, if
            an event has a negative measurement in a channel and that channel's
            scale is set to "log", this event will be set to ``{name}_None``.
+           
+    consensus_cluster : Bool (default = True)
+        Should we use consensus clustering to find the "natural" number of
+        clusters? Defauls to ``True``.
 
     width : Int (default = 10)
         What is the width of the map? The number of clusters used is the product
@@ -99,7 +105,7 @@ class SOMOp(HasStrictTraits):
         The magnitude of each update. Fixed over the course of the run -- 
         higher values mean more aggressive updates.
         
-    num_iterations : Int (default = 100)
+    num_iterations : Int (default = 20)
         How many times to update the neuron weights?
     
     by : List(Str)
@@ -185,16 +191,27 @@ class SOMOp(HasStrictTraits):
     name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
+    by = List(Str)
+
+    # SOM parameters
     width = Int(10)
     height = Int(10)
     distance = Enum("euclidean", "cosine", "chebyshev", "manhattan")
     learning_rate = Float(0.5)
     sigma = Float(1.0)
-    num_iterations = Int(100)
-    by = List(Str)
+    num_iterations = Int(20)
     sample = util.UnitFloat(0.1)
     
+    # consensus clustering parameters
+    consensus_cluster = Bool(True)
+    min_clusters = Int(2)
+    max_clusters = Int(10)
+    n_resamples = Int(100)
+    resample_frac = Int(0.8)
+    
     _som = Dict(Any, Instance("cytoflow.utility.minisom.MiniSom"), transient = True)
+    _cc = Dict(Any, Any)
+    _centers = Dict(Any, Any)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
     def estimate(self, experiment, subset = None):
@@ -319,12 +336,23 @@ class SOMOp(HasStrictTraits):
             
             soms[group] = util.MiniSom(x = self.width,
                                        y = self.height,
-                                       input_len = x.shape[1],
+                                       input_len = len(self.channels),
                                        learning_rate = self.learning_rate,
                                        sigma = self.sigma,
                                        activation_distance = self.distance)
             
             soms[group].train(x, self.num_iterations, use_epochs = True)
+            
+            if self.consensus_cluster:
+                centers = soms[group].get_weights().reshape(self.width * self.height, len(self.channels))
+                cc = util.ConsensusClustering(sklearn.cluster.AgglomerativeClustering(),
+                                              min_clusters = self.min_clusters,
+                                              max_clusters = self.max_clusters,
+                                              n_resamples = self.n_resamples,
+                                              resample_frac = self.resample_frac)       
+                cc.fit(centers, n_jobs = 8)
+                best_k = cc.best_k()
+                self._cc[group] = sklearn.cluster.AgglomerativeClustering(n_clusters = best_k).fit_predict(centers)
             
         # do this so the UI can pick up that the estimate changed
         self._som = soms                    
@@ -434,10 +462,18 @@ class SOMOp(HasStrictTraits):
             som = self._som[group]
   
             predicted = np.full(len(x), -1, "int")
-            predicted[~x_na] = \
-                np.apply_along_axis(lambda x: som.winner(x),
-                                    1,
-                                    x[~x_na])
+            
+            if self.consensus_cluster:
+                cc = self._cc[group]
+                def winner_idx(x, cc = cc):
+                    w = som.winner(x)
+                    return cc[w[0] * self.width + w[1]]
+            else:
+                def winner_idx(x):
+                    w = som.winner(x)
+                    return w[0] * self.width + w[1]
+
+            predicted[~x_na] = np.apply_along_axis(winner_idx, 1, x[~x_na])
                  
             predicted_str = pd.Series(["(none)"] * len(predicted))
             for c in np.unique(predicted):
@@ -458,10 +494,194 @@ class SOMOp(HasStrictTraits):
 
     def default_view(self, **kwargs):
         """
-        Returns a diagnostic plot of the self-organized maps clustering.
+        Returns a diagnostic plot of the k-means clustering.
          
         Returns
         -------
-            IView : an IView, call `SOM1DView.plot` to see the diagnostic plot.
+            IView : an IView, call `KMeans1DView.plot` to see the diagnostic plot.
         """
-        pass
+        channels = kwargs.pop('channels', self.channels)
+        scale = kwargs.pop('scale', self.scale)
+        
+        for c in channels:
+            if c not in self.channels:
+                raise util.CytoflowViewError('channels',
+                                             "Channel {} isn't in the operation's channels"
+                                             .format(c))
+                
+        for s in scale:
+            if s not in self.channels:
+                raise util.CytoflowViewError('scale',
+                                             "Channel {} isn't in the operation's channels"
+                                             .format(s))
+
+        for c in channels:
+            if c not in scale:
+                scale[c] = util.get_default_scale()
+            
+        if len(channels) == 0:
+            raise util.CytoflowViewError('channels',
+                                         "Must specify at least one channel for a default view")
+        elif len(channels) == 1:
+            v = SOM1DView(op = self)
+            v.trait_set(channel = channels[0], 
+                        scale = scale[channels[0]], 
+                        **kwargs)
+            return v
+        
+        elif len(channels) == 2:
+            v = SOM2DView(op = self)
+            v.trait_set(xchannel = channels[0], 
+                        ychannel = channels[1],
+                        xscale = scale[channels[0]],
+                        yscale = scale[channels[1]], 
+                        **kwargs)
+            return v
+        
+        else:
+            raise util.CytoflowViewError('channels',
+                                         "Can't specify more than two channels for a default view")
+    
+
+@provides(IView)
+class SOM1DView(By1DView, AnnotatingView, HistogramView):
+    """
+    A diagnostic view for `SOMOp` (1D, using a histogram)
+    
+    Attributes
+    ----------    
+    op : Instance(SOMOp)
+        The op whose parameters we're viewing.
+    """
+    
+    id = Constant('edu.mit.synbio.cytoflow.views.som1dview')
+    friendly_id = Constant("1D SOM Diagnostic Plot")
+    
+    channel = Str
+    scale = util.ScaleEnum
+    
+    def plot(self, experiment, **kwargs):
+        """
+        Plot the plots.
+        
+        Parameters
+        ----------
+        """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
+                
+        view, trait_name = self._strip_trait(self.op.name)
+        
+        
+        if self.channel in self.op._scale:
+            scale = self.op._scale[self.channel]
+        else:
+            scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+    
+        super(SOM1DView, view).plot(experiment,
+                                    annotation_facet = self.op.name,
+                                    annotation_trait = trait_name,
+                                    annotations = self.op._som,
+                                    scale = scale,
+                                    **kwargs)
+ 
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
+                                                        
+        # plot the cluster centers
+            
+        km = annotation
+        
+        kwargs.setdefault('orientation', 'vertical')
+        
+        if kwargs['orientation'] == 'horizontal':
+            scale = kwargs['yscale']
+            cidx = self.op.channels.index(self.channel)
+            for k in range(0, self.op.num_clusters):
+                c = scale.inverse(km.cluster_centers_[k][cidx])
+                axes.axhline(c, linewidth=3, color='blue')         
+        else:
+            scale = kwargs['xscale']
+            cidx = self.op.channels.index(self.channel)
+            for k in range(0, self.op.num_clusters):
+                c = scale.inverse(km.cluster_centers_[k][cidx])
+                axes.axvline(c, linewidth=3, color='blue')                      
+
+     
+@provides(IView)
+class SOM2DView(By2DView, AnnotatingView, ScatterplotView):
+    """
+    A diagnostic view for `SOMOp` (2D, using a scatterplot).
+    
+    Attributes
+    ----------
+    op : Instance(SOMOp)
+        The op whose parameters we're viewing.        
+    """
+     
+    id = Constant('edu.mit.synbio.cytoflow.view.som2dview')
+    friendly_id = Constant("2D SOM Diagnostic Plot")
+    
+    xchannel = Str
+    ychannel = Str
+    
+    xscale = util.ScaleEnum
+    yscale = util.ScaleEnum
+    
+    def plot(self, experiment, **kwargs):
+        """
+        Plot the plots.
+        
+        Parameters
+        ----------
+        """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
+                
+        view, trait_name = self._strip_trait(self.op.name)
+        
+        if self.xchannel in self.op._scale:
+            xscale = self.op._scale[self.xchannel]
+        else:
+            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+
+        if self.ychannel in self.op._scale:
+            yscale = self.op._scale[self.ychannel]
+        else:
+            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+    
+        super(SOM2DView, view).plot(experiment,
+                                    annotation_facet = self.op.name,
+                                    annotation_trait = trait_name,
+                                    annotations = self.op._som,
+                                    xscale = xscale,
+                                    yscale = yscale,
+                                    **kwargs)
+ 
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
+                                                        
+        # plot the cluster centers
+            
+        som = annotation
+        xscale = kwargs['xscale']
+        yscale = kwargs['yscale']
+        
+        ix = self.op.channels.index(self.xchannel)
+        iy = self.op.channels.index(self.ychannel)
+        
+        centers = som.get_weights().reshape(self.op.width * self.op.height, len(self.op.channels))
+        
+        for k in range(centers.shape[0]):
+            x = xscale.inverse(centers[k][ix])
+            y = yscale.inverse(centers[k][iy])
+            
+            axes.plot(x, y, '*', color = 'blue')
+
+util.expand_class_attributes(SOM1DView)
+util.expand_method_parameters(SOM1DView, SOM1DView.plot)
+
+util.expand_class_attributes(SOM2DView)
+util.expand_method_parameters(SOM2DView, SOM2DView.plot)
