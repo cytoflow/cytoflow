@@ -101,7 +101,9 @@ class Experiment(HasStrictTraits):
         `pandas.Series`: each level of the index is a facet, and each 
         combination of indices is a subset for which the statistic was computed.
         The values of the series, of course, are the values of the computed 
-        parameters or statistics for each subset.
+        parameters or statistics for each subset. They may be floating point numbers
+        or tuples of floating point numbers. If tuples, the tuple length must
+        be the same for every value in the statistic.
     
     channels : List(String)
         The channels that this experiment tracks (read-only).
