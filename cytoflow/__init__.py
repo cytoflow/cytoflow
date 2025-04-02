@@ -28,7 +28,7 @@ Written by Brian Teague, bpteague@gmail.com
 
 Copyright Massachusetts Institute of Technology 2015-2018
 
-Copyright Brian Teague 2018-2021
+Copyright Brian Teague 2018-2025
 """
 
 # check python version

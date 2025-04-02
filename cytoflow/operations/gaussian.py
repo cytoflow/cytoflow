@@ -131,6 +131,22 @@ class GaussianMixtureOp(HasStrictTraits):
         posterior probability that the event is in component ``i``.  Useful for 
         filtering out low-probability events.
         
+    Statistics
+    ----------
+    Calling `apply` adds the following statistics to the returned `Experiment`:
+    
+    - **{{Channel}} Mean** : The mean of the fitted gaussian in each channel for each component.
+        
+    - **{{Channel} SD** : The standard deviation of the fitted gaussian 
+        
+    - **{{Channel}}) Correlation** : Float
+        the correlation coefficient between each pair of channels for each
+        component.
+        
+    - **{{Channel}} Proportion** : Float
+        the proportion of events in each component of the mixture model.  only
+        added if `num_components` ``> 1``.
+                
     Notes
     -----
     
@@ -345,7 +361,6 @@ class GaussianMixtureOp(HasStrictTraits):
             gmm.covariances_ = gmm.covariances_[sort_idx]
             gmm.precisions_ = gmm.precisions_[sort_idx]
             gmm.precisions_cholesky_ = gmm.precisions_cholesky_[sort_idx]
-
             
             gmms[group] = gmm
             
@@ -363,18 +378,17 @@ class GaussianMixtureOp(HasStrictTraits):
             described in the class documentation.  Also adds the following
             new statistics:
             
-            - **mean** : Float
+            - **{{Channel}} Mean** 
                 the mean of the fitted gaussian in each channel for each component.
                 
-            - **sigma** : (Float, Float)
-                the locations the mean +/- one standard deviation in each channel
-                for each component.
+            - **{{Channel}} SD** 
+                The standard deviation of each channel for each component.
                 
-            - **correlation** : Float
-                the correlation coefficient between each pair of channels for each
+            - **{{Channel}} - {{Channel}} Correlation** 
+                The correlation coefficient between each pair of channels for each
                 component.
                 
-            - **proportion** : Float
+            - **{{Channel}} Proportion** : Float
                 the proportion of events in each component of the mixture model.  only
                 added if `num_components` ``> 1``.
         """

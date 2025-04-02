@@ -93,17 +93,14 @@ class Experiment(HasStrictTraits):
         The `IOperation` operations that have been applied to the raw 
         data to result in this `Experiment`.
         
-    statistics : Dict((Str, Str) : pandas.Series)
+    statistics : Dict(Str : pandas.DataFrame)
         The statistics and parameters computed by models that were fit to the 
-        data.  The key is an ``(Str, Str)`` tuple, where the first ``Str`` is 
-        the name of the operation that supplied the statistic, and the second 
-        ``Str`` is the name of the statistic. The value is a multi-indexed 
-        `pandas.Series`: each level of the index is a facet, and each 
+        data.  The key is an ``Str``, corresponding to the name of the 
+        operation that supplied the statistic. The value is a multi-indexed 
+        `pandas.DataFrame`: each level of the index is a facet, and each 
         combination of indices is a subset for which the statistic was computed.
-        The values of the series, of course, are the values of the computed 
-        parameters or statistics for each subset. They may be floating point numbers
-        or tuples of floating point numbers. If tuples, the tuple length must
-        be the same for every value in the statistic.
+        Columns of the `pandas.DataFrame` have names and values that depend on the
+        operation that added them -- they must have a ``float`` data type.
     
     channels : List(String)
         The channels that this experiment tracks (read-only).
@@ -173,7 +170,7 @@ class Experiment(HasStrictTraits):
     metadata = Dict(Str, Any, copy = "deep")
     
     # statistics.  mutable, deep copy required
-    statistics = Dict(Tuple(Str, Str), pd.Series, copy = "deep")
+    statistics = Dict(Str, pd.DataFrame, copy = "deep")
     
     history = List(Any, copy = "shallow")
     
