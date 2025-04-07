@@ -34,7 +34,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Any)
+                        Callable, Float)
 
 import cytoflow.utility as util
 
@@ -48,10 +48,11 @@ class FrameStatisticOp(HasStrictTraits):
     
     The `apply` function groups the data by the variables in `by`, 
     then applies the `function` callable to each `pandas.DataFrame` 
-    subset.  The callable should take a `pandas.DataFrame` as its only parameter.  
-    The return type is arbitrary, but to be used with the rest of 
-    `cytoflow` it should probably be a numeric type or an iterable of 
-    numeric types.
+    subset.  The callable should take a `pandas.DataFrame` as its only 
+    parameter and return a `pandas.Series` whose values are ``float``
+    (or type that can be coerced to a ``float``). The columns of the
+    resulting statistic come from the index (ie, the row names) of
+    the first `pandas.Series` to be returned.
     
     Attributes
     ----------
@@ -61,17 +62,10 @@ class FrameStatisticOp(HasStrictTraits):
         
     function : Callable
         The function used to compute the statistic.  Must take a 
-        `pandas.DataFrame` as its only argument.  The return type is 
-        arbitrary, but to be used with the rest of `cytoflow` it should 
-        probably be a numeric type or an iterable of numeric types.  If 
-        `statistic_name` is unset, the name of the function becomes the 
-        second in element in the `Experiment.statistics` key tuple.
-        
-    statistic_name : Str
-        The name of the function; if present, becomes the second element in
-        the `Experiment.statistics` key tuple.  Particularly useful if 
-        `function` is a lambda.
-        
+        `pandas.DataFrame` as its only argument and return a 
+        `pandas.DataFrame` containing ``float`` values. The column names
+        of this dataframe will become the column names of the new statistic.
+
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
         function.  For example, if the experiment has two pieces of metadata,
@@ -83,28 +77,26 @@ class FrameStatisticOp(HasStrictTraits):
         A Python expression sent to Experiment.query() to subset the data before
         computing the statistic.
         
-    fill : Any (default = 0)
+    fill : Float (default = 0)
         The value to use in the statistic if a slice of the data is empty.
    
     Examples
     --------
     
-    >>> stats_op = FrameStatisticOp(name = "ByDox",
-    ...                             function = lambda x: np.mean(x["FITC-A"],
-    ...                             statistic_name = "Mean",
+    >>> stats_op = FrameStatisticOp(name = "MeanByDox",
+    ...                             function = lambda x: x.mean,
     ...                             by = ["Dox"])
     >>> ex2 = stats_op.apply(ex)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
-    friendly_id = Constant("Statistics")
+    id = Constant('edu.mit.synbio.cytoflow.operations.frame_statistic')
+    friendly_id = Constant("Frame Statistic")
     
     name = Str
     function = Callable
-    statistic_name = Str
     by = List(Str)
     subset = Str
-    fill = Any(0)
+    fill = Float(0.0)
     
     def apply(self, experiment):
         if experiment is None:
@@ -128,15 +120,6 @@ class FrameStatisticOp(HasStrictTraits):
             raise util.CytoflowOpError('by',
                                        "Must specify some grouping conditions "
                                        "in 'by'")
-            
-        stat_name = (self.name, self.statistic_name) \
-                     if self.statistic_name \
-                     else (self.name, self.function.__name__)
-                     
-        if stat_name in experiment.statistics:
-            raise util.CytoflowOpError('name',
-                                       "{} is already in the experiment's statistics"
-                                       .format(stat_name))
                     
         new_experiment = experiment.clone(deep = False)
 
@@ -171,18 +154,12 @@ class FrameStatisticOp(HasStrictTraits):
                 warn("Group {} had no data"
                      .format(group), 
                      util.CytoflowOpWarning)
-        
-        # this shouldn't be necessary, but see pandas bug #38053
-        if len(self.by) == 1:
-            idx = pd.Index(experiment[self.by[0]].unique(), name = self.by[0])
-        else:
-            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
-                                             names = self.by)
 
-        stat = pd.Series(data = self.fill,
-                         index = idx, 
-                         name = "{} : {}".format(stat_name[0], stat_name[1]),
-                         dtype = np.dtype(object)).sort_index()
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
+                                         names = self.by)
+
+        stat = pd.DataFrame(index = idx, 
+                            dtype = 'float').sort_index()
         
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -190,8 +167,11 @@ class FrameStatisticOp(HasStrictTraits):
             
             try:
                 v = self.function(data_subset)
+                if len(stat.columns) == 0:
+                    for col in v.index:
+                        stat.insert(len(stat.columns), col, value = self.fill)
                 
-                stat.at[group] = v
+                stat.loc[group] = v
 
             except Exception as e:
                 raise util.CytoflowOpError('function',
@@ -203,14 +183,7 @@ class FrameStatisticOp(HasStrictTraits):
                 warn("Category {} returned {}".format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)
 
-        # try to convert to numeric, but if there are non-numeric bits ignore
-        try:
-            stat = pd.to_numeric(stat)
-        except:  # if there are errors, ignore them
-            pass
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
+        new_experiment.statistics[self.name] = stat
 
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-        new_experiment.statistics[stat_name] = stat
-
-        
         return new_experiment

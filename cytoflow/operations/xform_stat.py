@@ -40,38 +40,35 @@ from .i_operation import IOperation
 @provides(IOperation)
 class TransformStatisticOp(HasStrictTraits):
     """
-    Apply a function to a statistic, creating a new statistic.  The function can
-    be applied to the entire statistic, or it can be applied individually to 
-    groups of the statistic.  The function should take a `pandas.Series` 
-    as its only argument.  Return type is arbitrary, but a to be used with the 
-    rest of `cytoflow` it should probably be a numeric type or an 
-    iterable of numeric types.
+    Apply a function to a statistic, creating a new statistic.  
     
-    As a special case, if the function returns a `pandas.Series` *with 
-    the same index that it was passed*, it is interpreted as a transformation.  
-    The resulting statistic will have the same length, index names and index 
-    levels as the original statistic.
+    If you set `by`, then `function` must be a reduction. Calling `apply`
+    will group the input statistic by unique combinations of the conditions in
+    `by`, then call `function` on each column in each group. The `function` 
+    should take a `pandas.Series` and return a ``float``. The resulting statistic
+    will have the same columns as the original statistic, but the levels in
+    its index will be the same as the conditions in `by`.
+    
+    Alternately, if `by` is left empty, then `function` must be a transformation.
+    `function` must take a `pandas.Series` as an argument and return a `pandas.Series`
+    with exactly the same index. `function` will be called on each column of the 
+    input statistic in turn.
 
     Attributes
     ----------
     name : Str
-        The operation name.  Becomes the first element in the
-        `Experiment.statistics` key tuple.
+        The operation name.  Becomes the name of the new statistic.
     
-    statistic : Tuple(Str, Str)
+    statistic : Str
         The statistic to apply the function to.
         
     function : Callable
         The function used to transform the statistic.  `function` must 
-        take a `pandas.Series` as its only parameter.  The return type is 
+        take a `pandas.DataFrame` as its only parameter.  The return type is 
         arbitrary, but to work with the rest of `cytoflow` it should 
         probably be a numeric type or an iterable of numeric types..  If 
         `statistic_name` is unset, the name of the function becomes the 
         second in element in the `Experiment.statistics` key tuple.
-        
-    statistic_name : Str
-        The name of the function; if present, becomes the second element in
-        the `Experiment.statistics` key tuple.
         
     by : List(Str)
         A list of metadata attributes to aggregate the input statistic before 
@@ -101,9 +98,8 @@ class TransformStatisticOp(HasStrictTraits):
     friendly_id = Constant("Transform Statistic")
 
     name = Str
-    statistic = Tuple(Str, Str)
+    statistic = Str
     function = Callable
-    statistic_name = Str
     by = List(Str)    
     fill = Any(0)
 
@@ -151,17 +147,16 @@ class TransformStatisticOp(HasStrictTraits):
         if not self.function:
             raise util.CytoflowOpError('function',
                                        "Must specify a function")
-            
-        stat_name = (self.name, self.statistic_name) \
-                     if self.statistic_name \
-                     else (self.name, self.function.__name__)
-                     
-        if stat_name in experiment.statistics:
+
+        if self.name in experiment.statistics:
             raise util.CytoflowOpError('name',
                                        "{} is already in the experiment's statistics"
-                                       .format(stat_name))
+                                       .format(self.name))
 
         for b in self.by:
+            if b not in experiment.conditions:
+                raise util.CytoflowOpError('by',
+                                           "{} must be in the experiment's conditions")
             if b not in stat.index.names:
                 raise util.CytoflowOpError('by',
                                            "{} is not a statistic index; "
@@ -176,73 +171,72 @@ class TransformStatisticOp(HasStrictTraits):
         else:
             idx = stat.index.copy()
                     
-        new_stat = pd.Series(data = self.fill,
-                             index = idx, 
-                             dtype = np.dtype(object)).sort_index()
+        new_stat = pd.DataFrame(data = np.full((len(stat.columns), len(idx)), self.fill),
+                                columns = stat.columns,
+                                index = idx, 
+                                dtype = 'float').sort_index()
                     
-        if self.by:                         
-            for group in data[self.by].itertuples(index = False, name = None):                
-                if isinstance(stat.index, pd.MultiIndex):
-                    s = stat.xs(group, level = self.by, drop_level = False)
-                else:
-                    s = stat.loc[list(group)]
-                                    
-                if len(s) == 0:
-                    continue
-    
-                try:
-                    new_stat[group] = self.function(s)
-                except Exception as e:
-                    raise util.CytoflowOpError('function',
-                                               "Your function threw an error in group {}".format(group)) from e
+        if self.by: 
+            for column in stat.columns:                        
+                for group in data[self.by].itertuples(index = False, name = None):                
+                    if isinstance(stat.index, pd.MultiIndex):
+                        s = stat.xs(group, level = self.by, drop_level = False)[column]
+                    else:
+                        s = stat.at[group, column]
                                         
-                # check for, and warn about, NaNs.
-                if np.any(np.isnan(new_stat.loc[group])):
-                    warn("Category {} returned {}".format(group, new_stat.loc[group]), 
-                         util.CytoflowOpWarning)
+                    if len(s) == 0:
+                        continue
+        
+                    try:
+                        new_stat.at[group, column] = self.function(s)
+                    except Exception as e:
+                        raise util.CytoflowOpError('function',
+                                                   "Your function threw an error in group {}".format(group)) from e
+                                            
+                    # check for, and warn about, NaNs.
+                    if np.any(np.isnan(new_stat.loc[group])):
+                        warn("Category {} returned {}".format(group, new_stat.loc[group]), 
+                             util.CytoflowOpWarning)
                     
         else:
-            new_stat = self.function(stat)
+            print(new_stat)
+            for column in stat.columns: 
+                new_stat[column] = self.function(stat[column])
             
-            if not isinstance(new_stat, pd.Series):
-                raise util.CytoflowOpError('by',
-                                           "Transform function {} does not return a Series; "
-                                           "in this case, you must set 'by'"
-                                           .format(self.function))
-                
-        new_stat.name = "{} : {}".format(stat_name[0], stat_name[1])
+            # if not isinstance(new_stat, pd.Series):
+            #     raise util.CytoflowOpError('by',
+            #                                "Transform function {} does not return a Series; "
+            #                                "in this case, you must set 'by'"
+            #                                .format(self.function))
                                                     
-        matched_series = True
-        for group in data[self.by].itertuples(index = False, name = None):
-            if isinstance(stat.index, pd.MultiIndex):
-                s = stat.xs(group, level = self.by, drop_level = False)
-            else:
-                s = stat.loc[list(group)]
-
-            if isinstance(new_stat.loc[group], pd.Series) and \
-                s.index.equals(new_stat.loc[group].index):
-                pass
-            else:
-                matched_series = False
-                break
-            
-        if matched_series and len(self.by) > 0:
-            new_stat = pd.concat(new_stat.values)
+        # matched_series = True
+        # for group in data[self.by].itertuples(index = False, name = None):
+        #     if isinstance(stat.index, pd.MultiIndex):
+        #         s = stat.xs(group, level = self.by, drop_level = False)
+        #     else:
+        #         s = stat.loc[list(group)]
+        #
+        #     if isinstance(new_stat.loc[group], pd.Series) and \
+        #         s.index.equals(new_stat.loc[group].index):
+        #         pass
+        #     else:
+        #         matched_series = False
+        #         break
+        #
+        # if matched_series and len(self.by) > 0:
+        #     new_stat = pd.concat(new_stat.values)
 
         # try to convert to numeric, but if there are non-numeric bits ignore
-        try:
-            stat = pd.to_numeric(stat)
-        except:  # if there are errors, ignore them
-            pass
+        # try:
+        #     stat = pd.to_numeric(stat)
+        # except:  # if there are errors, ignore them
+        #     pass
         
         # sort the index, for performance
         new_stat = new_stat.sort_index()
         
         new_experiment = experiment.clone(deep = False)
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-        if self.statistic_name:
-            new_experiment.statistics[(self.name, self.statistic_name)] = new_stat
-        else:
-            new_experiment.statistics[(self.name, self.function.__name__)] = new_stat
+        new_experiment.statistics[self.name] = new_stat
 
         return new_experiment

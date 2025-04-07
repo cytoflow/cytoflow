@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Any)
+                        Callable, Float)
 
 import cytoflow.utility as util
 
@@ -45,8 +45,8 @@ class ChannelStatisticOp(HasStrictTraits):
     to the experiment.
     
     The `apply` function groups the data by the variables in `by`, 
-    then applies the `function` callable to each channel in `channels` 
-    in each group. The callable should take a single `pandas.Series` 
+    then applies the `function` callable to each group in each channel in 
+    `channels`. The callable should take a single `pandas.Series` 
     as an argument and return a ``float`` (or type that can be coerced
     to ``float``.
     
@@ -80,7 +80,7 @@ class ChannelStatisticOp(HasStrictTraits):
         A Python expression sent to `Experiment.query` to subset the 
         data before computing the statistic.
         
-    fill : Any (default = 0)
+    fill : Float (default = 0)
         The value to use in the statistic if a slice of the data is empty.
    
     Examples
@@ -125,14 +125,14 @@ class ChannelStatisticOp(HasStrictTraits):
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.channel_statistic')
-    friendly_id = Constant("Channel Statistics")
+    friendly_id = Constant("Channel Statistic")
     
     name = Str
     channels = List(Str)
     function = Callable
     by = List(Str)
     subset = Str
-    fill = Any(0)
+    fill = Float(0.0)
     
     def apply(self, experiment):
         """
@@ -236,7 +236,6 @@ class ChannelStatisticOp(HasStrictTraits):
             for channel in self.channels:
                 try:
                     v = self.function(data_subset[channel])
-                    
                     stat.at[group, channel] = v
     
                 except Exception as e:

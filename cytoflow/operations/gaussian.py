@@ -133,18 +133,20 @@ class GaussianMixtureOp(HasStrictTraits):
         
     Statistics
     ----------
-    Calling `apply` adds the following statistics to the returned `Experiment`:
+    Calling `apply` adds a statistic with the following columns to the returned `Experiment`.
+    
+    
     
     - **{{Channel}} Mean** : The mean of the fitted gaussian in each channel for each component.
         
-    - **{{Channel} SD** : The standard deviation of the fitted gaussian 
+    - **{{Channel}} SD** : The standard deviation of the fitted gaussian 
+    
+    - **{{Channel}} Interval Low** : The mean minus the standard deviation, rescaled for the channel scale
+    
+    - **{{Channel}} Interval High** : 
         
-    - **{{Channel}}) Correlation** : Float
-        the correlation coefficient between each pair of channels for each
-        component.
-        
-    - **{{Channel}} Proportion** : Float
-        the proportion of events in each component of the mixture model.  only
+    - **Proportion** : Float
+        the proportion of events in each component of the mixture model. Only
         added if `num_components` ``> 1``.
                 
     Notes
@@ -485,33 +487,42 @@ class GaussianMixtureOp(HasStrictTraits):
             # use a lambda expression to return a group that
             # contains all the events
             groupby = experiment.data.groupby(lambda _: True, observed = True)   
+        
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by],
+                                         names = self.by)
+        stat = pd.DataFrame(index = idx,
+                            dtype = 'float').sort_index()
+                            
+        for channel in self.channels:
+            stat.insert(len(stat.columns), "{} Mean".format(channel))
+            stat.insert(len(stat.columns), "{} SD".format(channel))
+            if self.num_components > 1:
+                stat.insert(len(stat.columns), "{} Proportion".format(channel))
 
-        # make the statistics       
-        components = [x + 1 for x in range(self.num_components)]
-         
-        prop_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components], 
-                                         names = list(self.by) + ["Component"])
-        prop_stat = pd.Series(name = "{} : {}".format(self.name, "proportion"),
-                              index = prop_idx, 
-                              dtype = np.dtype(object)).sort_index()
-                  
-        mean_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels], 
-                                              names = list(self.by) + ["Component"] + ["Channel"])
-        mean_stat = pd.Series(name = "{} : {}".format(self.name, "mean"),
-                              index = mean_idx, 
-                              dtype = np.dtype(object)).sort_index()
-        sigma_stat = pd.Series(name = "{} : {}".format(self.name, "sigma"),
-                               index = mean_idx,
-                               dtype = np.dtype(object)).sort_index()
-        interval_stat = pd.Series(name = "{} : {}".format(self.name, "interval"),
-                                  index = mean_idx, 
-                                  dtype = np.dtype(object)).sort_index()
-
-        corr_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels] + [self.channels], 
-                                              names = list(self.by) + ["Component"] + ["Channel_1"] + ["Channel_2"])
-        corr_stat = pd.Series(name = "{} : {}".format(self.name, "correlation"),
-                              index = corr_idx, 
-                              dtype = np.dtype(object)).sort_index()  
+        
+        # prop_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components], 
+        #                                  names = list(self.by) + ["Component"])
+        # prop_stat = pd.Series(name = "{} : {}".format(self.name, "proportion"),
+        #                       index = prop_idx, 
+        #                       dtype = np.dtype(object)).sort_index()
+        #
+        # mean_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels], 
+        #                                       names = list(self.by) + ["Component"] + ["Channel"])
+        # mean_stat = pd.Series(name = "{} : {}".format(self.name, "mean"),
+        #                       index = mean_idx, 
+        #                       dtype = np.dtype(object)).sort_index()
+        # sigma_stat = pd.Series(name = "{} : {}".format(self.name, "sigma"),
+        #                        index = mean_idx,
+        #                        dtype = np.dtype(object)).sort_index()
+        # interval_stat = pd.Series(name = "{} : {}".format(self.name, "interval"),
+        #                           index = mean_idx, 
+        #                           dtype = np.dtype(object)).sort_index()
+        #
+        # corr_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels] + [self.channels], 
+        #                                       names = list(self.by) + ["Component"] + ["Channel_1"] + ["Channel_2"])
+        # corr_stat = pd.Series(name = "{} : {}".format(self.name, "correlation"),
+        #                       index = corr_idx, 
+        #                       dtype = np.dtype(object)).sort_index()  
                  
         for group, group_data in groupby:
             if group not in self._gmms:
