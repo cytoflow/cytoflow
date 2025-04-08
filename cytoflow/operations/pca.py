@@ -82,6 +82,16 @@ class PCAOp(HasStrictTraits):
     whiten : Bool (default = False)
         Scale each component to unit variance?  May be useful if you will
         be using unsupervized clustering (such as K-means).
+        
+    Statistics
+    ----------
+    
+    .. important::
+       If `num_components` is greater than 1, **Component** is added
+       as another level to the statistic index.
+       
+    - **Explained Variance** : the proportion of variance explained by each
+        component. 
 
     Examples
     --------
@@ -208,6 +218,10 @@ class PCAOp(HasStrictTraits):
             raise util.CytoflowOpError('num_components',
                                        "Number of components must be less than "
                                        "or equal to number of channels.")
+            
+        if self.num_components < 2:
+            raise util.CytoflowOpError('num_components',
+                                       "Number of components must be greater than or equal to 2.")
                 
         for c in self.scale:
             if c not in self.channels:
@@ -350,6 +364,15 @@ class PCAOp(HasStrictTraits):
                                            
             new_experiment.add_channel(cname, pd.Series(index = experiment.data.index))
             new_channels.append(cname)            
+            
+        components = [x + 1 for x in range(self.num_components)]
+
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components],
+                                         names = list(self.by) + ["Component"])
+                                             
+        stat = pd.DataFrame(index = idx,
+                            columns = ["Explained Variance"], 
+                            dtype = 'float').sort_index()
                    
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -376,9 +399,13 @@ class PCAOp(HasStrictTraits):
             
             for ci, c in enumerate(new_channels):
                 new_experiment.data.loc[group_idx, c] = x_tf[:, ci]
+            
+            for c in range(self.num_components):    
+                stat.at[group + (c+1,), "Explained Variance"] = \
+                    pca.explained_variance_ratio_[c]
 
         new_experiment.data.dropna(inplace = True)
         new_experiment.data.reset_index(drop = True, inplace = True)
-
+        new_experiment.statistics[self.name] = stat
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment

@@ -135,19 +135,24 @@ class GaussianMixtureOp(HasStrictTraits):
     ----------
     Calling `apply` adds a statistic with the following columns to the returned `Experiment`.
     
+    .. important::
+       If `num_components` is greater than 1, **Component** is added
+       as another level to the statistic index.
     
-    
-    - **{{Channel}} Mean** : The mean of the fitted gaussian in each channel for each component.
+    - **{{Channel}} Mean** : The mean of the fitted gaussian in each channel 
+        for each component.
         
-    - **{{Channel}} SD** : The standard deviation of the fitted gaussian 
+    - **{{Channel}} SD** : The standard deviation of the fitted gaussian, 
+        rescaled with the channel scale
     
-    - **{{Channel}} Interval Low** : The mean minus the standard deviation, rescaled for the channel scale
+    - **{{Channel}} Interval Low** : The mean minus the standard deviation, 
+        rescaled for the channel scale
     
-    - **{{Channel}} Interval High** : 
+    - **{{Channel}} Interval High** : The mean plus the standard deviation, 
+        rescaled for the channel scale
         
-    - **Proportion** : Float
-        the proportion of events in each component of the mixture model. Only
-        added if `num_components` ``> 1``.
+    - **Proportion** : The proportion of events in each component of the mixture model. Only
+        added if `num_components` is greater than ``1``.
                 
     Notes
     -----
@@ -290,6 +295,12 @@ class GaussianMixtureOp(HasStrictTraits):
                                            "Aggregation metadata {} not found, "
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
+                
+        if self.num_components > 1 and "Component" in self.by:
+            raise util.CytoflowOpError('by',
+                                       "'Component' is going to be added as an "
+                                       "index level to the new statistic, so you "
+                                       "can't use it to aggregate events.")
                 
         if subset:
             try:
@@ -458,11 +469,20 @@ class GaussianMixtureOp(HasStrictTraits):
                                            "Aggregation metadata {} not found, "
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
-#                             
+                
+        if self.num_components > 1 and "Component" in self.by:
+            raise util.CytoflowOpError('by',
+                                       "'Component' is going to be added as an "
+                                       "index level to the new statistic, so you "
+                                       "can't use it to aggregate events.")
+            
+        if len(self.by) == 0 and self.num_components == 1:
+            raise util.CytoflowOpError('by',
+                                       "Cannot have num_components == 1 and empty 'by'")
+
 #         if self.num_components == 1 and self.sigma == 0.0:
 #             raise util.CytoflowOpError('sigma',
 #                                        "if num_components is 1, sigma must be > 0.0")
-        
                 
         if self.num_components == 1 and self.posteriors:
             warn("If num_components == 1, all posteriors will be 1",
@@ -488,41 +508,26 @@ class GaussianMixtureOp(HasStrictTraits):
             # contains all the events
             groupby = experiment.data.groupby(lambda _: True, observed = True)   
         
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by],
-                                         names = self.by)
+        # make the statistics       
+        components = [x + 1 for x in range(self.num_components)]
+        if self.num_components == 1:
+            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by],
+                                         names = list(self.by))
+        else:
+            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components],
+                                         names = list(self.by) + ["Component"])
+                                                                                          
         stat = pd.DataFrame(index = idx,
                             dtype = 'float').sort_index()
                             
         for channel in self.channels:
-            stat.insert(len(stat.columns), "{} Mean".format(channel))
-            stat.insert(len(stat.columns), "{} SD".format(channel))
-            if self.num_components > 1:
-                stat.insert(len(stat.columns), "{} Proportion".format(channel))
-
-        
-        # prop_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components], 
-        #                                  names = list(self.by) + ["Component"])
-        # prop_stat = pd.Series(name = "{} : {}".format(self.name, "proportion"),
-        #                       index = prop_idx, 
-        #                       dtype = np.dtype(object)).sort_index()
-        #
-        # mean_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels], 
-        #                                       names = list(self.by) + ["Component"] + ["Channel"])
-        # mean_stat = pd.Series(name = "{} : {}".format(self.name, "mean"),
-        #                       index = mean_idx, 
-        #                       dtype = np.dtype(object)).sort_index()
-        # sigma_stat = pd.Series(name = "{} : {}".format(self.name, "sigma"),
-        #                        index = mean_idx,
-        #                        dtype = np.dtype(object)).sort_index()
-        # interval_stat = pd.Series(name = "{} : {}".format(self.name, "interval"),
-        #                           index = mean_idx, 
-        #                           dtype = np.dtype(object)).sort_index()
-        #
-        # corr_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels] + [self.channels], 
-        #                                       names = list(self.by) + ["Component"] + ["Channel_1"] + ["Channel_2"])
-        # corr_stat = pd.Series(name = "{} : {}".format(self.name, "correlation"),
-        #                       index = corr_idx, 
-        #                       dtype = np.dtype(object)).sort_index()  
+            stat.insert(len(stat.columns), "{} Mean".format(channel), pd.NA)
+            stat.insert(len(stat.columns), "{} SD".format(channel), pd.NA)
+            stat.insert(len(stat.columns), "{} Interval Low".format(channel), pd.NA)
+            stat.insert(len(stat.columns), "{} Interval High".format(channel), pd.NA)
+            
+        if self.num_components > 1:
+            stat.insert(len(stat.columns), "Proportion", 0.0)
                  
         for group, group_data in groupby:
             if group not in self._gmms:
@@ -587,28 +592,31 @@ class GaussianMixtureOp(HasStrictTraits):
                     
             for c in range(self.num_components):
                 if len(self.by) == 0:
-                    g = tuple([c + 1])
-                elif hasattr(group, '__iter__') and not isinstance(group, (str, bytes)):
-                    g = tuple(list(group) + [c + 1])
+                    g = tuple([c+1])
+                elif self.num_components == 1:
+                    g = tuple(list(group))
                 else:
-                    g = tuple([group] + [c + 1])
+                    g = tuple(list(group) + [c+1])
 
-                prop_stat.at[g] = gmm.weights_[c]
+                if self.num_components > 1:
+                    stat.at[g, "Proportion"] = gmm.weights_[c]
                 
                 for cidx1, channel1 in enumerate(self.channels):
-                    g2 = tuple(list(g) + [channel1])
-                    mean_stat.at[g2] = self._scale[channel1].inverse(gmm.means_[c, cidx1])
+                    stat.at[g, channel1 + ' Mean'] = \
+                        self._scale[channel1].inverse(gmm.means_[c, cidx1])
                     
-                    s, corr = util.cov2corr(gmm.covariances_[c])
-                    sigma_stat[g2] = (self._scale[channel1].inverse(s[cidx1]))
-                    interval_stat.at[g2] = (self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1]),
-                                             self._scale[channel1].inverse(gmm.means_[c, cidx1] + s[cidx1]))
-            
-                    for cidx2, channel2 in enumerate(self.channels):
-                        g3 = tuple(list(g2) + [channel2])
-                        corr_stat[g3] = corr[cidx1, cidx2]
+                    s, _ = util.cov2corr(gmm.covariances_[c])
+                    stat.at[g, '{} SD'.format(channel1)] = \
+                        self._scale[channel1].inverse(s[cidx1])
                         
-                    corr_stat.drop(tuple(list(g2) + [channel1]), inplace = True)
+                    stat.at[g, channel1 + ' Interval Low'] = self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1])
+                    stat.at[g, channel1 + ' Interval High'] = self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1])
+            
+                    # for cidx2, channel2 in enumerate(self.channels):
+                    #     g3 = tuple(list(g2) + [channel2])
+                    #     corr_stat[g3] = corr[cidx1, cidx2]
+                    #
+                    # corr_stat.drop(tuple(list(g2) + [channel1]), inplace = True)
 
         new_experiment = experiment.clone(deep = False)
           
@@ -625,14 +633,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 post_name = "{}_{}_posterior".format(self.name, c + 1)
                 new_experiment.add_condition(post_name, "double", event_posteriors[c])
                 
-        new_experiment.statistics[(self.name, "mean")] = pd.to_numeric(mean_stat)
-        new_experiment.statistics[(self.name, "sigma")] = sigma_stat
-        new_experiment.statistics[(self.name, "interval")] = interval_stat
-        if len(corr_stat) > 0:
-            new_experiment.statistics[(self.name, "correlation")] = pd.to_numeric(corr_stat)
-        if self.num_components > 1:
-            new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
-
+        new_experiment.statistics[self.name] = stat
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
 

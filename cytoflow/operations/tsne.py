@@ -31,7 +31,7 @@ internal structure better than PCA. `tsne` has one class:
 
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, Float, Enum, provides)
+                        Constant, List, Enum, provides)
 
 import numpy as np
 import pandas as pd

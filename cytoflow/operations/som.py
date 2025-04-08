@@ -119,6 +119,14 @@ class SOMOp(HasStrictTraits):
         What proportion of the data set to use for training? Defaults to 1%
         of the dataset to help with runtime.
         
+    Statistics
+    ----------
+    
+    This operation adds a statistic whose columns are the channel names used in
+    the clustering and whose values are the centroids of the clusters. Useful
+    for hierarchical clustering, minimum spanning tree visualization, etc.
+    The index has levels from `by`, plus a new level called ``Cluster``.
+    
     
     Notes
     -----
@@ -182,7 +190,7 @@ class SOMOp(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> km_op.default_view().plot(ex2)
+        >>> som_op.default_view().plot(ex2)
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.som')
@@ -345,14 +353,16 @@ class SOMOp(HasStrictTraits):
             
             if self.consensus_cluster:
                 centers = soms[group].get_weights().reshape(self.width * self.height, len(self.channels))
-                cc = util.ConsensusClustering(sklearn.cluster.AgglomerativeClustering(),
+                cc = util.ConsensusClustering(sklearn.cluster.KMeans(),
                                               min_clusters = self.min_clusters,
                                               max_clusters = self.max_clusters,
                                               n_resamples = self.n_resamples,
                                               resample_frac = self.resample_frac)       
                 cc.fit(centers, n_jobs = 8)
                 best_k = cc.best_k()
-                self._cc[group] = sklearn.cluster.AgglomerativeClustering(n_clusters = best_k).fit_predict(centers)
+                self._cc[group] = sklearn.cluster.KMeans(n_clusters = best_k)
+                self._cc[group].fit(centers)
+                
             
         # do this so the UI can pick up that the estimate changed
         self._som = soms                    
@@ -423,6 +433,19 @@ class SOMOp(HasStrictTraits):
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
         
+        # make the statistic
+        if self.consensus_cluster:
+            num_clusters = self.max_clusters
+        else:
+            num_clusters = self.width * self.height
+            
+        clusters = [x + 1 for x in range(num_clusters)]
+          
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
+                                         names = list(self.by) + ["Cluster"])
+        centers_stat = pd.DataFrame(index = idx,
+                                    columns = list(self.channels), 
+                                    dtype = 'float').sort_index()
                  
         if self.by:
             groupby = experiment.data.groupby(self.by, observed = True)
@@ -462,12 +485,13 @@ class SOMOp(HasStrictTraits):
             som = self._som[group]
   
             predicted = np.full(len(x), -1, "int")
+            centers = som.get_weights().reshape(self.width * self.height, len(self.channels))
             
             if self.consensus_cluster:
                 cc = self._cc[group]
                 def winner_idx(x, cc = cc):
                     w = som.winner(x)
-                    return cc[w[0] * self.width + w[1]]
+                    return cc.predict(centers[[w[0] * self.width + w[1]]])[0]
             else:
                 def winner_idx(x):
                     w = som.winner(x)
@@ -482,12 +506,33 @@ class SOMOp(HasStrictTraits):
             predicted_str.index = group_idx
       
             event_assignments.iloc[group_idx] = predicted_str
+
+            if self.consensus_cluster:
+                cc = self._cc[group]
+                for ci, channel in enumerate(self.channels):
+                    scale = self._scale[channel]
+                    for cluster in range(cc.cluster_centers_.shape[0]):
+                        if len(self.by) == 0:
+                            g = tuple([cluster + 1])
+                        else:
+                            g = tuple(list([group]) + [cluster + 1])
+                            
+                        centers_stat.at[g, channel] = scale.inverse(cc.cluster_centers_[cluster][ci])
+                    
+            else:            
+                for ci, channel in enumerate(self.channels):
+                    scale = self._scale[channel]
+                    for cluster in range(num_clusters):
+                        if len(self.by) == 0:
+                            g = tuple([cluster + 1])
+                        else:
+                            g = tuple(list([group]) + [cluster + 1])
+                            
+                        centers_stat.at[g, channel] = scale.inverse(centers[cluster][ci])
          
         new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
-        
-        # TODO - add a statistic with the proportion of events in each cluster
-         
+        new_experiment.statistics[self.name] = centers_stat.dropna() 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     

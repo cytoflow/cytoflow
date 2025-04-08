@@ -31,10 +31,9 @@ operates on entire `pandas.DataFrame`.
 
 from warnings import warn
 import pandas as pd
-import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Float)
+                        Callable, Float, Union)
 
 import cytoflow.utility as util
 
@@ -77,7 +76,7 @@ class FrameStatisticOp(HasStrictTraits):
         A Python expression sent to Experiment.query() to subset the data before
         computing the statistic.
         
-    fill : Float (default = 0)
+    fill : Float (default = `pandas.NA`)
         The value to use in the statistic if a slice of the data is empty.
    
     Examples
@@ -96,7 +95,7 @@ class FrameStatisticOp(HasStrictTraits):
     function = Callable
     by = List(Str)
     subset = Str
-    fill = Float(0.0)
+    fill = Union(Constant(pd.NA), Float, default_value = pd.NA)
     
     def apply(self, experiment):
         if experiment is None:
