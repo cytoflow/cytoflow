@@ -31,10 +31,10 @@ operates on entire `pandas.DataFrame`.
 
 from warnings import warn
 import pandas as pd
+import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Float, Union)
-
+                        Callable)
 import cytoflow.utility as util
 
 from .i_operation import IOperation
@@ -48,10 +48,9 @@ class FrameStatisticOp(HasStrictTraits):
     The `apply` function groups the data by the variables in `by`, 
     then applies the `function` callable to each `pandas.DataFrame` 
     subset.  The callable should take a `pandas.DataFrame` as its only 
-    parameter and return a `pandas.Series` whose values are ``float``
-    (or type that can be coerced to a ``float``). The columns of the
-    resulting statistic come from the index (ie, the row names) of
-    the first `pandas.Series` to be returned.
+    parameter and return a `pandas.Series` whose values are ``float``. 
+    The columns of the resulting statistic come from the index (ie, the 
+    row names) of the first `pandas.Series` to be returned.
     
     Attributes
     ----------
@@ -75,9 +74,6 @@ class FrameStatisticOp(HasStrictTraits):
     subset : Str
         A Python expression sent to Experiment.query() to subset the data before
         computing the statistic.
-        
-    fill : Float (default = `pandas.NA`)
-        The value to use in the statistic if a slice of the data is empty.
    
     Examples
     --------
@@ -95,7 +91,6 @@ class FrameStatisticOp(HasStrictTraits):
     function = Callable
     by = List(Str)
     subset = Str
-    fill = Union(Constant(pd.NA), Float, default_value = pd.NA)
     
     def apply(self, experiment):
         if experiment is None:
@@ -168,7 +163,7 @@ class FrameStatisticOp(HasStrictTraits):
                 v = self.function(data_subset)
                 if len(stat.columns) == 0:
                     for col in v.index:
-                        stat.insert(len(stat.columns), col, value = self.fill)
+                        stat.insert(len(stat.columns), col, value = np.nan)
                 
                 stat.loc[group] = v
 
@@ -179,8 +174,8 @@ class FrameStatisticOp(HasStrictTraits):
                             
             # check for, and warn about, NaNs.
             if pd.Series(stat.loc[group]).isna().any():
-                warn("Category {} returned {}".format(group, stat.loc[group]), 
-                     util.CytoflowOpWarning)
+                raise util.CytoflowOpError('',
+                                           "Category {} returned {}".format(group, stat.loc[group]))
 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         new_experiment.statistics[self.name] = stat
