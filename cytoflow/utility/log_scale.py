@@ -27,7 +27,7 @@ A scale that transforms data using a base-10 log.
 """
 
 from traits.api import (Instance, Str, provides, Constant, Enum, Float, 
-                        Property, Tuple, Array) 
+                        Property, List, Array) 
                        
 import numpy as np
 import pandas as pd
@@ -35,7 +35,6 @@ import matplotlib.colors
 
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
-from .util_functions import is_numeric
 
 @provides(IScale)
 class LogScale(ScaleMixin):
@@ -47,8 +46,8 @@ class LogScale(ScaleMixin):
     # must set one of these.  they're considered in order.
     channel = Str
     condition = Str
-    statistic = Tuple(Str, Str)
-    error_statistic = Tuple(Str, Str)
+    statistic = Str
+    features = List(Str)
     data = Array
 
     mode = Enum("mask", "clip")
@@ -71,25 +70,9 @@ class LogScale(ScaleMixin):
         elif self.condition:
             cond = self.experiment[self.condition][self.experiment[self.condition] > 0]
             return cond.min()
-        elif self.statistic in self.experiment.statistics \
-            and not self.error_statistic in self.experiment.statistics:
-            stat = self.experiment.statistics[self.statistic]
-            assert is_numeric(stat)
-            return stat[stat > 0].min()
-        elif self.statistic in self.experiment.statistics \
-            and self.error_statistic in self.experiment.statistics:
-            stat = self.experiment.statistics[self.statistic]
-            err_stat = self.experiment.statistics[self.error_statistic]
-            stat_min = stat[stat > 0].min()
-            
-            try:
-                err_min = min([x for x in [min(x) for x in err_stat] if x > 0])
-                return err_min
-                
-            except (TypeError, IndexError):
-                err_min = min([x for x in err_stat if stat_min - x > 0])
-                return stat_min - err_min
-            
+        elif self.statistic in self.experiment.statistics:
+            stat = self.experiment.statistics[self.statistic][self.features]
+            return stat[stat > 0].min().min()
         elif self.data.size > 0:
             return self.data[self.data > 0].min()
                 
@@ -194,22 +177,10 @@ class LogScale(ScaleMixin):
             vmax = self.experiment[self.condition].max()
                 
         elif self.statistic in self.experiment.statistics:
-            stat = self.experiment.statistics[self.statistic]
-            try:
-                vmin = min([min(x) for x in stat])
-                vmax = max([max(x) for x in stat])
-            except (TypeError, IndexError):
-                vmin = stat.min()
-                vmax = stat.max()
-                
-            if self.error_statistic in self.experiment.statistics:
-                err_stat = self.experiment.statistics[self.error_statistic]
-                try:
-                    vmin = min([min(x) for x in err_stat])
-                    vmax = max([max(x) for x in err_stat])
-                except (TypeError, IndexError):
-                    vmin = vmin - err_stat.min()
-                    vmax = vmax + err_stat.max()
+            stat = self.experiment.statistics[self.statistic][self.features]
+            vmin = stat.min().min()
+            vmax = stat.max().max()
+
         elif self.data.size > 0:
             vmin = self.data.min()
             vmax = self.data.max()

@@ -40,7 +40,7 @@ from warnings import warn
 
 from traits.api import (HasStrictTraits, HasTraits, Float, Property, Instance, Str,
                         cached_property, Undefined, provides, Constant,
-                        Tuple, Array)
+                        List, Array)
                        
 import numpy as np
 import pandas as pd
@@ -53,7 +53,6 @@ import matplotlib.colors
 
 from .scale import IScale, register_scale
 from .logicle_ext.Logicle import FastLogicle
-from .util_functions import is_numeric
 from .cytoflow_errors import CytoflowError, CytoflowWarning
 
 @provides(IScale)
@@ -136,8 +135,8 @@ class LogicleScale(HasStrictTraits):
     # what data do we use to compute scale parameters?  set one.
     channel = Str
     condition = Str
-    statistic = Tuple(Str, Str)
-    error_statistic = Tuple(Str, Str)
+    statistic = Str
+    features = List(Str)
     data = Array
 
     W = Property(Float, depends_on = "[experiment, channel, M, _T, r]")
@@ -273,24 +272,9 @@ class LogicleScale(HasStrictTraits):
                 return float(self.experiment.data[self.channel].max())
         elif self.condition and self.condition in self.experiment.conditions:
             return float(self.experiment.data[self.condition].max())
-        elif self.statistic in self.experiment.statistics \
-             and not self.error_statistic in self.experiment.statistics:
-            stat = self.experiment.statistics[self.statistic]
-            assert is_numeric(stat)
-            return float(stat.max())
-        elif self.statistic in self.experiment.statistics and \
-             self.error_statistic in self.experiment.statistics:
-            stat = self.experiment.statistics[self.statistic]
-            err_stat = self.experiment.statistics[self.error_statistic]
-            
-            try:
-                err_max = max([max(x) for x in err_stat])
-                return float(err_max)
-            except (TypeError, IndexError):
-                err_max = err_stat.max()
-                stat_max = stat.max()
-
-                return float(stat_max + err_max)
+        elif self.statistic in self.experiment.statistics:
+            stat = self.experiment.statistics[self.statistic][self.features]
+            return float(stat.max().max())
         elif self.data.size > 0:
             return float(self.data.max())
         else:

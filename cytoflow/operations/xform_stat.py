@@ -31,7 +31,7 @@ import pandas as pd
 import numpy as np 
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides,
-                        Callable, Tuple, Any)
+                        Callable, Union, Float)
 
 import cytoflow.utility as util
 
@@ -64,11 +64,7 @@ class TransformStatisticOp(HasStrictTraits):
         
     function : Callable
         The function used to transform the statistic.  `function` must 
-        take a `pandas.DataFrame` as its only parameter.  The return type is 
-        arbitrary, but to work with the rest of `cytoflow` it should 
-        probably be a numeric type or an iterable of numeric types..  If 
-        `statistic_name` is unset, the name of the function becomes the 
-        second in element in the `Experiment.statistics` key tuple.
+        take a `pandas.Series` as its only parameter and return a ``float``.
         
     by : List(Str)
         A list of metadata attributes to aggregate the input statistic before 
@@ -77,7 +73,7 @@ class TransformStatisticOp(HasStrictTraits):
         `function` separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
         
-    fill : Any (default = 0)
+    fill : Float (default = `pandas.NA`)
         Value to use in the statistic if a slice of the data is empty.
    
     Examples
@@ -101,7 +97,7 @@ class TransformStatisticOp(HasStrictTraits):
     statistic = Str
     function = Callable
     by = List(Str)    
-    fill = Any(0)
+    fill = Union(Constant(pd.NA), Float, default_value = pd.NA)
 
     def apply(self, experiment):
         """
@@ -195,8 +191,9 @@ class TransformStatisticOp(HasStrictTraits):
                                             
                     # check for, and warn about, NaNs.
                     if np.any(np.isnan(new_stat.loc[group])):
-                        warn("Category {} returned {}".format(group, new_stat.loc[group]), 
-                             util.CytoflowOpWarning)
+                        raise util.CytoflowOpError('function',
+                                                   "Category {} returned {}, which had NaNs that aren't allowed"
+                                                   .format(group, new_stat.loc[group]))
                     
         else:
             print(new_stat)
