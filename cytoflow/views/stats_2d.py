@@ -141,23 +141,6 @@ class Stats2DView(Base2DStatisticsView):
     def _grid_plot(self, experiment, grid, **kwargs):
 
         data = grid.data
-        xstat = experiment.statistics[self.xstatistic]
-        xname = xstat.name
-        ystat = experiment.statistics[self.ystatistic]
-        yname = ystat.name
-        
-        if self.x_error_statistic[0]:
-            x_error_stat = experiment.statistics[self.x_error_statistic]
-            x_error_name = x_error_stat.name
-        else:
-            x_error_stat = None
-
-        if self.y_error_statistic[0]:
-            y_error_stat = experiment.statistics[self.y_error_statistic]
-            y_error_name = y_error_stat.name
-        else:
-            y_error_stat = None
-            
         xscale = kwargs.pop('xscale')
         yscale = kwargs.pop('yscale')
         
@@ -165,38 +148,39 @@ class Stats2DView(Base2DStatisticsView):
         
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
-            xlim = (xscale.clip(data[xname].min() * 0.9),
-                    xscale.clip(data[xname].max() * 1.1))
             
-            if x_error_stat is not None:
-                try: 
-                    xlim = (xscale.clip(min([x[0] for x in data[x_error_name]]) * 0.9),
-                            xscale.clip(max([x[1] for x in data[x_error_name]]) * 1.1))
-                except (TypeError, IndexError):
-                    xlim = (xscale.clip((data[xname].min() - data[x_error_name].min()) * 0.9), 
-                            xscale.clip((data[xname].max() + data[x_error_name].max()) * 1.1))
+            xlim = (data[self.xfeature].min(), data[self.xfeature].max())
+            if self.x_error_low and self.x_error_high:
+                xlim = (data[self.x_error_low].min(), data[self.x_error_high].max())
+            
+            span = xlim[1] - xlim[0]
+            xlim = (xlim[0] - 0.05 * span, xlim[1] + 0.05 * span)
+            xlim = (xscale.clip(xlim[0]), xscale.clip(xlim[1]))
                       
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
-            ylim = (yscale.clip(data[yname].min() * 0.9),
-                    yscale.clip(data[yname].max() * 1.1))
             
-            if y_error_stat is not None:
-                try: 
-                    ylim = (yscale.clip(min([x[0] for x in data[y_error_name]]) * 0.9),
-                            yscale.clip(max([x[1] for x in data[y_error_name]]) * 1.1))
-                except (TypeError, IndexError):
-                    ylim = (yscale.clip((data[yname].min() - data[y_error_name].min()) * 0.9), 
-                            yscale.clip((data[yname].max() + data[y_error_name].max()) * 1.1))
+            ylim = (data[self.yfeature].min(), data[self.yfeature].max())
+            if self.y_error_low and self.y_error_high:
+                ylim = (data[self.y_error_low].min(), data[self.y_error_high].max())
+            
+            span = ylim[1] - ylim[0]
+            ylim = (ylim[0] - 0.05 * span, ylim[1] + 0.05 * span)
+            ylim = (yscale.clip(ylim[0]), yscale.clip(ylim[1]))
+            
+        print(xlim)
+        print(ylim)
         
         # plot the error bars first so the axis labels don't get overwritten
-        if x_error_stat is not None:
-            grid.map(_x_error_bars, xname, yname, x_error_name, capsize = capsize)
+        if self.x_error_low and self.x_error_high:
+            grid.map(_x_error_bars, self.xfeature, self.yfeature, self.x_error_low, 
+                     self.x_error_high, capsize = capsize)
             
-        if y_error_stat is not None:
-            grid.map(_y_error_bars, xname, yname, y_error_name, capsize = capsize)
+        if self.y_error_low and self.y_error_high:
+            grid.map(_y_error_bars, self.xfeature, self.yfeature, self.y_error_low,
+                     self.y_error_high, capsize = capsize)
 
-        grid.map(plt.plot, xname, yname, **kwargs)
+        grid.map(plt.plot, self.xfeature, self.yfeature, **kwargs)
         
         return dict(xscale = xscale,
                     xlim = xlim,
@@ -204,50 +188,36 @@ class Stats2DView(Base2DStatisticsView):
                     ylim = ylim)
 
 
-def _y_error_bars(x, y, yerr, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
+def _y_error_bars(x, y, yerr_low, yerr_high, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
     
     if errwidth is not None:
         kwargs.setdefault("lw", errwidth)
     else:
         kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
-    
-    if isinstance(yerr.iloc[0], tuple):
-        lo = [ye[0] for ye in yerr]
-        hi = [ye[1] for ye in yerr]
-    else:
-        lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).items()]
-        hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).items()]
-        
+
     if capsize is not None:
         kwargs['marker'] = '_'
         kwargs['markersize'] = capsize * 2
         kwargs['markeredgewidth'] = kwargs['lw']
         
-    for x_i, lo_i, hi_i in zip(x, lo, hi):
+    for x_i, lo_i, hi_i in zip(x, yerr_low, yerr_high):
         plt.plot((x_i, x_i), (lo_i, hi_i), color = color, **kwargs)
     
-def _x_error_bars(x, y, xerr, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
+def _x_error_bars(x, y, xerr_low, xerr_high, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
 
     
     if errwidth is not None:
         kwargs.setdefault("lw", errwidth)
     else:
         kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
-    
-    if isinstance(xerr.iloc[0], tuple):
-        lo = [xe[0] for xe in xerr]
-        hi = [xe[1] for xe in xerr]
-    else:
-        lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).items()]
-        hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).items()]
-
+        
     if capsize is not None:
         kwargs['marker'] = '|'
         kwargs['markersize'] = capsize * 2
         kwargs['markeredgewidth'] = kwargs['lw']
 
         
-    for y_i, lo_i, hi_i in zip(y, lo, hi):
+    for y_i, lo_i, hi_i in zip(y, xerr_low, xerr_high):
         plt.plot((lo_i, hi_i), (y_i, y_i), color = color, **kwargs)
     
 util.expand_class_attributes(Stats2DView)
