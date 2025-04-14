@@ -123,7 +123,8 @@ class TableView(HasStrictTraits):
     id = Constant("edu.mit.synbio.cytoflow.view.table")
     friendly_id = Constant("Table View") 
     
-    statistic = Tuple(Str, Str)
+    statistic = util.ChangedStr(err_string = "Statistics have changed dramatically -- see the documentation for updates.")
+    feature = Str 
     row_facet = Str
     subrow_facet = Str
     column_facet = Str
@@ -141,11 +142,8 @@ class TableView(HasStrictTraits):
             raise util.CytoflowViewError('statistic', 
                                          "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
-        else:
-            stat = experiment.statistics[self.statistic]    
-            
-        data = pd.DataFrame(index = stat.index)
-        data[stat.name] = stat   
+        
+        data = experiment.statistics[self.statistic]    
         
         if self.subset:
             try:
@@ -309,9 +307,9 @@ class TableView(HasStrictTraits):
                         agg_idx = tuple(agg_idx)
 
                         try:
-                            text = "{:g}".format(data.loc[agg_idx, stat.name])
+                            text = "{:g}".format(data.loc[agg_idx, self.feature])
                         except (TypeError, ValueError):
-                            text = data.loc[agg_idx, stat.name]
+                            text = data.loc[agg_idx, self.feature]
                             
                         t.add_cell(row_idx, 
                                    col_idx,
@@ -392,8 +390,7 @@ class TableView(HasStrictTraits):
             raise util.CytoflowViewError('statistic', 
                                          "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
-        else:
-            stat = experiment.statistics[self.statistic]    
+        data = experiment.statistics[self.statistic]    
             
             
         if self.row_facet and self.row_facet not in experiment.conditions:
@@ -419,11 +416,8 @@ class TableView(HasStrictTraits):
                                          "Subcolumn facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.subcolumn_facet, experiment.conditions)) 
-            
-        data = pd.DataFrame(index = stat.index)
-        data[stat.name] = stat   
         
-        self._export_data(data, stat.name, filename)
+        self._export_data(data, self.feature, filename)
     
     def _export_data(self, data, column_name, filename):
         

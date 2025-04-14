@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Float, Dict, Union)
+                        Callable)
 
 import cytoflow.utility as util
 
@@ -48,12 +48,14 @@ class ChannelStatisticOp(HasStrictTraits):
     then applies the `function` callable to each group in the channel
     specified by `channel`. 
     
-    The `function` callable should take a single `pandas.Series` as an argument
-    and return a ``float`` or a `pandas.Series.` If `function` returns a 
-    ``float``, then the resulting statistic has one column and its name is
-    set to `channel`. If `function` returns a `pandas.Series`, then the 
-    ``Series``' index labels become the column names. (If used this way, 
-    `function` must **always** return a `pandas.Series` with the same index.)
+    The `function` callable should take a single `pandas.Series` of ``float`` 
+    as an argument and return a ``float``, a value that can be cast to 
+    ``float``, or a `pandas.Series` of ``float``. If `function` returns a 
+    ``float`` or a value that can be cast to ``float``, then the resulting 
+    statistic has one column and its name is set to `channel`. If `function`
+    returns a `pandas.Series`, then the ``Series``' index labels become the 
+    column names. (If used this way, `function` must **always** return a 
+    `pandas.Series` with the same index.)
     
     Attributes
     ----------
@@ -66,8 +68,8 @@ class ChannelStatisticOp(HasStrictTraits):
         
     function : Callable
         The function used to compute the statistic.  `function` must take 
-        a `pandas.Series` as its only parameter and return either a ``float``
-        or a `pandas.Series`.  
+        a `pandas.Series` as its only parameter and return either a ``float``,
+        a value that can be cast to ``float``, or a `pandas.Series`.  
         
         .. warning::
             Be careful!  Sometimes this function is called with an empty input!
@@ -152,9 +154,6 @@ class ChannelStatisticOp(HasStrictTraits):
             tuple ``(name, function)`` (or ``(name, statistic_name)`` if 
             `statistic_name` is set.
         """
-        
-        if experiment is None:
-            raise util.CytoflowOpError('experiment', "Must specify an experiment")
 
         if not self.name:
             raise util.CytoflowOpError('name', "Must specify a name")
@@ -193,11 +192,6 @@ class ChannelStatisticOp(HasStrictTraits):
                 raise util.CytoflowOpError('subset',
                                            "Subset string '{0}' isn't valid"
                                            .format(self.subset)) from exc
-                
-            if len(experiment) == 0:
-                raise util.CytoflowOpError('subset',
-                                           "Subset string '{0}' returned no events"
-                                           .format(self.subset))
        
         for b in self.by:
             if b not in experiment.conditions:
@@ -211,12 +205,6 @@ class ChannelStatisticOp(HasStrictTraits):
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
         groupby = experiment.data.groupby(self.by, observed = True)
-
-        for group, data_subset in groupby:
-            if len(data_subset) == 0:
-                warn("Group {} had no data"
-                     .format(group), 
-                     util.CytoflowOpWarning)
                 
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
@@ -224,12 +212,6 @@ class ChannelStatisticOp(HasStrictTraits):
         stat = None
         
         for group, data_subset in groupby:
-            if len(data_subset) == 0:
-                continue
-            
-            if not isinstance(group, tuple):
-                group = (group,)
-            
             try:
                 v = self.function(data_subset[self.channel])
                 
@@ -237,6 +219,22 @@ class ChannelStatisticOp(HasStrictTraits):
                 raise util.CytoflowOpError(None,
                                            "Your function threw an error in group {}"
                                            .format(group)) from e
+                                           
+            try:
+                v = float(v)
+            except (TypeError, ValueError):
+                if not isinstance(v, pd.Series):
+                    raise util.CytoflowOpError(None,
+                                               "Your function returned a {}. It must return "
+                                               "a float, a value that can be cast to float, "
+                                               "or a pandas.Series (with type float)"
+                                               .format(type(v)))
+                    
+            if isinstance(v, pd.Series) and v.dtype.kind != 'f':
+                raise util.CytoflowOpError(None,
+                                           "Your function returned a pandas.Series with dtype {}. "
+                                           "If it returns a Series, the data must be floating point."
+                                           .format(v.dtype))
                 
             if stat is None:
                 if isinstance(v, float):
@@ -249,24 +247,14 @@ class ChannelStatisticOp(HasStrictTraits):
                                         index = idx,
                                         columns = v.index.tolist(),
                                         dtype = 'float').sort_index()
-                else:
-                    raise util.CytoflowOpError('',
-                                               "Your function must return a float or a "
-                                               "pandas.Series. Instead, it returned {} "
-                                               "for group {}".format(v, group))
+
                 first_v = v
-                           
-            if isinstance(first_v, float) and not isinstance(v, float):
-                raise util.CytoflowOpError('',
-                                           "The first call to your function returned a float, "
-                                           "but group {} returned {}".format(group, v)) 
                 
-            if isinstance(first_v, pd.Series) and not first_v.index.equals(v.index):
+            if type(v) != type(first_v):
                 raise util.CytoflowOpError('',
-                                           "The pandas.Series index must be the same for "
-                                           "every function call. The first index was  {} "
-                                           "but group {} returned index {}"
-                                           .format(first_v.index, group, v.index))
+                                           "The first call to your function returned a {}, "
+                                           "but calling it on group {} returned a {}"
+                                           .format(type(first_v), group, type(v)))                           
 
             stat.loc[group] = v
 

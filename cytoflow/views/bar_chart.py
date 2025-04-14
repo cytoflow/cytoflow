@@ -150,24 +150,23 @@ class BarChartView(Base1DStatisticsView):
                       
         stat = experiment.statistics[self.statistic]
         if orientation == 'vertical':
-            map_args = [self.variable, stat.name]
+            map_args = [self.variable, self.feature]
         else:
-            map_args = [stat.name, self.variable]
+            map_args = [self.feature, self.variable]
         
         if self.huefacet:
             map_args.append(self.huefacet)  
         
-        if self.error_statistic[0]:
-            error_stat = experiment.statistics[self.error_statistic]
-            map_args.append(error_stat.name)
-        else:
-            error_stat = None
+        if self.error_low and self.error_high:
+            map_args.append(self.error_low)
+            map_args.append(self.error_high)
                         
         grid.map(_barplot, 
                  *map_args,
                  view = self,
-                 stat_name = stat.name,
-                 error_name = error_stat.name if error_stat is not None else None,
+                 feature = self.feature,
+                 error_low = self.error_low if self.error_low else None,
+                 error_high = self.error_high if self.error_high else None,
                  orientation = orientation,
                  grid = grid,
                  **kwargs)
@@ -179,7 +178,7 @@ class BarChartView(Base1DStatisticsView):
             return dict(yscale = scale,
                         ylim = lim)
             
-def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
+def _barplot(*args, view, feature, error_low, error_high, orientation, grid, **kwargs):
     """ 
     A custom barchart function.  This is assembled from pieces cobbled
     together from seaborn v0.7.1.
@@ -219,33 +218,37 @@ def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
         
         offpos = barpos + hue_offsets[hue_idx]
         barfunc(offpos,
-                data[stat_name], 
+                data[feature], 
                 nested_width,
                 align="center",
                 **kwargs)
                 
-        if error_name:
-            confint = data[error_name]
+        if error_low and error_high:
+            interval_low = data[error_low]
+            interval_high = data[error_high]
             errcolors = [errcolor] * len(offpos)
             _draw_confints(ax,
                            offpos,
-                           data[data[view.huefacet] == hue_level][stat_name],
-                           confint,
+                           data[data[view.huefacet] == hue_level][feature],
+                           interval_low,
+                           interval_high,
                            errcolors,
                            orientation,
                            errwidth = errwidth,
                            capsize = capsize)
                 
     else:
-        barfunc(barpos, data[stat_name], width, align="center", **kwargs)
+        barfunc(barpos, data[feature], width, align="center", **kwargs)
          
-        if error_name:
-            confint = data[error_name]
+        if error_low and error_high:
+            interval_low = data[error_low]
+            interval_high = data[error_high]
             errcolors = [errcolor] * len(barpos)
             _draw_confints(ax,
                            barpos,
-                           data[stat_name],
-                           confint,
+                           data[feature],
+                           interval_low,
+                           interval_high,
                            errcolors,
                            orientation,
                            errwidth = errwidth,
@@ -268,24 +271,17 @@ def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
     return ax 
 
 
-def _draw_confints(ax, at_group, stat, confints, colors, 
+def _draw_confints(ax, at_group, stat, int_low, int_high, colors, 
                    orient, errwidth=None, capsize=None, **kws):
  
     if errwidth is not None:
         kws.setdefault("lw", errwidth)
     else:
         kws.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
-         
-    if isinstance(confints.iloc[0], tuple):
-        ci_lo = [x[0] for x in confints]
-        ci_hi = [x[1] for x in confints]
-    else:
-        ci_lo = [stat.iloc[i] - x for i, x in confints.reset_index(drop = True).items()]
-        ci_hi = [stat.iloc[i] + x for i, x in confints.reset_index(drop = True).items()]
  
     for at, lo, hi, color in zip(at_group,
-                                 ci_lo,
-                                 ci_hi,
+                                 int_low,
+                                 int_high,
                                  colors):
         if orient == "vertical":
             if capsize is not None:

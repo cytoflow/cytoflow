@@ -105,7 +105,7 @@ class LongTableView(HasStrictTraits):
     id = Constant("edu.mit.synbio.cytoflow.view.long_table")
     friendly_id = Constant("Long Table View") 
     
-    statistic = Tuple(Str, Str)   
+    statistic = util.ChangedStr(err_string = "Statistics have changed dramatically -- see the documentation for updates.")
     subset = Str
 
     def plot(self, experiment, plot_name = None, **kwargs):
@@ -118,11 +118,8 @@ class LongTableView(HasStrictTraits):
             raise util.CytoflowViewError('statistic', 
                                          "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
-        else:
-            stat = experiment.statistics[self.statistic]    
-            
-        data = pd.DataFrame(index = stat.index)
-        data[stat.name] = stat   
+
+        data = experiment.statistics[self.statistic]
         
         if self.subset:
             try:
@@ -151,7 +148,7 @@ class LongTableView(HasStrictTraits):
                                                  "value to plot.") from e
                                                  
         names = list(data.index.names)
-        num_cols = len(names) + 1
+        num_cols = len(names) + len(data.columns)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -182,11 +179,12 @@ class LongTableView(HasStrictTraits):
                        height = height,
                        text = name)
             
-        t.add_cell(0, 
-                   len(names),
-                   width = width[len(names)],
-                   height = height,
-                   text = "Value")
+        for col_idx, col in enumerate(data.columns):
+            t.add_cell(0, 
+                       len(names) + col_idx,
+                       width = width[len(names)],
+                       height = height,
+                       text = col)
 
         row_i = 1
         for row_idx, row_data in data.iterrows():
@@ -211,16 +209,17 @@ class LongTableView(HasStrictTraits):
                            height = height,
                            text = text)
                 
-            try:
-                text = "{:g}".format(row_data.iat[0])
-            except (TypeError, ValueError):
-                text = row_data.iat[0]
+            for col_i, col in enumerate(data.columns):
+                try:
+                    text = "{:g}".format(row_data.loc[col])
+                except (TypeError, ValueError):
+                    text = row_data.loc[col]
                 
-            t.add_cell(row_i,
-                       num_cols - 1,
-                       width = width[num_cols],
-                       height = height,
-                       text = text)     
+                t.add_cell(row_i,
+                           len(names) + col_i,
+                           width = width[num_cols],
+                           height = height,
+                           text = text)     
             
             row_i = row_i + 1       
                         
@@ -238,15 +237,12 @@ class LongTableView(HasStrictTraits):
             raise util.CytoflowViewError('statistic', 
                                          "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
-        else:
-            stat = experiment.statistics[self.statistic]    
 
-        data = pd.DataFrame(index = stat.index)
-        data[stat.name] = stat   
+        stat = experiment.statistics[self.statistic]     
     
-        self._export_data(data, stat.name, filename)
+        self._export_data(stat, filename)
     
-    def _export_data(self, data, column_name, filename):
+    def _export_data(self, data, filename):
     
         if self.subset:
             try:
@@ -276,14 +272,16 @@ class LongTableView(HasStrictTraits):
     
 
         names = list(data.index.names)
-        num_cols = len(names) + 1
+        num_cols = len(names) + len(data.columns)
         num_rows = len(data) + 1
     
         t = np.empty((num_rows, num_cols), dtype = np.object_)
         
         for name_idx, name in enumerate(names):
             t[0, name_idx] = name
-        t[0, num_cols - 1] = "Value"
+            
+        for col_idx, col in enumerate(data.columns):
+            t[0, len(names) + col_idx] = col
             
         row_i = 1
         for row_idx, row_data in data.iterrows():
@@ -304,7 +302,9 @@ class LongTableView(HasStrictTraits):
                 
                 t[row_i, idx_i] = text
                 
-            t[row_i, num_cols - 1] = row_data.iat[0]
+            for col_i, col in enumerate(data.columns):
+                t[row_i, len(names) + col_i] = row_data[col]
+                
             row_i = row_i + 1
     
         np.savetxt(filename, t, delimiter = ",", fmt = "%s")
