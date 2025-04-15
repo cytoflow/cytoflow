@@ -182,8 +182,8 @@ class AutofluorescenceOp(HasStrictTraits):
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
                                      
-        # apply previous operations
-        for op in experiment.history:
+        # apply previous operations (except for the first, which is the import)
+        for op in experiment.history[1:]:
             if hasattr(op, 'by'):
                 for by in op.by:
                     if 'experiment' in experiment.metadata[by]:

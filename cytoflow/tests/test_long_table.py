@@ -29,26 +29,11 @@ class TestTable(ImportedDataTest):
         self.ex = flow.ThresholdOp(name = "T",
                                    channel = "Y2-A",
                                    threshold = 500).apply(self.ex)
-                                   
-        self.ex = flow.ChannelStatisticOp(name = "ByDox",
-                             channel = "Y2-A",
-                             by = ['Dox'],
-                             function = flow.geom_mean).apply(self.ex)
 
         self.ex = flow.ChannelStatisticOp(name = "ByDoxWell",
                              channel = "Y2-A",
-                             by = ['Dox', 'Well'],
+                             by = ['Dox', 'Well', 'T'],
                              function = flow.geom_mean).apply(self.ex)
-                             
-        self.ex = flow.ChannelStatisticOp(name = "ByDox",
-                             channel = "Y2-A",
-                             by = ['Dox'],
-                             function = flow.geom_sd_range).apply(self.ex)
-
-        self.ex = flow.ChannelStatisticOp(name = "ByDoxWell",
-                             channel = "Y2-A",
-                             by = ['Dox', 'Well'],
-                             function = flow.geom_sd_range).apply(self.ex)
                              
     def tearDown(self):
         fh, filename = tempfile.mkstemp()
@@ -60,16 +45,12 @@ class TestTable(ImportedDataTest):
             os.unlink(filename)
 
     def testPlot(self):
-        self.view = flow.LongTableView(statistic = ("ByDox", "geom_mean"))
+        self.view = flow.LongTableView(statistic = "ByDoxWell")
         self.view.plot(self.ex)
         
     def testPlotSubset(self):
-        self.view = flow.LongTableView(statistic = ("ByDox", "geom_mean"),
-                                   subset = "Dox > 1")
-        self.view.plot(self.ex)
-        
-    def testPlotRange(self):
-        self.view = flow.LongTableView(statistic = ("ByDox", "geom_sd_range"))
+        self.view = flow.LongTableView(statistic = "ByDoxWell",
+                                       subset = "Dox > 1")
         self.view.plot(self.ex)
         
 

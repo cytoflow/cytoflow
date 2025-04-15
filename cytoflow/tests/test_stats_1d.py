@@ -24,6 +24,7 @@ Created on Dec 1, 2015
 '''
 
 import unittest
+import pandas as pd
 
 import cytoflow as flow
 import cytoflow.utility as util
@@ -39,31 +40,28 @@ class Test1DStats(ImportedDataTest):
                                    threshold = 500).apply(self.ex)
                                    
         self.ex = flow.ChannelStatisticOp(name = "ByDox",
-                             channel = "Y2-A",
-                             by = ['T', 'Dox'],
-                             function = flow.geom_mean).apply(self.ex)
-                             
-        self.ex = flow.ChannelStatisticOp(name = "ByDox",
-                             channel = "Y2-A",
-                             by = ['T', 'Dox'],
-                             function = flow.geom_sd_range).apply(self.ex)
+                              channel = "Y2-A",
+                              by = ['T', 'Dox'],
+                              function = lambda x: pd.Series({'Mean' : x.mean(), 
+                                                              'SD' : x.std(),
+                                                              'MeanLo' : x.mean() - x.mean() * 0.2,
+                                                              'MeanHi' : x.mean() + x.mean() * 0.2,
+                                                              'SDLo' : x.std() - x.std() * 0.2,
+                                                              'SDHi' : x.std() + x.std() * 0.2})).apply(self.ex)
                                      
-        self.view = flow.Stats1DView(statistic = ("ByDox", "geom_mean"),
-                                     error_statistic = ("ByDox", "geom_sd_range"),
+        self.view = flow.Stats1DView(statistic = "ByDox",
+                                     feature = "Mean",
+                                     error_low = "MeanLo",
+                                     error_high = "MeanHi",
                                      variable = "Dox",
                                      huefacet = "T")
         
     def testPlot(self):
         self.view.plot(self.ex)
         
-    def testBadErrorStat(self):
-        self.ex = flow.ChannelStatisticOp(name = "ByDox_BAD",
-                                          channel = "Y2-A",
-                                          by = ['Dox'],
-                                          function = flow.geom_sd_range).apply(self.ex)
-                                     
-        self.view = flow.Stats1DView(statistic = ("ByDox", "geom_mean"),
-                                     error_statistic = ("ByDox_BAD", "geom_sd_range"),
+    def testBadErrorStat(self):                                     
+        self.view = flow.Stats1DView(statistic = "ByDox_BAD",
+                                     feature = "Mean",
                                      variable = "Dox",
                                      huefacet = "T")
         
@@ -89,7 +87,8 @@ class Test1DStats(ImportedDataTest):
     def testSubset(self):
         self.view.huefacet = ""
         self.view.subset = "T == True"
-        self.view.plot(self.ex)
+        with self.assertWarns(util.CytoflowViewWarning):
+            self.view.plot(self.ex)
         
     # Base plot params
     

@@ -161,6 +161,10 @@ class FrameStatisticOp(HasStrictTraits):
             
             try:
                 v = self.function(data_subset)
+                if not isinstance(v, pd.Series):
+                    raise util.CytoflowOpError('function',
+                                               "'function' must return a pandas.Series")
+                    
                 if len(stat.columns) == 0:
                     for col in v.index:
                         stat.insert(len(stat.columns), col, value = np.nan)

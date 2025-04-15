@@ -41,7 +41,8 @@ class Test(ImportedDataSmallTest):
                                       
         warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
 
-        flow.BarChartView(statistic = ("Stats1D", "mean"),
+        flow.BarChartView(statistic = "Stats1D",
+                          feature = "V2-A",
                           variable = "Dox").plot(ex2)
                     
     def testHexBin(self):
@@ -138,31 +139,30 @@ class Test(ImportedDataSmallTest):
                                       channel = "V2-A",
                                       function = np.mean).apply(self.ex)
         
-        flow.Stats1DView(statistic = ("Stats1D", "mean"),
+        flow.Stats1DView(statistic = "Stats1D",
+                         feature = "V2-A",
                          variable = "Dox").plot(ex2)
                          
-        flow.Stats1DView(statistic = ("Stats1D", "mean"),
+        flow.Stats1DView(statistic = "Stats1D",
+                         feature = "V2-A",
                          variable = "Dox",
                          variable_scale = "log",
                          scale = "logicle").plot(ex2)
 
                          
     def testStats2D(self):
-        import numpy as np
+        import pandas as pd
+        op = flow.FrameStatisticOp(name = "ByDox",
+                                   by = ['Dox'],
+                                   function = lambda x: pd.Series({'Y2-A' : x['Y2-A'].mean(),
+                                                                   'V2-A' : x['V2-A'].mean()}))
+        ex = op.apply(self.ex)                                     
         
-        ex2 = flow.ChannelStatisticOp(name = "StatsV",
-                                      by = ["Dox"],
-                                      channel = "V2-A",
-                                      function = np.mean).apply(self.ex)
-                                      
-        ex3 = flow.ChannelStatisticOp(name = "StatsY",
-                                      by = ["Dox"],
-                                      channel = "Y2-A",
-                                      function = np.mean).apply(ex2)                                      
-        
-        flow.Stats2DView(xstatistic = ("StatsV", "mean"),
-                         ystatistic = ("StatsY", "mean"),
-                         variable = "Dox").plot(ex3)
+        flow.Stats2DView(statistic = "ByDox",
+                         xfeature = "Y2-A",
+                         yfeature = "V2-A",
+                         variable = "Dox").plot(ex)
+
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'Test.testBarChart']

@@ -39,21 +39,20 @@ class Test(ImportedDataSmallTest):
                                    channel = "Y2-A",
                                    threshold = 500).apply(self.ex)
                                    
-        self.ex = flow.ChannelStatisticOp(name = "ByDox",
+        self.ex = flow.ChannelStatisticOp(name = "LenByDox",
                                           by = ['Dox', 'T'],
                                           channel = "Y2-A",
                                           function = len).apply(self.ex)
         
     def testApply(self):
-        ex = flow.TransformStatisticOp(name = "ByDox",
-                                       statistic = ("ByDox", "len"),
+        ex = flow.TransformStatisticOp(name = "SumByDox",
+                                       statistic = "LenByDox",
                                        by = ['Dox'],
-                                       statistic_name = "sum",
                                        function = lambda x: x.sum()).apply(self.ex)
                                      
-        self.assertIn(("ByDox","sum"), ex.statistics)
+        self.assertIn("SumByDox", ex.statistics)
  
-        stat = ex.statistics[("ByDox", "sum")]
+        stat = ex.statistics["SumByDox"]
         
         self.assertIn("Dox", stat.index.names)
         self.assertNotIn("T", stat.index.names)
@@ -62,9 +61,9 @@ class Test(ImportedDataSmallTest):
 
     def testBadFunction(self):
          
-        op = flow.TransformStatisticOp(name = "ByDox",
+        op = flow.TransformStatisticOp(name = "LenByDox",
                                        by = ['Dox'],
-                                       statistic = ("ByDox", "len"),
+                                       statistic = "ByDox",
                                        function = lambda x: (len(x) / 0.0))
          
         with self.assertRaises(util.CytoflowOpError):
@@ -72,16 +71,14 @@ class Test(ImportedDataSmallTest):
 
     def testSeries(self):      
         op = flow.TransformStatisticOp(name = "ByDox",
-                                       by = ['Dox'],
-                                       statistic = ("ByDox", "len"),
-                                       function = lambda x: (x / x.sum()),
-                                       statistic_name = "prop")
+                                       statistic = "LenByDox",
+                                       function = lambda x: (x / x.sum()))
         
         ex2 = op.apply(self.ex)
-        stat = ex2.statistics[("ByDox", "prop")]
-         
-        self.assertIsInstance(stat, pd.Series)
-        self.assertIsNot(type(stat.iloc[0]), pd.Series)
+        stat = ex2.statistics["ByDox"]
+        
+        self.assertIn("Dox", stat.index.names)
+        self.assertIn("T", stat.index.names)
 
 
 if __name__ == "__main__":

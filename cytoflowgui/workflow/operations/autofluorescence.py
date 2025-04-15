@@ -74,7 +74,7 @@ class AutofluorescenceWorkflowOp(WorkflowOperation, AutofluorescenceOp):
             
         # check for experiment metadata used to estimate operations in the
         # history, and bail if we find any
-        for op in experiment.history:
+        for op in experiment.history[1:]:
             if hasattr(op, 'by'):
                 for by in op.by:
                     if 'experiment' in experiment.metadata[by]:

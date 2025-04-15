@@ -369,7 +369,7 @@ class PCAOp(HasStrictTraits):
 
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components],
                                          names = list(self.by) + ["Component"])
-                                             
+                                                     
         stat = pd.DataFrame(index = idx,
                             columns = ["Explained Variance"], 
                             dtype = 'float').sort_index()
@@ -400,9 +400,14 @@ class PCAOp(HasStrictTraits):
             for ci, c in enumerate(new_channels):
                 new_experiment.data.loc[group_idx, c] = x_tf[:, ci]
             
-            for c in range(self.num_components):    
-                stat.at[group + (c+1,), "Explained Variance"] = \
-                    pca.explained_variance_ratio_[c]
+            for c in range(self.num_components):
+                if group == True:
+                    # only one group -- ie, no 'by'
+                    stat.at[(c+1,), "Explained Variance"] = \
+                        pca.explained_variance_ratio_[c]
+                else:
+                    stat.at[group + (c+1,), "Explained Variance"] = \
+                        pca.explained_variance_ratio_[c]
 
         new_experiment.data.dropna(inplace = True)
         new_experiment.data.reset_index(drop = True, inplace = True)

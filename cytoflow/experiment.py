@@ -29,9 +29,9 @@ Defines `Experiment`, `cytoflow`'s main data structure.
 import pandas as pd
 from natsort import natsorted
 
-from pandas.api.types import CategoricalDtype, is_categorical_dtype
+from pandas.api.types import CategoricalDtype
 from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
-                       Property, Tuple, Int, cached_property)
+                       Property, cached_property)
 
 import cytoflow.utility as util
 

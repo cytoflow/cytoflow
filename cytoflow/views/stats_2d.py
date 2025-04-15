@@ -167,9 +167,6 @@ class Stats2DView(Base2DStatisticsView):
             span = ylim[1] - ylim[0]
             ylim = (ylim[0] - 0.05 * span, ylim[1] + 0.05 * span)
             ylim = (yscale.clip(ylim[0]), yscale.clip(ylim[1]))
-            
-        print(xlim)
-        print(ylim)
         
         # plot the error bars first so the axis labels don't get overwritten
         if self.x_error_low and self.x_error_high:

@@ -40,27 +40,32 @@ class Test(ImportedDataSmallTest):
     def testApply(self):
         ex = flow.FrameStatisticOp(name = "ByDox",
                                    by = ['Dox', 'T'],
-                                   function = len).apply(self.ex)
+                                   function = lambda x: pd.Series({'Y2-A' : x['Y2-A'].mean(),
+                                                                   'V2-A' : x['V2-A'].mean()})).apply(self.ex)
                                      
-        self.assertIn(("ByDox","len"), ex.statistics)
+        self.assertIn("ByDox", ex.statistics)
 
-        stat = ex.statistics[("ByDox", "len")]
+        stat = ex.statistics["ByDox"]
         self.assertIn("Dox", stat.index.names)
         self.assertIn("T", stat.index.names)
-        
-        stat = ex.statistics[("ByDox", "len")]
-        
+        self.assertEqual(stat.columns.to_list(), ["Y2-A", "V2-A"])
+                
         self.assertIsInstance(ex.data.index, pd.RangeIndex)
         
     def testSubset(self):
-        ex = flow.FrameStatisticOp(name = "ByDox",
-                                   by = ['T'],
+        op = flow.FrameStatisticOp(name = "ByDox",
+                                   by = ['Dox', 'T'],
                                    subset = "Dox == 10.0",
-                                   function = len).apply(self.ex)
-        stat = ex.statistics[("ByDox", "len")]
-           
-        self.assertEqual(stat.loc[False], 5601)
-        self.assertEqual(stat.loc[True], 4399)
+                                   function = lambda x: pd.Series({'Y2-A' : x['Y2-A'].mean(),
+                                                                   'V2-A' : x['V2-A'].mean()}))
+        
+        with self.assertWarns(util.CytoflowOpWarning):
+            ex = op.apply(self.ex)
+
+        stat = ex.statistics["ByDox"]
+        
+        self.assertEquals(stat.index.to_list(), [(10.0, False), (10.0, True)])
+        self.assertEqual(stat.columns.to_list(), ["Y2-A", "V2-A"])
         
     def testBadFunction(self):
         

@@ -26,12 +26,11 @@ Transforms a statistic. `xform_stat` has one class:
 `TransformStatisticOp` -- apply a function to a statistic, making a new statistic.
 """
 
-from warnings import warn
 import pandas as pd
 import numpy as np 
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides,
-                        Callable, Union, Float)
+                        Callable)
 
 import cytoflow.utility as util
 
@@ -97,7 +96,6 @@ class TransformStatisticOp(HasStrictTraits):
     statistic = Str
     function = Callable
     by = List(Str)    
-    fill = Union(Constant(pd.NA), Float, default_value = pd.NA)
 
     def apply(self, experiment):
         """
@@ -130,11 +128,11 @@ class TransformStatisticOp(HasStrictTraits):
                                        .format(self.name)) 
         
         if not self.statistic:
-            raise util.CytoflowViewError('statistic',
+            raise util.CytoflowOpError('statistic',
                                          "Statistic not set")
         
         if self.statistic not in experiment.statistics:
-            raise util.CytoflowViewError('statistic',
+            raise util.CytoflowOpError('statistic',
                                          "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
         else:
@@ -167,67 +165,56 @@ class TransformStatisticOp(HasStrictTraits):
         else:
             idx = stat.index.copy()
                     
-        new_stat = pd.DataFrame(data = np.full((len(stat.columns), len(idx)), self.fill),
+        new_stat = pd.DataFrame(data = np.full((len(idx), len(stat.columns)), np.nan),
                                 columns = stat.columns,
                                 index = idx, 
                                 dtype = 'float').sort_index()
                     
         if self.by: 
-            for column in stat.columns:                        
-                for group in data[self.by].itertuples(index = False, name = None):                
-                    if isinstance(stat.index, pd.MultiIndex):
-                        s = stat.xs(group, level = self.by, drop_level = False)[column]
-                    else:
-                        s = stat.at[group, column]
+            for group in data[self.by].itertuples(index = False, name = None):         
+                for column in stat.columns:                        
+                    s = stat.xs(group, level = self.by, drop_level = False)[column]
                                         
                     if len(s) == 0:
                         continue
-        
+                            
                     try:
-                        new_stat.at[group, column] = self.function(s)
+                        v = self.function(s)
                     except Exception as e:
                         raise util.CytoflowOpError('function',
                                                    "Your function threw an error in group {}".format(group)) from e
-                                            
-                    # check for, and warn about, NaNs.
-                    if np.any(np.isnan(new_stat.loc[group])):
+                                                   
+                    if isinstance(v, pd.Series):
                         raise util.CytoflowOpError('function',
-                                                   "Category {} returned {}, which had NaNs that aren't allowed"
-                                                   .format(group, new_stat.loc[group]))
+                                                   "If you specify 'by', your function must return a float "
+                                                   "or value that can be cast to float. Instead, group {} "
+                                                   "returned type {}".format(group, type(v)))
+                        
+                    try:
+                        v = float(v)
+                    except (TypeError, ValueError):
+                        raise util.CytoflowOpError('function',
+                                                   "If you specify 'by', your function must return a float "
+                                                   "or value that can be cast to float. Instead, group {} "
+                                                   "returned type {}".format(group, type(v)))
+                        
+                    new_stat.at[group, column] = v
+                                            
+                # check for, and warn about, NaNs.
+                if np.any(np.isnan(new_stat.loc[group])):
+                    raise util.CytoflowOpError('function',
+                                               "Category {} returned {}, which had NaNs that aren't allowed"
+                                               .format(group, new_stat.loc[group]))
                     
         else:
-            print(new_stat)
             for column in stat.columns: 
-                new_stat[column] = self.function(stat[column])
-            
-            # if not isinstance(new_stat, pd.Series):
-            #     raise util.CytoflowOpError('by',
-            #                                "Transform function {} does not return a Series; "
-            #                                "in this case, you must set 'by'"
-            #                                .format(self.function))
-                                                    
-        # matched_series = True
-        # for group in data[self.by].itertuples(index = False, name = None):
-        #     if isinstance(stat.index, pd.MultiIndex):
-        #         s = stat.xs(group, level = self.by, drop_level = False)
-        #     else:
-        #         s = stat.loc[list(group)]
-        #
-        #     if isinstance(new_stat.loc[group], pd.Series) and \
-        #         s.index.equals(new_stat.loc[group].index):
-        #         pass
-        #     else:
-        #         matched_series = False
-        #         break
-        #
-        # if matched_series and len(self.by) > 0:
-        #     new_stat = pd.concat(new_stat.values)
-
-        # try to convert to numeric, but if there are non-numeric bits ignore
-        # try:
-        #     stat = pd.to_numeric(stat)
-        # except:  # if there are errors, ignore them
-        #     pass
+                v = self.function(stat[column])
+                
+                if not isinstance(v, pd.Series):
+                    raise util.CytoflowOpError('function',
+                                               "If you don't specify 'by', your function must return a pandas.Series. "
+                                               "Instead, group {} returned {}".format(group, type(v)))
+                new_stat[column] = v
         
         # sort the index, for performance
         new_stat = new_stat.sort_index()

@@ -24,6 +24,7 @@ Created on Oct 30, 2015
 '''
 import unittest
 import cytoflow as flow
+import cytoflow.utility as util
 import pandas as pd
 from .test_base import ClosePlotsWhenDoneTest
 
@@ -88,7 +89,8 @@ class TestAutofluorescence(ClosePlotsWhenDoneTest):
         ex_morpho = gm_1.apply(self.ex)
         
         self.op.blank_file_conditions = {'Dox' : 1.0}
-        self.op.estimate(ex_morpho, subset = 'Morpho1_2 == True')
+        with self.assertWarns(util.CytoflowOpWarning):
+            self.op.estimate(ex_morpho, subset = 'Morpho1_2 == True')
         
     def testSubset(self):
 
@@ -101,6 +103,7 @@ class TestAutofluorescence(ClosePlotsWhenDoneTest):
         ex_morpho = gm_1.apply(self.ex)
         
         self.op.estimate(ex_morpho, subset = "Morpho1_2 == True")
+
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'TestAutofluorescence.testConditions']

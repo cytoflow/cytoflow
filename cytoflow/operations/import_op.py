@@ -196,7 +196,7 @@ class ImportOp(HasStrictTraits):
     data_set = Int(0)
 
     # are we subsetting?
-    events = Int(None)
+    events = util.IntOrNone(None)
         
     # DON'T DO THIS
     ignore_v = List(Str)
@@ -363,7 +363,7 @@ class ImportOp(HasStrictTraits):
                                                .format(self.tubes[0].file, str(e))) from e
                 
     
-                if self.events is not None:
+                if self.events:
                     if self.events <= len(tube_data):
                         tube_data = tube_data.loc[np.random.choice(tube_data.index,
                                                                    self.events,

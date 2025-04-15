@@ -46,15 +46,10 @@ class TestTable(ImportedDataTest):
                              by = ['Dox', 'Well'],
                              function = flow.geom_mean).apply(self.ex)
                              
-        self.ex = flow.ChannelStatisticOp(name = "ByDox",
+        self.ex = flow.ChannelStatisticOp(name = "ByDoxWellT",
                              channel = "Y2-A",
-                             by = ['Dox'],
-                             function = flow.geom_sd_range).apply(self.ex)
-
-        self.ex = flow.ChannelStatisticOp(name = "ByDoxWell",
-                             channel = "Y2-A",
-                             by = ['Dox', 'Well'],
-                             function = flow.geom_sd_range).apply(self.ex)
+                             by = ['Dox', 'Well', 'T'],
+                             function = flow.geom_mean).apply(self.ex)
                              
     def tearDown(self):
         fh, filename = tempfile.mkstemp()
@@ -67,66 +62,45 @@ class TestTable(ImportedDataTest):
 
         
     def testPlotRowSubset(self):
-        self.view = flow.TableView(statistic = ("ByDox", "geom_mean"),
+        self.view = flow.TableView(statistic = "ByDox",
+                                   feature = "Y2-A",
                                    row_facet = "Dox",
                                    subset = "Dox > 1")
         self.view.plot(self.ex)
         
     def testPlotRow(self):
-        self.view = flow.TableView(statistic = ("ByDox", "geom_mean"),
+        self.view = flow.TableView(statistic = "ByDox",
+                                   feature = "Y2-A",
                                    row_facet = "Dox")
         self.view.plot(self.ex)
         
     def testPlotSubrow(self):
-        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_mean"),
+        self.view = flow.TableView(statistic = "ByDoxWell",
+                                   feature = "Y2-A",
                                    row_facet = 'Dox',
                                    subrow_facet = 'Well')
         self.view.plot(self.ex)
         
     def testPlotColumn(self):
-        self.view = flow.TableView(statistic = ("ByDox", "geom_mean"),
+        self.view = flow.TableView(statistic = "ByDox",
+                                   feature = "Y2-A",
                                    column_facet = "Dox")
         self.view.plot(self.ex)
         
     def testPlotSubcolumn(self):
-        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_mean"),
+        self.view = flow.TableView(statistic = "ByDoxWell",
+                                   feature = "Y2-A",
                                    column_facet = 'Dox',
                                    subcolumn_facet = 'Well')
         self.view.plot(self.ex)
 
     def testPlotRowAndColumn(self):
-        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_mean"),
+        self.view = flow.TableView(statistic = "ByDoxWell",
+                                   feature = "Y2-A",
                                    row_facet = 'Dox',
                                    column_facet = 'Well')
         self.view.plot(self.ex)        
-        
-    def testPlotRowRange(self):
-        self.view = flow.TableView(statistic = ("ByDox", "geom_sd_range"),
-                                   row_facet = "Dox")
-        self.view.plot(self.ex)
-        
-    def testPlotSubrowRange(self):
-        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_sd_range"),
-                                   row_facet = 'Dox',
-                                   subrow_facet = 'Well')
-        self.view.plot(self.ex)
-        
-    def testPlotColumnRange(self):
-        self.view = flow.TableView(statistic = ("ByDox", "geom_sd_range"),
-                                   column_facet = "Dox")
-        self.view.plot(self.ex)
-        
-    def testPlotSubcolumnRange(self):
-        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_sd_range"),
-                                   column_facet = 'Dox',
-                                   subcolumn_facet = 'Well')
-        self.view.plot(self.ex)
 
-    def testPlotRowAndColumnRange(self):
-        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_sd_range"),
-                                   row_facet = 'Dox',
-                                   column_facet = 'Well')
-        self.view.plot(self.ex) 
         
 
 if __name__ == "__main__":

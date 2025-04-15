@@ -362,6 +362,7 @@ class KMeansOp(HasStrictTraits):
           
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
                                          names = list(self.by) + ["Cluster"])
+
         centers_stat = pd.DataFrame(index = idx,
                                     columns = list(self.channels), 
                                     dtype = 'float').sort_index()
@@ -409,8 +410,8 @@ class KMeansOp(HasStrictTraits):
                 if len(self.by) == 0:
                     g = tuple([c + 1])
                 else:
-                    g = tuple(list([group]) + [c + 1])
-                
+                    g = group + tuple([c + 1])
+                                    
                 for cidx1, channel1 in enumerate(self.channels):
                     centers_stat.loc[g, channel1] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
          

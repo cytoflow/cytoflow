@@ -40,7 +40,8 @@ class TestBarChart(ImportedDataTest):
                                      channel = "Y2-A",
                                      function = flow.geom_mean).apply(self.ex)
                                      
-        self.view = flow.BarChartView(statistic = ("ByDox", "geom_mean"),
+        self.view = flow.BarChartView(statistic = "ByDox",
+                                      feature = "Y2-A",
                                       variable = "Well",
                                       huefacet = "Dox")
         
@@ -67,7 +68,8 @@ class TestBarChart(ImportedDataTest):
     def testSubset(self):
         self.view.huefacet = ""
         self.view.subset = "Dox == 10.0"
-        self.view.plot(self.ex)
+        with self.assertWarns(util.CytoflowViewWarning):
+            self.view.plot(self.ex)
 
         
     def testSubset2(self):
@@ -75,12 +77,20 @@ class TestBarChart(ImportedDataTest):
         self.view.plot(self.ex)
         
     def testErrorStat(self):
-        self.ex = flow.ChannelStatisticOp(name = "ByDox",
-                                     by = ['Dox', 'Well'],
-                                     channel = "Y2-A",
-                                     function = util.geom_sd_range).apply(self.ex)
-                                     
-        self.view.error_statistic = ("ByDox", "geom_sd_range")
+        import pandas as pd
+        self.ex = flow.ChannelStatisticOp(name = "ByDox2",
+                                          by = ['Dox', 'Well'],
+                                          channel = "Y2-A",
+                                          function = lambda x: pd.Series({'Mean' : x.mean(), 
+                                                                          'SD' : x.std(),
+                                                                          'MeanLo' : x.mean() - x.mean() * 0.2,
+                                                                          'MeanHi' : x.mean() + x.mean() * 0.2,
+                                                                          'SDLo' : x.std() - x.std() * 0.2,
+                                                                          'SDHi' : x.std() + x.std() * 0.2})).apply(self.ex)
+        self.view.statistic = "ByDox2"
+        self.view.feature = "Mean"
+        self.view.error_low = "MeanLo"
+        self.view.error_high = "MeanHi"
         self.view.plot(self.ex)
         
     # Base plot params

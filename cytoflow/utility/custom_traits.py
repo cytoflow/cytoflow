@@ -305,9 +305,9 @@ class ChangedStr(BaseStr):
         metadata.setdefault('err_string', "This trait now takes a Str.")
         super().__init__(**metadata)
     
-    def error(self, object, name, value):
+    def error(self, _, name, value):
         err = TraitError(object, name, self.full_info(object, name, value), value)
-        err.args[0] = err.args[0] + " " + self.err_string
+        err.args = (err.args[0] + " " + self.err_string,)
         raise err
         
     

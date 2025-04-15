@@ -104,12 +104,10 @@ class TestGaussian2D(ImportedDataSmallTest):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        stat = ex2.statistics[("Gauss", "mean")]
+        stat = ex2.statistics["Gauss"]
         
         self.assertIn("Component", stat.index.names)
-        self.assertIn("Dox", stat.index.names)    
-        self.assertIn("Channel", stat.index.names)
-   
+        self.assertIn("Dox", stat.index.names)       
     
     def testPlot(self):
         self.gate.estimate(self.ex)
