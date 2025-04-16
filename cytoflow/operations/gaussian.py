@@ -316,11 +316,11 @@ class GaussianMixtureOp(HasStrictTraits):
                                              .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by, observed = True)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True, observed = True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -335,9 +335,9 @@ class GaussianMixtureOp(HasStrictTraits):
             
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError(None,
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -502,11 +502,11 @@ class GaussianMixtureOp(HasStrictTraits):
                                 for i in range(self.num_components)}
 
         if self.by:
-            groupby = experiment.data.groupby(self.by, observed = True)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda _: True, observed = True)   
+            groupby = experiment.data.groupby(lambda _: True, observed = False)   
         
         # make the statistics       
         components = [x + 1 for x in range(self.num_components)]

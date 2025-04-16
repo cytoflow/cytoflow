@@ -246,7 +246,7 @@ class Experiment(HasStrictTraits):
                 if v not in list(self.conditions[c]):
                     raise util.CytoflowError("{} is not a value of condition {}".format(v, c))
 
-        g = self.data.groupby(conditions, observed = True)
+        g = self.data.groupby(conditions, observed = False)
 
         ret = self.clone(deep = False)
         ret.data = g.get_group(values)

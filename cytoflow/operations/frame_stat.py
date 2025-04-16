@@ -141,14 +141,7 @@ class FrameStatisticOp(HasStrictTraits):
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
                 
-        groupby = experiment.data.groupby(self.by)
-                        
-        for group, data_subset in groupby:
-            if len(data_subset) == 0:
-                warn("Group {} had no data"
-                     .format(group), 
-                     util.CytoflowOpWarning)
-
+        groupby = experiment.data.groupby(self.by, observed = False)
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
 
@@ -157,6 +150,8 @@ class FrameStatisticOp(HasStrictTraits):
         
         for group, data_subset in groupby:
             if len(data_subset) == 0:
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
                 continue
             
             try:

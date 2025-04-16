@@ -28,7 +28,7 @@ Use self-organizing maps to cluster events in any number of dimensions.
 
 """
 
-
+from warnings import warn
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, Int, Float, Enum, Bool,
                         provides)
@@ -310,11 +310,11 @@ class SOMOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by, observed = True)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True, observed = True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -330,9 +330,10 @@ class SOMOp(HasStrictTraits):
         soms = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
+            
             x = data_subset.sample(frac = self.sample).loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -448,19 +449,19 @@ class SOMOp(HasStrictTraits):
                                     dtype = 'float').sort_index()
                  
         if self.by:
-            groupby = experiment.data.groupby(self.by, observed = True)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True, observed = True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
         event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
             
             if group not in self._som:
                 raise util.CytoflowOpError('by',

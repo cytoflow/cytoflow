@@ -299,7 +299,7 @@ class ByView(OpView):
                                              "Don't set view.plot_name if you don't also set operation.by"
                                              .format(plot_name))
                                
-            groupby = experiment.data.groupby(by)
+            groupby = experiment.data.groupby(by, observed = True)
 
             if plot_name not in groupby.groups.keys():
                 raise util.CytoflowViewError('plot_name',

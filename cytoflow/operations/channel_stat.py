@@ -204,7 +204,7 @@ class ChannelStatisticOp(HasStrictTraits):
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
-        groupby = experiment.data.groupby(self.by, observed = True)
+        groupby = experiment.data.groupby(self.by, observed = False)
                 
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
@@ -257,9 +257,18 @@ class ChannelStatisticOp(HasStrictTraits):
                                            .format(type(first_v), group, type(v)))                           
 
             stat.loc[group] = v
+            print(group)
+            print(v)
 
             # fail on NaNs.
             if stat.loc[group].isna().any():
+                if len(data_subset) == 0:
+                    raise util.CytoflowOpError('',
+                                               "Calling function on category {} returned {} "
+                                               "which contains NaN. Also, there was no data in that group. "
+                                               "Make sure that your function behaves when called on an "
+                                               "empty pandas.Series (by returning 0, for example)".format(group, stat.loc[group]))
+                    
                 raise util.CytoflowOpError('',
                                            "Calling function on category {} returned {} "
                                            "which contains NaN".format(group, stat.loc[group]))

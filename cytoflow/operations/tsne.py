@@ -29,7 +29,7 @@ internal structure better than PCA. `tsne` has one class:
 `tSNEOp` -- the `IOperation` that applies tSNE to an `Experiment`.
 """
 
-
+from warnings import warn
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, Enum, provides)
 
@@ -254,11 +254,11 @@ class tSNEOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -348,11 +348,11 @@ class tSNEOp(HasStrictTraits):
                                            .format(b, experiment.conditions))
                                  
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # need deep = True because of the data.dropna below
         new_experiment = experiment.clone(deep = True)       
@@ -369,9 +369,10 @@ class tSNEOp(HasStrictTraits):
                    
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
+            
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])

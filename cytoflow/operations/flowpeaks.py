@@ -312,11 +312,11 @@ class FlowPeaksOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -331,8 +331,10 @@ class FlowPeaksOp(HasStrictTraits):
                                     
         for data_group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data".format(data_group))
+                warn("Group {} had no data".format(data_group),
+                     util.CytoflowOpWarning)
+                continue
+            
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -389,6 +391,9 @@ class FlowPeaksOp(HasStrictTraits):
         ### use optimization on the finite gmm to find the local peak for 
         ### each kmeans cluster
         for data_group, data_subset in groupby:
+            if len(data_subset) == 0:
+                continue
+            
             kmeans = self._kmeans[data_group]
             num_clusters = kmeans.n_clusters
             means = self._means[data_group]
@@ -478,6 +483,9 @@ class FlowPeaksOp(HasStrictTraits):
             
         cluster_peak = {}
         for data_group, data_subset in groupby:
+            if len(data_subset) == 0:
+                continue
+            
             kmeans = self._kmeans[data_group]
             num_clusters = kmeans.n_clusters
             means = self._means[data_group]
@@ -664,11 +672,11 @@ class FlowPeaksOp(HasStrictTraits):
                                            .format(b, experiment.conditions))
                  
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
         event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
          
@@ -681,9 +689,8 @@ class FlowPeaksOp(HasStrictTraits):
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn(util.CytoflowOpWarning("Group {} had no data".format(group)))
+                continue
                 
             if group not in self._kmeans:
                 raise util.CytoflowOpError('by',
