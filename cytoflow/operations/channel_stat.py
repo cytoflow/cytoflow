@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable)
+                        Callable, Float)
 
 import cytoflow.utility as util
 
@@ -136,6 +136,7 @@ class ChannelStatisticOp(HasStrictTraits):
     function = Callable
     by = List(Str)
     subset = Str
+    fill = Float(np.nan)
     
     def apply(self, experiment):
         """
@@ -222,13 +223,13 @@ class ChannelStatisticOp(HasStrictTraits):
                                            
             try:
                 v = float(v)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as e:
                 if not isinstance(v, pd.Series):
                     raise util.CytoflowOpError(None,
                                                "Your function returned a {}. It must return "
                                                "a float, a value that can be cast to float, "
                                                "or a pandas.Series (with type float)"
-                                               .format(type(v)))
+                                               .format(type(v))) from e
                     
             if isinstance(v, pd.Series) and v.dtype.kind != 'f':
                 raise util.CytoflowOpError(None,
@@ -238,12 +239,12 @@ class ChannelStatisticOp(HasStrictTraits):
                 
             if stat is None:
                 if isinstance(v, float):
-                    stat = pd.DataFrame(data = np.full((len(idx), 1), np.nan),
+                    stat = pd.DataFrame(data = np.full((len(idx), 1), self.fill),
                                         index = idx,
                                         columns = [self.channel],
                                         dtype = 'float' ).sort_index()
                 elif isinstance(v, pd.Series):
-                    stat = pd.DataFrame(data = np.full((len(idx), len(v)), np.nan),
+                    stat = pd.DataFrame(data = np.full((len(idx), len(v)), self.fill),
                                         index = idx,
                                         columns = v.index.tolist(),
                                         dtype = 'float').sort_index()
@@ -251,27 +252,25 @@ class ChannelStatisticOp(HasStrictTraits):
                 first_v = v
                 
             if type(v) != type(first_v):
-                raise util.CytoflowOpError('',
+                raise util.CytoflowOpError(None,
                                            "The first call to your function returned a {}, "
                                            "but calling it on group {} returned a {}"
                                            .format(type(first_v), group, type(v)))                           
 
             stat.loc[group] = v
-            print(group)
-            print(v)
 
             # fail on NaNs.
             if stat.loc[group].isna().any():
-                if len(data_subset) == 0:
-                    raise util.CytoflowOpError('',
-                                               "Calling function on category {} returned {} "
-                                               "which contains NaN. Also, there was no data in that group. "
-                                               "Make sure that your function behaves when called on an "
-                                               "empty pandas.Series (by returning 0, for example)".format(group, stat.loc[group]))
-                    
-                raise util.CytoflowOpError('',
+                raise util.CytoflowOpError(None,
                                            "Calling function on category {} returned {} "
                                            "which contains NaN".format(group, stat.loc[group]))
+                
+        if stat.isna().any().any():
+            raise util.CytoflowOpError(None,
+                                       "The statistic has at least one NaN in it, which probably means "
+                                       "one of the groups did not have any events AND you forgot to set "
+                                       "'fill' to something other than NaN.".format(group, stat.loc[group]))
+                
         
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         new_experiment.statistics[self.name] = stat
