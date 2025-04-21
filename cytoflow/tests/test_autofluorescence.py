@@ -26,10 +26,8 @@ import unittest
 import cytoflow as flow
 import cytoflow.utility as util
 import pandas as pd
-from .test_base import ClosePlotsWhenDoneTest
 
-
-class TestAutofluorescence(ClosePlotsWhenDoneTest):
+class TestAutofluorescence(unittest.TestCase):
     """
     Unit tests for Autofluorescence
     """

@@ -34,17 +34,17 @@ if not flow.RUNNING_IN_GUI:
     import warnings
     warnings.filterwarnings('ignore', '.*is ignored when not running in the GUI.*')
 
-class ClosePlotsWhenDone(object):
-    def tearDown(self):
-        """Run once after each test"""
-        plt.close('all')
+# class ClosePlotsWhenDone(object):
+#     def tearDown(self):
+#         """Run once after each test"""
+#         plt.close('all')
+#
+#
+# class ClosePlotsWhenDoneTest(ClosePlotsWhenDone, unittest.TestCase):
+#     pass
 
 
-class ClosePlotsWhenDoneTest(ClosePlotsWhenDone, unittest.TestCase):
-    pass
-
-
-class ImportedData(ClosePlotsWhenDone):
+class ImportedData(object):
 
     def setUp(self, thin=100):
         """Run once per test at the beginning"""
@@ -93,7 +93,7 @@ class ImportedDataTest(ImportedData, unittest.TestCase):
     pass
 
 
-class ImportedDataSmallTest(ClosePlotsWhenDoneTest):
+class ImportedDataSmallTest(unittest.TestCase):
     def setUp(self):
         """Run once per test at the beginning"""
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
@@ -106,7 +106,7 @@ class ImportedDataSmallTest(ClosePlotsWhenDoneTest):
         self.ex = import_op.apply()
 
 
-class TasbeTest(ClosePlotsWhenDoneTest):
+class TasbeTest(unittest.TestCase):
     
     def setUp(self):
         """Run once at the beginning of each test"""

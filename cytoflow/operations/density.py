@@ -499,12 +499,12 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
                          **kwargs):
         # plot a countour around the bins that got kept
         
-
   
         keep_x = annotation[0]
         keep_y = annotation[1]
         h = annotation[2]
         contour_props = annotation[3]
+        contour_props.pop('color', None)
         xbins = self.op._xbins[0:-1]
         ybins = self.op._ybins[0:-1]
         last_level = h[keep_x[-1], keep_y[-1]]

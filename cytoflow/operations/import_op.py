@@ -371,7 +371,7 @@ class ImportOp(HasStrictTraits):
                     else:
                         warnings.warn("Only {0} events in tube {1}"
                                       .format(len(tube_data), tube.file),
-                                      util.CytoflowWarning)
+                                      util.CytoflowOpWarning)
     
                 experiment.add_events(tube_data[channels], tube.conditions)
                         
@@ -412,7 +412,7 @@ class ImportOp(HasStrictTraits):
                 if range_bits < data_bits:
                     warnings.warn('The data range $PnR doesn\'t match the data bits $PnB for channel {}, masking out {} bits'
                                   .format(channel, data_bits - range_bits),
-                                  util.CytoflowWarning)
+                                  util.CytoflowOpWarning)
                     mask = 1
                     for _ in range(1, range_bits):
                         mask = mask << 1 | 1
@@ -428,13 +428,13 @@ class ImportOp(HasStrictTraits):
             if f1 > 0.0 and f2 == 0.0:
                 warnings.warn('Invalid $PnE = {},{} for channel {}, changing it to {},1.0'
                               .format(f1, f2, channel, f1),
-                              util.CytoflowWarning)
+                              util.CytoflowOpWarning)
                 f2 = 1.0
                 
             if f1 > 0.0 and f2 > 0.0 and tube0_meta['$DATATYPE'] == 'I':
                 warnings.warn('Converting channel {} from logarithmic to linear'
                               .format(channel),
-                              util.CytoflowWarning)
+                              util.CytoflowOpWarning)
                 experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
 
 

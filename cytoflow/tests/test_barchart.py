@@ -34,12 +34,12 @@ class TestBarChart(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-                                   
+
         self.ex = flow.ChannelStatisticOp(name = "ByDox",
                                      by = ['Dox', 'Well'],
                                      channel = "Y2-A",
                                      function = flow.geom_mean).apply(self.ex)
-                                     
+                                         
         self.view = flow.BarChartView(statistic = "ByDox",
                                       feature = "Y2-A",
                                       variable = "Well",
@@ -78,6 +78,7 @@ class TestBarChart(ImportedDataTest):
         
     def testErrorStat(self):
         import pandas as pd
+        
         self.ex = flow.ChannelStatisticOp(name = "ByDox2",
                                           by = ['Dox', 'Well'],
                                           channel = "Y2-A",

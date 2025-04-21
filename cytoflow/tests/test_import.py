@@ -26,6 +26,7 @@ Created on Dec 1, 2015
 import unittest
 import os
 import cytoflow as flow
+from cytoflow.utility import CytoflowOpWarning
 
 class TestImport(unittest.TestCase):
     
@@ -52,7 +53,8 @@ class TestImport(unittest.TestCase):
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
                                   tubes = [tube1, tube2])
         with self.assertRaises(RuntimeError):
-            import_op.apply()
+            with self.assertWarns(UserWarning):
+                import_op.apply()
         
     def testMetadata(self):
         tube1 = flow.Tube(file = self.cwd + '/data/Plate01/RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
@@ -78,7 +80,8 @@ class TestImport(unittest.TestCase):
     def testAccuriC6(self):
         path = self.cwd + '/data/instruments/' + 'Accuri - C6.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
 
     def testAttune(self):
         path = self.cwd + '/data/instruments/' + 'Applied Biosystems - Attune.fcs'
@@ -88,22 +91,26 @@ class TestImport(unittest.TestCase):
     def testFACSAriaII(self):
         path = self.cwd + '/data/instruments/' + 'BD - FACS Aria II.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(UserWarning):
+            import_op.apply()
         
     def testCyan(self):
         path = self.cwd + '/data/instruments/' + 'Beckman Coulter - Cyan.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testCytomicsLMD(self):
         path = self.cwd + '/data/instruments/' + 'Beckman Coulter - Cytomics FC500.LMD'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testGalliosLMD(self):
         path = self.cwd + '/data/instruments/' + 'Beckman Coulter - Gallios.LMD'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()    
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()    
         
     def testMoFloAstriosLinear(self):
         path = self.cwd + '/data/instruments/' + 'Beckman Coulter - MoFlo Astrios - linear settings.fcs'
@@ -115,10 +122,11 @@ class TestImport(unittest.TestCase):
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
         import_op.apply()
         
-    def testMoFlowXDP(self):
+    def testMoFloXDP(self):
         path = self.cwd + '/data/instruments/' + 'Beckman Coulter - MoFlo XDP.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testCytekDxP10(self):
         path = self.cwd + '/data/instruments/' + 'Cytek DxP10.fcs'
@@ -128,12 +136,14 @@ class TestImport(unittest.TestCase):
     def testCytekXP5(self):
         path = self.cwd + '/data/instruments/' + 'Cytek xP5.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testCytekNL2000(self):
         path = self.cwd + '/data/instruments/' + 'Cytek NL-2000.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(UserWarning):
+            import_op.apply()
         
     def testGuavaMuse(self):
         path = self.cwd + '/data/instruments/' +  'Guava Muse.fcs'
@@ -143,12 +153,14 @@ class TestImport(unittest.TestCase):
     def testICytEclipse(self):
         path = self.cwd + '/data/instruments/' + 'iCyt - Eclipse.lmd'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testMilliporeGuava(self):
         path = self.cwd + '/data/instruments/' + 'Millipore - Guava.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(UserWarning):
+            import_op.apply()
         
     def testMiltenyiMACSQuant(self):
         path = self.cwd + '/data/instruments/' + 'Miltenyi Biotec - MACSQuant Analyzer.fcs'
@@ -158,22 +170,26 @@ class TestImport(unittest.TestCase):
     def testPartecCyFlow29(self):
         path = self.cwd + '/data/instruments/' + 'Partec - CyFlow v2.9.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testPartecPAS(self):
         path = self.cwd + '/data/instruments/' + 'Partec - PAS.FCS'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testStratedigmS1400(self):
         path = self.cwd + '/data/instruments/' + 'Stratedigm - S1400.fcs'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()
         
     def testSystemIILMD(self):
         path = self.cwd + '/data/instruments/' + 'System II listmode with extra info in bits D10-D15.LMD'
         import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
-        import_op.apply()    
+        with self.assertWarns(CytoflowOpWarning):
+            import_op.apply()    
                     
     def testDataset(self):
         file = self.cwd + '/data/instruments/Guava Muse.fcs'

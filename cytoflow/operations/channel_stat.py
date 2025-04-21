@@ -205,11 +205,15 @@ class ChannelStatisticOp(HasStrictTraits):
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
-        groupby = experiment.data.groupby(self.by, observed = False)
-                
+        groupby = experiment.data.groupby(self.by, observed = False)  
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
-        
+
+        for i in idx:
+            if (i[0] if idx.nlevels == 1 else i) not in groupby.indices:
+                warn("No events for category {}".format( [str(i[0]) + "=" + str(i[1])  for i in zip(idx.names, i)]),
+                     util.CytoflowOpWarning)
+              
         stat = None
         
         for group, data_subset in groupby:

@@ -3,7 +3,8 @@ Created on Aug 5, 2020
 
 @author: brian
 '''
-import logging, multiprocessing, sys
+import logging, multiprocessing, sys, traceback
+from pathlib import Path
 
 from nose2.events import Plugin
 from nose2.plugins.mp import MultiProcess, procserver
@@ -24,7 +25,9 @@ from cytoflowgui.tests.sphinx_mock import MockFinder
 sys.meta_path.insert(0, MockFinder(['traitsui.qt']))  
 
 import matplotlib
-import matplotlib.backends
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import warnings
 
 def _startProcs(self, test_count):
     # Create session export
@@ -46,9 +49,12 @@ def _get_running_interactive_framework():
 
 class NoseSetup(Plugin):
     configSection = 'nose_setup'
+    saveFiguresFilename = None
+    saveFiguresDevice = None
     
     def __init__(self):
-        self.addOption(self.setGui, 'GUI', 'runInGUI', 'Running in GUI?', 0)
+        self.addFlag(self.setGui, 'GUI', 'runInGUI', 'Running in GUI?')
+        self.addArgument(self.saveFigures, None, "saveFigures", 'Save matplotlib figures to this file. If not passed, discard them.')
         
     def createTests(self, event):
         # select the 'null' pyface toolkit. an exception is raised if the qt toolkit
@@ -64,8 +70,8 @@ class NoseSetup(Plugin):
         from cytoflowgui.tests.sphinx_mock import MockFinder
         import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt']))   
 
-    def startTestRun(self, event):
-        log.warning('Loading customized nose2 configuration')
+    def startTestRun(self, _):
+        log.debug('Loading customized nose2 configuration')
 
         # set multiprocessing to use spawn (defaults to fork on UNIX)
         # keeps (GNU) OpenMP from crashing 
@@ -80,22 +86,46 @@ class NoseSetup(Plugin):
         # make matplotlib stop complaining about running headless
         matplotlib.backends._get_running_interactive_framework = _get_running_interactive_framework
         
-    def startSubprocess(self, event):
-        # select the 'null' pyface toolkit. 
+        # set up pdf plot saving
+        if self.saveFiguresFilename:
+            self.saveFiguresDevice = PdfPages(self.saveFiguresFilename)
+            
+    def stopTestRun(self, _):
+        if self.saveFiguresDevice:
+            self.saveFiguresDevice.close()
+            
+    def registerInSubprocess(self, event):
+        event.pluginClasses.append(self.__class__)
         
+    def startSubprocess(self, _):
+        # select the 'null' pyface toolkit.     
         from traits.etsconfig.api import ETSConfig
         ETSConfig.toolkit = 'null'
-        
+    
         # use the sphinx autodoc module-mocker to mock out traitsui.qt
-        
+    
         from cytoflowgui.tests.sphinx_mock import MockFinder
         import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt']))  
+        
+        # squash the matplotlib max figures warning
+        matplotlib.rcParams.update({'figure.max_open_warning': 0})
+        
+    def stopTest(self, event):
+        if self.saveFiguresDevice:
+            for n in plt.get_fignums():
+                plt.figure(n).savefig(self.saveFiguresDevice, format = 'pdf')
+        plt.close('all')
 
-    def setGui(self, val):
+    def setGui(self):
         # tell cytoflow that we are in a GUI, to test GUI-specific things!
 
         import cytoflow
-        cytoflow.RUNNING_IN_GUI = True        
-        
+        cytoflow.RUNNING_IN_GUI = True 
+
+    def saveFigures(self, filename):
+        filename = filename[0]
+        if Path(filename).exists():
+            raise RuntimeError("File {} already exists".format(filename))
+        self.saveFiguresFilename = filename
 
         

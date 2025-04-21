@@ -145,6 +145,11 @@ class FrameStatisticOp(HasStrictTraits):
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
 
+        for i in idx:
+            if (i[0] if idx.nlevels == 1 else i) not in groupby.indices:
+                warn("No events for category {}".format( [str(i[0]) + "=" + str(i[1])  for i in zip(idx.names, i)]),
+                     util.CytoflowOpWarning)
+
         stat = pd.DataFrame(index = idx, 
                             dtype = 'float').sort_index()
         
