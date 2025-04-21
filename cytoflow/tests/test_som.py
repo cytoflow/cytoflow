@@ -25,73 +25,79 @@ Created on Feb 4, 2018
 import unittest
 import cytoflow as flow
 import pandas as pd
-from .test_base import ImportedDataTest  # @UnresolvedImport
+from .test_base import ImportedDataTest
 
-class TestGaussian(ImportedDataTest):
+class TestSOM(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
 
-        self.op = flow.GaussianMixtureOp(name = "GM",
-                                         channels = ["V2-A", "Y2-A"],
-                                         scale = {"V2-A" : "logicle",
-                                                  "Y2-A" : "logicle"},
-                                         num_components = 2)
+        self.op = flow.SOMOp(name = "SOM",
+                             channels = ["V2-A", "Y2-A"],
+                             scale = {"V2-A" : "logicle",
+                                      "Y2-A" : "logicle"})
         
     def testEstimate(self):
         self.op.estimate(self.ex)
         ex2 = self.op.apply(self.ex)
-        self.assertEqual(len(ex2['GM'].unique()), 2)
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
+    def testEstimate1D(self):
+        self.op.channels = ["V2-A"]
+        self.op.scale = {"V2-A" : "logicle"}
+        self.op.estimate(self.ex)
+        ex2 = self.op.apply(self.ex)
+    
+        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
+    
     def testEstimateBy(self):
         self.op.by = ["Well"]
         self.op.estimate(self.ex)
-        
+    
         ex2 = self.op.apply(self.ex)
-        self.assertEqual(len(ex2['GM'].unique()), 2)
-
+    
     def testEstimateBy2(self):
         self.op.by = ["Well", "Dox"]
         self.op.estimate(self.ex)
-        
+    
         ex2 = self.op.apply(self.ex)
-        self.assertEqual(len(ex2['GM'].unique()), 2)
         
     def testPlot(self):
         self.op.estimate(self.ex)
         self.op.default_view().plot(self.ex)
-        
+    
+    def testPlot1D(self):
+        self.op.channels = ["V2-A"]
+        self.op.scale = {"V2-A" : "logicle"}
+        self.op.estimate(self.ex)
+        self.op.default_view().plot(self.ex)
+    
     def testPlotBy1(self):
         self.op.by = ["Dox"]
         self.op.estimate(self.ex)
         self.op.default_view().plot(self.ex, plot_name = 10.0)
-                
+    
     def testPlotByIter1(self):
         self.op.by = ["Dox"]
         self.op.estimate(self.ex)
         dv = self.op.default_view()
         for v in dv.enum_plots(self.ex):
             self.op.default_view().plot(self.ex, plot_name = v)
-            
+    
     def testPlotBy2(self):
-        self.op.by = ["Dox", "Well"]
+        self.op.by = ["Well", "Dox"]
         self.op.estimate(self.ex)
-        self.op.default_view().plot(self.ex, plot_name = (10.0, 'A'))
-                
+        self.op.default_view().plot(self.ex, plot_name = ('B', 10.0))
+    
     def testPlotByIter2(self):
-        self.op.by = ["Dox", "Well"]
+        self.op.by = ["Well", "Dox"]
         self.op.estimate(self.ex)
         dv = self.op.default_view()
         for v in dv.enum_plots(self.ex):
             self.op.default_view().plot(self.ex, plot_name = v)
-        
+    
     def testPlotBySubset(self):
-        self.op.by = ["Dox"]
+        self.op.by = ["Well", "Dox"]
         self.op.estimate(self.ex)
-        self.op.default_view(subset = "Dox == 10.0").plot(self.ex, plot_name = 10.0)
-
-if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'TestGaussian.testEstimateBy']
-    unittest.main()
+        self.op.default_view(subset = "Dox == 10.0").plot(self.ex, plot_name = ('A', 10.0))

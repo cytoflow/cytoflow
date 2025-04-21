@@ -210,7 +210,11 @@ class ByView(OpView):
             
             def __next__(self):
                 if self._iter:
-                    return next(self._iter)[0]
+                    ret = next(self._iter)[0]
+                    if util.is_list_like(ret) and len(ret) == 1:
+                        return ret[0]
+                    else:
+                        return ret
                 else:
                     if self._returned:
                         raise StopIteration
@@ -281,7 +285,6 @@ class ByView(OpView):
                                              .format(self.subset))   
                 
         # see if we're making subplots
-        
         by = [x for x in self.by if x not in self.facets]
         
         plot_name = kwargs.get('plot_name', None)
@@ -306,7 +309,7 @@ class ByView(OpView):
                                              "Plot {} must be one of the values "
                                              "returned by enum_plots(). "
                                              "Possible plot names: {} " 
-                                             "(DEBUG: groupby keys: {}"
+                                             "(DEBUG: groupby keys: {})"
                                              .format(plot_name, 
                                                      [x for x in self.enum_plots(experiment)],
                                                      groupby.groups.keys()))

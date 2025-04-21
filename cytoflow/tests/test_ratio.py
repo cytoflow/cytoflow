@@ -22,36 +22,24 @@ Created on Dec 1, 2015
 
 @author: brian
 '''
+
 import unittest
+
 import cytoflow as flow
 import pandas as pd
+import cytoflow.utility as util
 from .test_base import ImportedDataSmallTest
 
 
-class Test(ImportedDataSmallTest):
+class TestChannelRatio(ImportedDataSmallTest):
+
     def setUp(self):
         super().setUp()
-        self.gate = flow.ThresholdOp(name = "Threshold",
-                                     channel = "Y2-A",
-                                     threshold = 500)
+        self.ex = flow.RatioOp(name = "R",
+                               numerator = "Y2-A",
+                               denominator = "V2-A").apply(self.ex)
         
-    def testGate(self):
-        ex2 = self.gate.apply(self.ex)
+    def testApply(self):   
+        self.assertIn("R", self.ex.channels)
         
-        # how many events ended up in the gate?
-        self.assertEqual(ex2.data.groupby("Threshold").size()[True], 4446)
-        
-        self.assertIsInstance(ex2.data.index, pd.RangeIndex)
-
-    def testPlot(self):
-        self.gate.default_view().plot(self.ex)
-
-    def testPlotWithSubset(self):
-        self.gate.default_view(subset = "Dox == 10.0").plot(self.ex)
-        
-    def testPlotParams(self):
-        self.gate.default_view().plot(self.ex, line_props = {'color' : 'grey'})
-
-if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
+                

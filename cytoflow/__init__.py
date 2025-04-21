@@ -36,10 +36,11 @@ import sys
 if sys.version_info < (3, 4):
     raise Exception("Cytoflow requires Python 3.4 or later")
 
-# suppress meaningless warnings from seaborn
+# suppress meaningless warnings from seaborn and sklearn
 import warnings
 warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
 warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
+warnings.filterwarnings('ignore', 'X has feature names, but NearestNeighbors was fitted without feature names')
 
 # and matplotlib 3.1.1 -- there's some weird interaction with seaborn here.
 import matplotlib.text

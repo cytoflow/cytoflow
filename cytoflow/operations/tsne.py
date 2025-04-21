@@ -48,7 +48,7 @@ class tSNEOp(HasStrictTraits):
     
     Call `estimate` to compute the embedding.
       
-    Calling `apply` creates new "channels" named ``{name}_1`` and ``{name}_n``,
+    Calling `apply` creates new "channels" named ``{name}_1`` and ``{name}_2``,
     where ``name`` is the `name` attribute. (Unlike PCA, tSNE only decomposes to
     two components.)
 

@@ -515,8 +515,11 @@ class SOMOp(HasStrictTraits):
                     for cluster in range(cc.cluster_centers_.shape[0]):
                         if len(self.by) == 0:
                             g = tuple([cluster + 1])
-                        else:
+                        elif not util.is_list_like(group):
                             g = tuple(list([group]) + [cluster + 1])
+                        else:
+                            g = tuple(list(group) + [cluster + 1])
+
                             
                         centers_stat.at[g, channel] = scale.inverse(cc.cluster_centers_[cluster][ci])
                     
@@ -637,21 +640,23 @@ class SOM1DView(By1DView, AnnotatingView, HistogramView):
                                                         
         # plot the cluster centers
             
-        km = annotation
+        som = annotation
         
         kwargs.setdefault('orientation', 'vertical')
+        
+        centers = som.get_weights().reshape(self.op.width * self.op.height, len(self.op.channels))
         
         if kwargs['orientation'] == 'horizontal':
             scale = kwargs['yscale']
             cidx = self.op.channels.index(self.channel)
-            for k in range(0, self.op.num_clusters):
-                c = scale.inverse(km.cluster_centers_[k][cidx])
+            for k in range(centers.shape[0]):
+                c = scale.inverse(centers[k][cidx])
                 axes.axhline(c, linewidth=3, color='blue')         
         else:
             scale = kwargs['xscale']
             cidx = self.op.channels.index(self.channel)
-            for k in range(0, self.op.num_clusters):
-                c = scale.inverse(km.cluster_centers_[k][cidx])
+            for k in range(centers.shape[0]):
+                c = scale.inverse(centers[k][cidx])
                 axes.axvline(c, linewidth=3, color='blue')                      
 
      

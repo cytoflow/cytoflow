@@ -22,30 +22,48 @@ Created on Feb 4, 2018
 
 @author: brian
 '''
-import unittest
+import unittest, logging, sys
 import cytoflow as flow
 import pandas as pd
 from .test_base import ImportedDataSmallTest
 
 
-class TestPCA(ImportedDataSmallTest):
+class TestSNE(ImportedDataSmallTest):
 
     def setUp(self):
         super().setUp()
-        self.op = flow.PCAOp(name = "PCA",
-                             channels = ["V2-A", "V2-H", "Y2-A", "Y2-H"],
-                             scale = {"V2-A" : "log",
-                                      "V2-H" : "log",
-                                      "Y2-A" : "log",
-                                      "Y2-H" : "log"},
-                             num_components = 2)
+        self.op = flow.tSNEOp(name = "tSNE",
+                              channels = ["V2-A", "V2-H", "Y2-A", "Y2-H"],
+                              scale = {"V2-A" : "log",
+                                       "V2-H" : "log",
+                                       "Y2-A" : "log",
+                                       "Y2-H" : "log"})
+        
+        ## anything that gets printed to stdout, capture that too!
+        class StreamToLogger(object):
+            """
+            Fake file-like stream object that redirects writes to a logger instance.
+            """
+            def __init__(self, logger, level):
+                self.logger = logger
+                self.level = level
+                self.linebuf = ''
+        
+            def write(self, buf):
+                for line in buf.rstrip().splitlines():
+                    self.logger.log(self.level, line.rstrip())
+        
+            def flush(self):
+                pass
+            
+        sys.stdout = StreamToLogger(logging.getLogger(),logging.INFO)
 
         
     def testEstimate(self):
         self.op.estimate(self.ex)
         ex2 = self.op.apply(self.ex)
-        self.assertIn("PCA_1", ex2.channels)
-        self.assertIn("PCA_2", ex2.channels)
+        self.assertIn("tSNE_1", ex2.channels)
+        self.assertIn("tSNE_2", ex2.channels)
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
@@ -55,25 +73,16 @@ class TestPCA(ImportedDataSmallTest):
         
         ex2 = self.op.apply(self.ex)
 
-        self.assertIn("PCA_1", ex2.channels)
-        self.assertIn("PCA_2", ex2.channels)
+        self.assertIn("tSNE_1", ex2.channels)
+        self.assertIn("tSNE_2", ex2.channels)
         
     def testEstimateSubset(self):
         self.op.estimate(self.ex, subset = "Dox == 10.0")
         
         ex2 = self.op.apply(self.ex)
 
-        self.assertIn("PCA_1", ex2.channels)
-        self.assertIn("PCA_2", ex2.channels)
-        
-    def testWhiten(self):
-        self.op.whiten = True
-        self.op.estimate(self.ex)
-        
-        ex2 = self.op.apply(self.ex)
-
-        self.assertIn("PCA_1", ex2.channels)
-        self.assertIn("PCA_2", ex2.channels)
+        self.assertIn("tSNE_1", ex2.channels)
+        self.assertIn("tSNE_2", ex2.channels)
 
 
 if __name__ == "__main__":

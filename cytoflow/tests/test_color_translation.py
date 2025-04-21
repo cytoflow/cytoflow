@@ -44,6 +44,10 @@ class Test(unittest.TestCase):
                         mixture_model = True)
             
         self.op.estimate(self.ex)
+        
+    def testLinear(self):
+        self.op.linear_model = True
+        self.op.estimate(self.ex)
 
     def test_apply(self):
         ex2 = self.op.apply(self.ex)

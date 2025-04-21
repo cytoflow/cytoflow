@@ -73,6 +73,10 @@ class TestBeads(unittest.TestCase):
         self.assertAlmostEqual(self.op._calibration_functions["PE-Tx-Red-YG-A"](100000),
                                898360.9384, delta = 100)
         
+    def testLinear(self):
+        self.op.force_linear = True
+        self.op.estimate(self.ex)
+        
     def testApply(self):
         # this is just to make sure the code doesn't crash;
         # nothing about correctness.
