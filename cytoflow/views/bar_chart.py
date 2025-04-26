@@ -148,7 +148,6 @@ class BarChartView(Base1DStatisticsView):
         # limits
         lim = kwargs.pop('lim', None)
                       
-        stat = experiment.statistics[self.statistic]
         if orientation == 'vertical':
             map_args = [self.variable, self.feature]
         else:

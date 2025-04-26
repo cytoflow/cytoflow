@@ -54,8 +54,8 @@ class ChannelStatisticOp(HasStrictTraits):
     ``float`` or a value that can be cast to ``float``, then the resulting 
     statistic has one column and its name is set to `channel`. If `function`
     returns a `pandas.Series`, then the ``Series``' index labels become the 
-    column names. (If used this way, `function` must **always** return a 
-    `pandas.Series` with the same index.)
+    column names. (If used this way, each call to `function` must **always** 
+    return a `pandas.Series` with the same index.)
     
     Attributes
     ----------
@@ -63,8 +63,8 @@ class ChannelStatisticOp(HasStrictTraits):
         The operation name.  Becomes the name of the new statistic.
     
     channel : Str
-        The channel to apply the function to. The channels become the column
-        names in the new statistic.
+        The channel to apply the function to. The channels become the column 
+        (feature) name in the new statistic.
         
     function : Callable
         The function used to compute the statistic.  `function` must take 

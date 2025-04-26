@@ -27,7 +27,7 @@ import scipy.stats
 import pandas
 from warnings import warn
 
-from traits.api import (Str, Callable, Property, List, provides, observe, Tuple, Undefined)
+from traits.api import (Str, Callable, Property, List, provides, observe, Undefined)
 
 import cytoflow.utility as util
 from cytoflow import TransformStatisticOp
@@ -62,8 +62,8 @@ transform_functions = {"Mean" : np.mean,
 @provides(IWorkflowOperation)
 class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
     name = Str(apply = True)
-    statistic = Tuple(Str, Str, apply = True)
-    statistic_name = Str(apply = True)
+    statistic = Str(apply = True)
+    function_name = Str(apply = True)
     by = List(Str, apply = True)  
     
     # override the base class's "subset" with one that is dynamically generated /
@@ -74,15 +74,7 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)
     
-    # automagically pick a good fill
-    fill = Undefined
-    
-    # MAGIC - returns the value of the 'fill' property
-#     def _get_fill(self):
-#         if self.statistic_name:
-#             return fill[self.statistic_name]
-#         else:
-#             return 0
+    fill = 0
         
     # bits to support the subset editor
     @observe('subset_list:items.str')
@@ -94,10 +86,10 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
     def apply(self, experiment):
-        if not self.statistic_name:
+        if not self.function_name:
             raise util.CytoflowOpError("Transform function not set")
         
-        self.function = transform_functions[self.statistic_name]
+        self.function = transform_functions[self.function_name]
         
         ret = TransformStatisticOp.apply(self, experiment)
         
@@ -150,12 +142,12 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
                    "Fold" : "lambda a: Series(a / a.min())"
                    }
         
-        op.function = transform_functions[self.statistic_name]
-        try:
-            op.function.__name__ = fn_name[self.statistic_name]
-        except AttributeError:
-            # can't reassign the name of "len", for example
-            pass
+        op.function = transform_functions[self.function_name]
+        # try:
+        #     op.function.__name__ = fn_name[self.statistic_name]
+        # except AttributeError:
+        #     # can't reassign the name of "len", for example
+        #     pass
         
         return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})" \
             .format(import_statement = (fn_import[self.statistic_name]
@@ -166,16 +158,30 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
                 prev_idx = idx - 1) 
             
 ### Serialization
-@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 1)
+@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 2)
 def _dump(op):
     return dict(name = op.name,
                 statistic = op.statistic,
-                statistic_name = op.statistic_name,
+                function_name = op.function_name,
+                by = op.by,
+                subset_list = op.subset_list)
+
+@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 1)
+def _dump_v1(op):
+    return dict(name = op.name,
+                statistic = op.statistic,
+                statistic_name = op.function_name,
                 by = op.by,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('transform-statistic', version = 1)
+@camel_registry.loader('transform-statistic', version = 2)
 def _load(data, version):
-    data['statistic'] = tuple(data['statistic'])
+    return TransformStatisticWorkflowOp(**data)
+
+@camel_registry.loader('transform-statistic', version = 1)
+def _load_v1(data, version):
+    data['statistic'] = tuple(data['statistic'])[0]
+    del data['statistic_name']
+    # TODO - some warning about how stats have changed.
     return TransformStatisticWorkflowOp(**data)
 

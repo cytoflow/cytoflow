@@ -142,7 +142,7 @@ class Stats1DHandler(ViewHandler):
     view_traits_view = \
         View(VGroup(
              VGroup(Item('statistic',
-                         editor=EnumEditor(name='context_handler.numeric_statistics_names'),
+                         editor=EnumEditor(name='context_handler.statistics_names'),
                          label = "Statistic"),
                     Item('scale', label = "Statistic\nScale"),
                     Item('variable',

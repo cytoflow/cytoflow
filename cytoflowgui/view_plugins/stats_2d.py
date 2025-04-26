@@ -145,11 +145,11 @@ class Stats2DHandler(ViewHandler):
     view_traits_view = \
         View(VGroup(
              VGroup(Item('xstatistic',
-                         editor = EnumEditor(name = 'context_handler.numeric_statistics_names'),
+                         editor = EnumEditor(name = 'context_handler.statistics_names'),
                          label = "X Statistic"),
                     Item('xscale', label = "X Scale"),
                     Item('ystatistic',
-                         editor = EnumEditor(name = 'context_handler.numeric_statistics_names'),
+                         editor = EnumEditor(name = 'context_handler.statistics_names'),
                          label = "Y Statistic"),
                     Item('yscale', label = "Y Scale"),
                     Item('variable',

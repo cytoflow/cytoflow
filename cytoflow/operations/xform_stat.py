@@ -55,9 +55,6 @@ class TransformStatisticOp(HasStrictTraits):
         If `function` returns a `pandas.Series`, it must have an index with only
         one level -- no hierarchical indexing, please!
     
-     but the levels in
-    its index will be the same as the conditions in `by`.
-    
     Alternately, if `by` is left empty, then `function` must be a transformation.
     `function` must take a `pandas.Series` as an argument and return a `pandas.Series`
     with exactly the same index. `function` will be called on each column of the 

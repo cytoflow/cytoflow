@@ -210,7 +210,7 @@ class StatisticNode(TreeNodeObject):
     wi = Instance(WorkflowItem)
     """The `WorkflowItem` that this condition is part of"""
     
-    statistic = Tuple()   
+    statistic = Str()   
     
     def tno_get_label(self, _):
         return str(self.statistic)
@@ -229,10 +229,11 @@ class StatisticNode(TreeNodeObject):
     
     def tno_get_children(self, _):
         statistic = self.wi.statistics[self.statistic]
-        ret = [StringNode(name = 'Operation',
-                          value = self.statistic[0]),
-               StringNode(name = 'Name',
-                          value = self.statistic[1])]
+        ret = [StringNode(name = 'Name',
+                          value = self.statistic)]
+        for i, c in enumerate(statistic.columns):
+            ret.append(StringNode(name = 'Feature {}'.format(i + 1),
+                                  value = c))
                 
         if statistic.index.nlevels == 1:
             ret.append(StringNode(name = 'Facet Name',

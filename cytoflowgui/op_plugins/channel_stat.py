@@ -71,7 +71,7 @@ class ChannelStatisticHandler(OpHandler):
              Item('channel',
                   editor= EnumEditor(name='context_handler.previous_channels'),
                   label = "Channel"),
-             Item('statistic_name',
+             Item('function_name',
                          editor = EnumEditor(values = sorted(summary_functions.keys())),
                          label = "Function"),
              Item('by',
