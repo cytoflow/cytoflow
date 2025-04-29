@@ -126,21 +126,21 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
                      "Fold" : "from pandas import Series"
                   }
         
-        fn_name = {"Mean" : "mean",
-                   "Median" : "median",
-                   "Geom.Mean" : "geom_mean",
-                   "Count" : "len",
-                   "Std.Dev" : "std",
-                   "Geom.SD" : "geom_sd_range",
-                   "SEM" : "sem",
-                   "Geom.SEM" : "geom_sem_range",
-                   "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
-                   "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)",
-                   "Sum" : "sum",
-                   "Proportion" : "lambda a: Series(a / a.sum())",
-                   "Percentage" : "lambda a: Series(a / a.sum()) * 100.0",
-                   "Fold" : "lambda a: Series(a / a.min())"
-                   }
+        # fn_name = {"Mean" : "mean",
+        #            "Median" : "median",
+        #            "Geom.Mean" : "geom_mean",
+        #            "Count" : "len",
+        #            "Std.Dev" : "std",
+        #            "Geom.SD" : "geom_sd_range",
+        #            "SEM" : "sem",
+        #            "Geom.SEM" : "geom_sem_range",
+        #            "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
+        #            "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)",
+        #            "Sum" : "sum",
+        #            "Proportion" : "lambda a: Series(a / a.sum())",
+        #            "Percentage" : "lambda a: Series(a / a.sum()) * 100.0",
+        #            "Fold" : "lambda a: Series(a / a.min())"
+        #            }
         
         op.function = transform_functions[self.function_name]
         # try:

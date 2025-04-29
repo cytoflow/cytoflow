@@ -130,7 +130,7 @@ class BarChartView(Base1DStatisticsView):
         Other ``kwargs`` are passed to `matplotlib.axes.Axes.bar <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.bar.html>`_
 
         """
-        
+
         super().plot(experiment, plot_name, **kwargs)
         
     def _grid_plot(self, experiment, grid, **kwargs):

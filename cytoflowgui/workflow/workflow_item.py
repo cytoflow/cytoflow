@@ -225,7 +225,7 @@ class WorkflowItem(HasStrictTraits):
             experiment = self.previous_wi.result
         else:
             return None
-        
+
         plot_iter = self.current_view.enum_plots(experiment)
         plot_names = [x for x in plot_iter]
         

@@ -149,10 +149,8 @@ class LongTableHandler(ViewHandler):
         if dialog.open() != OK:
             return
   
-        data = pd.DataFrame(index = self.model.result.index)
-        data[self.model.result.name] = self.model.result
-         
-        self.model._export_data(data, self.model.result.name, dialog.path)
+        stat = self.context.statistics[self.model.statistic]
+        self.model._export_data(stat, dialog.path)
             
 
 @provides(IViewPlugin)

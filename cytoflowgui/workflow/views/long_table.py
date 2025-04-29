@@ -42,7 +42,7 @@ class LongTableWorkflowView(WorkflowByView, LongTableView):
     plot_params = BasePlotParams() # this is unused -- no view, not passed to plot()
     
     # return the result for export from the GUI process
-    result = Instance(pd.Series, status = True)
+    result = Instance(pd.DataFrame, status = True)
     
     def plot(self, experiment, **kwargs):
         if experiment is None:

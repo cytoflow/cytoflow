@@ -748,14 +748,14 @@ class BaseStatisticsView(BaseView):
                 self._returned = False
                 
                 if by:
-                    self._iter = data.groupby(by).__iter__()
+                    self._iter = data.groupby(by, observed = True).groups.keys().__iter__()
                 
             def __iter__(self):
                 return self
             
             def __next__(self):
                 if self._iter:
-                    return next(self._iter)[0]
+                    return next(self._iter)
                 else:
                     if self._returned:
                         raise StopIteration
@@ -803,7 +803,7 @@ class BaseStatisticsView(BaseView):
                                          "the facets are already used")
         
         if unused_names:
-            groupby = data.groupby(unused_names)
+            groupby = data.groupby(unused_names, observed = True)
 
             if plot_name is None:
                 raise util.CytoflowViewError('plot_name',

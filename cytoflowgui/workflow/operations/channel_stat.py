@@ -180,6 +180,14 @@ class ChannelStatisticWorkflowOp(WorkflowOperation, ChannelStatisticOp):
             
     
 ### Serialization
+@camel_registry.dumper(ChannelStatisticWorkflowOp, 'channel-statistic', version = 2)
+def _dump(op):
+    return dict(name = op.name,
+                channel = op.channel,
+                function_name = op.function_name,
+                by = op.by,
+                subset_list = op.subset_list)
+
 @camel_registry.dumper(ChannelStatisticWorkflowOp, 'channel-statistic', version = 1)
 def _dump_v1(op):
     return dict(name = op.name,
@@ -187,6 +195,10 @@ def _dump_v1(op):
                 statistic_name = op.statistic_name,
                 by = op.by,
                 subset_list = op.subset_list)
+    
+@camel_registry.loader('channel-statistic', version = 2)
+def _load(data, version):
+    return ChannelStatisticWorkflowOp(**data)
     
 @camel_registry.loader('channel-statistic', version = 1)
 def _load_v1(data, version):
