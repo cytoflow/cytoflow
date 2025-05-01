@@ -27,6 +27,9 @@ Make a table out of a statistic.  The table can then be exported.
 
     Which statistic to view.
     
+.. object:: Feature
+        The column in the statistic to view (often a channel name.)
+    
 .. object:: Rows
 
     Which variable to use for the rows
@@ -96,7 +99,8 @@ class TableHandler(ViewHandler):
 
     indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
     levels = Property(depends_on = "context.statistics, model.statistic")
-    
+    features = Property(depends_on = "context.statistics, model.statistic")
+
     export = Event()
 
     view_traits_view = \
@@ -104,6 +108,9 @@ class TableHandler(ViewHandler):
              VGroup(Item('statistic',
                          editor = EnumEditor(name='context_handler.statistics_names'),
                          label = "Statistic"),
+                    Item('feature',
+                         editor = EnumEditor(name = 'handler.features'),
+                         label = "Feature"),
                     Item('row_facet',
                          editor = ExtendableEnumEditor(name='handler.indices',
                                                      extra_items = {"None" : ""}),
@@ -195,6 +202,15 @@ class TableHandler(ViewHandler):
             
         return ret
     
+    # MAGIC: gets the value for the property "features"
+    def _get_features(self):
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+         
+        stat = self.context.statistics[self.model.statistic]
+        return stat.columns.to_list()
+    
     @observe('export')
     def _on_export(self, _):
          
@@ -206,11 +222,8 @@ class TableHandler(ViewHandler):
  
         if dialog.open() != OK:
             return
-  
-        data = pd.DataFrame(index = self.model.result.index)
-        data[self.model.result.name] = self.model.result
          
-        self.model._export_data(data, self.model.result.name, dialog.path)
+        self.model._export_data(self.model.result, self.model.feature, dialog.path)
             
                     
 

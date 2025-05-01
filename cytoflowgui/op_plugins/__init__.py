@@ -41,6 +41,7 @@ from .quad import QuadPlugin
 
 # statistics and transformations
 from .channel_stat import ChannelStatisticPlugin
+from .multi_channel_stat import MultiChannelStatisticPlugin
 from .xform_stat import TransformStatisticPlugin
 from .ratio import RatioPlugin
 

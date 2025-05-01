@@ -118,7 +118,7 @@ def _dump_tuple(data):
     return list(data)
 
 @standard_types_registry.loader('python/tuple', version=None)
-def _load_tuple(data, version):
+def _load_tuple(data, _):
     return tuple(data)
 
 # @standard_types_registry.dumper(TraitTuple, 'python/tuple', version = None)
@@ -130,7 +130,7 @@ def _dump_undef(ud):
     return "Undefined"
 
 @camel_registry.loader('undefined', version = 1)
-def _load_undef(data, version):
+def _load_undef(**_):
     return Undefined
 
 @camel_registry.dumper(numpy.dtype, 'numpy-dtype', version = 1)
@@ -138,7 +138,7 @@ def _dump_dtype(d):
     return str(d)
 
 @camel_registry.loader('numpy-dtype', version = 1)
-def _load_dtype(data, version):
+def _load_dtype(data, _):
     return numpy.dtype(data)
 
 @camel_registry.dumper(CategoricalDtype, 'pandas-categorical-dtype', version = 1)
@@ -147,7 +147,7 @@ def _dump_categorical_dtype(d):
                 ordered = d.ordered)
     
 @camel_registry.loader('pandas-categorical-dtype', version = 1)
-def _load_categorical_dtype(data, version):
+def _load_categorical_dtype(data, _):
     return CategoricalDtype(categories = data['categories'],
                             ordered = data['ordered'])
 
@@ -164,13 +164,13 @@ def _dump_multiindex_v2(d):
                 names = list(d.names))
 
 @camel_registry.loader('pandas-multiindex', version = 1)
-def _load_multiindex_v1(data, version):
+def _load_multiindex_v1(data, _):
     return pandas.MultiIndex(levels = data['levels'],
                              codes = data['labels'],
                              names = data['names'])
     
 @camel_registry.loader('pandas-multiindex', version = 2)
-def _load_multiindex_v2(data, version):
+def _load_multiindex_v2(data, _):
     return pandas.MultiIndex(levels = data['levels'],
                              codes = data['codes'],
                              names = data['names'])
@@ -182,7 +182,7 @@ def _dump_index(d):
                 dtype = str(d.dtype))
     
 @camel_registry.loader('pandas-index', version = 1)
-def _load_index(data, version):
+def _load_index(data, _):
     return pandas.Index(name = data['name'],
                         data = data['values'],
                         dtype = data['dtype'])
@@ -195,7 +195,7 @@ def _load_index(data, version):
 #                 values = d.values.tolist())
 
 @camel_registry.loader('pandas-int64index', version = 1)
-def _load_int64index(data, version):
+def _load_int64index(data, _):
     return pandas.Index(name = data['name'],
                         data = data['values'],
                         dtype = numpy.int64)
@@ -207,7 +207,7 @@ def _load_int64index(data, version):
 #                 values = d.values.tolist())
 
 @camel_registry.loader('pandas-float64index', version = 1)
-def _load_float64index(data, version):
+def _load_float64index(data, _):
     return pandas.Index(name = data['name'],
                         data = data['values'],
                         dtype = numpy.float64)
@@ -220,7 +220,7 @@ def _dump_categoricalindex(d):
                 ordered = d.ordered)
 
 @camel_registry.loader('pandas-categoricalindex', version = 1)
-def _load_categoricalindex(data, version):
+def _load_categoricalindex(data, _):
     return pandas.CategoricalIndex(name = data['name'],
                                    data = data['values'],
                                    categories = data['categories'],
@@ -234,7 +234,7 @@ def _dump_rangeindex(d):
                 step = d.step)
     
 @camel_registry.loader('pandas-rangeindex', version = 1)
-def _load_rangeindex(data, version):
+def _load_rangeindex(data, _):
     return pandas.RangeIndex(name = data['name'],
                              start = data['start'],
                              stop = data['stop'],
@@ -258,7 +258,7 @@ def _dump_series(s):
                 dtype = str(s.dtype))
     
 @camel_registry.loader('pandas-series', version = 1)
-def _load_series_v1(data, version):
+def _load_series_v1(data, _):
     ret = pandas.Series(data = data['data'],
                         index = data['index'])
 
@@ -270,16 +270,24 @@ def _load_series_v1(data, version):
     return ret
     
 @camel_registry.loader('pandas-series', version = 2)
-def _load_series_v2(data, version):
+def _load_series_v2(data, _):
     return pandas.Series(data = data['data'],
                          index = data['index'],
                          dtype = data['dtype'])
 
 @camel_registry.loader('pandas-series', version = 3)
-def _load_series_v3(data, version):
-    return pandas.Series(data = data['data'],
-                         index = data['index'],
-                         dtype = data['dtype'])
+def _load_series_v3(data, _):
+    return pandas.Series(**data)
+    
+@camel_registry.dumper(pandas.DataFrame, 'pandas-dataframe', version = 1)
+def _dump_dataframe(df):
+    return dict(data = {x: df[x] for x in df.columns},
+                index = df.index,
+                columns = df.columns.to_list())
+
+@camel_registry.loader('pandas-dataframe', version = 1)
+def _load_dataframe(data, _):
+    return pandas.DataFrame(**data)
     
 # a few bits for testing serialization
 def traits_eq(self, other):

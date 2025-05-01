@@ -121,7 +121,7 @@ class ChannelStatisticWorkflowOp(WorkflowOperation, ChannelStatisticOp):
             
     def apply(self, experiment):
         if not self.function_name:
-            raise util.CytoflowOpError("Summary function isn't set")
+            raise util.CytoflowOpError('function_name', "Summary function isn't set")
         
         self.function = summary_functions[self.function_name]
         
@@ -134,6 +134,9 @@ class ChannelStatisticWorkflowOp(WorkflowOperation, ChannelStatisticOp):
     def get_notebook_code(self, idx):
         op = ChannelStatisticOp()
         op.copy_traits(self, op.copyable_trait_names())
+        
+        raise NotImplementedError("Notebook export for channel_stat still needs testing!")
+
         
         fn_import = {"Mean" : "from numpy import mean",
                      "Mean +- SD" : None,

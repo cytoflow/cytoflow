@@ -32,6 +32,7 @@ from .range2d import Range2DWorkflowOp, Range2DSelectionView
 from .polygon import PolygonWorkflowOp, PolygonSelectionView
 
 from .channel_stat import ChannelStatisticWorkflowOp
+from .multi_channel_stat import MultiChannelStatisticWorkflowOp, Function as MultiChannelStatisticFunction
 from .xform_stat import TransformStatisticWorkflowOp
 from .ratio import RatioWorkflowOp
 

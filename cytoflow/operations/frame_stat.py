@@ -61,8 +61,8 @@ class FrameStatisticOp(HasStrictTraits):
     function : Callable
         The function used to compute the statistic.  Must take a 
         `pandas.DataFrame` as its only argument and return a 
-        `pandas.DataFrame` containing ``float`` values. The column names
-        of this dataframe will become the column names of the new statistic.
+        `pandas.Series` containing ``float`` values. The row names
+        of this series will become the column names of the new statistic.
 
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the

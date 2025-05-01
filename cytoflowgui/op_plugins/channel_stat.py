@@ -31,7 +31,7 @@ in **By**, then applies **Function** to the **Channel** in each group.
 
 .. object:: Name
 
-    The operation name.  Becomes the first part of the new statistic's name.
+    The operation name.  Becomes the new statistic's name.
     
 .. object:: Channel
 
@@ -72,8 +72,8 @@ class ChannelStatisticHandler(OpHandler):
                   editor= EnumEditor(name='context_handler.previous_channels'),
                   label = "Channel"),
              Item('function_name',
-                         editor = EnumEditor(values = sorted(summary_functions.keys())),
-                         label = "Function"),
+                  editor = EnumEditor(values = sorted(summary_functions.keys())),
+                                      label = "Function"),
              Item('by',
                   editor = CheckListEditor(cols = 2,
                                            name = 'context_handler.previous_conditions_names'),

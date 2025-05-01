@@ -42,7 +42,7 @@ class TableWorkflowView(WorkflowByView, TableView):
     plot_params = BasePlotParams() # this is unused -- no view, not passed to plot()
     
     # return the result for export from the GUI process
-    result = Instance(pd.Series, status = True)
+    result = Instance(pd.DataFrame, status = True)
     
     def plot(self, experiment, **kwargs):
         if experiment is None:
@@ -64,8 +64,23 @@ class TableWorkflowView(WorkflowByView, TableView):
            
 ### Serialization
 
-@camel_registry.dumper(TableWorkflowView, 'table-view', version = 1)
+@camel_registry.dumper(TableWorkflowView, 'table-view', version = 2)
 def _dump(view):
+    return dict(statistic = view.statistic,
+                feature = view.feature,
+                row_facet = view.row_facet,
+                subrow_facet = view.subrow_facet,
+                column_facet = view.column_facet,
+                subcolumn_facet = view.subcolumn_facet,
+                subset_list = view.subset_list,
+                current_plot = view.current_plot)
+    
+@camel_registry.loader('table-view', version = 2)
+def _load(data, version):
+    return TableWorkflowView(**data)
+
+@camel_registry.dumper(TableWorkflowView, 'table-view', version = 1)
+def _dump_v1(view):
     return dict(statistic = view.statistic,
                 row_facet = view.row_facet,
                 subrow_facet = view.subrow_facet,
@@ -75,6 +90,6 @@ def _dump(view):
                 current_plot = view.current_plot)
     
 @camel_registry.loader('table-view', version = 1)
-def _load(data, version):
+def _load_v1(data, version):
     data['statistic'] = tuple(data['statistic'])
     return TableWorkflowView(**data)

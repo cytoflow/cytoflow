@@ -63,8 +63,28 @@ class Stats2DWorkflowView(WorkflowByView, Stats2DView):
 
 ### Serialization
 
-@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 2)
+@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 3)
 def _dump(view):
+    return dict(statistic = view.statistic,
+                xfeature = view.xfeature,
+                xscale = view.xscale,
+                yfeature = view.yfeature,
+                yscale = view.yscale,
+                variable = view.variable,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                x_error_low = view.x_error_low,
+                x_error_high = view.x_error_high,
+                y_error_low = view.y_error_low,
+                y_error_high = view.y_error_high,
+                subset_list = view.subset_list,
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
+
+@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 2)
+def _dump_v2(view):
     return dict(xstatistic = view.xstatistic,
                 xscale = view.xscale,
                 ystatistic = view.ystatistic,
@@ -96,12 +116,26 @@ def _dump_v1(view):
                 subset_list = view.subset_list)
 
 
-@camel_registry.loader('stats-2d', version = any)
+@camel_registry.loader('stats-2d', version = 3)
 def _load(data, version):
-    data['xstatistic'] = tuple(data['xstatistic'])
-    data['ystatistic'] = tuple(data['ystatistic'])
-    data['x_error_statistic'] = tuple(data['x_error_statistic'])
-    data['y_error_statistic'] = tuple(data['y_error_statistic'])
+    return Stats2DWorkflowView(**data)
+
+@camel_registry.loader('stats-2d', version = 2)
+def _load_v2(data, version):
+    data['statistic'] = data['xstatistic'][0]
+    del data['ystatistic']
+    del data['x_error_statistic']
+    del data['y_error_statistic']
+    
+    return Stats2DWorkflowView(**data)
+
+    
+@camel_registry.loader('stats-2d', version = 1)
+def _load_v1(data, version):
+    data['statistic'] = data['xstatistic'][0]
+    del data['ystatistic']
+    del data['x_error_statistic']
+    del data['y_error_statistic']
 
     return Stats2DWorkflowView(**data)
 

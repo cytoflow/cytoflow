@@ -93,7 +93,7 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
         
         ret = TransformStatisticOp.apply(self, experiment)
         
-        stat = ret.statistics[(self.name, self.statistic_name)]
+        stat = ret.statistics[self.name]
         
         if Undefined in stat:
             warn("One of the transformed values was Undefined. "

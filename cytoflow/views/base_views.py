@@ -1146,9 +1146,31 @@ class Base2DStatisticsView(BaseStatisticsView):
                 raise util.CytoflowViewError('x_error_high',
                                              "If x_error_low is set, x_error_high must be set too.")
                 
+        if self.x_error_high:
+            if self.x_error_high not in experiment.statistics[self.statistic]:
+                raise util.CytoflowViewError('x_error_high',
+                                             "Can't find the error feature {} in statistic {}. "
+                                             "Possible features: {}"
+                                             .format(self.x_error_high, self.statistic, stat.columns.to_list()))
+                
+            if not self.x_error_low:
+                raise util.CytoflowViewError('x_error_low',
+                                             "If x_error_high is set, x_error_low must be set too.")
+                
+        if self.y_error_low:
+            if self.y_error_low not in experiment.statistics[self.statistic]:
+                raise util.CytoflowViewError('y_error_low',
+                                             "Can't find the y error feature {} in statistic {}. "
+                                             "Possible features: {}"
+                                             .format(self.y_error_low, self.statistic, stat.columns.to_list()))
+                
+            if not self.y_error_high:
+                raise util.CytoflowViewError('y_error_high',
+                                             "If y_error_low is set, y_error_high must be set too.")
+                
         if self.y_error_high:
             if self.y_error_high not in experiment.statistics[self.statistic]:
-                raise util.CytoflowViewError('y_error_low',
+                raise util.CytoflowViewError('y_error_high',
                                              "Can't find the error feature {} in statistic {}. "
                                              "Possible features: {}"
                                              .format(self.y_error_high, self.statistic, stat.columns.to_list()))

@@ -66,8 +66,25 @@ class Stats1DWorkflowView(WorkflowByView, Stats1DView):
         
         
 ### Serialization
-@camel_registry.dumper(Stats1DWorkflowView, 'stats-1d', version = 2)
+@camel_registry.dumper(Stats1DWorkflowView, 'stats-1d', version = 3)
 def _dump(view):
+    return dict(statistic = view.statistic,
+                feature = view.feature,
+                variable = view.variable,
+                scale = view.scale,
+                variable_scale = view.variable_scale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                error_low = view.error_low,
+                error_high = view.error_high,
+                subset_list = view.subset_list,
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
+
+@camel_registry.dumper(Stats1DWorkflowView, 'stats-1d', version = 2)
+def _dump_v2(view):
     return dict(statistic = view.statistic,
                 variable = view.variable,
                 scale = view.scale,
@@ -109,6 +126,12 @@ def _load_v1(data, version):
                              **data)
 
 @camel_registry.loader('stats-1d', version = 2)
+def _load_v2(data, version):
+    data['statistic'] = data['statistic'][0]
+    # TODO - raise some warning about statistics changing
+    return Stats1DWorkflowView(**data)
+
+@camel_registry.loader('stats-1d', version = 3)
 def _load(data, version):
     return Stats1DWorkflowView(**data)
 

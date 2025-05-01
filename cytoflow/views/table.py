@@ -145,6 +145,12 @@ class TableView(HasStrictTraits):
         
         data = experiment.statistics[self.statistic]    
         
+        if self.feature == "":
+            raise util.CytoflowViewError('feature', "Must specify a feature")
+        
+        if self.feature not in data:
+            raise util.CytoflowViewError('feature', "Feature must be in the statistic. Possible values: {}".format(data.columns.to_list()))
+        
         if self.subset:
             try:
                 data = data.query(self.subset)

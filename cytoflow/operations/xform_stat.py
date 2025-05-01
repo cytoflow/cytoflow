@@ -233,7 +233,7 @@ class TransformStatisticOp(HasStrictTraits):
                 if not isinstance(v, pd.Series):
                     raise util.CytoflowOpError('function',
                                                "If you don't specify 'by', your function must return a pandas.Series. "
-                                               "Instead, group {} returned {}".format(group, type(v)))
+                                               "Instead, the function returned {} ({})".format(v, type(v)))
                 new_stat[column] = v
         
         # sort the index, for performance
