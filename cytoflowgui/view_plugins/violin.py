@@ -170,7 +170,7 @@ class ViolinPlotPlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.view_plugins.violin'
     view_id = 'edu.mit.synbio.cytoflow.view.violin'
-    short_name = "Violin Plot"
+    name = "Violin Plot"
 
     def get_view(self):
         return ViolinPlotWorkflowView()

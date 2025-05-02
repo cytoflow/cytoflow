@@ -97,7 +97,7 @@ class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.channel_statistic'
     view_id = None
 
-    short_name = "Channel Statistic"
+    name = "Channel Statistic"
     menu_group = "Gates"
     
     def get_operation(self):

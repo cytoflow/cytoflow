@@ -22,6 +22,7 @@ cytoflowgui.workflow.operations.channel_stat
 
 """
 
+import logging
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -205,9 +206,10 @@ def _load(data, version):
     
 @camel_registry.loader('channel-statistic', version = 1)
 def _load_v1(data, version):
-    del data["statistic_name"]
-    del data["fill"]
-    # TODO - some warning about how statistics have changed and you'll need to reset the parameters of any
-    # function that uses a statistic or view that plots one
+    del data["statistic_name"] 
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+
     return ChannelStatisticWorkflowOp(**data)
 

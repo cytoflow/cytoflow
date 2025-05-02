@@ -68,7 +68,7 @@ class RatioPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.ratio'
     view_id = None
 
-    short_name = "Ratio"
+    name = "Ratio"
     menu_group = "Data"
     
     def get_operation(self):

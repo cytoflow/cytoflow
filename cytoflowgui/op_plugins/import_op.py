@@ -196,7 +196,7 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.import'
     view_id = None
 
-    short_name = "Import data"
+    name = "Import data"
     menu_group = "TOP"
     
     def get_operation(self):

@@ -135,7 +135,7 @@ class MultiChannelStatisticPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflowgui.workflow.operations.multi_channel_stat'
     view_id = None
 
-    short_name = "Multi Channel Statistic"
+    name = "Multi Channel Statistic"
     menu_group = "Statistics"
     
     def get_operation(self):

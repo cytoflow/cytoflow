@@ -120,7 +120,7 @@ class AutofluorescencePlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.autofluorescence'
     view_id = 'edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview'
 
-    short_name = "Autofluorescence correction"
+    name = "Autofluorescence correction"
     menu_group = "Calibration"
     
     def get_operation(self):

@@ -208,7 +208,7 @@ class GaussianMixture2DPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflowgui.operations.gaussian_2d'
     view_id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
 
-    short_name = "2D Mixture Model"
+    name = "2D Mixture Model"
     menu_group = "Gates"
     
     def get_operation(self):

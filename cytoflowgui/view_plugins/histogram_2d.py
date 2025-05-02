@@ -173,7 +173,7 @@ class Histogram2DPlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.view.histogram2d'
     view_id = 'edu.mit.synbio.cytoflow.view.histogram2d'
-    short_name = "2D Histogram"
+    name = "2D Histogram"
 
     def get_view(self):
         return Histogram2DWorkflowView()

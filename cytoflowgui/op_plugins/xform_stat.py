@@ -163,7 +163,7 @@ class TransformStatisticPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.transform_statistic'
     view_id = None
 
-    short_name = "Transform Statistic"
+    name = "Transform Statistic"
     menu_group = "Gates"
     
     def get_operation(self):

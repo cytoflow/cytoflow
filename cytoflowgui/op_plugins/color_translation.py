@@ -169,7 +169,7 @@ class ColorTranslationPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.color_translation'
     view_id = 'edu.mit.synbio.cytoflow.view.colortranslationdiagnostic'
 
-    short_name = "Color Translation"
+    name = "Color Translation"
     menu_group = "Gates"
     
     def get_operation(self):

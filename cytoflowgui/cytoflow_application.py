@@ -35,7 +35,7 @@ from traits.api import Bool, Instance, List, Property, Str, Any, File
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
 
-from pyface.api import error, ImageResource  # @UnresolvedImport
+from pyface.api import error, warning, ImageResource  # @UnresolvedImport
 from pyface.tasks.api import TaskWindowLayout
 from pyface.qt import QtGui
 
@@ -51,8 +51,11 @@ from .view_plugins import VIEW_PLUGIN_EXT
 
 logger = logging.getLogger(__name__)
   
-def gui_handler_callback(msg, app):
+def gui_error_handler_callback(msg, app):
     app.application_error = msg
+
+def gui_warning_handler_callback(msg, app):
+    app.application_warning = msg
     
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application"""
@@ -80,6 +83,12 @@ class CytoflowApplication(TasksApplication):
 
     application_error = Str
     """If there's an ERROR-level log message, drop it here"""
+    
+    application_warning = Str
+    """If there's a warning, drop it here"""
+    
+    shown_warnings = List(Str)
+    """Store warnings we've shown, so we only show a global warning once"""
 
     application_log = Instance(io.StringIO, ())
     """Keep the application log in memory"""
@@ -133,9 +142,13 @@ class CytoflowApplication(TasksApplication):
         logging.getLogger().addHandler(mem_handler)
          
         ## and display gui messages for exceptions
-        gui_handler = CallbackHandler(lambda rec, app = self: gui_handler_callback(rec.getMessage(), app))
-        gui_handler.setLevel(logging.ERROR)
-        logging.getLogger().addHandler(gui_handler)
+        gui_error_handler = CallbackHandler(lambda rec, app = self: gui_error_handler_callback(rec.getMessage(), app))
+        gui_error_handler.setLevel(logging.ERROR)
+        logging.getLogger().addHandler(gui_error_handler)
+        
+        gui_warning_handler = CallbackHandler(lambda rec, app = self: gui_warning_handler_callback(rec.getMessage(), app))
+        gui_warning_handler.setLevel(logging.WARNING)
+        logging.getLogger().addHandler(gui_warning_handler)
         
         ## anything that gets printed to stdout, capture that too!
         class StreamToLogger(object):
@@ -158,6 +171,7 @@ class CytoflowApplication(TasksApplication):
          
         # must redirect to the gui thread
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
+        self.on_trait_change(self.show_warning, 'application_warning', dispatch = 'ui')
                 
         # set up the model
         self.model = LocalWorkflow(self.remote_workflow_connection,
@@ -183,6 +197,12 @@ class CytoflowApplication(TasksApplication):
                     "Afterwards, may need to restart Cytoflow to continue working.\n\n" 
                     + error_string)
         
+    def show_warning(self, warning_string):
+        """GUI warning handler"""
+        if warning_string not in self.shown_warnings:
+            self.shown_warnings.append(warning_string)
+            warning(None, warning_string)
+            
     def stop(self):
         """Overridden from `envisage.ui.tasks.tasks_application.TasksApplication` to shut down the remote process"""
         super().stop()

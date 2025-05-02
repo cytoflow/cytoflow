@@ -253,7 +253,7 @@ class BarChartPlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.view.barchart'
     view_id = 'edu.mit.synbio.cytoflow.view.barchart'
-    short_name = "Bar Chart"
+    name = "Bar Chart"
     
     def get_view(self):
         return BarChartWorkflowView()

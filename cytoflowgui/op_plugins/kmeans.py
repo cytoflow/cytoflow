@@ -166,7 +166,7 @@ class KMeansPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.kmeans'
     view_id = 'edu.mit.synbio.cytoflowgui.op_plugins.kmeans'
 
-    short_name = "KMeans"
+    name = "KMeans"
     menu_group = "Gates"
     
     def get_operation(self):

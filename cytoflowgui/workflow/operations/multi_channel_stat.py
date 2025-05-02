@@ -187,23 +187,4 @@ def _dump(op):
 @camel_registry.loader('multi-channel-statistic', version = 1)
 def _load(data, version):
     return MultiChannelStatisticWorkflowOp(**data)
-    
-#
-# @camel_registry.dumper(ChannelStatisticWorkflowOp, 'channel-statistic', version = 1)
-# def _dump_v1(op):
-#     return dict(name = op.name,
-#                 channel = op.channel,
-#                 statistic_name = op.statistic_name,
-#                 by = op.by,
-#                 subset_list = op.subset_list)
-#
-
-#
-# @camel_registry.loader('channel-statistic', version = 1)
-# def _load_v1(data, version):
-#     del data["statistic_name"]
-#     del data["fill"]
-#     # TODO - some warning about how statistics have changed and you'll need to reset the parameters of any
-#     # function that uses a statistic or view that plots one
-#     return ChannelStatisticWorkflowOp(**data)
 

@@ -158,7 +158,7 @@ class LongTablePlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.view.long_table'
     view_id = 'edu.mit.synbio.cytoflow.view.long_table'
-    short_name = "Long Table View"
+    name = "Long Table View"
     
     def get_view(self):
         return LongTableWorkflowView()

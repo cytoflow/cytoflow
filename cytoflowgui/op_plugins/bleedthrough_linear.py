@@ -235,7 +235,7 @@ class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.bleedthrough_linear'
     view_id = 'edu.mit.synbio.cytoflow.view.linearbleedthroughdiagnostic'
 
-    short_name = "Linear Compensation"
+    name = "Linear Compensation"
     menu_group = "Gates"
     
     def get_operation(self):

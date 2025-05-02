@@ -191,7 +191,7 @@ class QuadPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.quad'
     view_id = 'edu.mit.synbio.cytoflow.views.quad'
 
-    short_name = "Quad"
+    name = "Quad"
     menu_group = "Gates"
     
     def get_operation(self):

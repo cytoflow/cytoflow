@@ -139,7 +139,7 @@ class BinningPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.binning'
     view_id = 'edu.mit.synbio.cytoflow.views.binning'
 
-    short_name = "Binning"
+    name = "Binning"
     menu_group = "Gates"
     
     def get_operation(self):

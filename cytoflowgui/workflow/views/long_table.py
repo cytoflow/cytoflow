@@ -22,7 +22,7 @@ cytoflowgui.workflow.views.long_table
 --------------------------------
 
 """
-
+import logging
 import pandas as pd
 from textwrap import dedent
 
@@ -64,13 +64,28 @@ class LongTableWorkflowView(WorkflowByView, LongTableView):
            
 ### Serialization
 
-@camel_registry.dumper(LongTableWorkflowView, 'long-table-view', version = 1)
+@camel_registry.dumper(LongTableWorkflowView, 'long-table-view', version = 2)
 def _dump(view):
     return dict(statistic = view.statistic,
                 subset_list = view.subset_list,
                 current_plot = view.current_plot)
     
-@camel_registry.loader('long-table-view', version = 1)
+@camel_registry.dumper(LongTableWorkflowView, 'long-table-view', version = 1)
+def _dump_v1(view):
+    return dict(statistic = view.statistic,
+                subset_list = view.subset_list,
+                current_plot = view.current_plot)
+    
+@camel_registry.loader('long-table-view', version = 2)
 def _load(data, version):
-    data['statistic'] = tuple(data['statistic'])
+    return LongTableWorkflowView(**data)
+
+@camel_registry.loader('long-table-view', version = 1)
+def _load_v1(data, version):
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+    
+    data['statistic'] = tuple(data['statistic'])[0]
     return LongTableWorkflowView(**data)

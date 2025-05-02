@@ -159,7 +159,7 @@ class RangePlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.range'
     view_id = 'edu.mit.synbio.cytoflow.views.range'
 
-    short_name = "Range"
+    name = "Range"
     menu_group = "Gates"
     
     def get_operation(self):

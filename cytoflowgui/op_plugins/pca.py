@@ -152,7 +152,7 @@ class PCAPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.pca'
     view_id = None
 
-    short_name = "Principal Component Analysis"
+    name = "Principal Component Analysis"
     menu_group = "Calibration"
     
     def get_operation(self):

@@ -23,6 +23,7 @@ cytoflowgui.workflow.views.stats_2d
 
 """
 
+import logging
 from textwrap import dedent
 
 from traits.api import provides, Instance, Enum
@@ -127,6 +128,10 @@ def _load_v2(data, version):
     del data['x_error_statistic']
     del data['y_error_statistic']
     
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+    
     return Stats2DWorkflowView(**data)
 
     
@@ -136,6 +141,10 @@ def _load_v1(data, version):
     del data['ystatistic']
     del data['x_error_statistic']
     del data['y_error_statistic']
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
 
     return Stats2DWorkflowView(**data)
 

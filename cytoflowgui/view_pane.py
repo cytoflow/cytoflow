@@ -88,7 +88,7 @@ class ViewDockPane(TraitsDockPane):
         self.toolbar.append(self._default_action)
         
         for plugin in self.plugins:
-            task_action = TaskAction(name = plugin.short_name,
+            task_action = TaskAction(name = plugin.name,
                                      on_perform = lambda view_id=plugin.view_id: self.handler.activate_view(view_id),
                                      image = plugin.get_icon(),
                                      style = 'toggle')

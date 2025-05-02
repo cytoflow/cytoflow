@@ -292,7 +292,7 @@ class Stats1DPlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.view.stats1d'
     view_id = 'edu.mit.synbio.cytoflow.view.stats1d'
-    short_name = "1D Statistics View"
+    name = "1D Statistics View"
     
     def get_view(self):
         return Stats1DWorkflowView()

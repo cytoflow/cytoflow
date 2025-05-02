@@ -20,9 +20,9 @@
 """
 cytoflowgui.workflow.views.table
 --------------------------------
-
 """
 
+import logging
 import pandas as pd
 from textwrap import dedent
 
@@ -91,5 +91,10 @@ def _dump_v1(view):
     
 @camel_registry.loader('table-view', version = 1)
 def _load_v1(data, version):
-    data['statistic'] = tuple(data['statistic'])
+    data['statistic'] = tuple(data['statistic'])[0]
+
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+
     return TableWorkflowView(**data)

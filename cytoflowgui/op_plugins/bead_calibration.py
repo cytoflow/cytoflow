@@ -211,7 +211,7 @@ class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.beads_calibrate'
     view_id = 'edu.mit.synbio.cytoflow.view.beadcalibrationdiagnosticview'
 
-    short_name = "Bead Calibration"
+    name = "Bead Calibration"
     menu_group = "Calibration"
     
     def get_operation(self):

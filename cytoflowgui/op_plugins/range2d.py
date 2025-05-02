@@ -204,7 +204,7 @@ class Range2DPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.range2d'
     view_id = 'edu.mit.synbio.cytoflow.views.range2d'
 
-    short_name = "Range 2D"
+    name = "Range 2D"
     menu_group = "Gates"
     
     def get_operation(self):

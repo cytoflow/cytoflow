@@ -41,6 +41,7 @@ cytoflowgui.workflow.views.bar_chart
 
 """
 
+import logging
 from textwrap import dedent
 
 from traits.api import provides, Instance
@@ -147,14 +148,22 @@ def _load_v1(data, version):
     data['scale'] = data.pop('yscale')
     data['statistic'] = tuple(data['statistic'])[0]
     del data['error_statistic']
-    # TODO - error about how statistics have changed
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+    
     return BarChartWorkflowView(**data)
 
 @camel_registry.loader('bar-chart', version = 2)
 def _load_v2(data, version):
     data['statistic'] = data['statistic'][0]
     del data['error_statistic']
-    # TODO - error about how statistics have changed
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+    
     return BarChartWorkflowView(**data)
 
 @camel_registry.loader('bar-chart', version = 3)

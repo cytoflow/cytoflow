@@ -233,7 +233,7 @@ class TablePlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.view.table'
     view_id = 'edu.mit.synbio.cytoflow.view.table'
-    short_name = "Table View"
+    name = "Table View"
     
     def get_view(self):
         return TableWorkflowView()

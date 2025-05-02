@@ -191,7 +191,7 @@ class tSNEPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.tsne'
     view_id = None
 
-    short_name = "t-Stochastic Neighbor Embedding"
+    name = "t-Stochastic Neighbor Embedding"
     menu_group = "Calibration"
     
     def get_operation(self):

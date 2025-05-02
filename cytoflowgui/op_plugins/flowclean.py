@@ -281,7 +281,7 @@ class FlowCleanPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.flowclean'
     view_id = 'edu.mit.synbio.cytoflow.view.flowcleandiagnostic'
 
-    short_name = "FlowClean"
+    name = "FlowClean"
     menu_group = "Calibration"
     
     def get_operation(self):

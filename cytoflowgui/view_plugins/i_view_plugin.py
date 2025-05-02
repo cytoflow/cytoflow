@@ -41,14 +41,14 @@ class IViewPlugin(Interface):
         Same as the "id" attribute of the IView this plugin wraps
         Prefix: edu.mit.synbio.cytoflowgui.view
         
-    short_name : Str
+    name : Str
         The view's "short" name - for menus, toolbar tips, etc.
     """
     
     
     id = Constant
     view_id = Constant
-    short_name = Constant
+    name = Constant
 
 
     def get_view(self):
@@ -120,3 +120,4 @@ class IViewPlugin(Interface):
               
 class ViewPluginManager(Plugin):
     view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)
+    id = "cytoflow.view_plugin_manager"

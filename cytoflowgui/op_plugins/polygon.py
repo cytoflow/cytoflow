@@ -164,7 +164,7 @@ class PolygonPlugin(Plugin, PluginHelpMixin):
     operation_id = 'edu.mit.synbio.cytoflow.operations.polygon'
     view_id = 'edu.mit.synbio.cytoflow.views.polygon'
 
-    short_name = "Polygon Gate"
+    name = "Polygon Gate"
     menu_group = "Gates"
     
     def get_operation(self):

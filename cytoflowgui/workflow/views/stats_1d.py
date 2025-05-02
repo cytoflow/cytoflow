@@ -23,6 +23,7 @@ cytoflowgui.workflow.views.stats_1d
 
 """
 
+import logging
 from textwrap import dedent
 
 from traits.api import provides, Instance, Tuple, Enum, Bool
@@ -128,7 +129,11 @@ def _load_v1(data, version):
 @camel_registry.loader('stats-1d', version = 2)
 def _load_v2(data, version):
     data['statistic'] = data['statistic'][0]
-    # TODO - raise some warning about statistics changing
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")    
+    
     return Stats1DWorkflowView(**data)
 
 @camel_registry.loader('stats-1d', version = 3)
