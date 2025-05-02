@@ -195,7 +195,7 @@ class ImportedDataTest(WorkflowTest):
         stats_op_1 = ChannelStatisticWorkflowOp()
         stats_op_1.name = "MeanByDoxIP"
         stats_op_1.channel = "Y2-A"
-        stats_op_1.statistic_name = "Geom.Mean"
+        stats_op_1.function_name = "Geo.Mean"
         stats_op_1.by = ['Dox', 'IP']
         stats_op_1.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))
@@ -213,7 +213,7 @@ class ImportedDataTest(WorkflowTest):
         stats_op_2 = ChannelStatisticWorkflowOp()
         stats_op_2.name = "SDByDoxIP"
         stats_op_2.channel = "Y2-A"
-        stats_op_2.statistic_name = "Geom.SD"
+        stats_op_2.function_name = "Geo.SD"
         stats_op_2.by = ['Dox', 'IP']
         stats_op_2.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))

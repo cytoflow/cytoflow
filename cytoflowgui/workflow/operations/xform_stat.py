@@ -150,8 +150,8 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
         #     pass
         
         return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})" \
-            .format(import_statement = (fn_import[self.statistic_name]
-                                        if fn_import[self.statistic_name] is not None
+            .format(import_statement = (fn_import[self.function_name]
+                                        if fn_import[self.function_name] is not None
                                         else ""),
                 repr = repr(op),
                 idx = idx,

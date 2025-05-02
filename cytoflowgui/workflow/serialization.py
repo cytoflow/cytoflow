@@ -303,6 +303,10 @@ def traits_repr(obj):
     """A uniform implementation of **__repr__** for `traits.has_traits.HasTraits`"""
     return obj.__class__.__name__ + '(' + traits_str(obj) + ')'
 
+def cytoflow_class_repr(obj):
+    """Adds 'cytoflow.' to the front of a cytoflow class; useful for serialization"""
+    return 'flow.' + traits_repr(obj)
+
 def traits_str(obj):
     """A uniform implementation of **__str__** for `traits.has_traits.HasTraits`"""
     try:

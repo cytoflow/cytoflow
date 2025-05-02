@@ -152,7 +152,7 @@ class MultiChannelStatisticWorkflowOp(WorkflowOperation, FrameStatisticOp):
         
         # try:
         #     # this doesn't work for builtins like "len"
-        #     op.function.__name__ = fn_name[self.statistic_name]
+        #     op.function.__name__ = fn_name[self.function_name]
         # except AttributeError:
         #     pass
         

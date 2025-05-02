@@ -88,7 +88,7 @@ from .operations.xform_stat import TransformStatisticOp
 
 # misc
 from .operations.binning import BinningOp
-from cytoflow.operations.flowclean import FlowCleanOp
+from .operations.flowclean import FlowCleanOp
 
 # views
 from .views.histogram import HistogramView
@@ -111,8 +111,7 @@ from .views.parallel_coords import ParallelCoordinatesView
 from .views.export_fcs import ExportFCS
 
 # util
-from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
-                                     geom_sem, geom_sem_range)
+from .utility.util_functions import (geom_mean, geom_sd, geom_sem)
 from .utility.algorithms import (ci, percentiles)
 from .utility.scale import set_default_scale, get_default_scale
 

@@ -151,9 +151,8 @@ class ChannelStatisticOp(HasStrictTraits):
         -------
         Experiment
             A new `Experiment`, containing a new entry in 
-            `Experiment.statistics`.  The key of the new entry is a 
-            tuple ``(name, function)`` (or ``(name, statistic_name)`` if 
-            `statistic_name` is set.
+            `Experiment.statistics`.  The key of the new entry 
+            is ``name``.
         """
 
         if not self.name:
@@ -236,6 +235,7 @@ class ChannelStatisticOp(HasStrictTraits):
                                                .format(type(v))) from e
                     
             if isinstance(v, pd.Series) and v.dtype.kind != 'f':
+                print(v)
                 raise util.CytoflowOpError(None,
                                            "Your function returned a pandas.Series with dtype {}. "
                                            "If it returns a Series, the data must be floating point."

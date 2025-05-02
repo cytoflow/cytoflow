@@ -27,12 +27,12 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 
-from traits.api import (Str, Callable, Property, Any, List, provides, observe)
+from traits.api import (Str, Callable, Property, List, provides, observe)
 
 import cytoflow.utility as util
 from cytoflow import ChannelStatisticOp
                        
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
 from ..subset import ISubset
@@ -55,17 +55,17 @@ summary_functions = {"Mean" : np.mean,
                      "SEM" : scipy.stats.sem,
                      "Geo.SEM" : util.geom_sem,
                      "Mean +- SEM" : lambda x: pd.Series({"Mean" : x.mean(),
-                                                          "+SEM" : x.mean + scipy.stats.sem(x),
-                                                          "-SEM" : x.mean - scipy.stats.sem(x)}),
+                                                          "+SEM" : x.mean() + scipy.stats.sem(x),
+                                                          "-SEM" : x.mean() - scipy.stats.sem(x)}),
                      "Geo.Mean */ SEM" : lambda x: pd.Series({"Geo.Mean" : util.geom_mean(x),
                                                               "*SEM" : util.geom_mean(x) * util.geom_sem(x),
                                                               "/SEM" : util.geom_mean(x) / util.geom_sem(x)}),
-                     "Mean +- 95% CI" : lambda x: pd.Series({"Mean" : x.mean(),
-                                                             "+CI" : x.mean + util.ci(x, np.mean, boots = 100),
-                                                             "-CI" : x.mean - util.ci(x, np.mean, boots = 100)}),
-                     "Geo.Mean */ 95% CI" : lambda x: pd.Series({"Geo.Mean" : util.geom_mean(x),
-                                                             "+CI" : util.geom_mean(x) * util.ci(x, util.geom_mean, boots = 100),
-                                                             "-CI" : util.geom_mean(x) / util.ci(x, util.geom_mean, boots = 100)}),
+                     "Mean & 95% CI" : lambda x: pd.Series({"Mean" : x.mean(),
+                                                             "-CI" : util.ci(x, lambda x: x.mean(), boots = 100)[0],
+                                                             "+CI" : util.ci(x, lambda x: x.mean(), boots = 100)[1]}),
+                     "Geo.Mean & 95% CI" : lambda x: pd.Series({"Geo.Mean" : util.geom_mean(x),
+                                                                "-CI" : util.ci(x, util.geom_mean, boots = 100)[0],
+                                                                "+CI" : util.ci(x, util.geom_mean, boots = 100)[1]}),
                      }
 
 # fill = {"Mean +- SD" : 0,
@@ -81,7 +81,7 @@ summary_functions = {"Mean" : np.mean,
 #         "Geo.Mean */ 95% CI" : 0
 #         }
 
-ChannelStatisticOp.__repr__ = traits_repr
+ChannelStatisticOp.__repr__ = cytoflow_class_repr
 
 @provides(IWorkflowOperation)
 class ChannelStatisticWorkflowOp(WorkflowOperation, ChannelStatisticOp):
@@ -135,53 +135,47 @@ class ChannelStatisticWorkflowOp(WorkflowOperation, ChannelStatisticOp):
     def get_notebook_code(self, idx):
         op = ChannelStatisticOp()
         op.copy_traits(self, op.copyable_trait_names())
-        
-        raise NotImplementedError("Notebook export for channel_stat still needs testing!")
-
-        
-        fn_import = {"Mean" : "from numpy import mean",
-                     "Mean +- SD" : None,
-                     "Geo.Mean" : None,
-                     "Geo.Mean */ SD" : None,
-                     "Median" : "from numpy import median",
-                     "Count" : None,
-                     "Std.Dev" : "from numpy import std",
-                     "Geo.SD" : None,
-                     "SEM" : "from scipy.stats import sem",
-                     "Mean +- SEM" : "from scipy.stats import sem",
-                     "Geo.Mean */ SEM" : None,
-                     "Mean 95% CI" : None,
-                     "Geom.Mean 95% CI" : None
+              
+        fn_import = {"Mean" : "import numpy as np",
+                     "Mean +- SD" : "import pandas as pd",
+                     "Geo.Mean */ SD" : "import pandas as pd",
+                     "Median" : "import numpy as np",
+                     "Std.Dev" : "import numpy as np",
+                     "SEM" : "import scipy.stats",
+                     "Mean +- SEM" : "import scipy.stats\nimport pandas as pd",
+                     "Geo.Mean */ SEM" : "import pandas as pd",
+                     "Mean & 95% CI" : "import pandas as pd"
                   }
-        #
-        # fn_name = {"Mean" : "mean",
-        #            "Median" : "median",
-        #            "Geom.Mean" : "geom_mean",
-        #            "Count" : "len",
-        #            "Std.Dev" : "std",
-        #            "Geom.SD" : "geom_sd_range",
-        #            "SEM" : "sem",
-        #            "Geom.SEM" : "geom_sem_range",
-        #            "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
-        #            "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)"
-        #            }
+        
+        fn_repr = { "Mean" : 'np.mean',
+                    "Mean +- SD" : 'lambda x: pd.Series({"Mean" : x.mean(), "+SD" : x.mean() + x.std(), "-SD" : x.mean() - x.std()})',
+                    "Geo.Mean */ SD" : 'lambda x: pd.Series({"Geo.Mean" : geom_mean(x), "*SD" : geom_mean(x) * geom_sd(x), "/SD" : geom_mean(x) / geom_sd(x)})',
+                    "Median" : 'np.median',
+                    "Std.Dev" : 'np.std',
+                    "SEM" : 'scipy.stats.sem',
+                    "Mean +- SEM" : 'lambda x: pd.Series({"Mean" : x.mean(), "+SEM" : x.mean() + scipy.stats.sem(x), "-SEM" : x.mean() - scipy.stats.sem(x)})',
+                    "Geo.Mean */ SEM" : 'lambda x: pd.Series({"Geo.Mean" : geom_mean(x), "*SEM" : geom_mean(x) * geom_sem(x), "/SEM" : geom_mean(x) / geom_sem(x)})',
+                    "Mean & 95% CI" : 'lambda x: pd.Series({"Mean" : x.mean(), "-CI" : ci(x, lambda x: x.mean(), boots = 100)[0], "+CI" : ci(x, lambda x: x.mean(), boots = 100)[1]})',
+                    "Geo.Mean & 95% CI" : 'lambda x: pd.Series({"Geo.Mean" : geom_mean(x), "-CI" : ci(x, geom_mean, boots = 100)[0], "+CI" : ci(x, geom_mean, boots = 100)[1]})',
+                   }
         
         op.function = summary_functions[self.function_name]
         
-        # try:
-        #     # this doesn't work for builtins like "len"
-        #     op.function.__name__ = fn_name[self.statistic_name]
-        # except AttributeError:
-        #     pass
+        try:
+            if self.function_name in fn_repr:
+                op.function.__name__ = fn_repr[self.function_name]
+        except AttributeError:
+            # this doesn't work for builtins like "len"
+            pass
         
         return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})"\
             .format(import_statement = (fn_import[self.function_name]
-                                        if fn_import[self.function_name] is not None
+                                        if self.function_name in fn_import
                                         else ""),
                     repr = repr(op),
                     idx = idx,
                     prev_idx = idx - 1)
-            
+                        
     
 ### Serialization
 @camel_registry.dumper(ChannelStatisticWorkflowOp, 'channel-statistic', version = 2)
