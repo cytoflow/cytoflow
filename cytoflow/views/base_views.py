@@ -1018,27 +1018,27 @@ class Base2DStatisticsView(BaseStatisticsView):
     statistic : Str
         The statistic to plot. Must be a key in `Experiment.statistics`.
         
-    x_feature : Str
+    xfeature : Str
         The name of the column to plot on the X axis.
         
-    x_error_low : Str
+    xerror_low : Str
         The name of the column containing the low values for the X error bars.
-        If `x_error_low` is set, `x_error_high` must be set as well.
+        If `xerror_low` is set, `xerror_high` must be set as well.
         
-    x_error_high : Str
+    xerror_high : Str
         The name of the column containing the high values for the X error bars.
-        If `x_error_high` is set, `x_error_low` must be set as well.
+        If `xerror_high` is set, `xerror_low` must be set as well.
         
-    y_feature : Str
+    yfeature : Str
         The name of the column to plot on the Y axis.
         
-    y_error_low : Str
+    yerror_low : Str
         The name of the column containing the low values for the Y error bars.
-        If `y_error_low` is set, `y_error_high` must be set as well.
+        If `yerror_low` is set, `yerror_high` must be set as well.
         
-    y_error_high : Str
+    yerror_high : Str
         The name of the column containing the high values for the Y error bars.
-        If `y_error_high` is set, `y_error_low` must be set as well.
+        If `yerror_high` is set, `yerror_low` must be set as well.
         
     xscale : {'linear', 'log', 'logicle'}
         The scale applied to X axis.
@@ -1047,20 +1047,20 @@ class Base2DStatisticsView(BaseStatisticsView):
         The scale applied to Y axis.
     """
     
-    xstatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'x_feature' instead of 'xstatistic'")
-    ystatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'y_feature' instead of 'ystatistic'")
-    x_error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'x_error_low' and 'x_error_high' instead of 'x_error_statistic'")
-    y_error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'y_error_low' and 'y_error_high' instead of 'y_error_statistic'")
+    xstatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'xfeature' instead of 'xstatistic'")
+    ystatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'yfeature' instead of 'ystatistic'")
+    x_error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'xerror_low' and 'xerror_high' instead of 'x_error_statistic'")
+    y_error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'yerror_low' and 'yerror_high' instead of 'y_error_statistic'")
     
     statistic = Str
     
-    x_feature = Str
-    x_error_low = Str
-    x_error_high = Str
+    xfeature = Str
+    xerror_low = Str
+    xerror_high = Str
     
-    y_feature = Str
-    y_error_low = Str
-    y_error_high = Str
+    yfeature = Str
+    yerror_low = Str
+    yerror_high = Str
     
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
@@ -1091,16 +1091,16 @@ class Base2DStatisticsView(BaseStatisticsView):
         xscale = util.scale_factory(self.xscale, 
                                     experiment, 
                                     statistic = self.statistic, 
-                                    features = [self.x_feature]  
-                                                + ([self.x_error_low] if self.x_error_low else [])
-                                                + ([self.x_error_high] if self.x_error_high else []))
+                                    features = [self.xfeature]  
+                                                + ([self.xerror_low] if self.xerror_low else [])
+                                                + ([self.xerror_high] if self.xerror_high else []))
         
         yscale = util.scale_factory(self.yscale, 
                                     experiment, 
                                     statistic = self.statistic,
-                                    features = [self.y_feature]  
-                                                + ([self.y_error_low] if self.y_error_low else [])
-                                                + ([self.y_error_high] if self.y_error_high else []))
+                                    features = [self.yfeature]  
+                                                + ([self.yerror_low] if self.yerror_low else [])
+                                                + ([self.yerror_high] if self.yerror_high else []))
             
         super().plot(experiment, 
                      data, 
@@ -1123,61 +1123,61 @@ class Base2DStatisticsView(BaseStatisticsView):
             
         stat = experiment.statistics[self.statistic]
         
-        if self.x_feature not in stat:
-            raise util.CytoflowViewError('x_feature',
+        if self.xfeature not in stat:
+            raise util.CytoflowViewError('xfeature',
                                          "Can't find feature {} in statistic {}. "
                                          "Possible features: {}"
-                                         .format(self.x_feature, self.statistic, stat.columns.to_list()))
+                                         .format(self.xfeature, self.statistic, stat.columns.to_list()))
             
-        if self.y_feature not in stat:
-            raise util.CytoflowViewError('y_feature',
+        if self.yfeature not in stat:
+            raise util.CytoflowViewError('yfeature',
                                          "Can't find feature {} in statistic {}. "
                                          "Possible features: {}"
-                                         .format(self.y_feature, self.statistic, stat.columns.to_list()))
+                                         .format(self.yfeature, self.statistic, stat.columns.to_list()))
             
-        if self.x_error_low:
-            if self.x_error_low not in experiment.statistics[self.statistic]:
-                raise util.CytoflowViewError('x_error_low',
+        if self.xerror_low:
+            if self.xerror_low not in experiment.statistics[self.statistic]:
+                raise util.CytoflowViewError('xerror_low',
                                              "Can't find the x error feature {} in statistic {}. "
                                              "Possible features: {}"
-                                             .format(self.x_error_low, self.statistic, stat.columns.to_list()))
+                                             .format(self.xerror_low, self.statistic, stat.columns.to_list()))
                 
-            if not self.x_error_high:
-                raise util.CytoflowViewError('x_error_high',
-                                             "If x_error_low is set, x_error_high must be set too.")
+            if not self.xerror_high:
+                raise util.CytoflowViewError('xerror_high',
+                                             "If xerror_low is set, xerror_high must be set too.")
                 
-        if self.x_error_high:
-            if self.x_error_high not in experiment.statistics[self.statistic]:
-                raise util.CytoflowViewError('x_error_high',
+        if self.xerror_high:
+            if self.xerror_high not in experiment.statistics[self.statistic]:
+                raise util.CytoflowViewError('xerror_high',
                                              "Can't find the error feature {} in statistic {}. "
                                              "Possible features: {}"
-                                             .format(self.x_error_high, self.statistic, stat.columns.to_list()))
+                                             .format(self.xerror_high, self.statistic, stat.columns.to_list()))
                 
-            if not self.x_error_low:
-                raise util.CytoflowViewError('x_error_low',
-                                             "If x_error_high is set, x_error_low must be set too.")
+            if not self.xerror_low:
+                raise util.CytoflowViewError('xerror_low',
+                                             "If xerror_high is set, xerror_low must be set too.")
                 
-        if self.y_error_low:
-            if self.y_error_low not in experiment.statistics[self.statistic]:
-                raise util.CytoflowViewError('y_error_low',
+        if self.yerror_low:
+            if self.yerror_low not in experiment.statistics[self.statistic]:
+                raise util.CytoflowViewError('yerror_low',
                                              "Can't find the y error feature {} in statistic {}. "
                                              "Possible features: {}"
-                                             .format(self.y_error_low, self.statistic, stat.columns.to_list()))
+                                             .format(self.yerror_low, self.statistic, stat.columns.to_list()))
                 
-            if not self.y_error_high:
-                raise util.CytoflowViewError('y_error_high',
-                                             "If y_error_low is set, y_error_high must be set too.")
+            if not self.yerror_high:
+                raise util.CytoflowViewError('yerror_high',
+                                             "If yerror_low is set, yerror_high must be set too.")
                 
-        if self.y_error_high:
-            if self.y_error_high not in experiment.statistics[self.statistic]:
-                raise util.CytoflowViewError('y_error_high',
+        if self.yerror_high:
+            if self.yerror_high not in experiment.statistics[self.statistic]:
+                raise util.CytoflowViewError('yerror_high',
                                              "Can't find the error feature {} in statistic {}. "
                                              "Possible features: {}"
-                                             .format(self.y_error_high, self.statistic, stat.columns.to_list()))
+                                             .format(self.yerror_high, self.statistic, stat.columns.to_list()))
                 
-            if not self.y_error_low:
-                raise util.CytoflowViewError('y_error_low',
-                                             "If y_error_high is set, y_error_low must be set too.")
+            if not self.yerror_low:
+                raise util.CytoflowViewError('yerror_low',
+                                             "If yerror_high is set, yerror_low must be set too.")
                 
         return stat
 

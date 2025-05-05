@@ -47,12 +47,12 @@ class Test2DStats(ImportedDataTest):
                                                                           'SDHi' : x.std() + x.std() * 0.2})).apply(self.ex)
                                      
         self.view = flow.Stats2DView(statistic = "ByDox", 
-                                     x_feature = "Mean",
-                                     x_error_low = "MeanLo",
-                                     x_error_high = "MeanHi",
-                                     y_feature = "SD",
-                                     y_error_low = "SDLo",
-                                     y_error_high = "SDHi",
+                                     xfeature = "Mean",
+                                     xerror_low = "MeanLo",
+                                     xerror_high = "MeanHi",
+                                     yfeature = "SD",
+                                     yerror_low = "SDLo",
+                                     yerror_high = "SDHi",
                                      variable = "Dox",
                                      huefacet = "Well")
         
@@ -61,12 +61,12 @@ class Test2DStats(ImportedDataTest):
         
     def testBadXErrorStatistic(self):
         self.view = flow.Stats2DView(statistic = "ByDox", 
-                                     x_feature = "Mean",
-                                     x_error_low = "MeanLo_BAD",
-                                     x_error_high = "MeanHi",
-                                     y_feature = "SD",
-                                     y_error_low = "SDLo",
-                                     y_error_high = "SDHi",
+                                     xfeature = "Mean",
+                                     xerror_low = "MeanLo_BAD",
+                                     xerror_high = "MeanHi",
+                                     yfeature = "SD",
+                                     yerror_low = "SDLo",
+                                     yerror_high = "SDHi",
                                      variable = "Dox",
                                      huefacet = "Well")
         
@@ -75,12 +75,12 @@ class Test2DStats(ImportedDataTest):
         
     def testBadYErrorStatistic(self):
         self.view = flow.Stats2DView(statistic = "ByDox", 
-                                     x_feature = "Mean",
-                                     x_error_low = "MeanLo_BAD",
-                                     x_error_high = "MeanHi",
-                                     y_feature = "SD",
-                                     y_error_low = "SDLo",
-                                     y_error_high = "SDHi_BAD",
+                                     xfeature = "Mean",
+                                     xerror_low = "MeanLo_BAD",
+                                     xerror_high = "MeanHi",
+                                     yfeature = "SD",
+                                     yerror_low = "SDLo",
+                                     yerror_high = "SDHi_BAD",
                                      variable = "Dox",
                                      huefacet = "Well")
         

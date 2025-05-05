@@ -82,15 +82,65 @@ class TransformStatisticOp(HasStrictTraits):
     Examples
     --------
     
-    >>> stats_op = ChannelStatisticOp(name = "Mean",
-    ...                               channel = "Y2-A",
-    ...                               function = np.mean,
-    ...                               by = ["Dox"])
-    >>> ex2 = stats_op.apply(ex)
-    >>> log_op = TransformStatisticOp(name = "LogMean",
-    ...                               statistic = ("Mean", "mean"),
-    ...                               function = np.log)
-    >>> ex3 = log_op.apply(ex2)  
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
+        ...                                 channel = 'Y2-A',
+        ...                                 function = flow.geom_mean,
+        ...                                 by = ['Dox'])
+        >>> ex2 = ch_op.apply(ex)
+        
+    View the new statistic
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> print(ex2.statistics.keys())
+        dict_keys(['MeanByDox'])
+    
+        >>> print(ex2.statistics['MeanByDox'])
+        
+                    Y2-A    
+        Dox                        
+        1.0    19.805601  
+        10.0  446.981927  
+        
+    Transform the statistic
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> xform_op = flow.TransformStatisticOp(name = 'LogMean',
+        ...                                      statistic = 'MeanByDox',
+        ...                                      function = np.log)
+        
+        >>> ex_3 = xform_op.apply(ex2)
+        >>> ex_3.statistics['LogMean']
+    
+            Y2_A
+        Dox    
+        1.0    2.985965
+        10.0    6.102518
+
     """
     
     id = Constant('cytoflow.operations.transform_statistic')

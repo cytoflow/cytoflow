@@ -116,16 +116,18 @@ class ChannelStatisticOp(HasStrictTraits):
         ...                                 by = ['Dox'])
         >>> ex2 = ch_op.apply(ex)
         
-    View the new operation
+    View the new statistic
+    .. plot::
+        :context: close-figs
     
-    >>> print(ex2.statistics.keys())
-    dict_keys(['MeanByDox'])
-
-    >>> print(ex2.statistics['MeanByDox'])
-                Y2-A    
-    Dox                        
-    1.0    19.805601  
-    10.0  446.981927  
+        >>> print(ex2.statistics.keys())
+        dict_keys(['MeanByDox'])
+    
+        >>> print(ex2.statistics['MeanByDox'])
+                    Y2-A    
+        Dox                        
+        1.0    19.805601  
+        10.0  446.981927  
 
     """
     

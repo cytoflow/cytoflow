@@ -86,8 +86,9 @@ class BarChartView(Base1DStatisticsView):
     .. plot::
         :context: close-figs
         
-        >>> flow.BarChartView(statistic = ("ByDox", "len"),
+        >>> flow.BarChartView(statistic = "ByDox",
         ...                   variable = "Dox",
+        ...                   feature = 'Y2-A',
         ...                   huefacet = "Threshold").plot(ex3)
         
     """

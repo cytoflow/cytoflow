@@ -97,7 +97,7 @@ class LongTableView(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> flow.LongTableView(statistic = ("ByDox", "len")).plot(ex3)
+        >>> flow.LongTableView(statistic = "ByDox").plot(ex3)
         
     """
 

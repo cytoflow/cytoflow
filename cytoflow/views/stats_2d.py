@@ -57,6 +57,7 @@ class Stats2DView(Base2DStatisticsView):
         Make a little data set.
     
         >>> import cytoflow as flow
+        >>> import pandas as pd
         >>> import_op = flow.ImportOp()
         >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
         ...                              conditions = {'Dox' : 10.0}),
@@ -70,16 +71,11 @@ class Stats2DView(Base2DStatisticsView):
     .. plot::
         :context: close-figs
         
-        >>> ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
+        >>> ch_op = flow.ChannelStatisticOp(name = 'MeanSDByDox',
         ...                     channel = 'Y2-A',
-        ...                     function = flow.geom_mean,
+        ...                     function = lambda x: pd.Series({'Geo.Mean' : flow.geom_mean(x),
+        ...                                                     'Geo.SD' : flow.geom_sd(x)}), 
         ...                     by = ['Dox'])
-        >>> ex2 = ch_op.apply(ex)
-        >>> ch_op_2 = flow.ChannelStatisticOp(name = 'SdByDox',
-        ...                       channel = 'Y2-A',
-        ...                       function = flow.geom_sd,
-        ...                       by = ['Dox'])
-        >>> ex3 = ch_op_2.apply(ex2)
         
     Plot the statistics
     
@@ -87,9 +83,10 @@ class Stats2DView(Base2DStatisticsView):
         :context: close-figs
         
         >>> flow.Stats2DView(variable = 'Dox',
-        ...                  xstatistic = ('MeanByDox', 'geom_mean'),
+        ...                  statistic = 'MeanSDByDox',
+        ...                  xfeature = 'Geo.Mean',
         ...                  xscale = 'log',
-        ...                  ystatistic = ('SdByDox', 'geom_sd'),
+        ...                  yfeature = 'Geo.SD',
         ...                  yscale = 'log').plot(ex3)
     """
     
@@ -149,9 +146,9 @@ class Stats2DView(Base2DStatisticsView):
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
             
-            xlim = (data[self.x_feature].min(), data[self.x_feature].max())
-            if self.x_error_low and self.x_error_high:
-                xlim = (data[self.x_error_low].min(), data[self.x_error_high].max())
+            xlim = (data[self.xfeature].min(), data[self.xfeature].max())
+            if self.xerror_low and self.xerror_high:
+                xlim = (data[self.xerror_low].min(), data[self.xerror_high].max())
             
             span = xlim[1] - xlim[0]
             xlim = (xlim[0] - 0.05 * span, xlim[1] + 0.05 * span)
@@ -160,24 +157,24 @@ class Stats2DView(Base2DStatisticsView):
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
             
-            ylim = (data[self.y_feature].min(), data[self.y_feature].max())
-            if self.y_error_low and self.y_error_high:
-                ylim = (data[self.y_error_low].min(), data[self.y_error_high].max())
+            ylim = (data[self.yfeature].min(), data[self.yfeature].max())
+            if self.yerror_low and self.yerror_high:
+                ylim = (data[self.yerror_low].min(), data[self.yerror_high].max())
             
             span = ylim[1] - ylim[0]
             ylim = (ylim[0] - 0.05 * span, ylim[1] + 0.05 * span)
             ylim = (yscale.clip(ylim[0]), yscale.clip(ylim[1]))
         
         # plot the error bars first so the axis labels don't get overwritten
-        if self.x_error_low and self.x_error_high:
-            grid.map(_x_error_bars, self.x_feature, self.y_feature, self.x_error_low, 
-                     self.x_error_high, capsize = capsize)
+        if self.xerror_low and self.xerror_high:
+            grid.map(_x_error_bars, self.xfeature, self.yfeature, self.xerror_low, 
+                     self.xerror_high, capsize = capsize)
             
-        if self.y_error_low and self.y_error_high:
-            grid.map(_y_error_bars, self.x_feature, self.y_feature, self.y_error_low,
-                     self.y_error_high, capsize = capsize)
+        if self.yerror_low and self.yerror_high:
+            grid.map(_y_error_bars, self.xfeature, self.yfeature, self.yerror_low,
+                     self.yerror_high, capsize = capsize)
 
-        grid.map(plt.plot, self.x_feature, self.y_feature, **kwargs)
+        grid.map(plt.plot, self.xfeature, self.yfeature, **kwargs)
         
         return dict(xscale = xscale,
                     xlim = xlim,

@@ -664,33 +664,33 @@ class Base2DStatisticsViewTest(BaseStatisticsViewTest):
         
         super().setUpView()
         self.view.statistic = "GeoMeanByDoxIP"
-        self.view.x_feature = "Geo.Mean"
-        self.view.y_feature = "Geo.Mean"
+        self.view.xfeature = "Geo.Mean"
+        self.view.yfeature = "Geo.Mean"
 
     # both error bars
     def testErrorBars(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.x_error_low = "/SD"
-        self.view.x_error_high = "*SD"
+        self.view.xerror_low = "/SD"
+        self.view.xerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.y_error_low = "/SD"
-        self.view.y_error_high = "*SD"
+        self.view.yerror_low = "/SD"
+        self.view.yerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     # x error statistic
     def testXErrorBars(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.x_error_low = "/SD"
-        self.view.x_error_high = "*SD"
+        self.view.xerror_low = "/SD"
+        self.view.xerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     # y error statistic
     def testYErrorBars(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.y_error_low = "/SD"
-        self.view.y_error_high = "*SD"
+        self.view.yerror_low = "/SD"
+        self.view.yerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
     # x scale
