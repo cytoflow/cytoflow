@@ -610,7 +610,7 @@ class GaussianMixtureOp(HasStrictTraits):
                         self._scale[channel1].inverse(s[cidx1])
                         
                     stat.at[g, channel1 + ' Interval Low'] = self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1])
-                    stat.at[g, channel1 + ' Interval High'] = self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1])
+                    stat.at[g, channel1 + ' Interval High'] = self._scale[channel1].inverse(gmm.means_[c, cidx1] + s[cidx1])
             
                     # for cidx2, channel2 in enumerate(self.channels):
                     #     g3 = tuple(list(g2) + [channel2])

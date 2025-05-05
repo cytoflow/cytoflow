@@ -414,10 +414,14 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
             try:        
                 logicle_min = self.logicle.inverse(0.0)
                 logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
-                if isinstance(values, pd.Series):            
+                if isinstance(values, pd.Series):    
+                    if values.empty():
+                        return values        
                     values = values.clip(logicle_min, logicle_max)
                     return values.apply(self.logicle.scale)
                 elif isinstance(values, np.ndarray):
+                    if values.size == 0:
+                        return values
                     values = np.clip(values, logicle_min, logicle_max)
                     scale = np.vectorize(self.logicle.scale)
                     return scale(values)
@@ -453,10 +457,14 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def transform_non_affine(self, values):
             try:
-                if isinstance(values, pd.Series):            
+                if isinstance(values, pd.Series):   
+                    if values.empty():
+                        return values           
                     values = values.clip(0, 1.0 - sys.float_info.epsilon)
                     return values.apply(self.logicle.inverse)
                 elif isinstance(values, np.ndarray):
+                    if values.size == 0:
+                        return values
                     values = np.clip(values, 0, 1.0 - sys.float_info.epsilon)
                     inverse = np.vectorize(self.logicle.inverse)
                     return inverse(values)

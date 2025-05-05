@@ -194,7 +194,7 @@ class Stats1DView(Base1DStatisticsView):
             span = lim[1] - lim[0]
             lim = (lim[0] - 0.05 * span, lim[1] + 0.05 * span)
             lim = (data_scale.clip(lim[0]), data_scale.clip(lim[1]))
-            
+                        
         orientation = kwargs.pop('orientation', 'vertical')
         capsize = kwargs.pop('capsize', None)
         shade_error = kwargs.pop('shade_error', False)
@@ -247,7 +247,7 @@ def _v_error_bars(x, y, yerr_low, yerr_high, ax = None, color = None, errwidth =
 
 
 def _v_error_shade(x, _, yerr_low, yerr_high, ax = None, color = None, alpha = None, **kwargs):
-    plt.fill_between(x, yerr_low, yerr_high, color = color, alpha = alpha, **kwargs)
+    plt.fill_between(x.to_list(), yerr_low.to_list(), yerr_high.to_list(), color = color, alpha = alpha, **kwargs)
 
 
 def _h_error_bars(x, y, xerr_low, xerr_high, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
@@ -268,7 +268,7 @@ def _h_error_bars(x, y, xerr_low, xerr_high, ax = None, color = None, errwidth =
         
     
 def _h_error_shade(x, y, xerr_low, xerr_high, ax = None, color = None, alpha = None, **kwargs):
-    plt.fill_betweenx(y, xerr_low, xerr_high, color = color, alpha = alpha)
+    plt.fill_betweenx(y.to_list(), xerr_low.to_list(), xerr_high.to_list(), color = color, alpha = alpha)
     
 util.expand_class_attributes(Stats1DView)
 util.expand_method_parameters(Stats1DView, Stats1DView.plot)
