@@ -122,7 +122,7 @@ class ThresholdOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.threshold')
+    id = Constant('cytoflow.operations.threshold')
     friendly_id = Constant("Threshold")
     
     name = Str
@@ -214,7 +214,7 @@ class ThresholdSelection(Op1DView, HistogramView):
     >>> ex3 = thresh.apply(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.threshold')
+    id = Constant('cytoflow.views.threshold')
     friendly_id = Constant("Threshold Selection")
 
     xfacet = Constant(None)

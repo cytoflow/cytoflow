@@ -31,7 +31,7 @@ from traits.api import (HasTraits, Str, Callable, Property, Constant, List, prov
 import cytoflow.utility as util
 from cytoflow import FrameStatisticOp
                        
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, traits_repr, cytoflow_class_repr
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
 from ..subset import ISubset
@@ -59,7 +59,7 @@ summary_functions = {"Mean" : np.mean,
 #         "Geo.Mean */ 95% CI" : 0
 #         }
 
-FrameStatisticOp.__repr__ = traits_repr
+FrameStatisticOp.__repr__ = cytoflow_class_repr
 
 class Function(HasTraits):
     channel = Str
@@ -71,7 +71,7 @@ class Function(HasTraits):
 
 @provides(IWorkflowOperation)
 class MultiChannelStatisticWorkflowOp(WorkflowOperation, FrameStatisticOp):
-    id = Constant('edu.mit.synbio.cytoflowgui.workflow.operations.multi_channel_stat')
+    id = Constant('cytoflowgui.workflow.operations.multi_channel_stat')
 
     # operation traits
     name = Str(apply = True)

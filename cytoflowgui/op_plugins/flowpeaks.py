@@ -198,9 +198,9 @@ class FlowPeaksViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class FlowPeaksPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.flowpeaks'
-    view_id = 'edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks'
+    id = 'cytoflowgui.op_plugins.flowpeaks'
+    operation_id = 'cytoflow.operations.flowpeaks'
+    view_id = 'cytoflowgui.op_plugins.flowpeaks'
 
     name = "Flow Peaks"
     menu_group = "Gates"

@@ -207,9 +207,9 @@ class BeadCalibrationViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.beads_calibrate'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.beads_calibrate'
-    view_id = 'edu.mit.synbio.cytoflow.view.beadcalibrationdiagnosticview'
+    id = 'cytoflowgui.op_plugins.beads_calibrate'
+    operation_id = 'cytoflow.operations.beads_calibrate'
+    view_id = 'cytoflow.view.beadcalibrationdiagnosticview'
 
     name = "Bead Calibration"
     menu_group = "Calibration"

@@ -120,7 +120,7 @@ class TableView(HasStrictTraits):
     """
 
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.table")
+    id = Constant("cytoflow.view.table")
     friendly_id = Constant("Table View") 
     
     statistic = util.ChangedStr(err_string = "Statistics have changed dramatically -- see the documentation for updates.")

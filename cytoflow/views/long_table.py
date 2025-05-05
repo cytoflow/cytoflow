@@ -102,7 +102,7 @@ class LongTableView(HasStrictTraits):
     """
 
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.long_table")
+    id = Constant("cytoflow.view.long_table")
     friendly_id = Constant("Long Table View") 
     
     statistic = util.ChangedStr(err_string = "Statistics have changed dramatically -- see the documentation for updates.")

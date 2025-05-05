@@ -49,10 +49,10 @@ from traits.api import provides, Instance
 from cytoflow import BarChartView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowByView, Stats1DPlotParams
 
-BarChartView.__repr__ = traits_repr
+BarChartView.__repr__ = cytoflow_class_repr
 
 
 class BarChartPlotParams(Stats1DPlotParams):

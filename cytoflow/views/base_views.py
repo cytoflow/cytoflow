@@ -272,9 +272,9 @@ class BaseView(HasStrictTraits):
                 ax.set_xscale(xscale.name, **xscale.get_mpl_params(ax.get_xaxis())) 
             if yscale:
                 ax.set_yscale(yscale.name, **yscale.get_mpl_params(ax.get_yaxis()))
-            if xlim:
+            if xlim != None and xlim != (None, None):
                 ax.set_xlim(xlim)
-            if ylim:
+            if ylim != None and ylim != (None, None):
                 ax.set_ylim(ylim)
 
         # if we are sharing x axes, make sure the x limits are the same for each
@@ -1047,18 +1047,18 @@ class Base2DStatisticsView(BaseStatisticsView):
         The scale applied to Y axis.
     """
     
-    xstatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'xfeature' instead of 'xstatistic'")
-    ystatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'yfeature' instead of 'ystatistic'")
+    xstatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'x_feature' instead of 'xstatistic'")
+    ystatistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'statistic' and 'y_feature' instead of 'ystatistic'")
     x_error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'x_error_low' and 'x_error_high' instead of 'x_error_statistic'")
     y_error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'y_error_low' and 'y_error_high' instead of 'y_error_statistic'")
     
     statistic = Str
     
-    xfeature = Str
+    x_feature = Str
     x_error_low = Str
     x_error_high = Str
     
-    yfeature = Str
+    y_feature = Str
     y_error_low = Str
     y_error_high = Str
     
@@ -1091,16 +1091,16 @@ class Base2DStatisticsView(BaseStatisticsView):
         xscale = util.scale_factory(self.xscale, 
                                     experiment, 
                                     statistic = self.statistic, 
-                                    features = [self.xfeature]  
-                                                + [self.x_error_low] if self.x_error_low else []
-                                                + [self.x_error_high] if self.x_error_high else [])
+                                    features = [self.x_feature]  
+                                                + ([self.x_error_low] if self.x_error_low else [])
+                                                + ([self.x_error_high] if self.x_error_high else []))
         
         yscale = util.scale_factory(self.yscale, 
                                     experiment, 
                                     statistic = self.statistic,
-                                    features = [self.yfeature]  
-                                                + [self.y_error_low] if self.y_error_low else []
-                                                + [self.y_error_high] if self.y_error_high else [])
+                                    features = [self.y_feature]  
+                                                + ([self.y_error_low] if self.y_error_low else [])
+                                                + ([self.y_error_high] if self.y_error_high else []))
             
         super().plot(experiment, 
                      data, 
@@ -1123,17 +1123,17 @@ class Base2DStatisticsView(BaseStatisticsView):
             
         stat = experiment.statistics[self.statistic]
         
-        if self.xfeature not in stat:
-            raise util.CytoflowViewError('xfeature',
+        if self.x_feature not in stat:
+            raise util.CytoflowViewError('x_feature',
                                          "Can't find feature {} in statistic {}. "
                                          "Possible features: {}"
-                                         .format(self.xfeature, self.statistic, stat.columns.to_list()))
+                                         .format(self.x_feature, self.statistic, stat.columns.to_list()))
             
-        if self.yfeature not in stat:
-            raise util.CytoflowViewError('yfeature',
+        if self.y_feature not in stat:
+            raise util.CytoflowViewError('y_feature',
                                          "Can't find feature {} in statistic {}. "
                                          "Possible features: {}"
-                                         .format(self.yfeature, self.statistic, stat.columns.to_list()))
+                                         .format(self.y_feature, self.statistic, stat.columns.to_list()))
             
         if self.x_error_low:
             if self.x_error_low not in experiment.statistics[self.statistic]:

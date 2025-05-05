@@ -72,7 +72,7 @@ class FlowTaskPane(TaskPane):
     data views.
     """
     
-    id = 'edu.mit.synbio.cytoflow.flow_task_pane'
+    id = 'cytoflow.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
     model = Instance(LocalWorkflow)
@@ -121,7 +121,7 @@ class FlowTask(Task):
     things like the menu and menu bar buttons are.
     """
     
-    id = "edu.mit.synbio.cytoflowgui.flow_task"
+    id = "cytoflowgui.flow_task"
     """This tasks's GUID"""
     
     name = "Cytometry analysis"
@@ -260,7 +260,7 @@ class FlowTask(Task):
     
         # add the import op
         if not self.model.workflow:
-            self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import') 
+            self.handler.add_operation('cytoflow.operations.import') 
     
         self.window.central_pane.activate()
     
@@ -272,11 +272,11 @@ class FlowTask(Task):
         """
         
         pane_size = 400
-        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane", width = pane_size),
-                                           PaneItem("edu.mit.synbio.cytoflowgui.experiment_pane", width = pane_size),
-                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = pane_size, height = pane_size)),
-                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane", width = pane_size),
-                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = pane_size, height = pane_size)),
+        return TaskLayout(left = VSplitter(PaneItem("cytoflowgui.workflow_pane", width = pane_size),
+                                           PaneItem("cytoflowgui.experiment_pane", width = pane_size),
+                                           PaneItem("cytoflowgui.help_pane", width = pane_size, height = pane_size)),
+                          right = VSplitter(PaneItem("cytoflowgui.view_traits_pane", width = pane_size),
+                                            PaneItem("cytoflowgui.params_pane", width = pane_size, height = pane_size)),
                           top_left_corner = 'left',
                           bottom_left_corner = 'left',
                           top_right_corner = 'right',
@@ -347,7 +347,7 @@ class FlowTask(Task):
         self.model.workflow = []
         
         # add the import op
-        self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import')
+        self.handler.add_operation('cytoflow.operations.import')
         
         self.model.modified = False
      
@@ -430,7 +430,7 @@ class FlowTask(Task):
         # check that the FCS files are all there
         
         wi = new_workflow[0]
-        assert(wi.operation.id == "edu.mit.synbio.cytoflow.operations.import")
+        assert(wi.operation.id == "cytoflow.operations.import")
         missing_tubes = 0
         for tube in wi.operation.tubes:
             file = pathlib.Path(tube.file)
@@ -535,7 +535,7 @@ class FlowTask(Task):
         Switch to the `ExportTask` task
         """
         
-        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.export_task')
+        task = next(x for x in self.window.tasks if x.id == 'cytoflowgui.export_task')
         self.window.activate_task(task)        
         
             
@@ -714,7 +714,7 @@ class FlowTask(Task):
         
         # todo serialize here
         header = dedent("""\
-            from cytoflow import *""")
+            import cytoflow as flow""")
         nb['cells'].append(nbf.v4.new_code_cell(header))
             
         for i, wi in enumerate(workflow):
@@ -759,7 +759,7 @@ class FlowTaskPlugin(Plugin):
     #### 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
-    id = 'edu.mit.synbio.cytoflow'
+    id = 'cytoflow'
 
     # The plugin's name (suitable for displaying to the user).
     name = 'Cytoflow'
@@ -780,7 +780,7 @@ class FlowTaskPlugin(Plugin):
 
     tasks = List(contributes_to = TASKS)
     def _tasks_default(self):
-        return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.flow_task',
+        return [TaskFactory(id = 'cytoflowgui.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,
                                                            model = self.application.model,

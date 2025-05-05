@@ -234,7 +234,7 @@ class GaussianMixtureOp(HasStrictTraits):
         
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.gaussian')
+    id = Constant('cytoflow.operations.gaussian')
     friendly_id = Constant("Gaussian Mixture Model")
     
     name = Str
@@ -701,7 +701,7 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture1dview')
+    id = Constant('cytoflow.view.gaussianmixture1dview')
     friendly_id = Constant("1D Gaussian Mixture Diagnostic Plot")
     
     channel = Str
@@ -830,7 +830,7 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
    
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture2dview')
+    id = Constant('cytoflow.view.gaussianmixture2dview')
     friendly_id = Constant("2D Gaussian Mixture Diagnostic Plot")
         
     xchannel = Str

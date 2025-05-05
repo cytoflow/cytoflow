@@ -73,7 +73,7 @@ class HistogramView(Base1DView):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.histogram")
+    id = Constant("cytoflow.view.histogram")
     friendly_id = Constant("Histogram") 
     
     def plot(self, experiment, **kwargs):

@@ -116,9 +116,9 @@ class AutofluorescenceViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class AutofluorescencePlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.autofluorescence'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.autofluorescence'
-    view_id = 'edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview'
+    id = 'cytoflowgui.op_plugins.autofluorescence'
+    operation_id = 'cytoflow.operations.autofluorescence'
+    view_id = 'cytoflow.view.autofluorescencediagnosticview'
 
     name = "Autofluorescence correction"
     menu_group = "Calibration"

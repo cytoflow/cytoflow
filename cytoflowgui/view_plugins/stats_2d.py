@@ -151,11 +151,11 @@ class Stats2DHandler(ViewHandler):
              VGroup(Item('statistic',
                          editor = EnumEditor(name = 'context_handler.statistics_names'),
                          label = "Statistic"),
-                    Item('xfeature',
+                    Item('x_feature',
                          editor = EnumEditor(name='handler.features'),
                          label = "X Feature"),
                     Item('xscale', label = "X Scale"),
-                    Item('yfeature',
+                    Item('y_feature',
                          editor = EnumEditor(name = 'handler.features'),
                          label = "Y Feature"),
                     Item('yscale', label = "Y Scale"),
@@ -305,8 +305,8 @@ class Stats2DHandler(ViewHandler):
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.stats2d'
-    view_id = 'edu.mit.synbio.cytoflow.view.stats2d'
+    id = 'cytoflowgui.view.stats2d'
+    view_id = 'cytoflow.view.stats2d'
     name = "2D Statistics View"
     
     def get_view(self):

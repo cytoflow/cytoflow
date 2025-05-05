@@ -231,8 +231,8 @@ class TableHandler(ViewHandler):
 @provides(IViewPlugin)
 class TablePlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.table'
-    view_id = 'edu.mit.synbio.cytoflow.view.table'
+    id = 'cytoflowgui.view.table'
+    view_id = 'cytoflow.view.table'
     name = "Table View"
     
     def get_view(self):

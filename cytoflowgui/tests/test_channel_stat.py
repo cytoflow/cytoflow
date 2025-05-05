@@ -36,7 +36,7 @@ import cytoflow.utility as util
 from cytoflow import ci, geom_mean, geom_sd, geom_sem  # @UnusedImport
 from numpy import mean, median, std  # @UnusedImport
 from scipy.stats import sem  # @UnusedImport
-import scipy.stats
+import scipy.stats  # @UnusedImport
 from pandas import Series  # @UnusedImport
 
 class TestChannelStat(ImportedDataTest):

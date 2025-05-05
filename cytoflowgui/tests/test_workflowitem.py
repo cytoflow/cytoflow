@@ -39,7 +39,7 @@ class TestWorkflowItem(ImportedDataTest):
         stats_op = ChannelStatisticWorkflowOp()
         stats_op.name = "MeanByDoxWell"
         stats_op.channel = "Y2-A"
-        stats_op.statistic_name = "Geom.Mean"
+        stats_op.function_name = "Geo.Mean"
         stats_op.by = ['Dox', 'Well']
         stats_op.subset_list.append(CategorySubset(name = "Well",
                                                    values = ['A', 'B']))
@@ -89,18 +89,5 @@ class TestWorkflowItem(ImportedDataTest):
 
         for i in range(len(new_workflow)):
             self.assertEqual(self.workflow.workflow[i], new_workflow[i])
-             
-             
-# TODO - TEST THIS
-#     def testSaveNotebook(self):
-#         # this is just a smoke test
-#         
-#         fh, filename = tempfile.mkstemp()
-#         try:
-#             os.close(fh)
-#             
-#             save_notebook(self.workflow.workflow, filename)
-#             
-#         finally:
-#             os.unlink(filename)
+
             

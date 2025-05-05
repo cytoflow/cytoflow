@@ -32,17 +32,17 @@ from cytoflow.operations.gaussian import GaussianMixtureOp, GaussianMixture2DVie
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowByView, ScatterplotPlotParams
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-GaussianMixtureOp.__repr__ = traits_repr
+GaussianMixtureOp.__repr__ = cytoflow_class_repr
 
 @provides(IWorkflowOperation)    
 class GaussianMixture2DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
     # override id so we can differentiate the 1D and 2D ops
-    id = Constant('edu.mit.synbio.cytoflowgui.operations.gaussian_2d')
+    id = Constant('cytoflowgui.operations.gaussian_2d')
 
     # add 'estimate' and 'apply' metadata
     name = Str(apply = True)

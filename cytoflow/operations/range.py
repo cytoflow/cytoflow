@@ -123,7 +123,7 @@ class RangeOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.range')
+    id = Constant('cytoflow.operations.range')
     friendly_id = Constant('Range')
     
     name = Str
@@ -238,7 +238,7 @@ class RangeSelection(Op1DView, HistogramView):
     >>> print r.low, r.high
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.range')
+    id = Constant('cytoflow.views.range')
     friendly_id = Constant("Range Selection")
 
     xfacet = Constant(None)

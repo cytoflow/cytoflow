@@ -34,11 +34,11 @@ from cytoflow import ExportFCS
 import cytoflow.utility as util
 
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from ..subset import ISubset
 from .view_base import IWorkflowView, WorkflowView, BasePlotParams
 
-ExportFCS.__repr__ = traits_repr
+ExportFCS.__repr__ = cytoflow_class_repr
 
 
 @provides(IWorkflowView)

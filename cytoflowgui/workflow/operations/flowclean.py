@@ -35,11 +35,11 @@ import cytoflow.utility as util
 
 from .. import Changed
 from ..views import IWorkflowView, WorkflowView
-from ..serialization import camel_registry, traits_repr, traits_str, dedent
+from ..serialization import camel_registry, cytoflow_class_repr, traits_repr, traits_str, dedent
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-FlowCleanOp.__repr__ = traits_repr
+FlowCleanOp.__repr__ = cytoflow_class_repr
 
 
 class Channel(HasTraits):
@@ -190,7 +190,7 @@ def _dump(op):
                 force_clean = op.force_clean,
                 dont_clean = op.dont_clean)
     
-@camel_registry.loader('pca', version = 1)
+@camel_registry.loader('flowclean', version = 1)
 def _load(data, version):
     return FlowCleanWorkflowOp(**data)
 

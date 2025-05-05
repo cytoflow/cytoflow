@@ -93,8 +93,8 @@ class ChannelStatisticHandler(OpHandler):
 @provides(IOperationPlugin)
 class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.channel_statistic'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.channel_statistic'
+    id = 'cytoflowgui.op_plugins.channel_statistic'
+    operation_id = 'cytoflow.operations.channel_statistic'
     view_id = None
 
     name = "Channel Statistic"

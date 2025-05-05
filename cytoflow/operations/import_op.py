@@ -176,7 +176,7 @@ class ImportOp(HasStrictTraits):
     >>> ex = import_op.apply()
     """
 
-    id = Constant("edu.mit.synbio.cytoflow.operations.import")
+    id = Constant("cytoflow.operations.import")
     friendly_id = Constant("Import")
     name = Constant("Import Data")
 

@@ -47,10 +47,10 @@ class Test2DStats(ImportedDataTest):
                                                                           'SDHi' : x.std() + x.std() * 0.2})).apply(self.ex)
                                      
         self.view = flow.Stats2DView(statistic = "ByDox", 
-                                     xfeature = "Mean",
+                                     x_feature = "Mean",
                                      x_error_low = "MeanLo",
                                      x_error_high = "MeanHi",
-                                     yfeature = "SD",
+                                     y_feature = "SD",
                                      y_error_low = "SDLo",
                                      y_error_high = "SDHi",
                                      variable = "Dox",
@@ -61,10 +61,10 @@ class Test2DStats(ImportedDataTest):
         
     def testBadXErrorStatistic(self):
         self.view = flow.Stats2DView(statistic = "ByDox", 
-                                     xfeature = "Mean",
+                                     x_feature = "Mean",
                                      x_error_low = "MeanLo_BAD",
                                      x_error_high = "MeanHi",
-                                     yfeature = "SD",
+                                     y_feature = "SD",
                                      y_error_low = "SDLo",
                                      y_error_high = "SDHi",
                                      variable = "Dox",
@@ -75,10 +75,10 @@ class Test2DStats(ImportedDataTest):
         
     def testBadYErrorStatistic(self):
         self.view = flow.Stats2DView(statistic = "ByDox", 
-                                     xfeature = "Mean",
+                                     x_feature = "Mean",
                                      x_error_low = "MeanLo_BAD",
                                      x_error_high = "MeanHi",
-                                     yfeature = "SD",
+                                     y_feature = "SD",
                                      y_error_low = "SDLo",
                                      y_error_high = "SDHi_BAD",
                                      variable = "Dox",

@@ -492,7 +492,7 @@ def _dump_wi_v2(wi):
 @camel_registry.dumper(WorkflowItem, 'workflow-item', version = 1)
 def _dump_wi_v1(wi):
                             
-    return dict(deletable = False if wi.operation.id == "edu.mit.synbio.cytoflow.operations.import" else True,
+    return dict(deletable = False if wi.operation.id == "cytoflow.operations.import" else True,
                 operation = wi.operation,
                 views = wi.views,
                 channels = wi.channels,

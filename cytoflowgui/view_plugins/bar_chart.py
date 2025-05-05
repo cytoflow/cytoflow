@@ -251,8 +251,8 @@ class BarChartHandler(ViewHandler):
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.barchart'
-    view_id = 'edu.mit.synbio.cytoflow.view.barchart'
+    id = 'cytoflowgui.view.barchart'
+    view_id = 'cytoflow.view.barchart'
     name = "Bar Chart"
     
     def get_view(self):

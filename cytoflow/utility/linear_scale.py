@@ -38,7 +38,7 @@ class LinearScale(ScaleMixin):
     A scale that doesn't transform the data at all.
     """
     
-    id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
+    id = Constant("cytoflow.utility.linear_scale")
     name = "linear"
     
     experiment = Instance("cytoflow.Experiment")

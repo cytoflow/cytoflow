@@ -231,9 +231,9 @@ class BleedthroughLinearViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.bleedthrough_linear'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.bleedthrough_linear'
-    view_id = 'edu.mit.synbio.cytoflow.view.linearbleedthroughdiagnostic'
+    id = 'cytoflowgui.op_plugins.bleedthrough_linear'
+    operation_id = 'cytoflow.operations.bleedthrough_linear'
+    view_id = 'cytoflow.view.linearbleedthroughdiagnostic'
 
     name = "Linear Compensation"
     menu_group = "Gates"

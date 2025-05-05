@@ -76,7 +76,7 @@ class ViolinPlotView(Base1DView):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.violin")
+    id = Constant("cytoflow.view.violin")
     friendly_id = Constant("Violin Plot")
 
     variable = Str

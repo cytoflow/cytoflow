@@ -26,7 +26,7 @@ cytoflowgui.op_plugins.i_op_plugin
 from traits.api import Interface, Constant, List
 from envisage.api import Plugin, ExtensionPoint
 
-OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
+OP_PLUGIN_EXT = 'cytoflow.op_plugins'
 
 class IOperationPlugin(Interface):
     """

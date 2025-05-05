@@ -29,11 +29,11 @@ from cytoflow.operations.polygon import PolygonOp, ScatterplotPolygonSelectionVi
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-PolygonOp.__repr__ = traits_repr
+PolygonOp.__repr__ = cytoflow_class_repr
 
 
 @provides(IWorkflowView)

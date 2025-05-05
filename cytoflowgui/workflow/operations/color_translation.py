@@ -32,12 +32,12 @@ import cytoflow.utility as util
 
 from .. import Changed
 from ..views import IWorkflowView, WorkflowView
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, traits_repr, cytoflow_class_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-ColorTranslationOp.__repr__ = traits_repr
+ColorTranslationOp.__repr__ = cytoflow_class_repr
 
 
 class Control(HasTraits):

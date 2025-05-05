@@ -38,7 +38,7 @@ from .cytoflow_errors import CytoflowError
 
 @provides(IScale)
 class LogScale(ScaleMixin):
-    id = Constant("edu.mit.synbio.cytoflow.utility.log_scale")
+    id = Constant("cytoflow.utility.log_scale")
     name = "log"
     
     experiment = Instance("cytoflow.Experiment")

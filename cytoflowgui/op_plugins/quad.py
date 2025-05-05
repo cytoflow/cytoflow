@@ -187,9 +187,9 @@ class QuadViewHandler(ViewHandler):
 
 @provides(IOperationPlugin)
 class QuadPlugin(Plugin, PluginHelpMixin): 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.quad'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.quad'
-    view_id = 'edu.mit.synbio.cytoflow.views.quad'
+    id = 'cytoflowgui.op_plugins.quad'
+    operation_id = 'cytoflow.operations.quad'
+    view_id = 'cytoflow.views.quad'
 
     name = "Quad"
     menu_group = "Gates"

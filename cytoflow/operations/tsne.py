@@ -179,7 +179,7 @@ class tSNEOp(HasStrictTraits):
         ...                      subset = "Dox == 10.0").plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.tsne')
+    id = Constant('cytoflow.operations.tsne')
     friendly_id = Constant("t-Stochastic Neighbor Embedding")
     
     name = Str

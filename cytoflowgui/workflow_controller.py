@@ -217,7 +217,7 @@ class WorkflowItemHandler(Controller):
     ##### PROPERTIES
     # MAGIC: gets value for property "deletable"
     def _get_deletable(self):
-        if self.model.operation.id == 'edu.mit.synbio.cytoflow.operations.import':
+        if self.model.operation.id == 'cytoflow.operations.import':
             return False
         else:
             return True

@@ -48,10 +48,10 @@ from traits.api import provides, Bool, Instance
 from cytoflow import DensityView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowFacetView, Data2DPlotParams
 
-DensityView.__repr__ = traits_repr
+DensityView.__repr__ = cytoflow_class_repr
 
      
 class DensityPlotParams(Data2DPlotParams):

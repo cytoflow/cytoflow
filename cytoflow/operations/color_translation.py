@@ -141,7 +141,7 @@ class ColorTranslationOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.color_translation')
+    id = Constant('cytoflow.operations.color_translation')
     friendly_id = Constant("Color translation")
     
     name = Constant("Color Translation")
@@ -412,7 +412,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.colortranslationdiagnostic")
+    id = Constant("cytoflow.view.colortranslationdiagnostic")
     friendly_id = Constant("Color Translation Diagnostic")
     
     subset = Str

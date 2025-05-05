@@ -111,7 +111,7 @@ class RadvizView(BaseNDView):
             
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.radviz')
+    id = Constant('cytoflow.view.radviz')
     friend_id = Constant("Radviz Plot")
         
     def plot(self, experiment, **kwargs):

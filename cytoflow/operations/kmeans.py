@@ -156,7 +156,7 @@ class KMeansOp(HasStrictTraits):
         >>> km_op.default_view().plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.kmeans')
+    id = Constant('cytoflow.operations.kmeans')
     friendly_id = Constant("KMeans Clustering")
     
     name = Str
@@ -486,7 +486,7 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
         The op whose parameters we're viewing.
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.kmeans1dview')
+    id = Constant('cytoflow.views.kmeans1dview')
     friendly_id = Constant("1D KMeans Diagnostic Plot")
     
     channel = Str
@@ -552,7 +552,7 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
         The op whose parameters we're viewing.        
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.kmeans2dview')
+    id = Constant('cytoflow.view.kmeans2dview')
     friendly_id = Constant("2D Kmeans Diagnostic Plot")
     
     xchannel = Str

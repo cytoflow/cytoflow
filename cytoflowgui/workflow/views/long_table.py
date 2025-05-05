@@ -31,10 +31,10 @@ from traits.api import provides, Instance
 from cytoflow import LongTableView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from .view_base import IWorkflowView, WorkflowByView, BasePlotParams
 
-LongTableView.__repr__ = traits_repr
+LongTableView.__repr__ = cytoflow_class_repr
 
 
 @provides(IWorkflowView)

@@ -192,8 +192,8 @@ class ParallelCoordinatesHandler(ViewHandler):
 @provides(IViewPlugin)
 class ParallelCoordinatesPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.parallel_coords'
-    view_id = 'edu.mit.synbio.cytoflow.view.parallel_coords'
+    id = 'cytoflowgui.view.parallel_coords'
+    view_id = 'cytoflow.view.parallel_coords'
     name = "Parallel Coordinates Plot"
 
     def get_view(self):

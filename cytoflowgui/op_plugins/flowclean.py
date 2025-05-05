@@ -277,9 +277,9 @@ class FlowCleanViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class FlowCleanPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.flowclean'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.flowclean'
-    view_id = 'edu.mit.synbio.cytoflow.view.flowcleandiagnostic'
+    id = 'cytoflowgui.op_plugins.flowclean'
+    operation_id = 'cytoflow.operations.flowclean'
+    view_id = 'cytoflow.view.flowcleandiagnostic'
 
     name = "FlowClean"
     menu_group = "Calibration"

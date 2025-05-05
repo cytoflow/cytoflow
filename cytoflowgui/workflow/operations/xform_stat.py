@@ -32,26 +32,22 @@ from traits.api import (Str, Callable, Property, List, provides, observe, Undefi
 import cytoflow.utility as util
 from cytoflow import TransformStatisticOp
                        
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, traits_repr, cytoflow_class_repr
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
 from ..subset import ISubset
 
-TransformStatisticOp.__repr__ = traits_repr
+TransformStatisticOp.__repr__ = cytoflow_class_repr
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
 geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
 
 transform_functions = {"Mean" : np.mean,
-                       "Geom.Mean" : util.geom_mean,
                        "Median" : np.median,
+                       "Geom.Mean" : util.geom_mean,
                        "Count" : len,
                        "Std.Dev" : np.std,
-                       "Geom.SD" : util.geom_sd_range,
                        "SEM" : scipy.stats.sem,
-                       "Geom.SEM" : util.geom_sem_range,
-                       "Mean 95% CI" : mean_95ci,
-                       "Geom.Mean 95% CI" : geomean_95ci,
                        "Sum" : np.sum,
                        "Proportion" : lambda a: pandas.Series(a / a.sum()),
                        "Percentage" : lambda a: pandas.Series(a / a.sum()) * 100.0,
@@ -110,10 +106,8 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
         op = TransformStatisticOp()
         op.copy_traits(self, [x for x in op.copyable_trait_names() if x != 'fill'])
         
-        fn_import = {"Mean" : "from numpy import mean",
-                     "Median" : "from numpy import median",
-                     "Geom.Mean" : None,
-                     "Count" : None,
+        fn_import = {"Mean" : "import numpy as np",
+                     "Median" : "import numpy as np",
                      "Std.Dev" : "from numpy import std",
                      "Geom.SD" : None,
                      "SEM" : "from scipy.stats import sem",
@@ -126,32 +120,28 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
                      "Fold" : "from pandas import Series"
                   }
         
-        # fn_name = {"Mean" : "mean",
-        #            "Median" : "median",
-        #            "Geom.Mean" : "geom_mean",
-        #            "Count" : "len",
-        #            "Std.Dev" : "std",
-        #            "Geom.SD" : "geom_sd_range",
-        #            "SEM" : "sem",
-        #            "Geom.SEM" : "geom_sem_range",
-        #            "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
-        #            "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)",
-        #            "Sum" : "sum",
-        #            "Proportion" : "lambda a: Series(a / a.sum())",
-        #            "Percentage" : "lambda a: Series(a / a.sum()) * 100.0",
-        #            "Fold" : "lambda a: Series(a / a.min())"
-        #            }
+        fn_repr = {"Mean" : "np.mean",
+                   "Median" : "np.median",
+                   "Geom.Mean" : "geom_mean",
+                   "Count" : "len",
+                   "Std.Dev" : "std",
+                   "SEM" : "sem",
+                   "Sum" : "sum",
+                   "Proportion" : "lambda a: Series(a / a.sum())",
+                   "Percentage" : "lambda a: Series(a / a.sum()) * 100.0",
+                   "Fold" : "lambda a: Series(a / a.min())"
+                   }
         
         op.function = transform_functions[self.function_name]
-        # try:
-        #     op.function.__name__ = fn_name[self.statistic_name]
-        # except AttributeError:
-        #     # can't reassign the name of "len", for example
-        #     pass
+        try:
+            op.function.__name__ = fn_repr[self.function_name]
+        except AttributeError:
+            # can't reassign the name of "len", for example
+            pass
         
         return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})" \
             .format(import_statement = (fn_import[self.function_name]
-                                        if fn_import[self.function_name] is not None
+                                        if self.function_name in fn_import
                                         else ""),
                 repr = repr(op),
                 idx = idx,

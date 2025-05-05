@@ -76,7 +76,7 @@ class Kde2DView(Base2DView):
         ...                huefacet = 'Dox').plot(ex)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.kde2d')
+    id = Constant('cytoflow.view.kde2d')
     friend_id = Constant("2D Kernel Density Estimate")
     
     def plot(self, experiment, **kwargs):

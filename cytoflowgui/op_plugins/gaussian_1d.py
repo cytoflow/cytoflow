@@ -198,9 +198,9 @@ class GaussianMixture1DViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class GaussianMixture1DPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.gaussian_1d'
-    operation_id = 'edu.mit.synbio.cytoflowgui.operations.gaussian_1d'
-    view_id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
+    id = 'cytoflowgui.op_plugins.gaussian_1d'
+    operation_id = 'cytoflowgui.operations.gaussian_1d'
+    view_id = 'cytoflow.view.gaussianmixture1dview'
 
     name = "1D Mixture Model"
     menu_group = "Gates"

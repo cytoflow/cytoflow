@@ -30,10 +30,10 @@ from traits.api import provides, Enum, Instance
 from cytoflow import ScatterplotView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowFacetView, Data2DPlotParams, SCATTERPLOT_MARKERS
 
-ScatterplotView.__repr__ = traits_repr
+ScatterplotView.__repr__ = cytoflow_class_repr
 
 class ScatterplotPlotParams(Data2DPlotParams):
 

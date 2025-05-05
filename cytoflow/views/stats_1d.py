@@ -89,7 +89,7 @@ class Stats1DView(Base1DStatisticsView):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.stats1d")
+    id = Constant("cytoflow.view.stats1d")
     friendly_id = Constant("1D Statistics View")
     
     variable_scale = util.ScaleEnum

@@ -25,6 +25,11 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
+# needed for testing lambdas
+import pandas as pd  # @UnusedImport
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
+
+from cytoflow import utility as util
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest
 from cytoflowgui.workflow.views.bar_chart import BarChartWorkflowView, BarChartPlotParams
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
@@ -89,14 +94,15 @@ class TestBarchart(ImportedDataTest, Base1DStatisticsViewTest):
         self.assertEqual(self.wi, new_wi)
                                      
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
            
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
                 
-        exec(code) # smoke test
+        with self.assertWarns(util.CytoflowWarning):
+            exec(code) # smoke test
 
 
 if __name__ == "__main__":

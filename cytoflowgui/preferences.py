@@ -37,7 +37,7 @@ class CytoflowPreferences(PreferencesHelper):
 
     #### 'PreferencesHelper' interface ########################################
 
-    preferences_path = 'edu.mit.synbio.cytoflow.preferences'
+    preferences_path = 'cytoflow.preferences'
     """The path to the preference node that contains the preferences."""
 
 

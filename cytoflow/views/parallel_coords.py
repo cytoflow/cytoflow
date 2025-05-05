@@ -81,7 +81,7 @@ class ParallelCoordinatesView(BaseNDView):
             
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.parallel_coords')
+    id = Constant('cytoflow.view.parallel_coords')
     friend_id = Constant("Parallel Coordinates Plot")
         
     def plot(self, experiment, **kwargs):

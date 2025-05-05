@@ -30,12 +30,12 @@ from cytoflow.operations.flowpeaks import FlowPeaksOp, FlowPeaks2DView, FlowPeak
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowByView, ScatterplotPlotParams, DensityPlotParams
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-FlowPeaksOp.__repr__ = traits_repr
+FlowPeaksOp.__repr__ = cytoflow_class_repr
 
 
 @provides(IWorkflowOperation)
@@ -171,7 +171,7 @@ class FlowPeaksWorkflowView(WorkflowByView, By2DView):
     
     show_density = Bool(False)
     
-    id = "edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks"
+    id = "cytoflowgui.op_plugins.flowpeaks"
     friendly_id = "FlowPeaks" 
     
     name = Constant("FlowPeaks")

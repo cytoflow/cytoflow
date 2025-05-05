@@ -135,9 +135,9 @@ class BinningViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class BinningPlugin(Plugin, PluginHelpMixin):
  
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.binning'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.binning'
-    view_id = 'edu.mit.synbio.cytoflow.views.binning'
+    id = 'cytoflowgui.op_plugins.binning'
+    operation_id = 'cytoflow.operations.binning'
+    view_id = 'cytoflow.views.binning'
 
     name = "Binning"
     menu_group = "Gates"

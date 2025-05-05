@@ -93,7 +93,7 @@ class BarChartView(Base1DStatisticsView):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.barchart")
+    id = Constant("cytoflow.view.barchart")
     friendly_id = Constant("Bar Chart") 
         
     def enum_plots(self, experiment):

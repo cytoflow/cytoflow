@@ -166,8 +166,8 @@ class ScatterplotHandler(ViewHandler):
 @provides(IViewPlugin)
 class ScatterplotPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.scatterplot'
-    view_id = 'edu.mit.synbio.cytoflow.view.scatterplot'
+    id = 'cytoflowgui.view.scatterplot'
+    view_id = 'cytoflow.view.scatterplot'
     name = "Scatter Plot"
     
     def get_view(self):

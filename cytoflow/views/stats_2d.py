@@ -94,7 +94,7 @@ class Stats2DView(Base2DStatisticsView):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.stats2d")
+    id = Constant("cytoflow.view.stats2d")
     friendly_id = Constant("2D Statistics View")
    
     def enum_plots(self, experiment):
@@ -149,7 +149,7 @@ class Stats2DView(Base2DStatisticsView):
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
             
-            xlim = (data[self.xfeature].min(), data[self.xfeature].max())
+            xlim = (data[self.x_feature].min(), data[self.x_feature].max())
             if self.x_error_low and self.x_error_high:
                 xlim = (data[self.x_error_low].min(), data[self.x_error_high].max())
             
@@ -160,7 +160,7 @@ class Stats2DView(Base2DStatisticsView):
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
             
-            ylim = (data[self.yfeature].min(), data[self.yfeature].max())
+            ylim = (data[self.y_feature].min(), data[self.y_feature].max())
             if self.y_error_low and self.y_error_high:
                 ylim = (data[self.y_error_low].min(), data[self.y_error_high].max())
             
@@ -170,14 +170,14 @@ class Stats2DView(Base2DStatisticsView):
         
         # plot the error bars first so the axis labels don't get overwritten
         if self.x_error_low and self.x_error_high:
-            grid.map(_x_error_bars, self.xfeature, self.yfeature, self.x_error_low, 
+            grid.map(_x_error_bars, self.x_feature, self.y_feature, self.x_error_low, 
                      self.x_error_high, capsize = capsize)
             
         if self.y_error_low and self.y_error_high:
-            grid.map(_y_error_bars, self.xfeature, self.yfeature, self.y_error_low,
+            grid.map(_y_error_bars, self.x_feature, self.y_feature, self.y_error_low,
                      self.y_error_high, capsize = capsize)
 
-        grid.map(plt.plot, self.xfeature, self.yfeature, **kwargs)
+        grid.map(plt.plot, self.x_feature, self.y_feature, **kwargs)
         
         return dict(xscale = xscale,
                     xlim = xlim,

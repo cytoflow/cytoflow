@@ -31,10 +31,10 @@ from traits.api import provides, Instance, Tuple, Enum, Bool
 from cytoflow import Stats1DView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowByView, Stats1DPlotParams as _Stats1DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
 
-Stats1DView.__repr__ = traits_repr
+Stats1DView.__repr__ = cytoflow_class_repr
 
 
 class Stats1DPlotParams(_Stats1DPlotParams):

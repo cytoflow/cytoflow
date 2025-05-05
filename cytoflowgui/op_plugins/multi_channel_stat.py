@@ -131,8 +131,8 @@ class MultiChannelStatisticHandler(OpHandler):
 @provides(IOperationPlugin)
 class MultiChannelStatisticPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.multi_channel_statistic'
-    operation_id = 'edu.mit.synbio.cytoflowgui.workflow.operations.multi_channel_stat'
+    id = 'cytoflowgui.op_plugins.multi_channel_statistic'
+    operation_id = 'cytoflowgui.workflow.operations.multi_channel_stat'
     view_id = None
 
     name = "Multi Channel Statistic"

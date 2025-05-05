@@ -179,9 +179,9 @@ class DensityGateViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class DensityGatePlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.density'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.density'
-    view_id = 'edu.mit.synbio.cytoflow.view.densitygateview'
+    id = 'cytoflowgui.op_plugins.density'
+    operation_id = 'cytoflow.operations.density'
+    view_id = 'cytoflow.view.densitygateview'
 
     name = "Density Gate"
     menu_group = "Gates"

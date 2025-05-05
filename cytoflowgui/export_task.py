@@ -57,7 +57,7 @@ class ExportPane(TraitsDockPane):
     Determine the width and height of the exported figure.
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.export_pane'
+    id = 'cytoflowgui.export_pane'
     name = 'Export'
     
     # the task serving as the dock pane's controller
@@ -103,7 +103,7 @@ class ExportTaskPane(TaskPane):
     data views.
     """
     
-    id = 'edu.mit.synbio.cytoflow.export_task_pane'
+    id = 'cytoflow.export_task_pane'
     name = 'Cytometry Data Viewer'
     
     model = Instance(LocalWorkflow)
@@ -141,7 +141,7 @@ class ExportTask(Task):
     classdocs
     """
     
-    id = "edu.mit.synbio.cytoflowgui.export_task"
+    id = "cytoflowgui.export_task"
     name = "Export figure"
     
     menu_bar = SMenuBar(SMenu(TaskToggleGroup(),
@@ -177,8 +177,8 @@ class ExportTask(Task):
     do_export = Event
     
     def _default_layout_default(self):
-        return TaskLayout(right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = 350),
-                                            PaneItem("edu.mit.synbio.cytoflowgui.export_pane", width = 350)))
+        return TaskLayout(right = VSplitter(PaneItem("cytoflowgui.params_pane", width = 350),
+                                            PaneItem("cytoflowgui.export_pane", width = 350)))
      
     def create_central_pane(self):
         return ExportTaskPane(canvas = self.application.canvas,
@@ -205,7 +205,7 @@ class ExportTask(Task):
     def activate_cytoflow_task(self, _):
         """Switch to the `FlowTask` task"""
         
-        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.flow_task')
+        task = next(x for x in self.window.tasks if x.id == 'cytoflowgui.flow_task')
         self.window.activate_task(task)
         
     @observe('do_export', post_init = True)
@@ -262,7 +262,7 @@ class ExportFigurePlugin(Plugin):
     #### 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
-    id = 'edu.mit.synbio.cytoflow.export'
+    id = 'cytoflow.export'
     
     # the local process's model
     model = Instance(LocalWorkflow)
@@ -272,7 +272,7 @@ class ExportFigurePlugin(Plugin):
 
     tasks = List(contributes_to = TASKS)
     def _tasks_default(self):
-        return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.export_task',
+        return [TaskFactory(id = 'cytoflowgui.export_task',
                             name = 'Export figure',
                             factory = lambda **x: ExportTask(application = self.application,
                                                              model = self.application.model,

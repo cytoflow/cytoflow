@@ -27,10 +27,10 @@ from traits.api import Str, provides
 
 from cytoflow import RatioOp
                        
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-RatioOp.__repr__ = traits_repr
+RatioOp.__repr__ = cytoflow_class_repr
 
 @provides(IWorkflowOperation)
 class RatioWorkflowOp(WorkflowOperation, RatioOp):

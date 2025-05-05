@@ -243,7 +243,7 @@ class FlowCleanOp(HasStrictTraits):
        
    """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.flowclean')
+    id = Constant('cytoflow.operations.flowclean')
     friendly_id = Constant("FlowClean Data Cleaning")
     
     name = Str
@@ -704,7 +704,7 @@ class FlowCleanDiagnostic(HasStrictTraits):
         if you create the instance using `FlowCleanOp.default_view`.
     """
 
-    id = Constant('edu.mit.synbio.cytoflow.view.flowcleandiagnostic')
+    id = Constant('cytoflow.view.flowcleandiagnostic')
     friendly_id = Constant("FlowClean Diagnostic")
     
     op = Instance(FlowCleanOp)

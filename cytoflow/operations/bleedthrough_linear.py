@@ -156,7 +156,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.bleedthrough_linear')
+    id = Constant('cytoflow.operations.bleedthrough_linear')
     friendly_id = Constant("Linear Bleedthrough Correction")
     
     name = Constant("Bleedthrough")
@@ -392,7 +392,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.linearbleedthroughdiagnostic")
+    id = Constant("cytoflow.view.linearbleedthroughdiagnostic")
     friendly_id = Constant("Linear Bleedthrough Diagnostic") 
     
     subset = Str

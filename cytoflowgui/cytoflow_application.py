@@ -60,7 +60,7 @@ def gui_warning_handler_callback(msg, app):
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application"""
 
-    id = 'edu.mit.synbio.cytoflow'
+    id = 'cytoflow'
     """The application's GUID"""
 
     name = 'Cytoflow'
@@ -234,7 +234,7 @@ class CytoflowApplication(TasksApplication):
                     state = restored_state
                      
                     # make sure the active task is the main window
-                    state.previous_window_layouts[0].active_task = 'edu.mit.synbio.cytoflowgui.flow_task'
+                    state.previous_window_layouts[0].active_task = 'cytoflowgui.flow_task'
                 else:
                     logger.warn('Discarding outdated application layout')
             except:
@@ -264,7 +264,7 @@ class CytoflowApplication(TasksApplication):
     #### Trait initializers ###################################################
 
     def _default_layout_default(self):
-        active_task = "edu.mit.synbio.cytoflowgui.flow_task"
+        active_task = "cytoflowgui.flow_task"
         tasks = [ factory.id for factory in self.task_factories ]
         return [ TaskWindowLayout(*tasks,
                                   active_task = active_task,

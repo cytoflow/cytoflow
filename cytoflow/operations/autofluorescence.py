@@ -120,7 +120,7 @@ class AutofluorescenceOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.autofluorescence')
+    id = Constant('cytoflow.operations.autofluorescence')
     friendly_id = Constant("Autofluorescence correction")
     
     name = Constant("Autofluorescence")
@@ -317,7 +317,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     """
     
     # traits   
-    id = Constant('edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview')
+    id = Constant('cytoflow.view.autofluorescencediagnosticview')
     friendly_id = Constant("Autofluorescence Diagnostic")
 
     op = Instance(AutofluorescenceOp)    

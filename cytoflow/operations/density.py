@@ -172,7 +172,7 @@ class DensityGateOp(HasStrictTraits):
         
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.density')
+    id = Constant('cytoflow.operations.density')
     friendly_id = Constant("Density Gate")
     
     name = Str
@@ -454,7 +454,7 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
     
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.densitygateview')
+    id = Constant('cytoflow.view.densitygateview')
     friendly_id = Constant("Density Gate Diagnostic Plot")
 
     huefacet = Constant(None)

@@ -127,7 +127,7 @@ class LogicleScale(HasStrictTraits):
         http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.22030/full
     """    
 
-    id = Constant("edu.mit.synbio.cytoflow.utility.logicle_scale")        
+    id = Constant("cytoflow.utility.logicle_scale")        
     name = "logicle"
     
     experiment = Instance("cytoflow.Experiment")

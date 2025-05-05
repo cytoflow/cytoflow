@@ -171,8 +171,8 @@ class Kde2DHandler(ViewHandler):
 
 @provides(IViewPlugin)
 class Kde2DPlugin(Plugin, PluginHelpMixin):
-    id = 'edu.mit.synbio.cytoflowgui.view.kde2d'
-    view_id = 'edu.mit.synbio.cytoflow.view.kde2d'
+    id = 'cytoflowgui.view.kde2d'
+    view_id = 'cytoflow.view.kde2d'
     name = "2D Kernel Density Estimate"
     
     def get_view(self):

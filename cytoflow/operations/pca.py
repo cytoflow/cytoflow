@@ -168,7 +168,7 @@ class PCAOp(HasStrictTraits):
         ...                      subset = "Dox == 10.0").plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.pca')
+    id = Constant('cytoflow.operations.pca')
     friendly_id = Constant("Principal Component Analysis")
     
     name = Str

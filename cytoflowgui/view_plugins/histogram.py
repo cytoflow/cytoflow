@@ -165,8 +165,8 @@ class HistogramHandler(ViewHandler):
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.histogram'
-    view_id = 'edu.mit.synbio.cytoflow.view.histogram'
+    id = 'cytoflowgui.view.histogram'
+    view_id = 'cytoflow.view.histogram'
     name = "Histogram"
     
     def get_view(self):

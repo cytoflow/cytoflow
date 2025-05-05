@@ -84,7 +84,7 @@ class FrameStatisticOp(HasStrictTraits):
     >>> ex2 = stats_op.apply(ex)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.frame_statistic')
+    id = Constant('cytoflow.operations.frame_statistic')
     friendly_id = Constant("Frame Statistic")
     
     name = Str

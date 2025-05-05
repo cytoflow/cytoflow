@@ -25,6 +25,7 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 import pandas as pd
+import cytoflow.utility as util
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
@@ -34,10 +35,10 @@ from cytoflowgui.workflow.subset import CategorySubset
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 # we need these to exec() code in testNotebook
-from cytoflow import ci, geom_mean 
-from numpy import mean, median, std
-from scipy.stats import sem
-from pandas import Series
+from cytoflow import ci, geom_mean, geom_sd  # @UnusedImport
+from numpy import mean, median, std  # @UnusedImport
+from scipy.stats import sem  # @UnusedImport
+from pandas import Series  # @UnusedImport
 
 class TestXformStat(ImportedDataTest):
     
@@ -50,7 +51,7 @@ class TestXformStat(ImportedDataTest):
         
         op.name = "Count"
         op.channel = "Y2-A"
-        op.statistic_name = "Count"
+        op.function_name = "Count"
         op.by = ['Dox', 'Well']
         
         wi = WorkflowItem(operation = op)
@@ -59,8 +60,8 @@ class TestXformStat(ImportedDataTest):
         self.op = op = TransformStatisticWorkflowOp()
         
         op.name = "Mean"
-        op.statistic = ("Count", "Count")
-        op.statistic_name = "Count"
+        op.statistic = "Count"
+        op.function_name = "Mean"
         op.by = ["Dox"]
         op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
                 
@@ -88,8 +89,7 @@ class TestXformStat(ImportedDataTest):
 
     def testAllFunctions(self):
         for fn in transform_functions:
-            self.workflow.wi_sync(self.wi, 'status', 'waiting')
-            self.op.statistic_name = fn
+            self.op.function_name = fn
             self.workflow.wi_waitfor(self.wi, 'status', 'valid')
  
     def testSerialize(self):
@@ -124,18 +124,19 @@ class TestXformStat(ImportedDataTest):
                                       
     def testNotebook(self):
         for fn in transform_functions:
-            self.workflow.wi_sync(self.wi, 'status', 'waiting')
-            self.op.statistic_name = fn
+            self.op.function_name = fn
             self.workflow.wi_waitfor(self.wi, 'status', 'valid')
             
-            code = "from cytoflow import *\n"
+            code = "import cytoflow as flow\n"
             for i, wi in enumerate(self.workflow.workflow):
                 code = code + wi.operation.get_notebook_code(i)
             
                 for view in wi.views:
                     code = code + view.get_notebook_code(i)
              
-            exec(code)
+            with self.assertWarns(util.CytoflowWarning):
+                exec(code)
+                
             nb_data = locals()['ex_4'].data
             remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         

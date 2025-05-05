@@ -96,6 +96,7 @@ class ChannelStatisticOp(HasStrictTraits):
         Make a little data set.
     
         >>> import cytoflow as flow
+        >>> import pandas as pd
         >>> import_op = flow.ImportOp()
         >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
         ...                              conditions = {'Dox' : 10.0}),
@@ -121,14 +122,14 @@ class ChannelStatisticOp(HasStrictTraits):
     dict_keys(['MeanByDox'])
 
     >>> print(ex2.statistics['MeanByDox'])
-                Y2-A       B1-A
+                Y2-A    
     Dox                        
-    1.0    19.805601  34.845373
-    10.0  446.981927  29.917667
+    1.0    19.805601  
+    10.0  446.981927  
 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.channel_statistic')
+    id = Constant('cytoflow.operations.channel_statistic')
     friendly_id = Constant("Channel Statistic")
     
     name = Str
@@ -235,7 +236,6 @@ class ChannelStatisticOp(HasStrictTraits):
                                                .format(type(v))) from e
                     
             if isinstance(v, pd.Series) and v.dtype.kind != 'f':
-                print(v)
                 raise util.CytoflowOpError(None,
                                            "Your function returned a pandas.Series with dtype {}. "
                                            "If it returns a Series, the data must be floating point."

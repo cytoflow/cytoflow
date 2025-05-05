@@ -156,8 +156,8 @@ class LongTableHandler(ViewHandler):
 @provides(IViewPlugin)
 class LongTablePlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.long_table'
-    view_id = 'edu.mit.synbio.cytoflow.view.long_table'
+    id = 'cytoflowgui.view.long_table'
+    view_id = 'cytoflow.view.long_table'
     name = "Long Table View"
     
     def get_view(self):

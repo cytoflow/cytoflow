@@ -159,8 +159,8 @@ class TransformStatisticHandler(OpHandler):
 @provides(IOperationPlugin)
 class TransformStatisticPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.transform_statistic'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.transform_statistic'
+    id = 'cytoflowgui.op_plugins.transform_statistic'
+    operation_id = 'cytoflow.operations.transform_statistic'
     view_id = None
 
     name = "Transform Statistic"

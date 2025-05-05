@@ -290,8 +290,8 @@ class Stats1DHandler(ViewHandler):
 @provides(IViewPlugin)
 class Stats1DPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.stats1d'
-    view_id = 'edu.mit.synbio.cytoflow.view.stats1d'
+    id = 'cytoflowgui.view.stats1d'
+    view_id = 'cytoflow.view.stats1d'
     name = "1D Statistics View"
     
     def get_view(self):

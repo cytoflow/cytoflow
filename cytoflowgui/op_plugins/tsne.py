@@ -187,8 +187,8 @@ class tSNEHandler(OpHandler):
 @provides(IOperationPlugin)
 class tSNEPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.tsne'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.tsne'
+    id = 'cytoflowgui.op_plugins.tsne'
+    operation_id = 'cytoflow.operations.tsne'
     view_id = None
 
     name = "t-Stochastic Neighbor Embedding"

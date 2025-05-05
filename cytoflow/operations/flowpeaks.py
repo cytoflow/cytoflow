@@ -226,7 +226,7 @@ class FlowPeaksOp(HasStrictTraits):
 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
+    id = Constant('cytoflow.operations.flowpeaks')
     friendly_id = Constant("FlowPeaks Clustering")
     
     name = Str
@@ -569,7 +569,6 @@ class FlowPeaksOp(HasStrictTraits):
                                 vg = peaks[pg]
                                 for ph in h:
                                     vh = peaks[ph]
-#                                     print("vg {} vh {}".format(vg, vh))
                                     dist_gh = min(dist_gh, 
                                                   np.linalg.norm(vg - vh))
                                      
@@ -887,7 +886,7 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks1dview')
+    id = Constant('cytoflow.view.flowpeaks1dview')
     friendly_id = Constant("1D FlowPeaks Diagnostic Plot")
     
     channel = Str
@@ -949,7 +948,7 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
 
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2dview')
+    id = Constant('cytoflow.view.flowpeaks2dview')
     friendly_id = Constant("FlowPeaks 2D Diagnostic Plot")
     
     xchannel = Str
@@ -1043,7 +1042,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2ddensityview')
+    id = Constant('cytoflow.view.flowpeaks2ddensityview')
     friendly_id = Constant("FlowPeaks 2D Diagnostic Plot (Density)")
     
     xchannel = Str

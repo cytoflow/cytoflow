@@ -32,12 +32,12 @@ from cytoflow.operations.kmeans import KMeansOp, KMeans2DView
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowByView, ScatterplotPlotParams
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-KMeansOp.__repr__ = traits_repr
+KMeansOp.__repr__ = cytoflow_class_repr
 
 @provides(IWorkflowOperation)
 class KMeansWorkflowOp(WorkflowOperation, KMeansOp):
@@ -127,7 +127,7 @@ class KMeansWorkflowView(WorkflowByView):
     
     plot_params = Instance(ScatterplotPlotParams, ())
     
-    id = "edu.mit.synbio.cytoflowgui.op_plugins.kmeans"
+    id = "cytoflowgui.op_plugins.kmeans"
     friendly_id = "KMeans" 
     
     name = Constant("KMeans")

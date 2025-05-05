@@ -89,7 +89,7 @@ class DensityView(Base2DView):
         ...                  huescale = 'log').plot(ex, smoothed = True)        
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.density')
+    id = Constant('cytoflow.view.density')
     friend_id = Constant("Density Plot")
     
     huefacet = Constant(None)

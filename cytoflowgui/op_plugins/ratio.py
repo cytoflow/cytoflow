@@ -64,8 +64,8 @@ class RatioHandler(OpHandler):
 @provides(IOperationPlugin)
 class RatioPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.ratio'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.ratio'
+    id = 'cytoflowgui.op_plugins.ratio'
+    operation_id = 'cytoflow.operations.ratio'
     view_id = None
 
     name = "Ratio"

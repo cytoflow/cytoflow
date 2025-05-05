@@ -193,7 +193,7 @@ class SOMOp(HasStrictTraits):
         >>> som_op.default_view().plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.som')
+    id = Constant('cytoflow.operations.som')
     friendly_id = Constant("Self Organizing Maps Clustering")
     
     name = Str
@@ -603,7 +603,7 @@ class SOM1DView(By1DView, AnnotatingView, HistogramView):
         The op whose parameters we're viewing.
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.som1dview')
+    id = Constant('cytoflow.views.som1dview')
     friendly_id = Constant("1D SOM Diagnostic Plot")
     
     channel = Str
@@ -671,7 +671,7 @@ class SOM2DView(By2DView, AnnotatingView, ScatterplotView):
         The op whose parameters we're viewing.        
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.som2dview')
+    id = Constant('cytoflow.view.som2dview')
     friendly_id = Constant("2D SOM Diagnostic Plot")
     
     xchannel = Str

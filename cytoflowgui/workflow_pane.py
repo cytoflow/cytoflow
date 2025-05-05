@@ -41,7 +41,7 @@ class WorkflowDockPane(TraitsDockPane):
     Workflow dock pane
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.workflow_pane'
+    id = 'cytoflowgui.workflow_pane'
     name = "Workflow"
     
     # the application instance from which to get plugin instances
@@ -62,7 +62,7 @@ class WorkflowDockPane(TraitsDockPane):
         for plugin in self.plugins:
             
             # don't include the import plugin
-            if plugin.id == 'edu.mit.synbio.cytoflowgui.op_plugins.import':
+            if plugin.id == 'cytoflowgui.op_plugins.import':
                 continue
             
             task_action = TaskAction(name=plugin.name,

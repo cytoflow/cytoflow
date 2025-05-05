@@ -159,8 +159,8 @@ class Test(ImportedDataSmallTest):
         ex = op.apply(self.ex)                                     
         
         flow.Stats2DView(statistic = "ByDox",
-                         xfeature = "Y2-A",
-                         yfeature = "V2-A",
+                         x_feature = "Y2-A",
+                         y_feature = "V2-A",
                          variable = "Dox").plot(ex)
 
 

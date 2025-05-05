@@ -82,7 +82,7 @@ class HlogScale(ScaleMixin):
         http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.20114/abstract
     """    
 
-    id = Constant("edu.mit.synbio.cytoflow.utility.hlog")        
+    id = Constant("cytoflow.utility.hlog")        
     name = "hlog"
     
     experiment = Instance("cytoflow.Experiment")

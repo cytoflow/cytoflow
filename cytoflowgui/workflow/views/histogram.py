@@ -30,10 +30,10 @@ from traits.api import provides, Enum, Bool, Instance
 from cytoflow import HistogramView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowFacetView, Data1DPlotParams, LINE_STYLES
 
-HistogramView.__repr__ = traits_repr
+HistogramView.__repr__ = cytoflow_class_repr
         
 
 class HistogramPlotParams(Data1DPlotParams):

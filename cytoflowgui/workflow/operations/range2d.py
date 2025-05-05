@@ -29,11 +29,11 @@ from cytoflow.operations.range2d import Range2DOp, ScatterplotRangeSelection2DVi
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-Range2DOp.__repr__ = traits_repr
+Range2DOp.__repr__ = cytoflow_class_repr
 
 @provides(IWorkflowView)
 class Range2DSelectionView(WorkflowView, ScatterplotRangeSelection2DView):

@@ -32,12 +32,12 @@ from cytoflow.operations.tsne import tSNEOp
 import cytoflow.utility as util
 from ...utility import CallbackHandler
 
-from ..serialization import camel_registry, traits_repr, dedent
+from ..serialization import camel_registry, cytoflow_class_repr, traits_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-tSNEOp.__repr__ = traits_repr
+tSNEOp.__repr__ = cytoflow_class_repr
 
 
 class Channel(HasTraits):
