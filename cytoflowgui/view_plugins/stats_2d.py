@@ -83,6 +83,7 @@ pair of elements with the same value of **Variable**; the X value is from
    :include-source: False
 
     import cytoflow as flow
+    import pandas as pd
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
                                  conditions = {'Dox' : 10.0}),
@@ -93,7 +94,8 @@ pair of elements with the same value of **Variable**; the X value is from
 
     ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
                         channel = 'Y2-A',
-                        function = flow.geom_mean,
+                        function = lambda x: pd.Series({'Geo.Mean' : flow.geom_mean(x),
+                                                        'Geo.SD' : flow.geom_sd(x)}), 
                         by = ['Dox'])
     ex2 = ch_op.apply(ex)
     ch_op_2 = flow.ChannelStatisticOp(name = 'SdByDox',
@@ -103,9 +105,10 @@ pair of elements with the same value of **Variable**; the X value is from
     ex3 = ch_op_2.apply(ex2)
     
     flow.Stats2DView(variable = 'Dox',
-                     xstatistic = ('MeanByDox', 'geom_mean'),
+                     statistic = 'MeanByDox',
+                     xfeature = 'Geo.Mean',
                      xscale = 'log',
-                     ystatistic = ('SdByDox', 'geom_sd'),
+                     yfeature = 'Geo.SD',
                      yscale = 'log').plot(ex3)
 """
 

@@ -89,7 +89,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
     ex2 = ch_op.apply(ex)
     
     flow.Stats1DView(variable = 'Dox',
-                     statistic = ('MeanByDox', 'geom_mean'),
+                     statistic = 'MeanByDox',
+                     feature = 'Y2-A',
                      scale = 'log',
                      variable_scale = 'log').plot(ex2)
 """

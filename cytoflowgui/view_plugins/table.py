@@ -73,7 +73,8 @@ Make a table out of a statistic.  The table can then be exported.
                                   by = ['Dox', 'Threshold'],
                                   function = len).apply(ex2) 
 
-    flow.TableView(statistic = ("ByDox", "len"),
+    flow.TableView(statistic = "ByDox",
+                   feature = "Y2-A",
                    row_facet = "Dox",
                    column_facet = "Threshold").plot(ex3)    
 

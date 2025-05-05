@@ -89,7 +89,7 @@ class FlowCleanOp(HasStrictTraits):
         package-wide default (set with `set_default_scale`) is used.
         
         .. important:: This algorithm works *much* better when fluorescence 
-           channels are scaled (and not just left `linear`.)
+           channels are scaled (and not just left ``linear``.)
     
     segment_size : Int (default = 500)
         The number of events in each bin in the analysis.

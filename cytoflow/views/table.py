@@ -113,7 +113,8 @@ class TableView(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> flow.TableView(statistic = ("ByDox", "len"),
+        >>> flow.TableView(statistic = "ByDox",
+        ...                feature = "Y2-A",
         ...                row_facet = "Dox",
         ...                column_facet = "Threshold").plot(ex3)
         

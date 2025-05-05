@@ -150,13 +150,15 @@ class Experiment(HasStrictTraits):
     ...                           tubes = [tube1, tube2])
     >>> 
     >>> ex = import_op.apply()
+    
     >>> ex.data.shape
-    (20000, 17)
+        (20000, 17)
+        
     >>> ex.data.groupby(['Dox']).size()
-    Dox
-    1      10000
-    10     10000
-    dtype: int64
+        Dox
+        1      10000
+        10     10000
+        dtype: int64
 
     """
 
@@ -225,7 +227,7 @@ class Experiment(HasStrictTraits):
             
             
         .. note:: This is a wrapper around `pandas.DataFrame.groupby` and
-                  `pandas.core.groupby.GroupBy.get_group`.  That means
+                  `pandas.core.groupby.DataFrameGroupBy.get_group`.  That means
                   you can pass other things in `conditions` -- see 
                   the `pandas.DataFrame.groupby` documentation
                   for details.

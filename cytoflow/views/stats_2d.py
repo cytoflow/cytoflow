@@ -42,7 +42,7 @@ class Stats2DView(Base2DStatisticsView):
     """
     Plot two statistics on a scatter plot.  A point (X,Y) is drawn for every
     pair of elements with the same value of `variable`; the X value is from 
-    `xstatistic` and the Y value is from `ystatistic`.
+    `xfeature` and the Y value is from `yfeature`.
     
     Attributes
     ----------
@@ -76,6 +76,7 @@ class Stats2DView(Base2DStatisticsView):
         ...                     function = lambda x: pd.Series({'Geo.Mean' : flow.geom_mean(x),
         ...                                                     'Geo.SD' : flow.geom_sd(x)}), 
         ...                     by = ['Dox'])
+        >>> ex2 = ch_op.apply(ex)
         
     Plot the statistics
     
@@ -87,7 +88,7 @@ class Stats2DView(Base2DStatisticsView):
         ...                  xfeature = 'Geo.Mean',
         ...                  xscale = 'log',
         ...                  yfeature = 'Geo.SD',
-        ...                  yscale = 'log').plot(ex3)
+        ...                  yscale = 'log').plot(ex2)
     """
     
     # traits   

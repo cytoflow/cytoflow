@@ -50,7 +50,7 @@ subset of events with a unique combination of experimental metadata.
    be scaled.
         
    .. important:: This algorithm works *much* better when fluorescence
-      channels are using a scale other than `linear`!
+      channels are using a scale other than ``linear``!
     
 .. object:: Segment Size (default = 500)
 

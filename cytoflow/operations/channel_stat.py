@@ -89,7 +89,7 @@ class ChannelStatisticOp(HasStrictTraits):
    
     Examples
     --------
-    
+
     .. plot::
         :context: close-figs
         
@@ -117,12 +117,13 @@ class ChannelStatisticOp(HasStrictTraits):
         >>> ex2 = ch_op.apply(ex)
         
     View the new statistic
+    
     .. plot::
         :context: close-figs
     
         >>> print(ex2.statistics.keys())
         dict_keys(['MeanByDox'])
-    
+        
         >>> print(ex2.statistics['MeanByDox'])
                     Y2-A    
         Dox                        

@@ -13,7 +13,6 @@ from joblib import Parallel, delayed
 from .kneed import KneeLocator
 from tqdm.auto import tqdm
 
-
 def resample(x: np.ndarray, frac: float) -> tuple[np.ndarray, np.ndarray]:
     """
     Resample a matrix x by a fraction frac
@@ -201,9 +200,8 @@ class ConsensusClustering:
     Consensus clustering for measuring the stability of clusters and selecting the
     optimal number of clusters. Consensus clustering is originally described in
     https://link.springer.com/article/10.1023/A:1023949509487 and implemented in R
-    in the ConsensusClusterPlus package (
-    https://academic.oup.com/bioinformatics/article/26/12/1572/281699). This class is
-    a Python implementation of the same algorithm.
+    in the ConsensusClusterPlus package (https://academic.oup.com/bioinformatics/article/26/12/1572/281699). 
+    This class is a Python implementation of the same algorithm.
 
     Clustering stability is measured by resampling rows of a matrix, clustering the
     resampled matrix, and computing a consensus matrix from the resampled clusters.
@@ -351,7 +349,8 @@ class ConsensusClustering:
         Returns
         -------
         None
-            Consensus matrices are stored in self.consensus_matrices_
+            Consensus matrices are stored in ``self.consensus_matrices_``
+            
         """
         self.consensus_matrices_ = []
         if n_jobs == 0:

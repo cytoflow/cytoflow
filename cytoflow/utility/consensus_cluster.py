@@ -16,20 +16,21 @@ class ConsensusCluster:
       Implementation of Consensus clustering, following the paper
       https://link.springer.com/content/pdf/10.1023%2FA%3A1023949509487.pdf
       Args:
-        * cluster -> clustering class
-        * NOTE: the class is to be instantiated with parameter `n_clusters`,
-          and possess a `fit_predict` method, which is invoked on data.
-        * L -> smallest number of clusters to try
-        * K -> biggest number of clusters to try
-        * H -> number of resamplings for each cluster number
-        * resample_proportion -> percentage to sample
-        * Mk -> consensus matrices for each k (shape =(K,data.shape[0],data.shape[0]))
-                (NOTE: every consensus matrix is retained, like specified in the paper)
-        * Ak -> area under CDF for each number of clusters 
-                (see paper: section 3.3.1. Consensus distribution.)
-        * deltaK -> changes in areas under CDF
-                (see paper: section 3.3.1. Consensus distribution.)
-        * self.bestK -> number of clusters that was found to be best
+
+      * cluster -> clustering class
+      * NOTE: the class is to be instantiated with parameter ``n_clusters``,
+        and possess a ``fit_predict`` method, which is invoked on data.
+      * L -> smallest number of clusters to try
+      * K -> biggest number of clusters to try
+      * H -> number of resamplings for each cluster number
+      * resample_proportion -> percentage to sample
+      * Mk -> consensus matrices for each k (shape =(K,data.shape[0],data.shape[0]))
+              (NOTE: every consensus matrix is retained, like specified in the paper)
+      * Ak -> area under CDF for each number of clusters 
+              (see paper: section 3.3.1. Consensus distribution.)
+      * deltaK -> changes in areas under CDF
+              (see paper: section 3.3.1. Consensus distribution.)
+      * self.bestK -> number of clusters that was found to be best
       """
 
     def __init__(self, cluster, L, K, H, resample_proportion=0.5):
@@ -47,6 +48,7 @@ class ConsensusCluster:
     def _internal_resample(self, data, proportion):
         """
         Args:
+        
           * data -> (examples,attributes) format
           * proportion -> percentage to sample
         """

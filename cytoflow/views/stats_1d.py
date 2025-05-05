@@ -72,7 +72,7 @@ class Stats1DView(Base1DStatisticsView):
         :context: close-figs
         
         >>> ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
-        ...                                 channels = ['Y2-A'],
+        ...                                 channel = 'Y2-A',
         ...                                 function = flow.geom_mean,
         ...                                 by = ['Dox'])
         >>> ex2 = ch_op.apply(ex)
@@ -83,7 +83,8 @@ class Stats1DView(Base1DStatisticsView):
         :context: close-figs
         
         >>> flow.Stats1DView(variable = 'Dox',
-        ...                  statistic = 'MeanByDox', 'geom_mean'),
+        ...                  statistic = 'MeanByDox', 
+        ...                  feature = 'Y2-A',
         ...                  variable_scale = 'log',
         ...                  scale = 'log').plot(ex2)
     """

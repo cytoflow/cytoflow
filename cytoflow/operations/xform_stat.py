@@ -116,9 +116,8 @@ class TransformStatisticOp(HasStrictTraits):
     
         >>> print(ex2.statistics.keys())
         dict_keys(['MeanByDox'])
-    
-        >>> print(ex2.statistics['MeanByDox'])
         
+        >>> print(ex2.statistics['MeanByDox'])
                     Y2-A    
         Dox                        
         1.0    19.805601  
@@ -135,7 +134,6 @@ class TransformStatisticOp(HasStrictTraits):
         
         >>> ex_3 = xform_op.apply(ex2)
         >>> ex_3.statistics['LogMean']
-    
             Y2_A
         Dox    
         1.0    2.985965

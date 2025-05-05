@@ -51,12 +51,12 @@ else:
 class KneeLocator(object):
     """
     Once instantiated, this class attempts to find the point of maximum
-    curvature on a line. The knee is accessible via the `.knee` attribute.
+    curvature on a line. The knee is accessible via the ``.knee`` attribute.
 
     :param x: x values, must be the same length as y.
-    :type x: 1D array of shape (`number_of_y_values`,) or list
+    :type x: 1D array of shape (``number_of_y_values``,) or list
     :param y: y values, must be the same length as x.
-    :type y: 1D array of shape (`number_of_y_values`,) or list
+    :type y: 1D array of shape (``number_of_x_values``,) or list
     :param S: Sensitivity, the number of minimum number of data points below the local distance maximum before calling a knee. The original paper suggests default of 1.0
     :type S: float
     :param curve: If 'concave', algorithm will detect knees. If 'convex', it
@@ -68,7 +68,7 @@ class KneeLocator(object):
     :type interp_method: str
     :param online: kneed will correct old knee points if True, will return first knee if False
     :type online: bool
-    :param polynomial_degree: The degree of the fitting polynomial. Only used when interp_method="polynomial". This argument is passed to numpy polyfit `deg` parameter.
+    :param polynomial_degree: The degree of the fitting polynomial. Only used when interp_method="polynomial". This argument is passed to numpy polyfit ``deg`` parameter.
     :type polynomial_degree: int
     :ivar x: x values.
     :vartype x: array-like
@@ -85,9 +85,9 @@ class KneeLocator(object):
     :vartype interp_method: str
     :ivar online: kneed will correct old knee points if True, will return first knee if False
     :vartype online: str
-    :ivar polynomial_degree: The degree of the fitting polynomial. Only used when interp_method="polynomial". This argument is passed to numpy polyfit `deg` parameter.
+    :ivar polynomial_degree: The degree of the fitting polynomial. Only used when interp_method="polynomial". This argument is passed to numpy polyfit ``deg`` parameter.
     :vartype polynomial_degree: int
-    :ivar N: The number of `x` values in the
+    :ivar N: The number of ``x`` values in the
     :vartype N: integer
     :ivar all_knees: A set containing all the x values of the identified knee points.
     :vartype all_knees: set

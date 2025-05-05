@@ -54,7 +54,7 @@ Make a long ("tidy") table out of a statistic.  The table can then be exported.
                                   by = ['Dox', 'Threshold'],
                                   function = len).apply(ex2) 
 
-    flow.LongTableView(statistic = ("ByDox", "len")).plot(ex3)    
+    flow.LongTableView(statistic = "ByDox").plot(ex3)    
 
 """
 

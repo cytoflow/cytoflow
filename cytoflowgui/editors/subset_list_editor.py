@@ -24,6 +24,7 @@ cytoflowgui.editors.subset_list_editor
 An editor for lists of `ISubset`. For each entry in the list, creates 
 an appropriate instance editor, each set up with appropriate ranges, 
 values, etc. from the experiment conditions and metadata.
+
 """
 
 import pandas as pd
