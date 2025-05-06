@@ -122,6 +122,18 @@ class FlowPeaksOp(HasStrictTraits):
         
         .. note::
             I have disabled this code until I can try to make it faster.
+            
+    Statistics
+    ----------
+    Calling `apply` adds a statistic with the following columns to the returned `Experiment`.
+    
+    .. important::
+       **Component** is added as another level to the statistic index.
+    
+    - ``{{Channel}} Mean`` : The mean of the meta-cluster's centroid in each channel 
+        for each component.
+        
+    - ``Proportion`` : The proportion of events in this component's cluster.
         
     Notes
     -----
@@ -495,7 +507,6 @@ class FlowPeaksOp(HasStrictTraits):
 
             groups = [[x] for x in range(len(peaks))]
             peak_groups = [x for x in range(len(peaks))]  # peak idx --> group idx
-            
                             
             def max_tol(x, y):
                 f = lambda a: density(a[np.newaxis, :])
@@ -685,6 +696,17 @@ class FlowPeaksOp(HasStrictTraits):
 #         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters] + [self.channels], 
 #                                          names = list(self.by) + ["Cluster"] + ["Channel"])
 #         centers_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+
+        # make the statistics   
+        max_group_idx = max([max(cg) for cg in self._cluster_group.values()])
+        clusters = [x + 1 for x in range(max_group_idx)]
+          
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
+                                         names = list(self.by) + ["Cluster"])
+
+        new_stat = pd.DataFrame(index = idx,
+                                columns = list(self.channels) + ["Proportion"], 
+                                dtype = 'float').sort_index()
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -718,6 +740,7 @@ class FlowPeaksOp(HasStrictTraits):
             predicted_km[~x_na] = kmeans.predict(x[~x_na])
             
             groups = np.asarray(self._cluster_group[group])
+            num_groups = max(self._cluster_group[group]) + 1
             predicted_group = np.full(len(x), -1, "int")
             predicted_group[~x_na] = groups[ predicted_km[~x_na] ]
                  
@@ -787,18 +810,29 @@ class FlowPeaksOp(HasStrictTraits):
 #                             
                     
             predicted_str = pd.Series(["(none)"] * len(predicted_group))
-            for c in range(len(self._cluster_group[group])):
+            for c in range(num_groups):
                 predicted_str[predicted_group == c] = "{0}_{1}".format(self.name, c + 1)
             predicted_str[predicted_group == -1] = "{0}_None".format(self.name)
             predicted_str.index = group_idx
       
             event_assignments.iloc[group_idx] = predicted_str
+            
+            for c in range(num_groups):
+                if len(self.by) == 0:
+                    g = tuple([c + 1])
+                else:
+                    g = group + tuple([c + 1])
+                                
+                for channel_idx, channel in enumerate(self.channels):
+                    new_stat.loc[g, channel] = self._scale[channel].inverse(self._peaks[group][c][channel_idx])
+                
+                new_stat.loc[g, "Proportion"] = sum(predicted_group == c) / len(predicted_group)
 
         new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
-#         new_experiment.statistics[(self.name, "centers")] = pd.to_numeric(centers_stat)
- 
+        new_experiment.statistics[self.name] = new_stat
+
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
@@ -1191,8 +1225,8 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
             plt.plot([x, peak_x], [y, peak_y])
     
         for peak in peaks:
-            x = self.op._scale[self.ychannel].inverse(peak[0])
-            y = self.op._scale[self.xchannel].inverse(peak[1])
+            x = self.op._scale[self.xchannel].inverse(peak[0])
+            y = self.op._scale[self.ychannel].inverse(peak[1])
             plt.plot(x, y, 'o', color = "magenta")   
 
 util.expand_class_attributes(FlowPeaks1DView)

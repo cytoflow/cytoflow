@@ -94,10 +94,14 @@ class KMeansOp(HasStrictTraits):
     Statistics
     ----------
     
-    Adds a statistic whose columns are the channels used for clustering,
-    and whose values are the centroids for each cluster. Useful for
-    hierarchical clustering, minimum spanning tree visualizations, etc.
-    The index has levels from `by`, plus a new level called ``Cluster``.
+    Adds a statistic whose name is the name of the operation, whose columns are 
+    the channels used for clustering, and whose values are the centroids for 
+    each cluster in that channel. Useful for hierarchical clustering, minimum 
+    spanning tree visualizations, etc. The index has levels from `by`, plus a 
+    new level called ``Cluster``.
+    
+    The new statistic also has a feature named ``Proportion``, which has the 
+    proportion of events in each cluster.
     
     Examples
     --------
@@ -364,9 +368,9 @@ class KMeansOp(HasStrictTraits):
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
                                          names = list(self.by) + ["Cluster"])
 
-        centers_stat = pd.DataFrame(index = idx,
-                                    columns = list(self.channels), 
-                                    dtype = 'float').sort_index()
+        new_stat = pd.DataFrame(index = idx,
+                                columns = list(self.channels) + ["Proportion"], 
+                                dtype = 'float').sort_index()
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -414,12 +418,14 @@ class KMeansOp(HasStrictTraits):
                     g = group + tuple([c + 1])
                                     
                 for cidx1, channel1 in enumerate(self.channels):
-                    centers_stat.loc[g, channel1] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
+                    new_stat.loc[g, channel1] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
+                
+                new_stat.loc[g, "Proportion"] = sum(predicted == c) / len(predicted)
          
         new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
-        new_experiment.statistics[self.name] = centers_stat
+        new_experiment.statistics[self.name] = new_stat
  
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
