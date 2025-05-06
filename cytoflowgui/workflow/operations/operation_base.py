@@ -143,8 +143,7 @@ class WorkflowOperation(HasStrictTraits):
     
     
     def clear_estimate(self):
-        raise NotImplementedError("clear_estimate was called but it's not implemented!")
-        
+        pass
     
     def get_notebook_code(self, idx):
         raise NotImplementedError("GUI plugins must override get_notebook_code()")
