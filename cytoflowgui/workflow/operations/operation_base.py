@@ -23,6 +23,7 @@ cytoflowgui.workflow.operations.operation_base
 
 """
 
+from logging import info
 from traits.api import HasStrictTraits, Event
 from cytoflow.operations import IOperation
 
@@ -141,11 +142,9 @@ class WorkflowOperation(HasStrictTraits):
     def should_clear_estimate(self, changed, payload):
         return True
     
-    
     def clear_estimate(self):
-        raise NotImplementedError("clear_estimate was called but it's not implemented!")
+        info("clear_estimate was called for {} but it's not implemented".format(self.id))
         
-    
     def get_notebook_code(self, idx):
         raise NotImplementedError("GUI plugins must override get_notebook_code()")
     

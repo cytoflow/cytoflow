@@ -224,18 +224,18 @@ class BaseView(HasStrictTraits):
                
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
-            sns_context = kwargs.pop('sns_context', 'talk')
+            sns_context = kwargs.pop('sns_context', 'notebook')
             sns.set_style(sns_style, rc = {"xtick.bottom": True, "ytick.left": True})
             sns.set_context(sns_context)
         else:
             if 'sns_style' in kwargs:
                 kwargs.pop('sns_style')
-                warn("'sns_style' is ignored when not running in the GUI",
+                warn("'sns_style' is ignored when not running in the GUI. Feel free to change the seaborn global settings.",
                      util.CytoflowViewWarning)
                 
             if 'sns_context' in kwargs:
                 kwargs.pop('sns_context')
-                warn("'sns_context' is ignored when not running in the GUI",
+                warn("'sns_context' is ignored when not running in the GUI. Feel free to change the seaborn global settings.",
                      util.CytoflowViewWarning)
                 
             

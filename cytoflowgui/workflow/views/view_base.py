@@ -270,7 +270,7 @@ class BasePlotParams(HasStrictTraits):
     col_wrap = util.PositiveCInt(None, allow_zero = False, allow_none = True)
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
-    sns_context = Enum(['paper', 'notebook', 'poster', 'talk'])
+    sns_context = Enum(['notebook', 'paper', 'poster', 'talk'])
 
     legend = Bool(True)
     sharex = Bool(True)

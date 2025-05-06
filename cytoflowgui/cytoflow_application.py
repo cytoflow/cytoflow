@@ -51,11 +51,11 @@ from .view_plugins import VIEW_PLUGIN_EXT
 
 logger = logging.getLogger(__name__)
   
-def gui_error_handler_callback(msg, app):
-    app.application_error = msg
-
-def gui_warning_handler_callback(msg, app):
-    app.application_warning = msg
+def gui_handler_callback(rec, app):
+    if rec.levelno == logging.WARNING:
+        app.application_warning = rec.getMessage()
+    elif rec.levelno == logging.ERROR:
+        app.application_error = rec.getMessage()
     
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application"""
@@ -142,13 +142,9 @@ class CytoflowApplication(TasksApplication):
         logging.getLogger().addHandler(mem_handler)
          
         ## and display gui messages for exceptions
-        gui_error_handler = CallbackHandler(lambda rec, app = self: gui_error_handler_callback(rec.getMessage(), app))
-        gui_error_handler.setLevel(logging.ERROR)
+        gui_error_handler = CallbackHandler(lambda rec, app = self: gui_handler_callback(rec, app))
+        gui_error_handler.setLevel(logging.WARNING)
         logging.getLogger().addHandler(gui_error_handler)
-        
-        gui_warning_handler = CallbackHandler(lambda rec, app = self: gui_warning_handler_callback(rec.getMessage(), app))
-        gui_warning_handler.setLevel(logging.WARNING)
-        logging.getLogger().addHandler(gui_warning_handler)
         
         ## anything that gets printed to stdout, capture that too!
         class StreamToLogger(object):
