@@ -350,7 +350,7 @@ class BaseView(HasStrictTraits):
                     self._update_legend(legend)
                         
         if title:
-            plt.suptitle(title)
+            plt.suptitle(title, y = 1.02)
             
         if xlabel == "":
             xlabel = None

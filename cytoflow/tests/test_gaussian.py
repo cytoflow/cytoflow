@@ -59,6 +59,24 @@ class TestGaussian(ImportedDataTest):
         ex2 = self.op.apply(self.ex)
         self.assertEqual(len(ex2['GM'].unique()), 2)
         
+    def testEstimate1Component(self):
+        self.op.num_components = 1
+        self.op.estimate(self.ex)
+        ex2 = self.op.apply(self.ex)
+        
+    def testEstimate1Component1By(self):
+        self.op.num_components = 1
+        self.op.by = ["Well"]
+        self.op.estimate(self.ex)
+        ex2 = self.op.apply(self.ex)
+
+    def testEstimate1Component2By(self):
+        self.op.num_components = 1
+        self.op.by = ["Well", "Dox"]
+        self.op.estimate(self.ex)
+        ex2 = self.op.apply(self.ex)
+        
+        
     def testPlot(self):
         self.op.estimate(self.ex)
         self.op.default_view().plot(self.ex)

@@ -74,7 +74,7 @@ class GaussianMixtureOp(HasStrictTraits):
     ``n`` is the number of components.  The column ``{name}_i`` is ``True`` if 
     the event is less than `sigma` standard deviations from the mean of 
     component ``i``.  If `num_components` is ``1``, `sigma` must be 
-    greater than 0.
+    greater than 0 and the new metadata name is the same as the operation name.
     
     .. note::
        The `sigma` attribute does NOT affect how events are assigned to 
@@ -615,7 +615,10 @@ class GaussianMixtureOp(HasStrictTraits):
             
         if self.sigma is not None:
             for c in range(self.num_components):
-                gate_name = "{}_{}".format(self.name, c + 1)
+                if self.num_components > 1:
+                    gate_name = "{}_{}".format(self.name, c + 1)
+                else:
+                    gate_name = self.name
                 new_experiment.add_condition(gate_name, "bool", event_gate[c])              
                 
         if self.posteriors:
