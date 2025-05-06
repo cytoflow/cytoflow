@@ -470,25 +470,19 @@ class GaussianMixtureOp(HasStrictTraits):
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
                 
-        if self.num_components > 1 and "Component" in self.by:
+        if "Component" in self.by:
             raise util.CytoflowOpError('by',
                                        "'Component' is going to be added as an "
                                        "index level to the new statistic, so you "
                                        "can't use it to aggregate events.")
-            
-        if len(self.by) == 0 and self.num_components == 1:
-            raise util.CytoflowOpError('by',
-                                       "Cannot have num_components == 1 and empty 'by'")
 
-#         if self.num_components == 1 and self.sigma == 0.0:
-#             raise util.CytoflowOpError('sigma',
-#                                        "if num_components is 1, sigma must be > 0.0")
+        if self.num_components == 1 and self.sigma == 0.0:
+            raise util.CytoflowOpError('sigma',
+                                       "if num_components is 1, sigma must be > 0.0")
                 
         if self.num_components == 1 and self.posteriors:
             warn("If num_components == 1, all posteriors will be 1",
                  util.CytoflowOpWarning)
-#             raise util.CytoflowOpError('posteriors',
-#                                        "If num_components == 1, all posteriors will be 1.")
          
         if self.num_components > 1:
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
@@ -508,13 +502,9 @@ class GaussianMixtureOp(HasStrictTraits):
             # contains all the events
             groupby = experiment.data.groupby(lambda _: True, observed = False)   
         
-        # make the statistics       
-        components = [x + 1 for x in range(self.num_components)]
-        if self.num_components == 1:
-            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by],
-                                         names = list(self.by))
-        else:
-            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components],
+        # make the statistics      
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + 
+                                         [[x + 1 for x in range(self.num_components)]],
                                          names = list(self.by) + ["Component"])
                                                                                           
         stat = pd.DataFrame(index = idx,
