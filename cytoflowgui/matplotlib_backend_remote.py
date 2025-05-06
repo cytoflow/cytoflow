@@ -108,6 +108,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
    
     def __init__(self, parent_conn, process_events, plot_lock, figure):      
         FigureCanvasAgg.__init__(self, figure)
+        self._set_device_pixel_ratio(2.0)
         
         self.parent_conn = parent_conn
         self.process_events = process_events
@@ -153,19 +154,15 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 return
             
             if msg != Msg.MOUSE_MOVE_EVENT:
-                logger.debug("FigureCanvasAggRemote.listen_for_local :: {}"
+                logger.debug("FigureCanvasAggRemote.listen_for_local :: {} {}"
                               .format(msg, payload))
                 
-            try:              
-                if msg == Msg.DPI:
-                    dpi = payload
-                    matplotlib.rcParams['figure.dpi'] = dpi
-                    matplotlib.pyplot.clf()
-                    
-                elif msg == Msg.RESIZE_EVENT:
+            try:                                 
+                if msg == Msg.RESIZE_EVENT:
                     with self.plot_lock:
-                        (winch, hinch) = payload
+                        (winch, hinch, dpi) = payload
                         self.figure.set_size_inches(winch, hinch)
+                        matplotlib.rcParams['figure.dpi'] = dpi
                         # FigureCanvasAgg.resize_event(self)
                         self.draw()
                         
@@ -259,8 +256,8 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             
             self.buffer = np.array(self.renderer.buffer_rgba())
                 
-            self.buffer_width = self.renderer.width
-            self.buffer_height = self.renderer.height
+            self.buffer_width = int(self.renderer.width)
+            self.buffer_height = int(self.renderer.height)
 
         self.update_remote.set()
         
@@ -274,7 +271,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         # If bbox is None, blit the entire canvas. Otherwise
         # blit only the area defined by the bbox.
         logger.debug("FigureCanvasAggRemote.blit() {}"
-                     .format(bbox))
+                     .format(bbox.extents))
         
         if bbox is None and self.figure:
             logger.info("bbox was none")
