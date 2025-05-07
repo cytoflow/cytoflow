@@ -1,41 +1,11 @@
 import sys, os, re, weakref, glob, logging
 from PyInstaller.compat import is_win, is_darwin, is_linux
+from PyInstaller.utils.hooks import copy_metadata
 
-#from PyInstaller.building.datastruct import TOC, unique_name
-#
-#def toc_setitem(self, key, value):
-#    if isinstance(key, slice):
-#        if key == slice(None, None, None):
-#            # special case: set the entire list
-#            self.filenames = set()
-#            self.clear()
-#            self.extend(value)
-#            return
-#        else:
-#            raise KeyError("TOC.__setitem__ doesn't handle slices")
-#
-#    else:
-#        old_value = self[key]
-#        old_name = unique_name(old_value)
-#        self.filenames.remove(old_name)
-#
-#        new_name = unique_name(value)
-#        if new_name not in self.filenames:
-#            self.filenames.add(new_name)
-#            super(TOC, self).__setitem__(key, value)
-#        
-#TOC.__setitem__ = toc_setitem
-#
-#def toc_iadd(self, other):
-#    for entry in other:
-#        self.append(entry)
-#    return self
-#    
-#TOC.__iadd_= toc_iadd
+print("\n\n" + str(copy_metadata('cytoflow', recursive=True)) + "\n\n")
 
 a = Analysis(['../cytoflowgui/run.py'],
              pathex=['cytoflowgui/'],
-#             binaries=[('d3dcompiler_47.dll', '.')] if is_win else None,
              binaries=None,
              datas=[('../cytoflowgui/preferences.ini', 'cytoflowgui'),
                     ('../cytoflowgui/images', '.'),
@@ -46,7 +16,8 @@ a = Analysis(['../cytoflowgui/run.py'],
                     ('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs', '.'),
                     ('icon.png', '.'),
                     ('cytoflow.desktop', '.'),
-                    ('set_launcher_icon', '.')],
+                    ('set_launcher_icon', '.'),]
+                      + copy_metadata('cytoflow', recursive=True),
              hookspath=['package/hooks'],
              runtime_hooks=['package/hooks/rthook_qtapi.py',],
              excludes=[
