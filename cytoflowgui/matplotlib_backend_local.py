@@ -149,7 +149,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                              args = ())
         t.daemon = True
         t.start()
-        
+
         # optional over-render for high-dpi displays
         self.render_scale = 2
 
@@ -339,43 +339,34 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         logger.debug('FigureCanvasQtAggLocal.paintEvent: {}'
                       .format(self.get_width_height()))
     
-        if self.blit_buffer is None:
+        # convert the Agg rendered image -> qImage
+        qImage = QtGui.QImage(self.buffer, 
+                              self.buffer_width,
+                              self.buffer_height,
+                              QtGui.QImage.Format_RGBA8888)
             
-            # convert the Agg rendered image -> qImage
-            qImage = QtGui.QImage(self.buffer, 
-                                  self.buffer_width,
-                                  self.buffer_height,
-                                  QtGui.QImage.Format_RGBA8888)#.scaled(self.size().width(),
-#                                                                       self.size().height(),
-#                                                                       transformMode = QtCore.Qt.SmoothTransformation)
-            
-            # get the rectangle for the image
-            rect = qImage.rect()
-            p = QtGui.QPainter(self)
-            # reset the image area of the canvas to be the back-ground color
-            p.eraseRect(rect)
-            # draw the rendered image on to the canvas
-            p.drawPixmap(QtCore.QRect(0, 0, self.size().width(), self.size().height()), 
+        # get the rectangle for the image
+        rect = qImage.rect()
+        p = QtGui.QPainter(self)
+        p.drawPixmap(QtCore.QRect(0, 0, self.size().width(), self.size().height()), 
                          QtGui.QPixmap.fromImage(qImage))
 
-            p.end()
-            
-        else:
-            qImage = QtGui.QImage(self.blit_buffer, 
+        if self.blit_buffer is not None:
+            buffer_image = QtGui.QImage(self.blit_buffer, 
                                   self.blit_width,
                                   self.blit_height,
                                   QtGui.QImage.Format_ARGB32)
  
-            pixmap = QtGui.QPixmap.fromImage(qImage)
-            p = QtGui.QPainter(self)
+            buffer_pixmap = QtGui.QPixmap.fromImage(buffer_image)
             p.drawPixmap(int(self.blit_left / self.render_scale), 
                          int((self.buffer_height - self.blit_top) / self.render_scale),
                          int(self.blit_width / self.render_scale),
                          int(self.blit_height / self.render_scale), 
-                         pixmap)
+                         buffer_pixmap)
 
-            p.end()
             self.blit_buffer = None
+
+        p.end()
             
     def print_figure(self, *args, **kwargs):
         """
