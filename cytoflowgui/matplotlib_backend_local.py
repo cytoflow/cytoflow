@@ -150,17 +150,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         t.daemon = True
         t.start()
         
-        # overrender four-fold to deal with low-DPI aliasing
-        self.render_scale = 2
-        
-        # strangely, the DPI that Qt reports changes between calls!
-        # so get it here, and store it here.
-        # self.screen_dpi = self.physicalDpiX()
-        # self.render_dpi = self.physicalDpiX() * self.scale
-        # figure.dpi = self.screen_dpi
-        # matplotlib.rcParams['figure.dpi'] = self.screen_dpi
-        # self.child_conn.send((Msg.DPI, self.render_dpi))
-        
+        # optional over-render for high-dpi displays
+        self.render_scale = 1
+
     def listen_for_remote(self):
         """
         The main method for the thread that listens for messages from
@@ -267,8 +259,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         Override the Qt event mouseMoveEvent
         """
         
-#         if DEBUG:
-#             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
         self.move_x = event.x() * self.render_scale
         # flip y so y=0 is bottom of canvas
         self.move_y = (self.height() - event.y()) * self.render_scale 
@@ -302,8 +292,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         super().resizeEvent(event)    
         
-        w = event.size().width() * self.device_pixel_ratio
-        h = event.size().height() * self.device_pixel_ratio
+        w = event.size().width() 
+        h = event.size().height() 
         dpival = self.figure.dpi
         winch = w / dpival
         hinch = h / dpival
@@ -346,8 +336,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         if self.buffer is None:
             return
 
-        logger.debug('FigureCanvasQtAggLocal.paintEvent: {} {} {}'
-                      .format(self.get_width_height(), self.size().width(), self.size().height()))
+        logger.debug('FigureCanvasQtAggLocal.paintEvent: {}'
+                      .format(self.get_width_height()))
     
         if self.blit_buffer is None:
             
@@ -355,9 +345,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             qImage = QtGui.QImage(self.buffer, 
                                   self.buffer_width,
                                   self.buffer_height,
-                                  QtGui.QImage.Format_RGBA8888).scaled(self.size().width(),
-                                                                       self.size().height(),
-                                                                       transformMode = QtCore.Qt.SmoothTransformation)
+                                  QtGui.QImage.Format_RGBA8888)#.scaled(self.size().width(),
+#                                                                       self.size().height(),
+#                                                                       transformMode = QtCore.Qt.SmoothTransformation)
             
             # get the rectangle for the image
             rect = qImage.rect()
