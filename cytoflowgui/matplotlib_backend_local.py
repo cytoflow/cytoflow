@@ -153,14 +153,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         # overrender four-fold to deal with low-DPI aliasing
         self.render_scale = 2
         
-        # strangely, the DPI that Qt reports changes between calls!
-        # so get it here, and store it here.
-        # self.screen_dpi = self.physicalDpiX()
-        # self.render_dpi = self.physicalDpiX() * self.scale
-        # figure.dpi = self.screen_dpi
-        # matplotlib.rcParams['figure.dpi'] = self.screen_dpi
-        # self.child_conn.send((Msg.DPI, self.render_dpi))
-        
     def listen_for_remote(self):
         """
         The main method for the thread that listens for messages from
@@ -266,9 +258,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         """
         Override the Qt event mouseMoveEvent
         """
-        
-#         if DEBUG:
-#             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
+
         self.move_x = event.x() * self.render_scale
         # flip y so y=0 is bottom of canvas
         self.move_y = (self.height() - event.y()) * self.render_scale 
@@ -302,8 +292,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         super().resizeEvent(event)    
         
-        w = event.size().width() * self.device_pixel_ratio
-        h = event.size().height() * self.device_pixel_ratio
+        w = event.size().width()
+        h = event.size().height()
         dpival = self.figure.dpi
         winch = w / dpival
         hinch = h / dpival
@@ -346,46 +336,37 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         if self.buffer is None:
             return
 
-        logger.debug('FigureCanvasQtAggLocal.paintEvent: {} {} {}'
-                      .format(self.get_width_height(), self.size().width(), self.size().height()))
+        logger.debug('FigureCanvasQtAggLocal.paintEvent: {}'
+                      .format(self.get_width_height()))
     
-        if self.blit_buffer is None:
+        # convert the Agg rendered image -> qImage
+        qImage = QtGui.QImage(self.buffer, 
+                              self.buffer_width,
+                              self.buffer_height,
+                              QtGui.QImage.Format_RGBA8888)
             
-            # convert the Agg rendered image -> qImage
-            qImage = QtGui.QImage(self.buffer, 
-                                  self.buffer_width,
-                                  self.buffer_height,
-                                  QtGui.QImage.Format_RGBA8888).scaled(self.size().width(),
-                                                                       self.size().height(),
-                                                                       transformMode = QtCore.Qt.SmoothTransformation)
-            
-            # get the rectangle for the image
-            rect = qImage.rect()
-            p = QtGui.QPainter(self)
-            # reset the image area of the canvas to be the back-ground color
-            p.eraseRect(rect)
-            # draw the rendered image on to the canvas
-            p.drawPixmap(QtCore.QRect(0, 0, self.size().width(), self.size().height()), 
+        # get the rectangle for the image
+        rect = qImage.rect()
+        p = QtGui.QPainter(self)
+        p.drawPixmap(QtCore.QRect(0, 0, self.size().width(), self.size().height()), 
                          QtGui.QPixmap.fromImage(qImage))
 
-            p.end()
-            
-        else:
-            qImage = QtGui.QImage(self.blit_buffer, 
+        if self.blit_buffer is not None:
+            buffer_image = QtGui.QImage(self.blit_buffer, 
                                   self.blit_width,
                                   self.blit_height,
                                   QtGui.QImage.Format_ARGB32)
  
-            pixmap = QtGui.QPixmap.fromImage(qImage)
-            p = QtGui.QPainter(self)
+            buffer_pixmap = QtGui.QPixmap.fromImage(buffer_image)
             p.drawPixmap(int(self.blit_left / self.render_scale), 
                          int((self.buffer_height - self.blit_top) / self.render_scale),
                          int(self.blit_width / self.render_scale),
                          int(self.blit_height / self.render_scale), 
-                         pixmap)
+                         buffer_pixmap)
 
-            p.end()
             self.blit_buffer = None
+
+        p.end()
             
     def print_figure(self, *args, **kwargs):
         """
