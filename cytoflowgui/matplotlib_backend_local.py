@@ -151,7 +151,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         t.start()
         
         # optional over-render for high-dpi displays
-        self.render_scale = 1
+        self.render_scale = 2
 
     def listen_for_remote(self):
         """

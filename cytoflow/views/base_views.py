@@ -224,7 +224,7 @@ class BaseView(HasStrictTraits):
                
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
-            sns_context = kwargs.pop('sns_context', 'notebook')
+            sns_context = kwargs.pop('sns_context', 'paper')
             sns.set_style(sns_style, rc = {"xtick.bottom": True, "ytick.left": True})
             sns.set_context(sns_context)
         else:
