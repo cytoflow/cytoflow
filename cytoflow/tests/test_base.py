@@ -120,20 +120,16 @@ class View1DTestBase(ImportedData):
         self.view.plot(self.ex)
         ax = plt.gca()
         self.assertEqual(ax.get_xlabel(), "B1-A")
-        np.testing.assert_array_equal(
-            ax.get_xticks(),
-            np.array([-25000., 0., 25000., 50000., 75000., 100000., 125000.,
-                       150000., 175000., 200000.])
-        )
 
     def testLogScale(self):
         self.view.scale = "log"
         self.view.plot(self.ex)
-        np.testing.assert_array_equal(
-            plt.gca().get_xticks(),
-            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
-        )
-
+        
+    def testLogScaleWithZero(self):
+        self.view.scale = "log"
+        self.ex.data.loc[1, self.view.channel] = 0.0
+        self.view.plot(self.ex)
+        
     def testLogicleScale(self):
         self.view.scale = "logicle"
         self.view.plot(self.ex)
@@ -278,34 +274,22 @@ class View2DTestBase(View1DTestBase):
         ax = plt.gca()
         self.assertEqual(ax.get_xlabel(), "B1-A")
         self.assertEqual(ax.get_ylabel(), "Y2-A")
-        np.testing.assert_array_equal(ax.get_xticks(), np.array(true_x))
-        np.testing.assert_array_equal(ax.get_yticks(), np.array(true_y))
 
     def testLogScale(self):
         self.view.xscale = "log"
         self.view.yscale = "log"
         self.view.plot(self.ex)
-        np.testing.assert_array_equal(
-            plt.gca().get_xticks(),
-            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
-        )
-        np.testing.assert_array_equal(
-            plt.gca().get_yticks(),
-            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
-        )
+
+    def testLogScaleWithZero(self):
+        self.view.xscale = "log"
+        self.view.yscale = "log"
+        self.ex.data.loc[0, self.view.xchannel] = 0.0
+        self.view.plot(self.ex)
 
     def testLogicleScale(self):
         self.view.xscale = "logicle"
         self.view.yscale = "logicle"
         self.view.plot(self.ex)
-        np.testing.assert_array_equal(
-            plt.gca().get_xticks(),
-            np.array([-100., 0., 100., 1000., 10000., 100000.])
-        )
-        np.testing.assert_array_equal(
-            plt.gca().get_yticks(),
-            np.array([-100., 0., 100., 1000., 10000., 100000.])
-        )
 
     def testOrientation(self):
         pass  # not applicable

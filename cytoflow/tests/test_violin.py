@@ -28,6 +28,7 @@ import cytoflow as flow
 import matplotlib.pyplot as plt
 import numpy as np
 
+import cytoflow.utility as util
 from .test_base import View1DTestBase, get_legend_entries
 
 
@@ -53,7 +54,8 @@ class TestViolin(View1DTestBase, unittest.TestCase):
 
     def testLogScale(self):
         self.view.scale = "log"
-        self.view.plot(self.ex)
+        with self.assertWarns(util.CytoflowViewWarning):
+            self.view.plot(self.ex)
         ax = plt.gca()
         self.assertEqual(ax.get_ylabel(), "B1-A")  # this is different from other 1D views
         self.assertEqual(ax.get_xlabel(), "Dox")
@@ -62,6 +64,12 @@ class TestViolin(View1DTestBase, unittest.TestCase):
             np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
         )
         self.assertEqual([l.get_text() for l in ax.get_xticklabels()], ["0.0", "10.0", "100.0"])
+        
+    def testLogScaleWithZero(self):
+        self.view.scale = "log"
+        self.ex.data.loc[1, self.view.channel] = 0.0
+        with self.assertWarns(util.CytoflowViewWarning):
+            self.view.plot(self.ex)
 
     def testLogicleScale(self):
         self.view.scale = "logicle"

@@ -26,12 +26,14 @@ A scale that transforms data using a base-10 log.
 `LogScale` -- implements `IScale`, the `cytoflow` interface for the scale.
 """
 
-from traits.api import (Instance, Str, provides, Constant, Enum, Float, 
-                        Property, List, Array) 
+import sys
                        
 import numpy as np
 import pandas as pd
 import matplotlib.colors
+
+from traits.api import (Instance, Str, provides, Constant, Enum, Float, 
+                        Property, List, Array) 
 
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
@@ -52,7 +54,7 @@ class LogScale(ScaleMixin):
 
     mode = Enum("mask", "clip")
     threshold = Property(Float, depends_on = "[experiment, condition, channel, statistic, error_statistic]")
-    _channel_threshold = Float(0.1)
+    _channel_threshold = Float(0.001)
 
     def get_mpl_params(self, ax):
         """

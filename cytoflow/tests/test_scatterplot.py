@@ -30,7 +30,7 @@ import cytoflow as flow
 from .test_base import View2DTestBase
 
 
-class TestHistogram2D(View2DTestBase, unittest.TestCase):
+class TestScatterplot(View2DTestBase, unittest.TestCase):
 
     def setUp(self):
         super().setUp()

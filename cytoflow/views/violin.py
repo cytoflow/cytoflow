@@ -26,6 +26,8 @@ A violin plot is a facetted set of kernel density estimates.
 `ViolinPlotView` -- the `IView` class that makes the plot.
 """
 
+import warnings
+
 from traits.api import Str, provides, Constant
 
 import numpy as np
@@ -134,6 +136,16 @@ class ViolinPlotView(Base1DView):
         facets = [x for x in [self.xfacet, self.yfacet, self.huefacet, self.variable] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
+        
+        # for some reason, seaborn's violinplot REALLY dislikes very small values on a log scale
+        # make a tiny little experiment with just the plot channel and conditions, then drop
+        # any bad events.
+        if self.channel and self.scale == "log" and (experiment.data[self.channel] < 0.001).any():
+            warnings.warn("Dropping small values in channel {}".format(self.channel),
+                          util.CytoflowViewWarning)
+            experiment = experiment.clone(deep = False)
+            experiment.data = experiment.data[ list(experiment.conditions.keys()) + [self.channel]]
+            experiment.data = experiment.data.loc[experiment.data[self.channel] > 0.001]
         
         super().plot(experiment, **kwargs)
         
