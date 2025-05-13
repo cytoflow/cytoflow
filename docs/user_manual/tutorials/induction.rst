@@ -44,12 +44,23 @@ Import the data
   ...                ...    ...
   =================  =====  =======
   
-  .. note:: There are a *lot* of rows in this table.  Two things can make setting
-            up these kinds of experiments easier.  First, if you already have
-            the details in a table, you can import that table by following the
-            instructions at :ref:`user_import`.  And second, you can select
-            multiple cells in the table to edit at once by holding **Control**
-            or **Command** and clicking multiple cells.
+  .. note:: There are a *lot* of rows in this table.  Three things can make setting
+            up these kinds of experiments easier:
+            
+            - If you already have the details in a table, you can import that 
+              table by following the instructions at :ref:`user_import`. 
+              
+            - You can select multiple cells in the table to edit at once by 
+            holding **Control**  or **Command** and clicking multiple cells.
+            
+            - *Cytoflow* looks at the files' *metadata* and offers to let you
+              use metadata that differs between tubes as experiment conditions.
+              In this instance, once you load all the tubes, you can create 
+              two new variables of type *FCS Metadata*, then choose 
+              *CF_IP* and *CF_Minutes* to load the metadata as variables. You'll 
+              need to change both of their types to *Number* and rename them to 
+              *IP* and *Minutes* if you want your screen to match the 
+              following tutorial.
             
   .. warning:: It is generally not a good idea to name a variable **Time**,
                because most flow cytometers produce FCS files with a **Time**
@@ -58,6 +69,8 @@ Import the data
 At the end, your table should look like this:
 
 .. image:: images/induction02.png
+
+Go ahead and click **Import!** to import the dataset.
 
 
 Filter out clumps and debris
@@ -83,6 +96,8 @@ density gate to keep the 80% of events that are in the "center" of this
 distribution.
 
 * Add a **Density Gate** operation to your workflow: |DENSITY_GATE|
+
+* Set the name to **Single_Cells**.
 
 * Set **X channel** to **FSC_A** and **Y Channel** to **SSC_A**.  Change both
   axis scales to **log**.  By default, the operation keeps 90% of the events;
@@ -122,9 +137,8 @@ Now that we've made a new summary statistic, we want to plot it!
 
 * Open the **1D Statistics View**: |VIEW|
 
-* Set **Statistic** to the name of the statistic we just created: *('GFP_Mean', 'Geom.Mean')*
-  (note that it shows us both the name of the operation that created the statistic, and the
-  function that we used.)
+* Set **Statistic** to *GFP_Mean* (the name of the statistic we just created) and
+  set the **Feature** to the channel we computed the statistic on, *FITC_A*.
   
 * Set the **Statistic Scale** to **log**.  This is how the plot will scale the Y axis.
 
@@ -203,14 +217,18 @@ I'd say that's a pretty good fit!
 
 It's important to note that *most data-driven operations* **also** *add statistics*
 that contain information about the models they fit.  In this case, the 
-**1D Mixture Model** operation creates statistics named *mean* and *proportion*,
-containing the mean and proportion for each component for each data subset.  
+**1D Mixture Model** operation creates a new statistic whose name is the same as
+the operation name (in this case, *GM_FITC*) with a new level named *Component*
+and features that include *Mean* and *Proportion*. These contain the mean and 
+proportion for each component for each data subset.  
 
 First, let's see if the means actually do stay the same for the two components:
 
 * Select the **1D Statistics View** |VIEW|
 
-* Set **Statistic** to *('GM_FITC', 'mean')* and the **Statistic scale** to *log*.
+* Set **Statistic** to *GM_FITC* and **Feature** to *FITC_A Mean*. 
+
+* Set **Statistic scale** to *log*.
 
 * Set **Variable** to *Minutes*.  Leave the **Variable Scale** as *linear*.
 
@@ -230,11 +248,11 @@ the "low" population.
 
 Second, let's see if the proportion in the "high" component changes:
 
-* Set **Statistic** to *('GM_FITC', 'proportion')*
+* Change **Feature** to *Proportion*
 
 * Change the **Statistic scale** back to *linear*.
 
-* Leave the **Variable** set to *Minutes*, the **Variable scale** on *linear**,
+* Leave the **Variable** set to *Minutes*, the **Variable scale** on *linear*,
   the **Hue facet** on *IP* and the **Hue scale** on *log*.
   
 * If you changed the Y axis minimum, reset it to nothing (default).
