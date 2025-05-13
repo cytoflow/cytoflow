@@ -115,13 +115,14 @@ Advanced GMM uses
   I set **Vertical Facet** on the view to **Dox** to show both of them.
   
 * Finally, in addition to gating events, data-driven modules also often create 
-  new statistics as well.  For example, the **Gaussian Mixture Model** operation
-  creates two statistics, **mean** and **proportion**, recording the mean of 
-  each population and the proportion of events that was in that population.  This
-  is particularly powerful when combined with the **Group Estimates By** 
-  parameter.  For example, in the image above, it's pretty clear that there weren't
-  many events in the **Gauss_2** population for **Dox = 1.0**.  Let's look at
-  the actual proportions using a bar graph:
+  new statistics as well. (See an operation's help page for details.) For example, 
+  the **Gaussian Mixture Model** operation creates a statistic named the same as the
+  operation name, with the new level **Component** and the features **Mean**, **Proportion**,
+  and others. This lets us analyze these properties of the model that was fit. For
+  example, in the image above, it's pretty clear that there weren't many events in 
+  component 2 of the data subset **Dox = 1.0**. If we plot a bar graph of the new
+  statistic with the feature to **Proportion**, the major variable set to **Dox**
+  and the hue facet set to **Component**, we can directly compare those proportions:
   
   .. image:: images/machine10.png
   
