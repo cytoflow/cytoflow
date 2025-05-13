@@ -96,7 +96,8 @@ filter that out with a polygon gate.
   X and Y scale to **log**.
   
 * Draw a polygon around the major population the center of the plot.
-  Single-click to set a new vertex; double-click to close the polygon.
+  Single-click to set a new vertex; click the last vertex again to close the
+  polygon.
   
 Here's what my window looks like now:
 
@@ -177,9 +178,8 @@ Now that we've made a new summary statistic, we want to plot it!
 
 * Open the **1D Statistics View**: |VIEW|
 
-* Set **Statistic** to the name of the statistic we just created: *('GFP_Mean', 'Geom.Mean')*
-  (note that it shows us both the name of the operation that created the statistic, and the
-  function that we used.)
+* Set **Statistic** to the name of the statistic we just created, *GFP_Mean*, and
+  set **Feature** to the name of the channel that we computed the statistic on, *FITC_A*.
   
 * Set the **Statistic Scale** to **log**.  This is how the plot will scale the Y axis.
 
@@ -200,7 +200,8 @@ a spreadsheet or other plotting or analysis tool.)
 
 * Choose the **Table View**: |TABLE|
 
-* Set **Statistic** to the same statistic we were just looking at: *('GFP_Mean', 'Geom.Mean')*
+* Set **Statistic** and **Feature** to the same statistic we were just looking at:
+  *GFP_Mean* and *FITC_A*.
 
 * Set *Row* to the variable you'd like to put on different rows.  In this case, there's only
   one, so set it to *IP*.
