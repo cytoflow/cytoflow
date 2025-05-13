@@ -273,7 +273,8 @@ class ExportFCS(HasStrictTraits):
                     parts.append(name + '_' + str(group[i]))
                 else:
                     parts.append(str(group[i]))
-                    kws["CF_" + name] = str(group[i])
+                    
+                kws["CF_" + name] = str(group[i])
                 
             if self.base:
                 filename = self.base + '_' + '_'.join(parts) + '.fcs'
