@@ -43,6 +43,7 @@ from .quad import QuadPlugin
 from .channel_stat import ChannelStatisticPlugin
 from .multi_channel_stat import MultiChannelStatisticPlugin
 from .xform_stat import TransformStatisticPlugin
+from .merge_stat import MergeStatisticsPlugin
 from .ratio import RatioPlugin
 
 # # data-driven

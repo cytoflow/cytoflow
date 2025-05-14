@@ -304,7 +304,7 @@ def traits_repr(obj):
     return obj.__class__.__name__ + '(' + traits_str(obj) + ')'
 
 def cytoflow_class_repr(obj):
-    """Adds 'cytoflow.' to the front of a cytoflow class; useful for serialization"""
+    """Adds 'flow.' to the front of a cytoflow class; useful for serialization"""
     return 'flow.' + traits_repr(obj)
 
 def traits_str(obj):

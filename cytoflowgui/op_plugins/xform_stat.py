@@ -30,7 +30,7 @@ repeated for each feature (column) in the statistic.
 
 .. object:: Name
 
-    The operation name.  Becomes the first part of the new statistic's name.
+    The operation name.  Becomes the new statistic's name.
     
 .. object:: Statistic
 
@@ -42,8 +42,7 @@ repeated for each feature (column) in the statistic.
         
 .. object:: Subset
 
-    Only apply the function to a subset of the input statistic.  Useful if the 
-    function is very slow.
+    Only apply the function to a subset of the input statistic. 
 
 '''
 

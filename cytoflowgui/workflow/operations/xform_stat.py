@@ -32,7 +32,7 @@ from traits.api import (Str, Callable, Property, List, provides, observe, Undefi
 import cytoflow.utility as util
 from cytoflow import TransformStatisticOp
                        
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, cytoflow_class_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
 from ..subset import ISubset

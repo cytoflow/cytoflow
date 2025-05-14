@@ -34,6 +34,7 @@ from .polygon import PolygonWorkflowOp, PolygonSelectionView
 from .channel_stat import ChannelStatisticWorkflowOp
 from .multi_channel_stat import MultiChannelStatisticWorkflowOp, Function as MultiChannelStatisticFunction
 from .xform_stat import TransformStatisticWorkflowOp
+from .merge_stat import MergeStatisticsWorkflowOp
 from .ratio import RatioWorkflowOp
 
 from .binning import BinningWorkflowOp, BinningWorkflowView
