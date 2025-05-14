@@ -274,7 +274,7 @@ def run_gui():
                   ChannelStatisticPlugin(),
                   MultiChannelStatisticPlugin(),
                   TransformStatisticPlugin(),
-                  MergeStatisticsPlugin(),
+                  #MergeStatisticsPlugin(),
                   RatioPlugin(),
                   FlowCleanPlugin(),
                   BinningPlugin(),
