@@ -91,33 +91,28 @@ Examine the function of the gene circuit
 Now, we can reproduce the bar chart in the publication by taking the output 
 (EYFP, in the FITC-A channel) geometric mean of the positively transfected cells, 
 split out by condition and ``Dox``. Don't forget to look at just the transfected 
-cells (using subset). We'll compute the geometric mean across circuit and ``Dox``, 
-and then split it out by replicate so we can compute an SEM.
+cells (using subset).
 
-Please note: This is a terrible place to use error bars. See:
+  .. note:: The figure in the paper has error bars representing the
+            standard error of the mean across the three replicates.
+            First, this is not something the GUI can (yet) handle.
+            And second, that is a *terrible* way to use error bars. 
+            See:
 
-https://www.nature.com/nature/journal/v492/n7428/full/492180a.html
+			https://www.nature.com/nature/journal/v492/n7428/full/492180a.html
+				
+			and
 
-and
+			http://jcb.rupress.org/content/177/1/7
+			
+			for reasons why.
 
-http://jcb.rupress.org/content/177/1/7
 
-for the reason why. I'm using them here to demonstrate the capability, rather than 
-argue that you should perform your analysis this way.
-
-* First, make a statistic with the overall geometric mean (by condition and Dox):
+* First, make a statistic with the geometric mean (by condition and Dox):
 
   .. image:: images/kiani08.png
   
-* Next, make a statistic with the geometric mean broken out by condition, Dox *and replicate*.
-
-  .. image:: images/kiani09.png 
-  
-* Finally, compute the geometric standard deviation of the mean:
-
-  .. image:: images/kiani10.png
-  
-* Then plot them together:
+* Then plot it:
 
   .. image:: images/kiani11.png
 
