@@ -165,11 +165,11 @@ class ColorTranslationViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class ColorTranslationPlugin(Plugin, PluginHelpMixin):
  
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.color_translation'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.color_translation'
-    view_id = 'edu.mit.synbio.cytoflow.view.colortranslationdiagnostic'
+    id = 'cytoflowgui.op_plugins.color_translation'
+    operation_id = 'cytoflow.operations.color_translation'
+    view_id = 'cytoflow.view.colortranslationdiagnostic'
 
-    short_name = "Color Translation"
+    name = "Color Translation"
     menu_group = "Gates"
     
     def get_operation(self):

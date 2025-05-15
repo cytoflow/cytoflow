@@ -58,6 +58,14 @@ class TestPCA(ImportedDataSmallTest):
         self.assertIn("PCA_1", ex2.channels)
         self.assertIn("PCA_2", ex2.channels)
         
+    def testEstimateSubset(self):
+        self.op.estimate(self.ex, subset = "Dox == 10.0")
+        
+        ex2 = self.op.apply(self.ex)
+
+        self.assertIn("PCA_1", ex2.channels)
+        self.assertIn("PCA_2", ex2.channels)
+        
     def testWhiten(self):
         self.op.whiten = True
         self.op.estimate(self.ex)

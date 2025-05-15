@@ -44,6 +44,7 @@ Test the packaging
 ------------------
   	  
 - Build the conda package locally::
+	
       conda install conda-build conda-verify  # only necessary once
       conda build package/conda_recipes/cytoflow
       

@@ -36,7 +36,7 @@ Base classes and functions for `cytoflow` scales.
 
 import numbers
 
-from traits.api import Interface, Str, Instance, Tuple, Array
+from traits.api import Interface, Str, Instance, List, Array
 
 from .cytoflow_errors import CytoflowError
 from .util_functions import is_numeric
@@ -82,8 +82,8 @@ class IScale(Interface):
     # multiple are set, the first is used.
     channel = Str
     condition = Str
-    statistic = Tuple(Str, Str)
-    error_statistic = Tuple(Str, Str)
+    statistic = Str
+    features = List(Str)
     data = Array
     
     def __call__(self, data):
@@ -133,21 +133,21 @@ class ScaleMixin(HasStrictTraits):
                 raise CytoflowError("Tried to scale the non-numeric condition {}"
                                     .format(self.condition))
                 
-        elif self.statistic[0]:
-            stat = self.experiment.statistics[self.statistic]
-            if is_numeric(stat):
-                return
-            else:
-                try:
-                    for x in stat:
-                        for y in x:
-                            if not isinstance(y, numbers.Number):
-                                raise CytoflowError("Tried to scale a non-numeric "
-                                                    "statistic {}"
-                                                    .format(self.statistic))
-                except TypeError as e:
-                    raise CytoflowError("Error scaling statistic {}"
-                                        .format(self.statistic)) from e
+        # elif self.statistic:
+        #     stat = self.experiment.statistics[self.statistic]
+        #     if is_numeric(stat):
+        #         return
+        #     else:
+        #         try:
+        #             for x in stat:
+        #                 for y in x:
+        #                     if not isinstance(y, numbers.Number):
+        #                         raise CytoflowError("Tried to scale a non-numeric "
+        #                                             "statistic {}"
+        #                                             .format(self.statistic))
+        #         except TypeError as e:
+        #             raise CytoflowError("Error scaling statistic {}"
+        #                                 .format(self.statistic)) from e
     
 # maps name -> scale object
 _scale_mapping = {}

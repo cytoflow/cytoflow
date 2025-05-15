@@ -26,10 +26,8 @@ Created on Nov 15, 2015
 import unittest
 import cytoflow as flow
 import pandas as pd
-from .test_base import ClosePlotsWhenDoneTest
 
-
-class TestBeads(ClosePlotsWhenDoneTest):
+class TestBeads(unittest.TestCase):
 
     def setUp(self):
         import os
@@ -74,6 +72,10 @@ class TestBeads(ClosePlotsWhenDoneTest):
                                
         self.assertAlmostEqual(self.op._calibration_functions["PE-Tx-Red-YG-A"](100000),
                                898360.9384, delta = 100)
+        
+    def testLinear(self):
+        self.op.force_linear = True
+        self.op.estimate(self.ex)
         
     def testApply(self):
         # this is just to make sure the code doesn't crash;

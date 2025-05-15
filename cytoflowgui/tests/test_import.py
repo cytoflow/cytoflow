@@ -24,6 +24,10 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 import pandas as pd
+import cytoflow.utility as util
+
+# needed for testing lambdas
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest, TasbeTest
 from cytoflowgui.workflow.serialization import save_yaml, load_yaml
@@ -134,18 +138,20 @@ class TestImport(ImportedDataTest):
         self.assertEqual(self.wi, new_wi)
                                      
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
          
-        exec(code)
+        with self.assertWarns(util.CytoflowWarning):
+            exec(code)
+            
         nb_data = locals()['ex_0'].data
         remote_data = self.workflow.remote_eval("self.workflow[0].result.data")
         self.assertTrue((nb_data == remote_data).all().all())
          
 class TestImportTasbe(TasbeTest):
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
             

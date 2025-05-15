@@ -163,7 +163,7 @@ class PolygonOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.polygon')
+    id = Constant('cytoflow.operations.polygon')
     friendly_id = Constant("Polygon")
     
     name = Str
@@ -385,7 +385,7 @@ class ScatterplotPolygonSelectionView(_PolygonSelection, ScatterplotView):
     >>> poly.interactive = True
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.polygon')
+    id = Constant('cytoflow.views.polygon')
     friendly_id = Constant("Polygon Selection")
     
     def plot(self, experiment, **kwargs):
@@ -430,7 +430,7 @@ class DensityPolygonSelectionView(_PolygonSelection, DensityView):
     >>> poly.interactive = True
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.polygon_density')
+    id = Constant('cytoflow.views.polygon_density')
     friendly_id = Constant("Polygon Selection")
     
     def plot(self, experiment, **kwargs):

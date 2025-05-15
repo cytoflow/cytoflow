@@ -34,11 +34,11 @@ from cytoflow import ExportFCS
 import cytoflow.utility as util
 
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from ..subset import ISubset
 from .view_base import IWorkflowView, WorkflowView, BasePlotParams
 
-ExportFCS.__repr__ = traits_repr
+ExportFCS.__repr__ = cytoflow_class_repr
 
 
 @provides(IWorkflowView)
@@ -110,7 +110,7 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
                 self._include_by = _include_by
                 
                 if by:
-                    self._iter = experiment.data.groupby(by).__iter__()
+                    self._iter = experiment.data.groupby(by, observed = True).__iter__()
                 
             def __iter__(self):
                 return self

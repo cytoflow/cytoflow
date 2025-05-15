@@ -25,6 +25,10 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 import pandas as pd
+import cytoflow.utility as util
+
+# needed for testing lambdas
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
@@ -45,7 +49,7 @@ class TestTable(ImportedDataTest):
         op = ChannelStatisticWorkflowOp()
         op.name = "MeanByDox"
         op.channel = "Y2-A"
-        op.statistic_name = "Geom.SD"
+        op.function_name = "Geo.Mean"
         op.by = ['Dox']
 
         wi = WorkflowItem(operation = op,
@@ -56,34 +60,12 @@ class TestTable(ImportedDataTest):
         op = ChannelStatisticWorkflowOp()
         op.name = "MeanByDoxAndWell"
         op.channel = "Y2-A"
-        op.statistic_name = "Geom.SD"
+        op.function_name = "Geo.Mean"
         op.by = ['Dox', 'Well']
-
-        wi = WorkflowItem(operation = op,
-                          status = 'waiting',
-                          view_error = "Not yet plotted")        
-        self.workflow.workflow.append(wi)
         
-        op = ChannelStatisticWorkflowOp()
-        op.name = "MeanByDox"
-        op.channel = "Y2-A"
-        op.statistic_name = "Geom.Mean"
-        op.by = ['Dox']
-                
-        wi = WorkflowItem(operation = op,
-                          status = 'waiting',
-                          view_error = "Not yet plotted")        
-        self.workflow.workflow.append(wi)
-        
-        op = ChannelStatisticWorkflowOp()
-        op.name = "MeanByDoxAndWell"
-        op.channel = "Y2-A"
-        op.statistic_name = "Geom.Mean"
-        op.by = ['Dox', 'Well']
-                
         self.wi = wi = WorkflowItem(operation = op,
-                                    status = 'waiting',
-                                    view_error = "Not yet plotted")        
+                          status = 'waiting',
+                          view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
         self.workflow.selected = wi
@@ -91,7 +73,8 @@ class TestTable(ImportedDataTest):
         self.workflow.wi_waitfor(wi, 'status', "valid")
         
         self.view = view = TableWorkflowView()
-        view.statistic = ("MeanByDox", "Geom.Mean")
+        view.statistic = "MeanByDox"
+        view.feature = "Y2-A"
         view.row_facet = "Dox"
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
@@ -107,11 +90,8 @@ class TestTable(ImportedDataTest):
         
         try:
             os.close(fh)
-            
-            data = pd.DataFrame(index = self.view.result.index)
-            data[self.view.result.name] = self.view.result   
-        
-            self.view._export_data(data, self.view.result.name, filename)
+                
+            self.view._export_data(self.view.result, self.view.feature, filename)
         finally:
             os.unlink(filename)
 
@@ -127,41 +107,35 @@ class TestTable(ImportedDataTest):
         
     def testSubRow(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDoxAndWell", "Geom.Mean")
+        self.view.statistic = "MeanByDoxAndWell"
+        self.view.feature = "Y2-A"
         self.view.row_facet = "Dox"
         self.view.subrow_facet = "Well"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSubColumn(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDoxAndWell", "Geom.Mean")
+        self.view.statistic = "MeanByDoxAndWell"
+        self.view.feature = "Y2-A"
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
         self.view.subcolumn_facet = "Well"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
-    def testRowRange(self):
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDox", "Geom.SD")
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
-    
-    def testColumnRange(self):
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDox", "Geom.SD")
-        self.view.row_facet = ""
-        self.view.column_facet = "Dox"
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
-        
     def testSubRowRange(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDoxAndWell", "Geom.SD")
+        self.view.statistic = "MeanByDoxAndWell"
+        self.view.feature = "Y2-A"
+
         self.view.row_facet = "Dox"
         self.view.subrow_facet = "Well"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSubColumnRange(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDoxAndWell", "Geom.SD")
+        self.view.statistic = "MeanByDoxAndWell"
+        self.view.feature = "Y2-A"
+
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
         self.view.subcolumn_facet = "Well"
@@ -197,14 +171,15 @@ class TestTable(ImportedDataTest):
         self.assertEqual(self.wi, new_wi)
                 
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
             
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
            
-        exec(code) # smoke test
+        with self.assertWarns(util.CytoflowWarning):
+            exec(code) # smoke test
 
 
 if __name__ == "__main__":

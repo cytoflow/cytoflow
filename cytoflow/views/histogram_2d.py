@@ -88,7 +88,7 @@ class Histogram2DView(Base2DView):
         ...                      huescale = 'log').plot(ex, smoothed = True)  
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.histogram2d'
+    id = 'cytoflow.view.histogram2d'
     friend_id = "2D Histogram"
         
     def plot(self, experiment, **kwargs):

@@ -75,7 +75,7 @@ class Kde1DView(Base1DView):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.kde1d")
+    id = Constant("cytoflow.view.kde1d")
     friendly_id = Constant("1D Kernel Density") 
     
     def plot(self, experiment, **kwargs):

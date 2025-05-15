@@ -46,7 +46,7 @@ class HelpDockPane(TraitsDockPane):
 
     #### TaskPane interface ###############################################
 
-    id = 'edu.mit.synbio.cytoflowgui.help_pane'
+    id = 'cytoflowgui.help_pane'
     """This pane's GUID"""
     
     name = 'Help'

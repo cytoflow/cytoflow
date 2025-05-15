@@ -36,15 +36,15 @@ import cytoflow.utility as util
 from .. import Changed
 from ..views import IWorkflowView, WorkflowView
 from ..views.view_base import IterWrapper
-from ..serialization import camel_registry, traits_repr, dedent
+from ..serialization import camel_registry, cytoflow_class_repr, traits_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-AutofluorescenceOp.__repr__ = traits_repr
-BleedthroughLinearOp.__repr__ = traits_repr
-BeadCalibrationOp.__repr__ = traits_repr
-ColorTranslationOp.__repr__ = traits_repr
+AutofluorescenceOp.__repr__ = cytoflow_class_repr
+BleedthroughLinearOp.__repr__ = cytoflow_class_repr
+BeadCalibrationOp.__repr__ = cytoflow_class_repr
+ColorTranslationOp.__repr__ = cytoflow_class_repr
 
 
 class BleedthroughControl(HasTraits):
@@ -87,7 +87,7 @@ class Progress(object):
     
 @provides(IWorkflowOperation)
 class TasbeWorkflowOp(WorkflowOperation):   
-    id = Constant('edu.mit.synbio.cytoflowgui.workflow.operations.tasbe')
+    id = Constant('cytoflowgui.workflow.operations.tasbe')
     friendly_id = Constant("Quantitative Pipeline")
     name = Constant("TASBE")
     
@@ -372,7 +372,7 @@ class TasbeWorkflowView(WorkflowView):
     op = Instance(TasbeWorkflowOp)
     plot_params = Instance(HasTraits, ())
     
-    id = "edu.mit.synbio.cytoflowgui.workflow.operations.tasbeview"
+    id = "cytoflowgui.workflow.operations.tasbeview"
     friendly_id = "TASBE Calibration" 
     
     name = Constant("TASBE Calibration")

@@ -76,7 +76,6 @@ class Msg(object):
     MOUSE_RELEASE_EVENT = "MOUSE_RELEASE"
     MOUSE_DOUBLE_CLICK_EVENT = "MOUSE_DOUBLE_CLICK"
     
-    DPI = "DPI"
     PRINT = "PRINT"
     
 def log_exception():
@@ -150,13 +149,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         t.daemon = True
         t.start()
         
-        # overrender four-fold to deal with low-DPI aliasing
-        self.scale = 2
-        self.render_dpi = self.physicalDpiX() * self.scale
-        figure.dpi = self.render_dpi
-        matplotlib.rcParams['figure.dpi'] = self.render_dpi
-        self.child_conn.send((Msg.DPI, self.render_dpi))
-        
     def listen_for_remote(self):
         """
         The main method for the thread that listens for messages from
@@ -208,8 +200,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                 
             if self.resize_width is not None:
                 logger.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
-                              .format((Msg.RESIZE_EVENT, self.resize_width, self.resize_height)))
-                msg = (Msg.RESIZE_EVENT, (self.resize_width, self.resize_height))
+                              .format((Msg.RESIZE_EVENT, self.resize_width, self.resize_height, self.figure.dpi)))
+                msg = (Msg.RESIZE_EVENT, (self.resize_width, self.resize_height, self.figure.dpi))
                 self.child_conn.send(msg)
                 self.resize_width = self.resize_height = None
 
@@ -233,9 +225,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         logger.debug('FigureCanvasQTAggLocal.mousePressEvent: {}'
                       .format(event.button()))
-        x = event.pos().x() * self.scale
+        x = event.pos().x() * self.device_pixel_ratio
         # flip y so y=0 is bottom of canvas
-        y = (self.height() - event.pos().y()) * self.scale
+        y = (self.height() - event.pos().y()) * self.device_pixel_ratio
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_PRESS_EVENT, (x, y, button))
@@ -249,9 +241,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         logger.debug('FigureCanvasQTAggLocal.mouseDoubleClickEvent: {}'
                       .format(event.button()))
-        x = event.pos().x() * self.scale
+        x = event.pos().x() * self.device_pixel_ratio
         # flipy so y=0 is bottom of canvas
-        y = (self.height() - event.pos().y()) * self.scale
+        y = (self.height() - event.pos().y()) * self.device_pixel_ratio
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_DOUBLE_CLICK_EVENT, (x, y, button))
@@ -262,12 +254,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         """
         Override the Qt event mouseMoveEvent
         """
-        
-#         if DEBUG:
-#             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
-        self.move_x = event.x() * self.scale
+
+        self.move_x = event.x() * self.device_pixel_ratio
         # flip y so y=0 is bottom of canvas
-        self.move_y = (self.height() - event.y()) * self.scale 
+        self.move_y = (self.height() - event.y()) * self.device_pixel_ratio
         self.send_event.set()
 
 
@@ -279,9 +269,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         logger.debug('FigureCanvasQTAggLocal.mouseReleaseEvent: {}'
                       .format(event.button()))
         
-        x = event.x() * self.scale
+        x = event.x() * self.device_pixel_ratio
         # flip y so y=0 is bottom of canvas
-        y = (self.height() - event.y()) * self.scale
+        y = (self.height() - event.y()) * self.device_pixel_ratio
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_RELEASE_EVENT, (x, y, button))
@@ -292,20 +282,17 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         """
         Override the Qt event resizeEvent
         """
+                
+        logger.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
+                      .format((event.size().width(), event.size().height())))        
+        
+        super().resizeEvent(event)    
         
         w = event.size().width()
         h = event.size().height()
-                
-        logger.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
-                      .format((w, h)))            
-        
-        dpival = self.physicalDpiX()
-        winch = w / dpival
-        hinch = h / dpival
-        
-        self.figure.set_size_inches(winch, hinch)
-        # FigureCanvasAgg.resize_event(self)
-        QtGui.QWidget.resizeEvent(self, event)
+        dpival = self.figure.dpi
+        winch = w / dpival * self.device_pixel_ratio
+        hinch = h / dpival * self.device_pixel_ratio
         
         wp_size = int(min([self.width(), self.height()]) / 5)
         self.working_pixmap.resize(wp_size, wp_size)
@@ -348,41 +335,33 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         logger.debug('FigureCanvasQtAggLocal.paintEvent: {}'
                       .format(self.get_width_height()))
     
-        if self.blit_buffer is None:
+        # convert the Agg rendered image -> qImage
+        qImage = QtGui.QImage(self.buffer, 
+                              self.buffer_width,
+                              self.buffer_height,
+                              QtGui.QImage.Format_RGBA8888)
             
-            # convert the Agg rendered image -> qImage
-            qImage = QtGui.QImage(self.buffer, 
-                                  int(self.buffer_width),
-                                  int(self.buffer_height),
-                                  QtGui.QImage.Format_RGBA8888)
-            
-            # get the rectangle for the image
-            rect = qImage.rect()
-            p = QtGui.QPainter(self)
-            # reset the image area of the canvas to be the back-ground color
-            p.eraseRect(rect)
-            # draw the rendered image on to the canvas
-            p.drawPixmap(QtCore.QRect(0, 0, self.size().width(), self.size().height()), 
+        # get the rectangle for the image
+        p = QtGui.QPainter(self)
+        p.drawPixmap(QtCore.QRect(0, 0, self.size().width(), self.size().height()), 
                          QtGui.QPixmap.fromImage(qImage))
 
-            p.end()
-            
-        else:
-            qImage = QtGui.QImage(self.blit_buffer, 
+        if self.blit_buffer is not None:
+            buffer_image = QtGui.QImage(self.blit_buffer, 
                                   self.blit_width,
                                   self.blit_height,
                                   QtGui.QImage.Format_ARGB32)
  
-            pixmap = QtGui.QPixmap.fromImage(qImage)
-            p = QtGui.QPainter(self)
-            p.drawPixmap(int(self.blit_left / self.scale), 
-                         int((self.buffer_height - self.blit_top) / self.scale),
-                         int(self.blit_width / self.scale),
-                         int(self.blit_height / self.scale), 
-                         pixmap)
+            buffer_pixmap = QtGui.QPixmap.fromImage(buffer_image)
+            p.drawPixmap(int(self.blit_left / self.device_pixel_ratio), 
+                         int((self.buffer_height - self.blit_top) / self.device_pixel_ratio),
+                         int(self.blit_width / self.device_pixel_ratio),
+                         int(self.blit_height / self.device_pixel_ratio), 
+                         buffer_pixmap)
 
-            p.end()
             self.blit_buffer = None
+
+        p.end()
             
     def print_figure(self, *args, **kwargs):
         """

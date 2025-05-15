@@ -162,11 +162,11 @@ class KMeansViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class KMeansPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.kmeans'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.kmeans'
-    view_id = 'edu.mit.synbio.cytoflowgui.op_plugins.kmeans'
+    id = 'cytoflowgui.op_plugins.kmeans'
+    operation_id = 'cytoflow.operations.kmeans'
+    view_id = 'cytoflowgui.op_plugins.kmeans'
 
-    short_name = "KMeans"
+    name = "KMeans"
     menu_group = "Gates"
     
     def get_operation(self):

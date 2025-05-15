@@ -195,7 +195,7 @@ class ImportedDataTest(WorkflowTest):
         stats_op_1 = ChannelStatisticWorkflowOp()
         stats_op_1.name = "MeanByDoxIP"
         stats_op_1.channel = "Y2-A"
-        stats_op_1.statistic_name = "Geom.Mean"
+        stats_op_1.function_name = "Mean"
         stats_op_1.by = ['Dox', 'IP']
         stats_op_1.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))
@@ -211,9 +211,9 @@ class ImportedDataTest(WorkflowTest):
         self.workflow.wi_waitfor(stats_wi_1, 'status', 'valid')
         
         stats_op_2 = ChannelStatisticWorkflowOp()
-        stats_op_2.name = "SDByDoxIP"
+        stats_op_2.name = "GeoMeanByDoxIP"
         stats_op_2.channel = "Y2-A"
-        stats_op_2.statistic_name = "Geom.SD"
+        stats_op_2.function_name = "Geo.Mean */ SD"
         stats_op_2.by = ['Dox', 'IP']
         stats_op_2.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))
@@ -619,24 +619,28 @@ class Base1DStatisticsViewTest(BaseStatisticsViewTest):
     
     def setUpView(self):
         super().setUpView()
-        self.view.statistic = ("MeanByDoxIP", "Geom.Mean")
+        self.view.statistic = "GeoMeanByDoxIP"
+        self.view.feature = "Geo.Mean"
         
     # error_statistic
     def testErrorStatistic(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.error_statistic = ("SDByDoxIP", "Geom.SD")
+        self.view.error_low = "/SD"
+        self.view.error_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
     # scale
     def testScaleLog(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDoxIP", "Geom.Mean")
+        self.view.statistic = "GeoMeanByDoxIP"
+        self.view.feature = "Geo.Mean"
         self.view.scale = "log"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')        
 
     def testScaleLogicle(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.statistic = ("MeanByDoxIP", "Geom.Mean")
+        self.view.statistic = "GeoMeanByDoxIP"
+        self.view.feature = "Geo.Mean"
         self.view.scale = "logicle"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')  
     
@@ -659,29 +663,34 @@ class Base2DStatisticsViewTest(BaseStatisticsViewTest):
     def setUpView(self):
         
         super().setUpView()
-        self.view.xstatistic = ("MeanByDoxIP", "Geom.Mean")
-        self.view.ystatistic = ("MeanByDoxIP2", "Geom.Mean")
+        self.view.statistic = "GeoMeanByDoxIP"
+        self.view.xfeature = "Geo.Mean"
+        self.view.yfeature = "Geo.Mean"
 
     # both error bars
     def testErrorBars(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.x_error_statistic = ("SDByDoxIP", "Geom.SD")
+        self.view.xerror_low = "/SD"
+        self.view.xerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.y_error_statistic = ("SDByDoxIP2", "Geom.SD")
+        self.view.yerror_low = "/SD"
+        self.view.yerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     # x error statistic
     def testXErrorBars(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.x_error_statistic = ("SDByDoxIP", "Geom.SD")
+        self.view.xerror_low = "/SD"
+        self.view.xerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     # y error statistic
     def testYErrorBars(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.y_error_statistic = ("SDByDoxIP2", "Geom.SD")
+        self.view.yerror_low = "/SD"
+        self.view.yerror_high = "*SD"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
     # x scale

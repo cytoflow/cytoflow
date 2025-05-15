@@ -38,10 +38,14 @@ from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWar
 from .scale import scale_factory, IScale, set_default_scale, get_default_scale
 from .custom_traits import (PositiveInt, PositiveCInt, PositiveFloat, 
                             PositiveCFloat, ScaleEnum, Deprecated, Removed,
-                            FloatOrNone, CFloatOrNone, IntOrNone, CIntOrNone)
+                            FloatOrNone, CFloatOrNone, IntOrNone, CIntOrNone,
+                            UnitFloat, ChangedStr)
 
 from .docstring import expand_class_attributes, expand_method_parameters
 
 from .fcswrite import write_fcs
+
+from .minisom import MiniSom
+from .consensus import ConsensusClustering
 
 from pandas.core.dtypes.inference import is_list_like

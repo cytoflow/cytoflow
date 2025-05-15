@@ -94,7 +94,7 @@ class WorkflowItem(HasStrictTraits):
     metadata = Dict(Str, Any, status = True)
     """The metadata from `result`"""
     
-    statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
+    statistics = Dict(Str, pd.DataFrame, status = True)
     """The statistics from `result`"""
     
     default_view = Property(Instance('cytoflowgui.workflow.views.IWorkflowView'), observe = 'operation')
@@ -225,7 +225,7 @@ class WorkflowItem(HasStrictTraits):
             experiment = self.previous_wi.result
         else:
             return None
-        
+
         plot_iter = self.current_view.enum_plots(experiment)
         plot_names = [x for x in plot_iter]
         
@@ -237,7 +237,10 @@ class WorkflowItem(HasStrictTraits):
             self.plot_names_label = ""
         else:
             self.plot_names = plot_names
-            self.plot_names_label = ", ".join(plot_iter.by)
+            try:
+                self.plot_names_label = ", ".join(plot_iter.by)
+            except AttributeError:
+                self.plot_names_label = ""
         
         
     def estimate(self):
@@ -370,8 +373,10 @@ class WorkflowItem(HasStrictTraits):
                 plot_params = self.current_view.plot_params.trait_get()
                 
                 if self.result:
+                    plt.clf()
                     self.current_view.plot(self.result, **plot_params)
                 elif self.previous_wi and self.previous_wi.result:
+                    plt.clf()
                     self.current_view.plot(self.previous_wi.result, **plot_params)
                     warnings.warn("Warning: plotting previous operation's result")
                 else:
@@ -416,8 +421,8 @@ class WorkflowItem(HasStrictTraits):
                     self.view_warning = ""
                     
             return True
-        
-@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 4)
+
+@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 5)
 def _dump_wi(wi):
                           
     # we really don't need to keep copying around the fcs metadata
@@ -430,7 +435,23 @@ def _dump_wi(wi):
                 channels = wi.channels,
                 conditions = wi.conditions,
                 metadata = wi.metadata,
-                statistics = wi.statistics,
+                statistics = wi.statistics,  # Dict: Str --> pd.DataFrame
+                current_view = wi.current_view)
+        
+@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 4)
+def _dump_wi_v4(wi):
+                          
+    # we really don't need to keep copying around the fcs metadata
+    # it will still get saved out in the import op
+    if 'fcs_metadata' in wi.metadata:
+        del wi.metadata['fcs_metadata']
+                            
+    return dict(operation = wi.operation,
+                views = wi.views,
+                channels = wi.channels,
+                conditions = wi.conditions,
+                metadata = wi.metadata,
+                statistics = wi.statistics,  # Dict: Tuple(Str, Str) --> pd.Series
                 current_view = wi.current_view)
         
 @camel_registry.dumper(WorkflowItem, 'workflow-item', version = 3)
@@ -471,7 +492,7 @@ def _dump_wi_v2(wi):
 @camel_registry.dumper(WorkflowItem, 'workflow-item', version = 1)
 def _dump_wi_v1(wi):
                             
-    return dict(deletable = False if wi.operation.id == "edu.mit.synbio.cytoflow.operations.import" else True,
+    return dict(deletable = False if wi.operation.id == "cytoflow.operations.import" else True,
                 operation = wi.operation,
                 views = wi.views,
                 channels = wi.channels,
@@ -504,6 +525,10 @@ def _load_wi_v3(data, version):
     return WorkflowItem(**data)
 
 @camel_registry.loader('workflow-item', version = 4)
-def _load_wi(data, version):
+def _load_wi_v4(data, version):
+    del data['statistics']
     return WorkflowItem(**data)
 
+@camel_registry.loader('workflow-item', version = 5)
+def _load_wi_v5(data, version):
+    return WorkflowItem(**data)

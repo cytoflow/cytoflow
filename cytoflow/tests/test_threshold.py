@@ -45,6 +45,9 @@ class Test(ImportedDataSmallTest):
 
     def testPlot(self):
         self.gate.default_view().plot(self.ex)
+
+    def testPlotWithSubset(self):
+        self.gate.default_view(subset = "Dox == 10.0").plot(self.ex)
         
     def testPlotParams(self):
         self.gate.default_view().plot(self.ex, line_props = {'color' : 'grey'})

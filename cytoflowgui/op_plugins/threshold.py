@@ -147,11 +147,11 @@ class ThresholdViewHandler(ViewHandler):
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin, PluginHelpMixin):
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.threshold'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.threshold'
-    view_id = 'edu.mit.synbio.cytoflow.views.threshold'
+    id = 'cytoflowgui.op_plugins.threshold'
+    operation_id = 'cytoflow.operations.threshold'
+    view_id = 'cytoflow.views.threshold'
 
-    short_name = "Threshold"
+    name = "Threshold"
     menu_group = "Gates"
     
     def get_operation(self):

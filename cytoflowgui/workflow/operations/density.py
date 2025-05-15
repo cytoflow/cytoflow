@@ -32,13 +32,13 @@ from cytoflow.operations.density import DensityGateOp, DensityGateView
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowByView, DensityPlotParams
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 from ..subset import ISubset
 from .. import Changed
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-DensityGateOp.__repr__ = traits_repr
+DensityGateOp.__repr__ = cytoflow_class_repr
 
 
 @provides(IWorkflowOperation)

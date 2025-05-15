@@ -29,12 +29,12 @@ from traits.api import (HasTraits, provides, Str, Property, observe,
 from cytoflow.operations.pca import PCAOp
 import cytoflow.utility as util
 
-from ..serialization import camel_registry, traits_repr, dedent
+from ..serialization import camel_registry, cytoflow_class_repr, traits_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-PCAOp.__repr__ = traits_repr
+PCAOp.__repr__ = cytoflow_class_repr
 
 
 class Channel(HasTraits):

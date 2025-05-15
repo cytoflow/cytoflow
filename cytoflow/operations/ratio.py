@@ -59,7 +59,7 @@ class RatioOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.ratio')
+    id = Constant('cytoflow.operations.ratio')
     friendly_id = Constant("Ratio")
     
     name = Str

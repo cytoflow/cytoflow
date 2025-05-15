@@ -26,7 +26,7 @@ cytoflowgui.op_plugins.i_op_plugin
 from traits.api import Interface, Constant, List
 from envisage.api import Plugin, ExtensionPoint
 
-OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
+OP_PLUGIN_EXT = 'cytoflow.op_plugins'
 
 class IOperationPlugin(Interface):
     """
@@ -39,12 +39,12 @@ class IOperationPlugin(Interface):
     operation_id : Constant
         Same as the ``id`` attribute of the IOperation this plugin wraps.
         
-    short_name : Constant
+    name : Constant
         The operation's ``short`` name - for menus and toolbar tool tips
     """
 
     operation_id = Constant
-    short_name = Constant
+    name = Constant
 
     def get_operation(self):
         """
@@ -107,3 +107,4 @@ class IOperationPlugin(Interface):
 
 class OpPluginManager(Plugin):
     op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
+    id = "cytoflow.op_plugin_manager"

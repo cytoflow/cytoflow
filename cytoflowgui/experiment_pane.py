@@ -35,7 +35,7 @@ class ExperimentBrowserDockPane(TraitsDockPane):
     results from the currently-selected `WorkflowItem`.
     """
 
-    id = 'edu.mit.synbio.cytoflowgui.experiment_pane'
+    id = 'cytoflowgui.experiment_pane'
     name = "Experiment Browser"
 
     # controller

@@ -168,9 +168,9 @@ class ViolinHandler(ViewHandler):
 @provides(IViewPlugin)
 class ViolinPlotPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view_plugins.violin'
-    view_id = 'edu.mit.synbio.cytoflow.view.violin'
-    short_name = "Violin Plot"
+    id = 'cytoflowgui.view_plugins.violin'
+    view_id = 'cytoflow.view.violin'
+    name = "Violin Plot"
 
     def get_view(self):
         return ViolinPlotWorkflowView()

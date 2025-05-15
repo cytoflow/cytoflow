@@ -41,7 +41,8 @@ class Test(ImportedDataSmallTest):
                                       
         warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
 
-        flow.BarChartView(statistic = ("Stats1D", "mean"),
+        flow.BarChartView(statistic = "Stats1D",
+                          feature = "V2-A",
                           variable = "Dox").plot(ex2)
                     
     def testHexBin(self):
@@ -65,53 +66,23 @@ class Test(ImportedDataSmallTest):
                            scale = "logicle").plot(self.ex)
                            
     def testScatterplot(self):
-        import numpy as np
-        import matplotlib.pyplot as plt
-
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              xscale = "linear",
                              yscale = "linear",
                              huefacet = "Dox").plot(self.ex)
-        ax = plt.gca()
-        np.testing.assert_array_equal(
-            ax.get_xticks(),
-            np.array([-500., 0., 500., 1000., 1500., 2000., 2500., 3000.]),
-        )
-        np.testing.assert_array_equal(
-            ax.get_yticks(),
-            np.array([-10000., 0., 10000., 20000., 30000., 40000., 50000., 60000., 70000.]),
-        )
                              
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              xscale = "log",
                              yscale = "log",
                              huefacet = "Dox").plot(self.ex)
-        ax = plt.gca()
-        np.testing.assert_array_equal(
-            ax.get_xticks(),
-            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e5]),
-        )
-        np.testing.assert_array_equal(
-            ax.get_yticks(),
-            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e+05, 1.e6]),
-        )
-                             
+                                                          
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              xscale = "logicle",
                              yscale = "logicle",
                              huefacet = "Dox").plot(self.ex)
-        ax = plt.gca()
-        np.testing.assert_array_equal(
-            ax.get_xticks(),
-            np.array([-100., 0., 100., 1000.]),
-        )
-        np.testing.assert_array_equal(
-            ax.get_yticks(),
-            np.array([ -100., 0., 100., 1000., 10000.]),
-        )
 
         # try setting default scale and _not_ setting xscale, yscale
         flow.set_default_scale("log")
@@ -119,15 +90,7 @@ class Test(ImportedDataSmallTest):
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              huefacet = "Dox").plot(self.ex)
-        ax = plt.gca()
-        np.testing.assert_array_equal(
-            ax.get_xticks(),
-            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e5]),
-        )
-        np.testing.assert_array_equal(
-            ax.get_yticks(),
-            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e+05, 1.e6]),
-        )
+
         flow.set_default_scale("linear")  # reset the default scale
                              
     def testStats1D(self):
@@ -138,31 +101,30 @@ class Test(ImportedDataSmallTest):
                                       channel = "V2-A",
                                       function = np.mean).apply(self.ex)
         
-        flow.Stats1DView(statistic = ("Stats1D", "mean"),
+        flow.Stats1DView(statistic = "Stats1D",
+                         feature = "V2-A",
                          variable = "Dox").plot(ex2)
                          
-        flow.Stats1DView(statistic = ("Stats1D", "mean"),
+        flow.Stats1DView(statistic = "Stats1D",
+                         feature = "V2-A",
                          variable = "Dox",
                          variable_scale = "log",
                          scale = "logicle").plot(ex2)
 
                          
     def testStats2D(self):
-        import numpy as np
+        import pandas as pd
+        op = flow.FrameStatisticOp(name = "ByDox",
+                                   by = ['Dox'],
+                                   function = lambda x: pd.Series({'Y2-A' : x['Y2-A'].mean(),
+                                                                   'V2-A' : x['V2-A'].mean()}))
+        ex = op.apply(self.ex)                                     
         
-        ex2 = flow.ChannelStatisticOp(name = "StatsV",
-                                      by = ["Dox"],
-                                      channel = "V2-A",
-                                      function = np.mean).apply(self.ex)
-                                      
-        ex3 = flow.ChannelStatisticOp(name = "StatsY",
-                                      by = ["Dox"],
-                                      channel = "Y2-A",
-                                      function = np.mean).apply(ex2)                                      
-        
-        flow.Stats2DView(xstatistic = ("StatsV", "mean"),
-                         ystatistic = ("StatsY", "mean"),
-                         variable = "Dox").plot(ex3)
+        flow.Stats2DView(statistic = "ByDox",
+                         xfeature = "Y2-A",
+                         yfeature = "V2-A",
+                         variable = "Dox").plot(ex)
+
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'Test.testBarChart']

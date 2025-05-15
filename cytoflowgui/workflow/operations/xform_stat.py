@@ -27,31 +27,28 @@ import scipy.stats
 import pandas
 from warnings import warn
 
-from traits.api import (Str, Callable, Property, List, provides, observe, Tuple, Undefined)
+from traits.api import (Str, Callable, Property, List, provides, observe, Undefined)
 
 import cytoflow.utility as util
 from cytoflow import TransformStatisticOp
                        
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
 from ..subset import ISubset
 
-TransformStatisticOp.__repr__ = traits_repr
+TransformStatisticOp.__repr__ = cytoflow_class_repr
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
 geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
 
 transform_functions = {"Mean" : np.mean,
-                       "Geom.Mean" : util.geom_mean,
                        "Median" : np.median,
+                       "Geom.Mean" : util.geom_mean,
                        "Count" : len,
                        "Std.Dev" : np.std,
-                       "Geom.SD" : util.geom_sd_range,
+                       "Geom.Std.Dev" : util.geom_sd,
                        "SEM" : scipy.stats.sem,
-                       "Geom.SEM" : util.geom_sem_range,
-                       "Mean 95% CI" : mean_95ci,
-                       "Geom.Mean 95% CI" : geomean_95ci,
                        "Sum" : np.sum,
                        "Proportion" : lambda a: pandas.Series(a / a.sum()),
                        "Percentage" : lambda a: pandas.Series(a / a.sum()) * 100.0,
@@ -62,8 +59,8 @@ transform_functions = {"Mean" : np.mean,
 @provides(IWorkflowOperation)
 class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
     name = Str(apply = True)
-    statistic = Tuple(Str, Str, apply = True)
-    statistic_name = Str(apply = True)
+    statistic = Str(apply = True)
+    function_name = Str(apply = True)
     by = List(Str, apply = True)  
     
     # override the base class's "subset" with one that is dynamically generated /
@@ -74,15 +71,7 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)
     
-    # automagically pick a good fill
-    fill = Undefined
-    
-    # MAGIC - returns the value of the 'fill' property
-#     def _get_fill(self):
-#         if self.statistic_name:
-#             return fill[self.statistic_name]
-#         else:
-#             return 0
+    fill = 0
         
     # bits to support the subset editor
     @observe('subset_list:items.str')
@@ -94,14 +83,14 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
     def apply(self, experiment):
-        if not self.statistic_name:
+        if not self.function_name:
             raise util.CytoflowOpError("Transform function not set")
         
-        self.function = transform_functions[self.statistic_name]
+        self.function = transform_functions[self.function_name]
         
         ret = TransformStatisticOp.apply(self, experiment)
         
-        stat = ret.statistics[(self.name, self.statistic_name)]
+        stat = ret.statistics[self.name]
         
         if Undefined in stat:
             warn("One of the transformed values was Undefined. "
@@ -118,11 +107,10 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
         op = TransformStatisticOp()
         op.copy_traits(self, [x for x in op.copyable_trait_names() if x != 'fill'])
         
-        fn_import = {"Mean" : "from numpy import mean",
-                     "Median" : "from numpy import median",
-                     "Geom.Mean" : None,
-                     "Count" : None,
+        fn_import = {"Mean" : "import numpy as np",
+                     "Median" : "import numpy as np",
                      "Std.Dev" : "from numpy import std",
+                     "Geom.Std.Dev" : None,
                      "Geom.SD" : None,
                      "SEM" : "from scipy.stats import sem",
                      "Geom.SEM" : None,
@@ -134,48 +122,59 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
                      "Fold" : "from pandas import Series"
                   }
         
-        fn_name = {"Mean" : "mean",
-                   "Median" : "median",
+        fn_repr = {"Mean" : "np.mean",
+                   "Median" : "np.median",
                    "Geom.Mean" : "geom_mean",
                    "Count" : "len",
                    "Std.Dev" : "std",
-                   "Geom.SD" : "geom_sd_range",
+                   "Geom.Std.Dev" : "geom_sd",
                    "SEM" : "sem",
-                   "Geom.SEM" : "geom_sem_range",
-                   "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
-                   "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)",
                    "Sum" : "sum",
                    "Proportion" : "lambda a: Series(a / a.sum())",
                    "Percentage" : "lambda a: Series(a / a.sum()) * 100.0",
                    "Fold" : "lambda a: Series(a / a.min())"
                    }
         
-        op.function = transform_functions[self.statistic_name]
+        op.function = transform_functions[self.function_name]
         try:
-            op.function.__name__ = fn_name[self.statistic_name]
+            op.function.__name__ = fn_repr[self.function_name]
         except AttributeError:
             # can't reassign the name of "len", for example
             pass
         
         return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})" \
-            .format(import_statement = (fn_import[self.statistic_name]
-                                        if fn_import[self.statistic_name] is not None
+            .format(import_statement = (fn_import[self.function_name]
+                                        if self.function_name in fn_import
                                         else ""),
                 repr = repr(op),
                 idx = idx,
                 prev_idx = idx - 1) 
             
 ### Serialization
-@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 1)
+@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 2)
 def _dump(op):
     return dict(name = op.name,
                 statistic = op.statistic,
-                statistic_name = op.statistic_name,
+                function_name = op.function_name,
+                by = op.by,
+                subset_list = op.subset_list)
+
+@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 1)
+def _dump_v1(op):
+    return dict(name = op.name,
+                statistic = op.statistic,
+                statistic_name = op.function_name,
                 by = op.by,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('transform-statistic', version = 1)
+@camel_registry.loader('transform-statistic', version = 2)
 def _load(data, version):
-    data['statistic'] = tuple(data['statistic'])
+    return TransformStatisticWorkflowOp(**data)
+
+@camel_registry.loader('transform-statistic', version = 1)
+def _load_v1(data, version):
+    data['statistic'] = tuple(data['statistic'])[0]
+    del data['statistic_name']
+    # TODO - some warning about how stats have changed.
     return TransformStatisticWorkflowOp(**data)
 

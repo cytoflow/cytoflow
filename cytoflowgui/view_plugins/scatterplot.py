@@ -166,9 +166,9 @@ class ScatterplotHandler(ViewHandler):
 @provides(IViewPlugin)
 class ScatterplotPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.scatterplot'
-    view_id = 'edu.mit.synbio.cytoflow.view.scatterplot'
-    short_name = "Scatter Plot"
+    id = 'cytoflowgui.view.scatterplot'
+    view_id = 'cytoflow.view.scatterplot'
+    name = "Scatter Plot"
     
     def get_view(self):
         return ScatterplotWorkflowView()

@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Any)
+                        Callable, Float)
 
 import cytoflow.utility as util
 
@@ -41,42 +41,40 @@ from .i_operation import IOperation
 @provides(IOperation)
 class ChannelStatisticOp(HasStrictTraits):
     """
-    Apply a function to subsets of a data set, and add it as a statistic
-    to the experiment.
+    Apply a functions to subsets of a data set, and add it as a 
+    statistic to the experiment.
     
     The `apply` function groups the data by the variables in `by`, 
-    then applies the `function` callable to the `channel` series 
-    in each subset.  The callable should take a single `pandas.Series` 
-    as an argument.  The return type is arbitrary, but to be used with the rest 
-    of `cytoflow` it should probably be a numeric type or an iterable of 
-    numeric types.
+    then applies the `function` callable to each group in the channel
+    specified by `channel`. 
+    
+    The `function` callable should take a single `pandas.Series` of ``float`` 
+    as an argument and return a ``float``, a value that can be cast to 
+    ``float``, or a `pandas.Series` of ``float``. If `function` returns a 
+    ``float`` or a value that can be cast to ``float``, then the resulting 
+    statistic has one column and its name is set to `channel`. If `function`
+    returns a `pandas.Series`, then the ``Series``' index labels become the 
+    column names. (If used this way, each call to `function` must **always** 
+    return a `pandas.Series` with the same index.)
     
     Attributes
     ----------
     name : Str
-        The operation name.  Becomes the first element in the
-        `Experiment.statistics` key tuple.
+        The operation name.  Becomes the name of the new statistic.
     
     channel : Str
-        The channel to apply the function to.
+        The channel to apply the function to. The channels become the column 
+        (feature) name in the new statistic.
         
     function : Callable
         The function used to compute the statistic.  `function` must take 
-        a `pandas.Series` as its only parameter.  The return type is 
-        arbitrary, but to be used with the rest of `cytoflow` it should 
-        probably be a numeric type or an iterable of numeric types.  If 
-        `statistic_name` is unset, the name of the function becomes the 
-        second in element in the `Experiment.statistics` key tuple.
+        a `pandas.Series` as its only parameter and return either a ``float``,
+        a value that can be cast to ``float``, or a `pandas.Series`.  
         
         .. warning::
             Be careful!  Sometimes this function is called with an empty input!
             If this is the case, poorly-behaved functions can return ``NaN`` or 
             throw an error.  If this happens, it will be reported.
-        
-    statistic_name : Str
-        The name of the function; if present, becomes the second element in
-        the `Experiment.statistics` key tuple.  Particularly useful if 
-        `function` is a lambda expression.
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
@@ -88,19 +86,17 @@ class ChannelStatisticOp(HasStrictTraits):
     subset : Str
         A Python expression sent to `Experiment.query` to subset the 
         data before computing the statistic.
-        
-    fill : Any (default = 0)
-        The value to use in the statistic if a slice of the data is empty.
    
     Examples
     --------
-    
+
     .. plot::
         :context: close-figs
         
         Make a little data set.
     
         >>> import cytoflow as flow
+        >>> import pandas as pd
         >>> import_op = flow.ImportOp()
         >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
         ...                              conditions = {'Dox' : 10.0}),
@@ -115,34 +111,36 @@ class ChannelStatisticOp(HasStrictTraits):
         :context: close-figs
         
         >>> ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
-        ...                     channel = 'Y2-A',
-        ...                     function = flow.geom_mean,
-        ...                     by = ['Dox'])
+        ...                                 channel = 'Y2-A',
+        ...                                 function = flow.geom_mean,
+        ...                                 by = ['Dox'])
         >>> ex2 = ch_op.apply(ex)
         
-    View the new operation
+    View the new statistic
     
-    >>> print(ex2.statistics.keys())
-    dict_keys([('MeanByDox', 'geom_mean')])
-
-    >>> print(ex2.statistics[('MeanByDox', 'geom_mean')])
-    Dox
-    1.0      19.805601
-    10.0    446.981927
-    dtype: float64
+    .. plot::
+        :context: close-figs
+    
+        >>> print(ex2.statistics.keys())
+        dict_keys(['MeanByDox'])
+        
+        >>> print(ex2.statistics['MeanByDox'])
+                    Y2-A    
+        Dox                        
+        1.0    19.805601  
+        10.0  446.981927  
 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.channel_statistic')
-    friendly_id = Constant("Channel Statistics")
+    id = Constant('cytoflow.operations.channel_statistic')
+    friendly_id = Constant("Channel Statistic")
     
     name = Str
     channel = Str
     function = Callable
-    statistic_name = Str
     by = List(Str)
     subset = Str
-    fill = Any(0)
+    fill = Float(np.nan)
     
     def apply(self, experiment):
         """
@@ -157,13 +155,9 @@ class ChannelStatisticOp(HasStrictTraits):
         -------
         Experiment
             A new `Experiment`, containing a new entry in 
-            `Experiment.statistics`.  The key of the new entry is a 
-            tuple ``(name, function)`` (or ``(name, statistic_name)`` if 
-            `statistic_name` is set.
+            `Experiment.statistics`.  The key of the new entry 
+            is ``name``.
         """
-        
-        if experiment is None:
-            raise util.CytoflowOpError('experiment', "Must specify an experiment")
 
         if not self.name:
             raise util.CytoflowOpError('name', "Must specify a name")
@@ -174,29 +168,25 @@ class ChannelStatisticOp(HasStrictTraits):
                                        .format(self.name))  
         
         if not self.channel:
-            raise util.CytoflowOpError('channel', "Must specify a channel")
+            raise util.CytoflowOpError('channels', "Must specify a channel")
 
         if not self.function:
             raise util.CytoflowOpError('function', "Must specify a function")
 
         if self.channel not in experiment.data:
-            raise util.CytoflowOpError('channel',
-                                       "Channel {0} not found in the experiment"
+            raise util.CytoflowOpError('channels',
+                                       "Channel {} not found in the experiment"
                                        .format(self.channel))
             
         if not self.by:
             raise util.CytoflowOpError('by',
                                        "Must specify some grouping conditions "
                                        "in 'by'")
-            
-        stat_name = (self.name, self.statistic_name) \
-                     if self.statistic_name \
-                     else (self.name, self.function.__name__)
                      
-        if stat_name in experiment.statistics:
+        if self.name in experiment.statistics:
             raise util.CytoflowOpError('name',
                                        "{} is already in the experiment's statistics"
-                                       .format(stat_name))
+                                       .format(self.name))
 
         new_experiment = experiment.clone(deep = False)
         if self.subset:
@@ -206,11 +196,6 @@ class ChannelStatisticOp(HasStrictTraits):
                 raise util.CytoflowOpError('subset',
                                            "Subset string '{0}' isn't valid"
                                            .format(self.subset)) from exc
-                
-            if len(experiment) == 0:
-                raise util.CytoflowOpError('subset',
-                                           "Subset string '{0}' returned no events"
-                                           .format(self.subset))
        
         for b in self.by:
             if b not in experiment.conditions:
@@ -223,56 +208,78 @@ class ChannelStatisticOp(HasStrictTraits):
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
-        groupby = experiment.data.groupby(self.by, observed = True)
+        groupby = experiment.data.groupby(self.by, observed = False)  
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
+                                         names = self.by)
 
-        for group, data_subset in groupby:
-            if len(data_subset) == 0:
-                warn("Group {} had no data"
-                     .format(group), 
+        for i in idx:
+            if (i[0] if idx.nlevels == 1 else i) not in groupby.indices:
+                warn("No events for category {}".format( [str(i[0]) + "=" + str(i[1])  for i in zip(idx.names, i)]),
                      util.CytoflowOpWarning)
-                
-        # this shouldn't be necessary, but see pandas bug #38053
-        if len(self.by) == 1:
-            idx = pd.Index(experiment[self.by[0]].unique(), name = self.by[0])
-        else:
-            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
-                                             names = self.by)
-
-        stat = pd.Series(data = [self.fill] * len(idx),
-                         index = idx, 
-                         name = "{} : {}".format(stat_name[0], stat_name[1]),
-                         dtype = np.dtype(object)).sort_index()
+              
+        stat = None
         
         for group, data_subset in groupby:
-            if len(data_subset) == 0:
-                continue
-            
-            if not isinstance(group, tuple):
-                group = (group,)
-            
             try:
                 v = self.function(data_subset[self.channel])
                 
-                stat.at[group] = v
-
             except Exception as e:
                 raise util.CytoflowOpError(None,
                                            "Your function threw an error in group {}"
                                            .format(group)) from e
-            
-            # check for, and warn about, NaNs.
-            if pd.Series(stat.loc[group]).isna().any():
-                warn("Found NaN in category {} returned {}"
-                     .format(group, stat.loc[group]), 
-                     util.CytoflowOpWarning)
+                                           
+            try:
+                v = float(v)
+            except (TypeError, ValueError) as e:
+                if not isinstance(v, pd.Series):
+                    raise util.CytoflowOpError(None,
+                                               "Your function returned a {}. It must return "
+                                               "a float, a value that can be cast to float, "
+                                               "or a pandas.Series (with type float)"
+                                               .format(type(v))) from e
                     
-        # try to convert to numeric, but if there are non-numeric bits ignore
-        try:
-            stat = pd.to_numeric(stat)
-        except:  # if there are errors, ignore them
-            pass
+            if isinstance(v, pd.Series) and v.dtype.kind != 'f':
+                raise util.CytoflowOpError(None,
+                                           "Your function returned a pandas.Series with dtype {}. "
+                                           "If it returns a Series, the data must be floating point."
+                                           .format(v.dtype))
+                
+            if stat is None:
+                if isinstance(v, float):
+                    stat = pd.DataFrame(data = np.full((len(idx), 1), self.fill),
+                                        index = idx,
+                                        columns = [self.channel],
+                                        dtype = 'float' ).sort_index()
+                elif isinstance(v, pd.Series):
+                    stat = pd.DataFrame(data = np.full((len(idx), len(v)), self.fill),
+                                        index = idx,
+                                        columns = v.index.tolist(),
+                                        dtype = 'float').sort_index()
+
+                first_v = v
+                
+            if type(v) != type(first_v):
+                raise util.CytoflowOpError(None,
+                                           "The first call to your function returned a {}, "
+                                           "but calling it on group {} returned a {}"
+                                           .format(type(first_v), group, type(v)))                           
+
+            stat.loc[group] = v
+
+            # fail on NaNs.
+            if stat.loc[group].isna().any():
+                raise util.CytoflowOpError(None,
+                                           "Calling function on category {} returned {} "
+                                           "which contains NaN".format(group, stat.loc[group]))
+                
+        if stat.isna().any().any():
+            raise util.CytoflowOpError(None,
+                                       "The statistic has at least one NaN in it, which probably means "
+                                       "one of the groups did not have any events AND you forgot to set "
+                                       "'fill' to something other than NaN.".format(group, stat.loc[group]))
+                
         
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
-        new_experiment.statistics[stat_name] = stat
+        new_experiment.statistics[self.name] = stat
         
         return new_experiment

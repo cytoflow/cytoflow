@@ -41,6 +41,7 @@ cytoflowgui.workflow.views.bar_chart
 
 """
 
+import logging
 from textwrap import dedent
 
 from traits.api import provides, Instance
@@ -48,10 +49,10 @@ from traits.api import provides, Instance
 from cytoflow import BarChartView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowByView, Stats1DPlotParams
 
-BarChartView.__repr__ = traits_repr
+BarChartView.__repr__ = cytoflow_class_repr
 
 
 class BarChartPlotParams(Stats1DPlotParams):
@@ -77,8 +78,24 @@ class BarChartWorkflowView(WorkflowByView, BarChartView):
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
 ### Serialization
-@camel_registry.dumper(BarChartWorkflowView, 'bar-chart', version = 2)
+@camel_registry.dumper(BarChartWorkflowView, 'bar-chart', version = 3)
 def _dump(view):
+    return dict(statistic = view.statistic,
+                feature = view.feature,
+                variable = view.variable,
+                scale = view.scale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                error_low = view.error_low,
+                error_high = view.error_high,
+                subset_list = view.subset_list,
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
+    
+@camel_registry.dumper(BarChartWorkflowView, 'bar-chart', version = 2)
+def _dump_v2(view):
     return dict(statistic = view.statistic,
                 variable = view.variable,
                 scale = view.scale,
@@ -129,13 +146,28 @@ def _dump_params(params):
 @camel_registry.loader('bar-chart', version = 1)
 def _load_v1(data, version):
     data['scale'] = data.pop('yscale')
-    data['statistic'] = tuple(data['statistic'])
-    data['error_statistic'] = tuple(data['error_statistic'])
-
+    data['statistic'] = tuple(data['statistic'])[0]
+    del data['error_statistic']
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+    
     return BarChartWorkflowView(**data)
 
 @camel_registry.loader('bar-chart', version = 2)
 def _load_v2(data, version):
+    data['statistic'] = data['statistic'][0]
+    del data['error_statistic']
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+    
+    return BarChartWorkflowView(**data)
+
+@camel_registry.loader('bar-chart', version = 3)
+def _load_v3(data, version):
     return BarChartWorkflowView(**data)
 
 @camel_registry.loader('barchart-params', version = any)

@@ -30,6 +30,9 @@ operation's **Group By**) must be set as **Variable** or as a facet.
 
     Which statistic to plot.
     
+.. object:: Feature
+        The column in the statistic to plot on the Y axis (often a channel name.)
+    
 .. object:: Variable
 
     The statistic variable put on the X axis.  Must be numeric.
@@ -86,7 +89,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
     ex2 = ch_op.apply(ex)
     
     flow.Stats1DView(variable = 'Dox',
-                     statistic = ('MeanByDox', 'geom_mean'),
+                     statistic = 'MeanByDox',
+                     feature = 'Y2-A',
                      scale = 'log',
                      variable_scale = 'log').plot(ex2)
 """
@@ -138,12 +142,16 @@ class Stats1DHandler(ViewHandler):
     indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
     numeric_indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
     levels = Property(depends_on = "context.statistics, model.statistic")
+    features = Property(depends_on = "context.statistics, model.statistic")
 
     view_traits_view = \
         View(VGroup(
              VGroup(Item('statistic',
-                         editor=EnumEditor(name='context_handler.numeric_statistics_names'),
+                         editor=EnumEditor(name='context_handler.statistics_names'),
                          label = "Statistic"),
+                    Item('feature',
+                         editor = EnumEditor(name='handler.features'),
+                         label = "Feature"),
                     Item('scale', label = "Statistic\nScale"),
                     Item('variable',
                          editor = EnumEditor(name = 'handler.numeric_indices')),
@@ -162,10 +170,14 @@ class Stats1DHandler(ViewHandler):
                          label="Hue\nFacet"),
                     Item('huescale', 
                          label = "Hue\nScale"),
-                    Item('error_statistic',
-                         editor=ExtendableEnumEditor(name='context_handler.statistics_names',
-                                                     extra_items = {"None" : ("", "")}),
-                         label = "Error\nStatistic"),
+                    Item('error_low',
+                         editor=ExtendableEnumEditor(name='handler.features',
+                                                     extra_items = {"None" : ""}),
+                         label = "Error Bar Low"),
+                    Item('error_high',
+                         editor=ExtendableEnumEditor(name='handler.features',
+                                                     extra_items = {"None" : ""}),
+                         label = "Error Bar High"),
                     label = "One-Dimensional Statistics Plot",
                     show_border = False),
              VGroup(Item('subset_list',
@@ -265,14 +277,23 @@ class Stats1DHandler(ViewHandler):
         
         data.reset_index(inplace = True)
         return [x for x in data if util.is_numeric(data[x])]
+        
+    # MAGIC: gets the value for the property "features"
+    def _get_features(self):
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+         
+        stat = self.context.statistics[self.model.statistic]
+        return stat.columns.to_list()
 
 
 @provides(IViewPlugin)
 class Stats1DPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.stats1d'
-    view_id = 'edu.mit.synbio.cytoflow.view.stats1d'
-    short_name = "1D Statistics View"
+    id = 'cytoflowgui.view.stats1d'
+    view_id = 'cytoflow.view.stats1d'
+    name = "1D Statistics View"
     
     def get_view(self):
         return Stats1DWorkflowView()

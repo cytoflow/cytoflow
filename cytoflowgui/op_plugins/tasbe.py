@@ -323,11 +323,11 @@ class TasbeViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class TasbePlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.tasbe'
-    operation_id = 'edu.mit.synbio.cytoflowgui.workflow.operations.tasbe'
-    view_id = 'edu.mit.synbio.cytoflowgui.workflow.operations.tasbeview'
+    id = 'cytoflowgui.op_plugins.tasbe'
+    operation_id = 'cytoflowgui.workflow.operations.tasbe'
+    view_id = 'cytoflowgui.workflow.operations.tasbeview'
 
-    short_name = "TASBE Calibration"
+    name = "TASBE Calibration"
     menu_group = "Gates"
     
     def get_operation(self):

@@ -33,12 +33,12 @@ import cytoflow.utility as util
 
 from .. import Changed
 from ..views import IWorkflowView, WorkflowView
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, traits_repr, cytoflow_class_repr, dedent
 from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-BleedthroughLinearOp.__repr__ = traits_repr
+BleedthroughLinearOp.__repr__ = cytoflow_class_repr
 
 
 class Channel(HasTraits):
@@ -49,20 +49,10 @@ class Channel(HasTraits):
         return traits_repr(self)
     
     
-class UnitFloat(BaseFloat):
-    def validate(self, obj, name, value):
-        value = super().validate(obj, name, value)
-        if value < 0.0:
-            return 0.0
-        if value > 1.0:
-            return 1.0
-        return value
-    
-    
 class Spillover(HasTraits):
     from_channel = Str
     to_channel = Str
-    spillover = UnitFloat
+    spillover = util.UnitFloat
     
     def __repr__(self):
         return traits_repr(self)
@@ -112,7 +102,7 @@ class BleedthroughLinearWorkflowOp(WorkflowOperation, BleedthroughLinearOp):
                     
         # check for experiment metadata used to estimate operations in the
         # history, and bail if we find any
-        for op in experiment.history:
+        for op in experiment.history[1:]:
             if hasattr(op, 'by'):
                 for by in op.by:
                     if 'experiment' in experiment.metadata[by]:

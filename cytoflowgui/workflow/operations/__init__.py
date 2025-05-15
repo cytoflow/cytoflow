@@ -32,7 +32,9 @@ from .range2d import Range2DWorkflowOp, Range2DSelectionView
 from .polygon import PolygonWorkflowOp, PolygonSelectionView
 
 from .channel_stat import ChannelStatisticWorkflowOp
+from .multi_channel_stat import MultiChannelStatisticWorkflowOp, Function as MultiChannelStatisticFunction
 from .xform_stat import TransformStatisticWorkflowOp
+from .merge_stat import MergeStatisticsWorkflowOp
 from .ratio import RatioWorkflowOp
 
 from .binning import BinningWorkflowOp, BinningWorkflowView
@@ -42,6 +44,8 @@ from .density import DensityGateWorkflowOp, DensityGateWorkflowView
 from .kmeans import KMeansWorkflowOp, KMeansWorkflowView
 from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
 from .pca import PCAWorkflowOp, Channel as PCAChannel
+from .flowclean import FlowCleanWorkflowOp, Channel as FlowCleanChannel, FlowCleanWorkflowView
+from .tsne import tSNEWorkflowOp, Channel as tSNEChannel
 
 from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkflowView
 from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, Unit as BeadCalibrationUnit

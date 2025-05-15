@@ -148,11 +148,11 @@ class PCAHandler(OpHandler):
 @provides(IOperationPlugin)
 class PCAPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.pca'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.pca'
+    id = 'cytoflowgui.op_plugins.pca'
+    operation_id = 'cytoflow.operations.pca'
     view_id = None
 
-    short_name = "Principal Component Analysis"
+    name = "Principal Component Analysis"
     menu_group = "Calibration"
     
     def get_operation(self):

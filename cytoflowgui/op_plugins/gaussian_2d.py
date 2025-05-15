@@ -204,11 +204,11 @@ class GaussianMixture2DViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class GaussianMixture2DPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.gaussian_2d'
-    operation_id = 'edu.mit.synbio.cytoflowgui.operations.gaussian_2d'
-    view_id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
+    id = 'cytoflowgui.op_plugins.gaussian_2d'
+    operation_id = 'cytoflowgui.operations.gaussian_2d'
+    view_id = 'cytoflow.view.gaussianmixture2dview'
 
-    short_name = "2D Mixture Model"
+    name = "2D Mixture Model"
     menu_group = "Gates"
     
     def get_operation(self):

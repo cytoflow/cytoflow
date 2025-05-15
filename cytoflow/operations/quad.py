@@ -145,7 +145,7 @@ class QuadOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.quad')
+    id = Constant('cytoflow.operations.quad')
     friendly_id = Constant("Quadrant Gate")
     
     name = Str
@@ -369,7 +369,7 @@ class ScatterplotQuadSelectionView(_QuadSelection, ScatterplotView):
     >>> qv.plot(ex2) 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.quad')
+    id = Constant('cytoflow.views.quad')
     friendly_id = Constant("Quadrant Selection")
     
     def plot(self, experiment, **kwargs):
@@ -416,7 +416,7 @@ class DensityQuadSelectionView(_QuadSelection, DensityView):
     >>> qv.plot(ex2) 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.quad_density')
+    id = Constant('cytoflow.views.quad_density')
     friendly_id = Constant("Quadrant Selection (Density Plot)")
     
     def plot(self, experiment, **kwargs):

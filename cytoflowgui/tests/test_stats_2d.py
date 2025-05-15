@@ -24,6 +24,11 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import cytoflow.utility as util
+
+# needed for testing lambdas
+import pandas as pd  # @UnusedImport
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DStatisticsViewTest
 from cytoflowgui.workflow.views.stats_2d import Stats2DWorkflowView, Stats2DPlotParams, LINE_STYLES
@@ -46,7 +51,7 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
         stats_op_3 = stats_plugin.get_operation()
         stats_op_3.name = "MeanByDoxIP2"
         stats_op_3.channel = "B1-A"
-        stats_op_3.statistic_name = "Geom.Mean"
+        stats_op_3.function_name = "Geo.Mean"
         stats_op_3.by = ['Dox', 'IP']
         stats_op_3.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))
@@ -64,7 +69,7 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
         stats_op_4 = stats_plugin.get_operation()
         stats_op_4.name = "SDByDoxIP2"
         stats_op_4.channel = "B1-A"
-        stats_op_4.statistic_name = "Geom.SD"
+        stats_op_4.function_name = "Geo.SD"
         stats_op_4.by = ['Dox', 'IP']
         stats_op_4.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))
@@ -154,14 +159,15 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
         self.assertEqual(self.wi, new_wi)
                 
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
             
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
            
-        exec(code) # smoke test
+        with self.assertWarns(util.CytoflowWarning):
+            exec(code) # smoke test
 
 
 if __name__ == "__main__":

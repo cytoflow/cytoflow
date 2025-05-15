@@ -176,7 +176,7 @@ class ImportOp(HasStrictTraits):
     >>> ex = import_op.apply()
     """
 
-    id = Constant("edu.mit.synbio.cytoflow.operations.import")
+    id = Constant("cytoflow.operations.import")
     friendly_id = Constant("Import")
     name = Constant("Import Data")
 
@@ -196,7 +196,7 @@ class ImportOp(HasStrictTraits):
     data_set = Int(0)
 
     # are we subsetting?
-    events = Int(None)
+    events = util.IntOrNone(None)
         
     # DON'T DO THIS
     ignore_v = List(Str)
@@ -363,7 +363,7 @@ class ImportOp(HasStrictTraits):
                                                .format(self.tubes[0].file, str(e))) from e
                 
     
-                if self.events is not None:
+                if self.events:
                     if self.events <= len(tube_data):
                         tube_data = tube_data.loc[np.random.choice(tube_data.index,
                                                                    self.events,
@@ -371,7 +371,7 @@ class ImportOp(HasStrictTraits):
                     else:
                         warnings.warn("Only {0} events in tube {1}"
                                       .format(len(tube_data), tube.file),
-                                      util.CytoflowWarning)
+                                      util.CytoflowOpWarning)
     
                 experiment.add_events(tube_data[channels], tube.conditions)
                         
@@ -412,7 +412,7 @@ class ImportOp(HasStrictTraits):
                 if range_bits < data_bits:
                     warnings.warn('The data range $PnR doesn\'t match the data bits $PnB for channel {}, masking out {} bits'
                                   .format(channel, data_bits - range_bits),
-                                  util.CytoflowWarning)
+                                  util.CytoflowOpWarning)
                     mask = 1
                     for _ in range(1, range_bits):
                         mask = mask << 1 | 1
@@ -428,13 +428,13 @@ class ImportOp(HasStrictTraits):
             if f1 > 0.0 and f2 == 0.0:
                 warnings.warn('Invalid $PnE = {},{} for channel {}, changing it to {},1.0'
                               .format(f1, f2, channel, f1),
-                              util.CytoflowWarning)
+                              util.CytoflowOpWarning)
                 f2 = 1.0
                 
             if f1 > 0.0 and f2 > 0.0 and tube0_meta['$DATATYPE'] == 'I':
                 warnings.warn('Converting channel {} from logarithmic to linear'
                               .format(channel),
-                              util.CytoflowWarning)
+                              util.CytoflowOpWarning)
                 experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
 
 
@@ -449,6 +449,7 @@ class ImportOp(HasStrictTraits):
                 experiment.metadata[new_name]["fcs_name"] = channel
                 del experiment.metadata[channel]
 
+        experiment.history.append(self.clone_traits(transient = lambda _: True))
         return experiment
 
 

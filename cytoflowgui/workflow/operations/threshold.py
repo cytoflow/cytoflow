@@ -29,11 +29,11 @@ from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
 import cytoflow.utility as util
 
 from ..views import IWorkflowView, WorkflowView, HistogramPlotParams
-from ..serialization import camel_registry, traits_str, traits_repr, dedent
+from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-ThresholdOp.__repr__ = traits_repr
+ThresholdOp.__repr__ = cytoflow_class_repr
 
 @provides(IWorkflowView)
 class ThresholdSelectionView(WorkflowView, ThresholdSelection):

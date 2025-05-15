@@ -30,10 +30,10 @@ from traits.api import provides, Str, Instance, List, Dict, Property, observe
 from cytoflow import ParallelCoordinatesView
 import cytoflow.utility as util
 
-from ..serialization import camel_registry, traits_repr, traits_str
+from ..serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowFacetView, DataPlotParams, Channel
 
-ParallelCoordinatesView.__repr__ = traits_repr
+ParallelCoordinatesView.__repr__ = cytoflow_class_repr
 
 
 class ParallelCoordinatesPlotParams(DataPlotParams):

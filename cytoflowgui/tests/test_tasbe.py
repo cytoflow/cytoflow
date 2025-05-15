@@ -25,6 +25,10 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 import pandas as pd
+import cytoflow.utility as util
+
+# needed for testing lambdas
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import TasbeTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
@@ -176,7 +180,7 @@ class TestTASBE(TasbeTest):
         self.assertEqual(self.wi, new_wi)
                                      
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
             

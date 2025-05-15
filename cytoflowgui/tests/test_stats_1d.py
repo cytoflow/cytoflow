@@ -25,6 +25,10 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 import pandas as pd
+import cytoflow.utility as util
+
+# needed for testing lambdas
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
@@ -123,32 +127,17 @@ class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
         self.maxDiff = None
         
         self.assertEqual(self.wi, new_wi)
-                
-    def testSerializeWorkflowItemV1(self):
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-
-            save_yaml(self.wi, filename, lock_versions = {WorkflowItem: 1,
-                                                            pd.Series : 1})
-            new_wi = load_yaml(filename)
-        finally:
-            os.unlink(filename)
-
-        self.maxDiff = None
-
-        self.assertEqual(self.wi, new_wi)
-
 
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
             
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
            
-        exec(code) # smoke test
+        with self.assertWarns(util.CytoflowWarning):
+            exec(code) # smoke test
 
 
 if __name__ == "__main__":

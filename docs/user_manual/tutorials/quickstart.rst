@@ -209,14 +209,18 @@ the Views toolbar:
 
 Set the view parameters as follows:
 
-* Statistic = ('Count', 'Count')
-
-  Note: the new statistic is called ('Count', 'Count') because the
-  channel statistic operaton's *name* was "Count" and the *function*
-  you applied was also named "Count".
-
+* Statistic = "Count"
+* Feature = "Y2-A"
 * Variable = "Dox"
 * Hue Facet = "T"
+
+Note: the new statistic is called "Count" because that was the name of the
+operation that added it. A statistic is just a table -- it has one *row*
+for each group of data that it was computed from. A statistic can also
+have multiple *columns* -- taking a name from machine learning, we call
+these columns *features*. By default, the channel statistic makes a 
+statistic with one feature, and the feature's name is the same as the name
+of the channel.
 
 .. image:: images/01_22_barplot.png
 

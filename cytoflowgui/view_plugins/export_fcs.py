@@ -123,9 +123,9 @@ class ExportFCSHandler(ViewHandler):
 @provides(IViewPlugin)
 class ExportFCSPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.exportfcs'
-    view_id = 'edu.mit.synbio.cytoflow.view.exportfcs'
-    short_name = "Export FCS"
+    id = 'cytoflowgui.view.exportfcs'
+    view_id = 'cytoflow.view.exportfcs'
+    name = "Export FCS"
     
     def get_view(self):
         return ExportFCSWorkflowView()

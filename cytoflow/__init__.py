@@ -28,7 +28,7 @@ Written by Brian Teague, bpteague@gmail.com
 
 Copyright Massachusetts Institute of Technology 2015-2018
 
-Copyright Brian Teague 2018-2021
+Copyright Brian Teague 2018-2025
 """
 
 # check python version
@@ -36,18 +36,19 @@ import sys
 if sys.version_info < (3, 4):
     raise Exception("Cytoflow requires Python 3.4 or later")
 
-# suppress meaningless warnings from seaborn
+# suppress meaningless warnings from seaborn and sklearn
 import warnings
 warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
 warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
+warnings.filterwarnings('ignore', 'X has feature names, but NearestNeighbors was fitted without feature names')
 
 # and matplotlib 3.1.1 -- there's some weird interaction with seaborn here.
 import matplotlib.text
 import logging
 
         
-from .utility.logging import MplFilter
-matplotlib.text._log.addFilter(MplFilter())
+from cytoflow.utility.logging_ext import MplFilter
+matplotlib.text._log.addFilter(MplFilter())  # @UndefinedVariable
 
 # keep track of whether we're running in the GUI.
 # there is the occasional place where we differ in behavior
@@ -77,6 +78,8 @@ from .operations.gaussian import GaussianMixtureOp
 from .operations.kmeans import KMeansOp
 from .operations.flowpeaks import FlowPeaksOp
 from .operations.pca import PCAOp
+from .operations.tsne import tSNEOp
+from .operations.som import SOMOp
 
 # channels
 from .operations.channel_stat import ChannelStatisticOp
@@ -85,6 +88,7 @@ from .operations.xform_stat import TransformStatisticOp
 
 # misc
 from .operations.binning import BinningOp
+from .operations.flowclean import FlowCleanOp
 
 # views
 from .views.histogram import HistogramView
@@ -107,8 +111,7 @@ from .views.parallel_coords import ParallelCoordinatesView
 from .views.export_fcs import ExportFCS
 
 # util
-from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
-                                     geom_sem, geom_sem_range)
+from .utility.util_functions import (geom_mean, geom_sd, geom_sem)
 from .utility.algorithms import (ci, percentiles)
 from .utility.scale import set_default_scale, get_default_scale
 

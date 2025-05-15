@@ -28,7 +28,7 @@ A scale that doesn't transform data at all -- a "default" scale.
 
 import matplotlib.colors
 
-from traits.api import Instance, Str, provides, Constant, Tuple, Array
+from traits.api import Instance, Str, provides, Constant, List, Array
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
 
@@ -38,7 +38,7 @@ class LinearScale(ScaleMixin):
     A scale that doesn't transform the data at all.
     """
     
-    id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
+    id = Constant("cytoflow.utility.linear_scale")
     name = "linear"
     
     experiment = Instance("cytoflow.Experiment")
@@ -46,8 +46,8 @@ class LinearScale(ScaleMixin):
     # none of these are actually used
     channel = Str
     condition = Str
-    statistic = Tuple(Str, Str)
-    error_statistic = Tuple(Str, Str)
+    statistic = Str
+    features = List(Str)
     data = Array
 
     def __call__(self, data):
@@ -69,22 +69,9 @@ class LinearScale(ScaleMixin):
             vmin = self.experiment[self.condition].min()
             vmax = self.experiment[self.condition].max()
         elif self.statistic in self.experiment.statistics:
-            stat = self.experiment.statistics[self.statistic]
-            try:
-                vmin = min([min(x) for x in stat])
-                vmax = max([max(x) for x in stat])
-            except (TypeError, IndexError):
-                vmin = stat.min()
-                vmax = stat.max()
-                
-            if self.error_statistic in self.experiment.statistics:
-                err_stat = self.experiment.statistics[self.error_statistic]
-                try:
-                    vmin = min([min(x) for x in err_stat])
-                    vmax = max([max(x) for x in err_stat])
-                except (TypeError, IndexError):
-                    vmin = vmin - err_stat.min()
-                    vmax = vmax + err_stat.max()
+            stat = self.experiment.statistics[self.statistic][self.features]
+            vmin = stat.min().min()
+            vmax = stat.max().max()
         elif self.data.size > 0:
             vmin = self.data.min()
             vmax = self.data.max()        

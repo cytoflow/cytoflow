@@ -19,7 +19,7 @@
 
 """
 Long Table
------
+----------
 
 Make a long ("tidy") table out of a statistic.  The table can then be exported.
 
@@ -54,7 +54,7 @@ Make a long ("tidy") table out of a statistic.  The table can then be exported.
                                   by = ['Dox', 'Threshold'],
                                   function = len).apply(ex2) 
 
-    flow.LongTableView(statistic = ("ByDox", "len")).plot(ex3)    
+    flow.LongTableView(statistic = "ByDox").plot(ex3)    
 
 """
 
@@ -149,18 +149,16 @@ class LongTableHandler(ViewHandler):
         if dialog.open() != OK:
             return
   
-        data = pd.DataFrame(index = self.model.result.index)
-        data[self.model.result.name] = self.model.result
-         
-        self.model._export_data(data, self.model.result.name, dialog.path)
+        stat = self.context.statistics[self.model.statistic]
+        self.model._export_data(stat, dialog.path)
             
 
 @provides(IViewPlugin)
 class LongTablePlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.long_table'
-    view_id = 'edu.mit.synbio.cytoflow.view.long_table'
-    short_name = "Long Table View"
+    id = 'cytoflowgui.view.long_table'
+    view_id = 'cytoflow.view.long_table'
+    name = "Long Table View"
     
     def get_view(self):
         return LongTableWorkflowView()

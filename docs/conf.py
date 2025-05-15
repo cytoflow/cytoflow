@@ -344,7 +344,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-from typing import List, Tuple, Any, cast
+from typing import List, Tuple, cast
 from docutils import nodes
 from docutils.nodes import Element, Node
 from sphinx import addnodes
@@ -514,6 +514,9 @@ def convert_notebooks(app):
     images_dir.mkdir(exist_ok = True)
 
     for notebook_file in notebooks_basic:
+        if 'ipynb_checkpoints' in str(notebook_file):
+            continue
+        
         output_name = notebook_file.stem.lower()
         output_name = output_name.replace(' ', '_')
         
@@ -539,6 +542,9 @@ def convert_notebooks(app):
     images_dir.mkdir(exist_ok = True)
     
     for notebook_file in notebooks_advanced:
+        if 'ipynb_checkpoints' in str(notebook_file):
+            continue
+        
         output_name = notebook_file.stem.lower()
         output_name = output_name.replace(' ', '_')
         

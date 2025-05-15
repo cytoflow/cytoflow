@@ -30,10 +30,10 @@ from traits.api import provides, Bool, Instance, Enum
 from cytoflow import Kde2DView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowFacetView, Data2DPlotParams
 
-Kde2DView.__repr__ = traits_repr
+Kde2DView.__repr__ = cytoflow_class_repr
 
 class Kde2DPlotParams(Data2DPlotParams):
     

@@ -106,7 +106,7 @@ class BinningOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.binning')
+    id = Constant('cytoflow.operations.binning')
     friendly_id = Constant("Binning")
     
     name = Str
@@ -261,7 +261,7 @@ class BinningView(Op1DView, AnnotatingView, HistogramView):
     
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.views.binning')
+    id = Constant('cytoflow.views.binning')
     friendly_id = Constant('Binning Setup')                                 
     
     def plot(self, experiment, **kwargs):

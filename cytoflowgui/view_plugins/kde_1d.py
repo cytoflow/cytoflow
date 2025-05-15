@@ -162,9 +162,9 @@ class Kde1DHandler(ViewHandler, Controller):
 @provides(IViewPlugin)
 class Kde1DPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.kde1d'
-    view_id = 'edu.mit.synbio.cytoflow.view.kde1d'
-    short_name = "1D Kernel Density"
+    id = 'cytoflowgui.view.kde1d'
+    view_id = 'cytoflow.view.kde1d'
+    name = "1D Kernel Density"
     
     def get_view(self):
         return Kde1DWorkflowView()

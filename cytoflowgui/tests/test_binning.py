@@ -26,6 +26,11 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
+# needed for testing lambdas
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
+
+import cytoflow.utility as util
+
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.operations import BinningWorkflowOp, BinningWorkflowView
@@ -131,14 +136,16 @@ class TestBinning(ImportedDataTest):
         self.assertEqual(self.wi, new_wi)
             
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
             
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
-         
-        exec(code)
+
+        with self.assertWarns(util.CytoflowWarning):
+            exec(code)
+            
         nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         

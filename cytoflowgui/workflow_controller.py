@@ -114,9 +114,6 @@ class WorkflowItemHandler(Controller):
     statistics_names = Property(observe = "model.statistics")
     """The names of the statistics in this `WorkflowItem.result`"""
 
-    numeric_statistics_names = Property(observe = "model.statistics")
-    """The names of the numeric statistics in this `WorkflowItem.result`"""
-
     previous_statistics_names = Property(observe = "model.previous_wi.statistics")
     """The names of the statistics in the previous `WorkflowItem.result`"""
 
@@ -220,7 +217,7 @@ class WorkflowItemHandler(Controller):
     ##### PROPERTIES
     # MAGIC: gets value for property "deletable"
     def _get_deletable(self):
-        if self.model.operation.id == 'edu.mit.synbio.cytoflow.operations.import':
+        if self.model.operation.id == 'cytoflow.operations.import':
             return False
         else:
             return True
@@ -266,14 +263,6 @@ class WorkflowItemHandler(Controller):
     def _get_statistics_names(self):
         if self.model and self.model.statistics:
             return natsorted(list(self.model.statistics.keys()))
-        else:
-            return []
-        
-    # MAGIC: gets value for property "numeric_statistics_names"
-    def _get_numeric_statistics_names(self):
-        if self.model and self.model.statistics:
-            return sorted([x for x in list(self.model.statistics.keys())
-                                 if util.is_numeric(self.model.statistics[x])])
         else:
             return []
         

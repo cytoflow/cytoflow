@@ -52,6 +52,7 @@ import random, string
 
 import numpy as np
 from scipy import stats
+from .cytoflow_errors import CytoflowError
 
 def iqr(a):
     """
@@ -183,23 +184,13 @@ def geom_sd(a):
     
 def geom_sd_range(a):
     """
-    A convenience function to compute [geom_mean / geom_sd, geom_mean * geom_sd].
-    
-    Parameters
-    ----------
-    
-    a : array-like
-        A numpy.ndarray, or something that can be converted to an ndarray
-        
-    Returns
-    -------
-    A tuple, with ``(geom_mean / geom_sd, geom_mean * geom_sd)``
+    Used to compute [geom_mean / geom_sd, geom_mean * geom_sd].
+    However, now statistics can't have tuples.
     """
     
-    u = geom_mean(a)
-    sd = geom_sd(a)
-    
-    return (u / sd, u * sd)
+    raise CytoflowError("Statistics have changed, and can't contain tuples, "
+                        "so geom_sd_range is no longer useful. See the docs "
+                        "for details.")
 
 def geom_sem(a):
     """
@@ -242,23 +233,13 @@ def geom_sem(a):
     
 def geom_sem_range(a):
     """
-    A convenience function to compute [geom_mean / geom_sem, geom_mean * geom_sem].
-    
-    Parameters
-    ----------
-    
-    a : array-like
-        A numpy.ndarray, or something that can be converted to an ndarray
-        
-    Returns
-    -------
-    A tuple, with ``(geom_mean / geom_sem, geom_mean * geom_sem)``
+    Used to compute [geom_mean / geom_sem, geom_mean * geom_sem].
+    No longer useful because statistics can't contain tuples.
     """
     
-    u = geom_mean(a)
-    sem = geom_sem(a)
-    
-    return (u / sem, u * sem)
+    raise CytoflowError("Statistics have changed, and can't contain tuples, "
+                        "so geom_sem_range is no longer useful. See the docs "
+                        "for details.")
 
     
 def cartesian(arrays, out=None):

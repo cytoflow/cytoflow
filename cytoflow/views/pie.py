@@ -1,8 +1,8 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python3.11
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2022
+# (c) Brian Teague 2018-2025
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,21 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-cytoflow.utility.logging
-------------------------
+"""
+cytoflow.views.pie
+------------------
 
-Utilities to help with logging.
-
-`MplFilter` -- a `logging.Filter` that removes nuisance warnings
-'''
-
-import logging
-
-class MplFilter(logging.Filter):
-    """A `logging.Filter` that removes nuisance warnings"""
-    def filter(self, record):
-        if record.msg == "posx and posy should be finite values":
-            return 0
-        else:
-            return 1
+A statistics view that plots a set of pie plots. The "value" parameter determines
+which facet is used in the pie plots; the rest of the levels are used to facet
+the grid plot. The size of the pie circles can be fixed, or relative to the
+number of events in the faceted groups. Optionally, a second statistic can
+be passed with the same index levels, and its values (single numbers or tuples) 
+are used as centroid locations in a minimum spanning tree.
+"""

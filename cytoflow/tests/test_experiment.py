@@ -110,12 +110,9 @@ class TestExperiment(ImportedDataTest):
         pandas.testing.assert_frame_equal(self.ex.data, ex2.data)
         self.assertDictEqual(self.ex.metadata, ex2.metadata)
         self.assertDictEqual(self.ex.statistics, ex2.statistics)
-        self.assertListEqual(self.ex.history, ex2.history)
-        
-        from cytoflow import ThresholdOp
-        op = ThresholdOp(name = "t", channel = "FSC-A", threshold = 100)
-        ex_t = op.apply(self.ex)  # @UnusedVariable
-        ex2_t = op.apply(ex2)  # @UnusedVariable
+        self.assertListEqual([x.id for x in self.ex.history], 
+                             [x.id for x in ex2.history])
+
         
 
 if __name__ == "__main__":

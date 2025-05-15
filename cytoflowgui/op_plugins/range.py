@@ -155,11 +155,11 @@ class RangeViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class RangePlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.range'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.range'
-    view_id = 'edu.mit.synbio.cytoflow.views.range'
+    id = 'cytoflowgui.op_plugins.range'
+    operation_id = 'cytoflow.operations.range'
+    view_id = 'cytoflow.views.range'
 
-    short_name = "Range"
+    name = "Range"
     menu_group = "Gates"
     
     def get_operation(self):

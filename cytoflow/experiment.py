@@ -29,9 +29,9 @@ Defines `Experiment`, `cytoflow`'s main data structure.
 import pandas as pd
 from natsort import natsorted
 
-from pandas.api.types import CategoricalDtype, is_categorical_dtype
+from pandas.api.types import CategoricalDtype
 from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
-                       Property, Tuple, Int, cached_property)
+                       Property, cached_property)
 
 import cytoflow.utility as util
 
@@ -93,15 +93,14 @@ class Experiment(HasStrictTraits):
         The `IOperation` operations that have been applied to the raw 
         data to result in this `Experiment`.
         
-    statistics : Dict((Str, Str) : pandas.Series)
+    statistics : Dict(Str : pandas.DataFrame)
         The statistics and parameters computed by models that were fit to the 
-        data.  The key is an ``(Str, Str)`` tuple, where the first ``Str`` is 
-        the name of the operation that supplied the statistic, and the second 
-        ``Str`` is the name of the statistic. The value is a multi-indexed 
-        `pandas.Series`: each level of the index is a facet, and each 
+        data.  The key is an ``Str``, corresponding to the name of the 
+        operation that supplied the statistic. The value is a multi-indexed 
+        `pandas.DataFrame`: each level of the index is a facet, and each 
         combination of indices is a subset for which the statistic was computed.
-        The values of the series, of course, are the values of the computed 
-        parameters or statistics for each subset.
+        Columns of the `pandas.DataFrame` have names and values that depend on the
+        operation that added them -- they must have a ``float`` data type.
     
     channels : List(String)
         The channels that this experiment tracks (read-only).
@@ -151,13 +150,15 @@ class Experiment(HasStrictTraits):
     ...                           tubes = [tube1, tube2])
     >>> 
     >>> ex = import_op.apply()
+    
     >>> ex.data.shape
-    (20000, 17)
+        (20000, 17)
+        
     >>> ex.data.groupby(['Dox']).size()
-    Dox
-    1      10000
-    10     10000
-    dtype: int64
+        Dox
+        1      10000
+        10     10000
+        dtype: int64
 
     """
 
@@ -171,7 +172,7 @@ class Experiment(HasStrictTraits):
     metadata = Dict(Str, Any, copy = "deep")
     
     # statistics.  mutable, deep copy required
-    statistics = Dict(Tuple(Str, Str), pd.Series, copy = "deep")
+    statistics = Dict(Str, pd.DataFrame, copy = "deep")
     
     history = List(Any, copy = "shallow")
     
@@ -226,7 +227,7 @@ class Experiment(HasStrictTraits):
             
             
         .. note:: This is a wrapper around `pandas.DataFrame.groupby` and
-                  `pandas.core.groupby.GroupBy.get_group`.  That means
+                  `pandas.core.groupby.DataFrameGroupBy.get_group`.  That means
                   you can pass other things in `conditions` -- see 
                   the `pandas.DataFrame.groupby` documentation
                   for details.
@@ -247,7 +248,7 @@ class Experiment(HasStrictTraits):
                 if v not in list(self.conditions[c]):
                     raise util.CytoflowError("{} is not a value of condition {}".format(v, c))
 
-        g = self.data.groupby(conditions, observed = True)
+        g = self.data.groupby(conditions, observed = False)
 
         ret = self.clone(deep = False)
         ret.data = g.get_group(values)

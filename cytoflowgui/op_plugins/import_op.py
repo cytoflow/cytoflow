@@ -192,11 +192,11 @@ class ImportHandler(OpHandler):
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.import'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.import'
+    id = 'cytoflowgui.op_plugins.import'
+    operation_id = 'cytoflow.operations.import'
     view_id = None
 
-    short_name = "Import data"
+    name = "Import data"
     menu_group = "TOP"
     
     def get_operation(self):

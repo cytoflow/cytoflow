@@ -200,7 +200,7 @@ class BeadCalibrationOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.beads_calibrate')
+    id = Constant('cytoflow.operations.beads_calibrate')
     friendly_id = Constant("Bead Calibration")
     
     name = Constant("Beads")
@@ -1097,14 +1097,14 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     Attributes
     ----------
     op : Instance(`BeadCalibrationOp`)
-        The operation instance whose parameters we're plotting.  Set 
+        The operation instance whose diagnostic we're plotting.  Set 
         automatically if you created the instance using 
         `BeadCalibrationOp.default_view`.
 
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.beadcalibrationdiagnosticview")
+    id = Constant("cytoflow.view.beadcalibrationdiagnosticview")
     friendly_id = Constant("Bead Calibration Diagnostic")
         
     op = Instance(BeadCalibrationOp)

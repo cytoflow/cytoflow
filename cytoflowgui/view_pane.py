@@ -50,7 +50,7 @@ class ViewDockPane(TraitsDockPane):
 
     #### TaskPane interface ###############################################
 
-    id = 'edu.mit.synbio.cytoflowgui.view_traits_pane'
+    id = 'cytoflowgui.view_traits_pane'
     name = 'View Properties'
 
     # the Task that serves as the controller
@@ -88,7 +88,7 @@ class ViewDockPane(TraitsDockPane):
         self.toolbar.append(self._default_action)
         
         for plugin in self.plugins:
-            task_action = TaskAction(name = plugin.short_name,
+            task_action = TaskAction(name = plugin.name,
                                      on_perform = lambda view_id=plugin.view_id: self.handler.activate_view(view_id),
                                      image = plugin.get_icon(),
                                      style = 'toggle')
@@ -150,7 +150,7 @@ class ViewDockPane(TraitsDockPane):
             
 class PlotParamsPane(TraitsDockPane):
     
-    id = 'edu.mit.synbio.cytoflowgui.params_pane'
+    id = 'cytoflowgui.params_pane'
     name = "Plot Parameters"
     
     # controller

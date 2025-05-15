@@ -43,6 +43,8 @@ from .gaussian import GaussianMixtureOp
 from .kmeans import KMeansOp
 from .flowpeaks import FlowPeaksOp
 from .pca import PCAOp
+from .tsne import tSNEOp
+from .som import SOMOp
 
 # statistics
 from .channel_stat import ChannelStatisticOp
@@ -57,3 +59,4 @@ from .color_translation import ColorTranslationOp
 
 # etc 
 from .binning import BinningOp
+from cytoflow.operations.flowclean import FlowCleanOp

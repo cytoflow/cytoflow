@@ -157,9 +157,9 @@ class DensityHandler(ViewHandler):
 
 @provides(IViewPlugin)
 class DensityPlugin(Plugin, PluginHelpMixin):
-    id = 'edu.mit.synbio.cytoflowgui.view.density'
-    view_id = 'edu.mit.synbio.cytoflow.view.density'
-    short_name = "Density Plot"
+    id = 'cytoflowgui.view.density'
+    view_id = 'cytoflow.view.density'
+    name = "Density Plot"
 
     def get_view(self):
         return DensityWorkflowView()

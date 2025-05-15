@@ -28,7 +28,12 @@ operation's **Group By**) must be set as **Variable** or as a facet.
 
 .. object:: Statistic
 
-    Which statistic to plot.
+    Which statistic to plot. This is usually the name of the operation that 
+    added the statistic. 
+    
+.. object:: Feature
+
+    Which column in the statistic should be plotted?
     
 .. object:: Variable
 
@@ -83,7 +88,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
                                   by = ['Dox', 'Threshold'],
                                   function = len).apply(ex2) 
     
-    flow.BarChartView(statistic = ("ByDox", "len"),
+    flow.BarChartView(statistic = "ByDox",
+                      feature = "Y2-A",
                       variable = "Dox",
                       huefacet = "Threshold").plot(ex3)
 """
@@ -118,14 +124,18 @@ class BarChartParamsHandler(Controller):
         
 class BarChartHandler(ViewHandler):
   
+    features = Property(depends_on = "context.statistics, model.statistic")
     indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
     levels = Property(depends_on = "context.statistics, model.statistic")
 
     view_traits_view = \
         View(VGroup(
              VGroup(Item('statistic',
-                         editor=EnumEditor(name='context_handler.numeric_statistics_names'),
+                         editor=EnumEditor(name='context_handler.statistics_names'),
                          label = "Statistic"),
+                    Item('feature',
+                         editor = EnumEditor(name = 'handler.features'),
+                         label = "Feature"),
                     Item('variable',
                          editor=EnumEditor(name='handler.indices'),
                          label = "Variable"),
@@ -142,10 +152,14 @@ class BarChartHandler(ViewHandler):
                          editor=ExtendableEnumEditor(name='handler.indices',
                                                      extra_items = {"None" : ""}),
                          label="Hue\nFacet"),
-                    Item('error_statistic',
-                         editor=ExtendableEnumEditor(name='context_handler.statistics_names',
-                                                     extra_items = {"None" : ("", "")}),
-                         label = "Error\nStatistic"),
+                    Item('error_low',
+                         editor=ExtendableEnumEditor(name='handler.features',
+                                                     extra_items = {"None" : ""}),
+                         label = "Error Bar Low"),
+                    Item('error_high',
+                         editor=ExtendableEnumEditor(name='handler.features',
+                                                     extra_items = {"None" : ""}),
+                         label = "Error Bar High"),
                       label = "Bar Chart",
                       show_border = False),
              VGroup(Item('subset_list',
@@ -175,6 +189,16 @@ class BarChartHandler(ViewHandler):
                   style = 'custom',
                   show_label = False))
         
+    # MAGIC: gets the value for the property "features"
+    def _get_features(self):
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+         
+        stat = self.context.statistics[self.model.statistic]
+        return stat.columns.to_list()
+        
+        
     # MAGIC: gets the value for the property indices
     def _get_indices(self):
         if not (self.context and self.context.statistics 
@@ -182,21 +206,20 @@ class BarChartHandler(ViewHandler):
             return []
          
         stat = self.context.statistics[self.model.statistic]
-        data = pd.DataFrame(index = stat.index)
          
         if self.model.subset:
-            data = data.query(self.model.subset)
+            stat = stat.query(self.model.subset)
              
-        if len(data) == 0:
+        if len(stat) == 0:
             return []       
          
-        names = list(data.index.names)
+        names = list(stat.index.names)
         for name in names:
-            unique_values = data.index.get_level_values(name).unique()
+            unique_values = stat.index.get_level_values(name).unique()
             if len(unique_values) == 1:
-                data.index = data.index.droplevel(name)
+                stat.index = stat.index.droplevel(name)
          
-        return list(data.index.names)
+        return list(stat.index.names)
      
     # MAGIC: gets the value for the property 'levels'
     # returns a Dict(Str, pd.Series)
@@ -228,9 +251,9 @@ class BarChartHandler(ViewHandler):
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.barchart'
-    view_id = 'edu.mit.synbio.cytoflow.view.barchart'
-    short_name = "Bar Chart"
+    id = 'cytoflowgui.view.barchart'
+    view_id = 'cytoflow.view.barchart'
+    name = "Bar Chart"
     
     def get_view(self):
         return BarChartWorkflowView()

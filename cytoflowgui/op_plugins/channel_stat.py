@@ -31,7 +31,7 @@ in **By**, then applies **Function** to the **Channel** in each group.
 
 .. object:: Name
 
-    The operation name.  Becomes the first part of the new statistic's name.
+    The operation name.  Becomes the new statistic's name.
     
 .. object:: Channel
 
@@ -71,9 +71,9 @@ class ChannelStatisticHandler(OpHandler):
              Item('channel',
                   editor= EnumEditor(name='context_handler.previous_channels'),
                   label = "Channel"),
-             Item('statistic_name',
-                         editor = EnumEditor(values = sorted(summary_functions.keys())),
-                         label = "Function"),
+             Item('function_name',
+                  editor = EnumEditor(values = sorted(summary_functions.keys())),
+                                      label = "Function"),
              Item('by',
                   editor = CheckListEditor(cols = 2,
                                            name = 'context_handler.previous_conditions_names'),
@@ -93,11 +93,11 @@ class ChannelStatisticHandler(OpHandler):
 @provides(IOperationPlugin)
 class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.channel_statistic'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.channel_statistic'
+    id = 'cytoflowgui.op_plugins.channel_statistic'
+    operation_id = 'cytoflow.operations.channel_statistic'
     view_id = None
 
-    short_name = "Channel Statistic"
+    name = "Channel Statistic"
     menu_group = "Gates"
     
     def get_operation(self):

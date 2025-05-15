@@ -31,6 +31,8 @@ estimated by the `DensityGateOp`.
 
 """
 
+from warnings import warn
+
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Array)
 
@@ -170,7 +172,7 @@ class DensityGateOp(HasStrictTraits):
         
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.density')
+    id = Constant('cytoflow.operations.density')
     friendly_id = Constant("Density Gate")
     
     name = Str
@@ -260,11 +262,11 @@ class DensityGateOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = True)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = True)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -289,9 +291,8 @@ class DensityGateOp(HasStrictTraits):
         histogram = {}
         for group, group_data in groupby:
             if len(group_data) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn(util.CytoflowOpWarning("Group {} had no data".format(group)))
+                continue
 
             h, _, _ = np.histogram2d(group_data[self.xchannel], 
                                      group_data[self.ychannel], 
@@ -392,11 +393,11 @@ class DensityGateOp(HasStrictTraits):
                                            .format(b, experiment.conditions))
         
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = True)
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = True)
             
         event_assignments = pd.Series([False] * len(experiment), dtype = "bool")
         
@@ -453,7 +454,7 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
     
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.densitygateview')
+    id = Constant('cytoflow.view.densitygateview')
     friendly_id = Constant("Density Gate Diagnostic Plot")
 
     huefacet = Constant(None)
@@ -498,12 +499,12 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
                          **kwargs):
         # plot a countour around the bins that got kept
         
-
   
         keep_x = annotation[0]
         keep_y = annotation[1]
         h = annotation[2]
         contour_props = annotation[3]
+        contour_props.pop('color', None)
         xbins = self.op._xbins[0:-1]
         ybins = self.op._ybins[0:-1]
         last_level = h[keep_x[-1], keep_y[-1]]

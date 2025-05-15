@@ -45,7 +45,9 @@ hold the value ``None``.
 from warnings import warn
 import inspect
 
-from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, TraitType)
+from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, 
+                        BaseStr, TraitType)
+from traits.trait_errors import TraitError
 from . import scale
 from . import CytoflowError, CytoflowWarning
 
@@ -146,6 +148,20 @@ class CFloatOrNone(BaseCFloat):
             return None
         else:
             return super().validate(obj, name, value)
+        
+    
+class UnitFloat(BaseFloat):
+    """
+    Defines a trait whose value must be a float between 0 and 1 (inclusive)
+    """
+    
+    def validate(self, obj, name, value):
+        value = super().validate(obj, name, value)
+        if value < 0.0:
+            return 0.0
+        if value > 1.0:
+            return 1.0
+        return value
 
 class IntOrNone(BaseInt):
     """
@@ -279,5 +295,19 @@ class Deprecated(TraitType):
             if calframe[1][3] != "copy_traits":
                 warn(self.err_string.format(name, self.new), CytoflowWarning)
         setattr(obj, self.new, value)
+        
+class ChangedStr(BaseStr):
+    """
+    When an invalid type is set, return a custom string.
+    """
+    
+    def __init__(self, **metadata):
+        metadata.setdefault('err_string', "This trait now takes a Str.")
+        super().__init__(**metadata)
+    
+    def error(self, _, name, value):
+        err = TraitError(object, name, self.full_info(object, name, value), value)
+        err.args = (err.args[0] + " " + self.err_string,)
+        raise err
         
     

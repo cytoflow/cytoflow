@@ -31,7 +31,7 @@ Use k-means clustering to cluster events in any number of dimensions.
 `KMeans2DView` -- a diagnostic view of the clustering (2D, using a scatterplot)
 """
 
-
+from warnings import warn
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides)
 
@@ -82,7 +82,7 @@ class KMeansOp(HasStrictTraits):
            scale is set to "log", this event will be set to ``{name}_None``.
 
     num_clusters : Int (default = 2)
-        How many components to fit to the data?  Must be a positive integer.
+        How many components to fit to the data?  Must be greater or equal to 2.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -90,7 +90,18 @@ class KMeansOp(HasStrictTraits):
         ``Time`` and ``Dox``, setting `by` to ``["Time", "Dox"]`` will 
         fit the model separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
-  
+        
+    Statistics
+    ----------
+    
+    Adds a statistic whose name is the name of the operation, whose columns are 
+    the channels used for clustering, and whose values are the centroids for 
+    each cluster in that channel. Useful for hierarchical clustering, minimum 
+    spanning tree visualizations, etc. The index has levels from `by`, plus a 
+    new level called ``Cluster``.
+    
+    The new statistic also has a feature named ``Proportion``, which has the 
+    proportion of events in each cluster.
     
     Examples
     --------
@@ -149,7 +160,7 @@ class KMeansOp(HasStrictTraits):
         >>> km_op.default_view().plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.kmeans')
+    id = Constant('cytoflow.operations.kmeans')
     friendly_id = Constant("KMeans Clustering")
     
     name = Str
@@ -225,11 +236,11 @@ class KMeansOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by, observed = True)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True, observed = True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -245,9 +256,10 @@ class KMeansOp(HasStrictTraits):
         kmeans = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
+            
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -262,6 +274,8 @@ class KMeansOp(HasStrictTraits):
                                                 random_state = 0)
             
             k.fit(x)
+            
+        # TODO - add optional consensus clustering
             
         # do this so the UI can pick up that the estimate changed
         self._kmeans = kmeans                       
@@ -331,29 +345,38 @@ class KMeansOp(HasStrictTraits):
                                            "Aggregation metadata {} not found, "
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
+                
+        if "Cluster" in self.by:
+            raise util.CytoflowOpError('by',
+                                       "'Cluster' is going to be added as an "
+                                       "index level to the new statistic, so you "
+                                       "can't use it to aggregate events.")
         
                  
         if self.by:
-            groupby = experiment.data.groupby(self.by, observed = True)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True, observed = True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
         event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
          
         # make the statistics       
         clusters = [x + 1 for x in range(self.num_clusters)]
           
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters] + [self.channels], 
-                                         names = list(self.by) + ["Cluster"] + ["Channel"])
-        centers_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
+                                         names = list(self.by) + ["Cluster"])
+
+        new_stat = pd.DataFrame(index = idx,
+                                columns = list(self.channels) + ["Proportion"], 
+                                dtype = 'float').sort_index()
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
             
             if group not in self._kmeans:
                 raise util.CytoflowOpError('by',
@@ -390,20 +413,19 @@ class KMeansOp(HasStrictTraits):
             
             for c in range(self.num_clusters):
                 if len(self.by) == 0:
-                    g = [c + 1]
-                elif hasattr(group, '__iter__') and not isinstance(group, (str, bytes)):
-                    g = tuple(list(group) + [c + 1])
+                    g = tuple([c + 1])
                 else:
-                    g = tuple([group] + [c + 1])
-                
+                    g = group + tuple([c + 1])
+                                    
                 for cidx1, channel1 in enumerate(self.channels):
-                    g2 = tuple(list(g) + [channel1])
-                    centers_stat.loc[g2] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
+                    new_stat.loc[g, channel1] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
+                
+                new_stat.loc[g, "Proportion"] = sum(predicted == c) / len(predicted)
          
         new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
-        new_experiment.statistics[(self.name, "centers")] = pd.to_numeric(centers_stat)
+        new_experiment.statistics[self.name] = new_stat
  
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
@@ -470,7 +492,7 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
         The op whose parameters we're viewing.
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.kmeans1dview')
+    id = Constant('cytoflow.views.kmeans1dview')
     friendly_id = Constant("1D KMeans Diagnostic Plot")
     
     channel = Str
@@ -536,7 +558,7 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
         The op whose parameters we're viewing.        
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.kmeans2dview')
+    id = Constant('cytoflow.view.kmeans2dview')
     friendly_id = Constant("2D Kmeans Diagnostic Plot")
     
     xchannel = Str

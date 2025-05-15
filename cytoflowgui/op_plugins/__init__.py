@@ -41,7 +41,9 @@ from .quad import QuadPlugin
 
 # statistics and transformations
 from .channel_stat import ChannelStatisticPlugin
+from .multi_channel_stat import MultiChannelStatisticPlugin
 from .xform_stat import TransformStatisticPlugin
+from .merge_stat import MergeStatisticsPlugin
 from .ratio import RatioPlugin
 
 # # data-driven
@@ -52,6 +54,8 @@ from .density import DensityGatePlugin
 from .flowpeaks import FlowPeaksPlugin
 from .kmeans import KMeansPlugin
 from .pca import PCAPlugin
+from .flowclean import FlowCleanPlugin
+from .tsne import tSNEPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin

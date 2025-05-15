@@ -45,26 +45,29 @@ operation (the one whose button is a big sigma.)
 
 Note that I've set a name for the statistic, the channel I want to summarize,
 and the function I want to apply.  Probably the most important -- and most
-confusing! -- parameter is **By**. This specifies how I want to ``Cytoflow``
+confusing! -- parameter is **Group By**. This specifies how I want to ``Cytoflow``
 to group the data before applying **Function** to channel -- in this case,
 I've set it to *Drug*.  Here's the order that things happen in:
 
-# Cytoflow sees how many different values of the *Drug* parameter are in the
-  data set.
+#. Cytoflow sees how many different values of the *Drug* parameter are in the
+   data set.
   
-# It separates the data into groups -- subsets -- by those different values of
-  *Drug*. If each tube has a different *Drug* value, then each of those subsets
-  is the events from a single tube. However, *if I had multiple tubes with the*
-  *same **Drug** value, those tubes would be combined.*
+#. It separates the data into groups -- subsets -- by those different values of
+   *Drug*. If each tube has a different *Drug* value, then each of those subsets
+   is the events from a single tube. However, *if I had multiple tubes with the*
+   *same **Drug** value, those tubes would be combined.*
   
-# For each subset of the data -- each unique value of *Drug* -- ``Cytoflow``
-  applies the function I asked for (in this case, *Geom.Mean* -- the geometric
-  mean -- to the channel I said -- in this case, *FITC_A*.
+#. For each subset of the data -- each unique value of *Drug* -- ``Cytoflow``
+   applies the function I asked for (in this case, *Geom.Mean* -- the geometric
+   mean -- to the channel I said -- in this case, *FITC_A*.
   
 This results in a table of those summary numbers for each subset.  You can view
 this table directly (with the **Table View**, natch) -- here's what we see.
 
 .. image:: images/stats4.png
+
+The **Feature** property is which column of the statistic you'd like to view or
+plot -- it is often the same as the channel name, but not always.
 
 If you would like to export this data, you can of course do so with the **Export**
 button. However, ``Cytoflow`` can plot it directly as well, with the 

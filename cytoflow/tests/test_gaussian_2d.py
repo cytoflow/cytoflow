@@ -104,12 +104,10 @@ class TestGaussian2D(ImportedDataSmallTest):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        stat = ex2.statistics[("Gauss", "mean")]
+        stat = ex2.statistics["Gauss"]
         
         self.assertIn("Component", stat.index.names)
-        self.assertIn("Dox", stat.index.names)    
-        self.assertIn("Channel", stat.index.names)
-   
+        self.assertIn("Dox", stat.index.names)       
     
     def testPlot(self):
         self.gate.estimate(self.ex)
@@ -125,6 +123,18 @@ class TestGaussian2D(ImportedDataSmallTest):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         self.gate.default_view().plot(self.ex, plot_name = 1.0)        
+        
+    def testPlotByIter(self):
+        self.gate.by = ["Dox"]
+        self.gate.estimate(self.ex)
+        dv = self.gate.default_view()
+        for v in dv.enum_plots(self.ex):
+            self.gate.default_view().plot(self.ex, plot_name = v)
+        
+    def testPlotBySubset(self):
+        self.gate.by = ["Dox"]
+        self.gate.estimate(self.ex)
+        self.gate.default_view(subset = "Dox == 1.0").plot(self.ex, plot_name = 1.0)
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestGaussian2D.testStatistics']

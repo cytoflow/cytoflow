@@ -160,11 +160,11 @@ class PolygonViewHandler(ViewHandler):
 @provides(IOperationPlugin)
 class PolygonPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.polygon'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.polygon'
-    view_id = 'edu.mit.synbio.cytoflow.views.polygon'
+    id = 'cytoflowgui.op_plugins.polygon'
+    operation_id = 'cytoflow.operations.polygon'
+    view_id = 'cytoflow.views.polygon'
 
-    short_name = "Polygon Gate"
+    name = "Polygon Gate"
     menu_group = "Gates"
     
     def get_operation(self):

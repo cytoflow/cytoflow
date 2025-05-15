@@ -28,7 +28,7 @@ amount of variance.  `pca` has one class:
 `PCAOp` -- the `IOperation` that applies PCA to an `Experiment`.
 """
 
-
+from warnings import warn
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, Bool, provides)
 
@@ -82,6 +82,16 @@ class PCAOp(HasStrictTraits):
     whiten : Bool (default = False)
         Scale each component to unit variance?  May be useful if you will
         be using unsupervized clustering (such as K-means).
+        
+    Statistics
+    ----------
+    
+    .. important::
+       If `num_components` is greater than 1, **Component** is added
+       as another level to the statistic index.
+       
+    - **Explained Variance** : the proportion of variance explained by each
+        component. 
 
     Examples
     --------
@@ -158,7 +168,7 @@ class PCAOp(HasStrictTraits):
         ...                      subset = "Dox == 10.0").plot(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.pca')
+    id = Constant('cytoflow.operations.pca')
     friendly_id = Constant("Principal Component Analysis")
     
     name = Str
@@ -208,6 +218,10 @@ class PCAOp(HasStrictTraits):
             raise util.CytoflowOpError('num_components',
                                        "Number of components must be less than "
                                        "or equal to number of channels.")
+            
+        if self.num_components < 2:
+            raise util.CytoflowOpError('num_components',
+                                       "Number of components must be greater than or equal to 2.")
                 
         for c in self.scale:
             if c not in self.channels:
@@ -237,11 +251,11 @@ class PCAOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -255,9 +269,9 @@ class PCAOp(HasStrictTraits):
         pca = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -332,11 +346,11 @@ class PCAOp(HasStrictTraits):
                                            .format(b, experiment.conditions))
                                  
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # need deep = True because of the data.dropna below
         new_experiment = experiment.clone(deep = True)       
@@ -350,12 +364,22 @@ class PCAOp(HasStrictTraits):
                                            
             new_experiment.add_channel(cname, pd.Series(index = experiment.data.index))
             new_channels.append(cname)            
+            
+        components = [x + 1 for x in range(self.num_components)]
+
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components],
+                                         names = list(self.by) + ["Component"])
+                                                     
+        stat = pd.DataFrame(index = idx,
+                            columns = ["Explained Variance"], 
+                            dtype = 'float').sort_index()
                    
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data".format(group), 
+                     util.CytoflowOpWarning)
+                continue
+            
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -376,9 +400,18 @@ class PCAOp(HasStrictTraits):
             
             for ci, c in enumerate(new_channels):
                 new_experiment.data.loc[group_idx, c] = x_tf[:, ci]
+            
+            for c in range(self.num_components):
+                if group == True:
+                    # only one group -- ie, no 'by'
+                    stat.at[(c+1,), "Explained Variance"] = \
+                        pca.explained_variance_ratio_[c]
+                else:
+                    stat.at[group + (c+1,), "Explained Variance"] = \
+                        pca.explained_variance_ratio_[c]
 
         new_experiment.data.dropna(inplace = True)
         new_experiment.data.reset_index(drop = True, inplace = True)
-
+        new_experiment.statistics[self.name] = stat
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment

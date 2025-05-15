@@ -147,7 +147,7 @@ class Range2DOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.range2d')
+    id = Constant('cytoflow.operations.range2d')
     friendly_id = Constant("2D Range")
     
     name = Str
@@ -391,7 +391,7 @@ class ScatterplotRangeSelection2DView(_RangeSelection2D, ScatterplotView):
     >>> rv.plot(ex2) 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.range2d')
+    id = Constant('cytoflow.views.range2d')
     friendly_id = Constant("2D Range Selection")
     
 util.expand_class_attributes(ScatterplotRangeSelection2DView)
@@ -421,7 +421,7 @@ class DensityRangeSelection2DView(_RangeSelection2D, DensityView):
     >>> rv.plot(ex2) 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.views.range2d_density')
+    id = Constant('cytoflow.views.range2d_density')
     friendly_id = Constant("2D Range Selection (Density plot)")
     
 util.expand_class_attributes(DensityRangeSelection2DView)

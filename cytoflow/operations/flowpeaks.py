@@ -122,6 +122,18 @@ class FlowPeaksOp(HasStrictTraits):
         
         .. note::
             I have disabled this code until I can try to make it faster.
+            
+    Statistics
+    ----------
+    Calling `apply` adds a statistic with the following columns to the returned `Experiment`.
+    
+    .. important::
+       **Component** is added as another level to the statistic index.
+    
+    - ``{{Channel}} Mean`` : The mean of the meta-cluster's centroid in each channel 
+        for each component.
+        
+    - ``Proportion`` : The proportion of events in this component's cluster.
         
     Notes
     -----
@@ -226,7 +238,7 @@ class FlowPeaksOp(HasStrictTraits):
 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
+    id = Constant('cytoflow.operations.flowpeaks')
     friendly_id = Constant("FlowPeaks Clustering")
     
     name = Str
@@ -288,7 +300,7 @@ class FlowPeaksOp(HasStrictTraits):
             if c not in self.channels:
                 raise util.CytoflowOpError('scale',
                                            "Scale set for channel {0}, but it isn't "
-                                           "in the experiment"
+                                           "in 'channels'"
                                            .format(c))
        
         for b in self.by:
@@ -312,11 +324,11 @@ class FlowPeaksOp(HasStrictTraits):
                                            .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -331,8 +343,10 @@ class FlowPeaksOp(HasStrictTraits):
                                     
         for data_group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data".format(data_group))
+                warn("Group {} had no data".format(data_group),
+                     util.CytoflowOpWarning)
+                continue
+            
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -389,6 +403,9 @@ class FlowPeaksOp(HasStrictTraits):
         ### use optimization on the finite gmm to find the local peak for 
         ### each kmeans cluster
         for data_group, data_subset in groupby:
+            if len(data_subset) == 0:
+                continue
+            
             kmeans = self._kmeans[data_group]
             num_clusters = kmeans.n_clusters
             means = self._means[data_group]
@@ -478,6 +495,9 @@ class FlowPeaksOp(HasStrictTraits):
             
         cluster_peak = {}
         for data_group, data_subset in groupby:
+            if len(data_subset) == 0:
+                continue
+            
             kmeans = self._kmeans[data_group]
             num_clusters = kmeans.n_clusters
             means = self._means[data_group]
@@ -487,7 +507,6 @@ class FlowPeaksOp(HasStrictTraits):
 
             groups = [[x] for x in range(len(peaks))]
             peak_groups = [x for x in range(len(peaks))]  # peak idx --> group idx
-            
                             
             def max_tol(x, y):
                 f = lambda a: density(a[np.newaxis, :])
@@ -561,7 +580,6 @@ class FlowPeaksOp(HasStrictTraits):
                                 vg = peaks[pg]
                                 for ph in h:
                                     vh = peaks[ph]
-#                                     print("vg {} vh {}".format(vg, vh))
                                     dist_gh = min(dist_gh, 
                                                   np.linalg.norm(vg - vh))
                                      
@@ -664,11 +682,11 @@ class FlowPeaksOp(HasStrictTraits):
                                            .format(b, experiment.conditions))
                  
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by, observed = False)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
         event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
          
@@ -678,12 +696,22 @@ class FlowPeaksOp(HasStrictTraits):
 #         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters] + [self.channels], 
 #                                          names = list(self.by) + ["Cluster"] + ["Channel"])
 #         centers_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+
+        # make the statistics   
+        max_group_idx = max([max(cg) for cg in self._cluster_group.values()])
+        clusters = [x + 1 for x in range(max_group_idx)]
+          
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
+                                         names = list(self.by) + ["Cluster"])
+
+        new_stat = pd.DataFrame(index = idx,
+                                columns = list(self.channels) + ["Proportion"], 
+                                dtype = 'float').sort_index()
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError('by',
-                                           "Group {} had no data"
-                                           .format(group))
+                warn(util.CytoflowOpWarning("Group {} had no data".format(group)))
+                continue
                 
             if group not in self._kmeans:
                 raise util.CytoflowOpError('by',
@@ -712,6 +740,7 @@ class FlowPeaksOp(HasStrictTraits):
             predicted_km[~x_na] = kmeans.predict(x[~x_na])
             
             groups = np.asarray(self._cluster_group[group])
+            num_groups = max(self._cluster_group[group]) + 1
             predicted_group = np.full(len(x), -1, "int")
             predicted_group[~x_na] = groups[ predicted_km[~x_na] ]
                  
@@ -781,18 +810,29 @@ class FlowPeaksOp(HasStrictTraits):
 #                             
                     
             predicted_str = pd.Series(["(none)"] * len(predicted_group))
-            for c in range(len(self._cluster_group[group])):
+            for c in range(num_groups):
                 predicted_str[predicted_group == c] = "{0}_{1}".format(self.name, c + 1)
             predicted_str[predicted_group == -1] = "{0}_None".format(self.name)
             predicted_str.index = group_idx
       
             event_assignments.iloc[group_idx] = predicted_str
+            
+            for c in range(num_groups):
+                if len(self.by) == 0:
+                    g = tuple([c + 1])
+                else:
+                    g = group + tuple([c + 1])
+                                
+                for channel_idx, channel in enumerate(self.channels):
+                    new_stat.loc[g, channel] = self._scale[channel].inverse(self._peaks[group][c][channel_idx])
+                
+                new_stat.loc[g, "Proportion"] = sum(predicted_group == c) / len(predicted_group)
 
         new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
-#         new_experiment.statistics[(self.name, "centers")] = pd.to_numeric(centers_stat)
- 
+        new_experiment.statistics[self.name] = new_stat
+
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
@@ -880,7 +920,7 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
 
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks1dview')
+    id = Constant('cytoflow.view.flowpeaks1dview')
     friendly_id = Constant("1D FlowPeaks Diagnostic Plot")
     
     channel = Str
@@ -942,7 +982,7 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
 
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2dview')
+    id = Constant('cytoflow.view.flowpeaks2dview')
     friendly_id = Constant("FlowPeaks 2D Diagnostic Plot")
     
     xchannel = Str
@@ -1024,7 +1064,7 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
             y = self.op._scale[self.xchannel].inverse(peak[1])
             plt.plot(x, y, 'o', color = "magenta")
                 
-                
+@provides(IView)          
 class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
     """
     A two-dimensional diagnostic view for `FlowPeaksOp`.  Plots the
@@ -1036,7 +1076,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2ddensityview')
+    id = Constant('cytoflow.view.flowpeaks2ddensityview')
     friendly_id = Constant("FlowPeaks 2D Diagnostic Plot (Density)")
     
     xchannel = Str
@@ -1185,8 +1225,8 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
             plt.plot([x, peak_x], [y, peak_y])
     
         for peak in peaks:
-            x = self.op._scale[self.ychannel].inverse(peak[0])
-            y = self.op._scale[self.xchannel].inverse(peak[1])
+            x = self.op._scale[self.xchannel].inverse(peak[0])
+            y = self.op._scale[self.ychannel].inverse(peak[1])
             plt.plot(x, y, 'o', color = "magenta")   
 
 util.expand_class_attributes(FlowPeaks1DView)

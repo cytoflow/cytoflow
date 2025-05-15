@@ -13,7 +13,8 @@ a = Analysis(['../cytoflowgui/run.py'],
                     ('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs', '.'),
                     ('icon.png', '.'),
                     ('cytoflow.desktop', '.'),
-                    ('set_launcher_icon', '.')],
+                    ('set_launcher_icon', '.')] 
+                      + copy_metadata('cytoflow', recursive=True),
              hookspath=['package/hooks'],
              runtime_hooks=['package/hooks/rthook_qtapi.py',],
              excludes=[

@@ -141,7 +141,7 @@ class ColorTranslationOp(HasStrictTraits):
     """
     
     # traits
-    id = Constant('edu.mit.synbio.cytoflow.operations.color_translation')
+    id = Constant('cytoflow.operations.color_translation')
     friendly_id = Constant("Color translation")
     
     name = Constant("Color Translation")
@@ -231,8 +231,8 @@ class ColorTranslationOp(HasStrictTraits):
                                     channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata']).apply()
                 
-                # apply previous operations
-                for op in experiment.history:
+                # apply previous operations (except the first, which is import)
+                for op in experiment.history[1:]:
                     if hasattr(op, 'by'):
                         for by in op.by:
                             if 'experiment' in experiment.metadata[by]:
@@ -412,7 +412,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.colortranslationdiagnostic")
+    id = Constant("cytoflow.view.colortranslationdiagnostic")
     friendly_id = Constant("Color Translation Diagnostic")
     
     subset = Str

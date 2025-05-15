@@ -25,15 +25,18 @@ Plot two statistics on a scatter plot.  A point (X,Y) is drawn for every
 pair of elements with the same value of **Variable**; the X value is from 
 ** X statistic** and the Y value is from **Y statistic**.
 
-.. object:: X Statistic
+.. object:: Statistic
 
-    Which statistic to plot on the X axis.
+    Which statistic to plot.
 
-.. object:: Y Statistic
+.. object:: X Feature
 
-    Which statistic to plot on the Y axis.  Must have the same indices as
-    **X Statistic**.
+    Which feature to plot on the X axis.
 
+.. object:: Y Feature
+
+    Which feature to plot on the Y axis.
+    
 .. object:: X Scale, Y Scale
 
     How to scale the X and Y axes.
@@ -80,6 +83,7 @@ pair of elements with the same value of **Variable**; the X value is from
    :include-source: False
 
     import cytoflow as flow
+    import pandas as pd
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
                                  conditions = {'Dox' : 10.0}),
@@ -90,7 +94,8 @@ pair of elements with the same value of **Variable**; the X value is from
 
     ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
                         channel = 'Y2-A',
-                        function = flow.geom_mean,
+                        function = lambda x: pd.Series({'Geo.Mean' : flow.geom_mean(x),
+                                                        'Geo.SD' : flow.geom_sd(x)}), 
                         by = ['Dox'])
     ex2 = ch_op.apply(ex)
     ch_op_2 = flow.ChannelStatisticOp(name = 'SdByDox',
@@ -100,9 +105,10 @@ pair of elements with the same value of **Variable**; the X value is from
     ex3 = ch_op_2.apply(ex2)
     
     flow.Stats2DView(variable = 'Dox',
-                     xstatistic = ('MeanByDox', 'geom_mean'),
+                     statistic = 'MeanByDox',
+                     xfeature = 'Geo.Mean',
                      xscale = 'log',
-                     ystatistic = ('SdByDox', 'geom_sd'),
+                     yfeature = 'Geo.SD',
                      yscale = 'log').plot(ex3)
 """
 
@@ -138,19 +144,23 @@ class Stats2DParamsHandler(Controller):
         
     
 class Stats2DHandler(ViewHandler):
-    indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
-    numeric_indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
-    levels = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic")
-    
+    indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
+    numeric_indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
+    levels = Property(depends_on = "context.statistics, model.statistic")
+    features = Property(depends_on = "context.statistics, model.statistic")
+
     view_traits_view = \
         View(VGroup(
-             VGroup(Item('xstatistic',
-                         editor = EnumEditor(name = 'context_handler.numeric_statistics_names'),
-                         label = "X Statistic"),
+             VGroup(Item('statistic',
+                         editor = EnumEditor(name = 'context_handler.statistics_names'),
+                         label = "Statistic"),
+                    Item('xfeature',
+                         editor = EnumEditor(name='handler.features'),
+                         label = "X Feature"),
                     Item('xscale', label = "X Scale"),
-                    Item('ystatistic',
-                         editor = EnumEditor(name = 'context_handler.numeric_statistics_names'),
-                         label = "Y Statistic"),
+                    Item('yfeature',
+                         editor = EnumEditor(name = 'handler.features'),
+                         label = "Y Feature"),
                     Item('yscale', label = "Y Scale"),
                     Item('variable',
                          editor=EnumEditor(name='handler.indices')),
@@ -168,14 +178,22 @@ class Stats2DHandler(ViewHandler):
                          label="Color\nFacet"),
                     Item('huescale', 
                          label = "Hue\nScale"),
-                    Item('x_error_statistic',
-                         editor=ExtendableEnumEditor(name='context_handler.statistics_names',
+                    Item('xerror_low',
+                         editor=ExtendableEnumEditor(name='handler.features',
                                                      extra_items = {"None" : ("", "")}),
-                         label = "X Error\nStatistic"),
-                    Item('y_error_statistic',
-                         editor=ExtendableEnumEditor(name='context_handler.statistics_names',
+                         label = "X Error\nStatistic (Low)"),
+                    Item('xerror_high',
+                         editor=ExtendableEnumEditor(name='handler.features',
                                                      extra_items = {"None" : ("", "")}),
-                         label = "Y Error\nStatistic"),
+                         label = "X Error\nStatistic (High)"),
+                    Item('yerror_low',
+                         editor=ExtendableEnumEditor(name='handler.features',
+                                                     extra_items = {"None" : ("", "")}),
+                         label = "Y Error\nStatistic (Low)"),
+                    Item('yerror_high',
+                         editor=ExtendableEnumEditor(name='handler.features',
+                                                     extra_items = {"None" : ("", "")}),
+                         label = "Y Error\nStatistic (High)"),
                     label = "Two-Dimensional Statistics Plot",
                     show_border = False),
              VGroup(Item('subset_list',
@@ -208,22 +226,11 @@ class Stats2DHandler(ViewHandler):
     # MAGIC: gets the value for the property indices
     def _get_indices(self):
         if not (self.context and self.context.statistics 
-                and self.model.xstatistic in self.context.statistics
-                and self.model.ystatistic in self.context.statistics):
+                and self.model.statistic in self.context.statistics):
             return []
         
-        xstat = self.context.statistics[self.model.xstatistic]
-        ystat = self.context.statistics[self.model.ystatistic]
-        
-        try:
-            ystat.index = ystat.index.reorder_levels(xstat.index.names)
-            ystat.sort_index(inplace = True)
-        except AttributeError:
-            pass
-        
-        index = xstat.index.intersection(ystat.index)
-        
-        data = pd.DataFrame(index = index)
+        stat = self.context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
         
         if self.model.subset:
             data = data.query(self.model.subset)
@@ -238,25 +245,39 @@ class Stats2DHandler(ViewHandler):
                 data.index = data.index.droplevel(name)
         
         return list(data.index.names)
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    def _get_levels(self):        
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return {}
+        
+        stat = self.context.statistics[self.model.statistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
+            
+        return ret
         
     # MAGIC: gets the value for the property numeric_indices
     def _get_numeric_indices(self):        
         if not (self.context and self.context.statistics 
-                and self.model.xstatistic in self.context.statistics
-                and self.model.ystatistic in self.context.statistics):
+                and self.model.statistic in self.context.statistics):
             return []
         
-        xstat = self.context.statistics[self.model.xstatistic]
-        ystat = self.context.statistics[self.model.ystatistic]
-        
-        try:
-            ystat.index = ystat.index.reorder_levels(xstat.index.names)
-            ystat.sort_index(inplace = True)
-        except AttributeError:
-            pass
-        
-        index = xstat.index.intersection(ystat.index)
-        data = pd.DataFrame(index = index)
+        stat = self.context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
         
         if self.model.subset:
             data = data.query(self.model.subset)
@@ -272,42 +293,24 @@ class Stats2DHandler(ViewHandler):
         
         data.reset_index(inplace = True)
         return [x for x in data if util.is_numeric(data[x])]
+        
     
-    # MAGIC: gets the value for the property 'levels'
-    # returns a Dict(Str, pd.Series)
-    
-    def _get_levels(self):        
+    # MAGIC: gets the value for the property "features"
+    def _get_features(self):
         if not (self.context and self.context.statistics 
-                and self.model.xstatistic in self.context.statistics
-                and self.model.ystatistic in self.context.statistics):
-            return {}
-        
-        xstat = self.context.statistics[self.model.xstatistic]
-        ystat = self.context.statistics[self.model.ystatistic]
-    
-        index = xstat.index.intersection(ystat.index)
-        
-        names = list(index.names)
-        for name in names:
-            unique_values = index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                index = index.droplevel(name)
-
-        names = list(index.names)
-        ret = {}
-        for name in names:
-            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
-            ret[name] = pd.Series(ret[name].unique())
-            
-        return ret
+                and self.model.statistic in self.context.statistics):
+            return []
+         
+        stat = self.context.statistics[self.model.statistic]
+        return stat.columns.to_list()
     
 
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.stats2d'
-    view_id = 'edu.mit.synbio.cytoflow.view.stats2d'
-    short_name = "2D Statistics View"
+    id = 'cytoflowgui.view.stats2d'
+    view_id = 'cytoflow.view.stats2d'
+    name = "2D Statistics View"
     
     def get_view(self):
         return Stats2DWorkflowView()

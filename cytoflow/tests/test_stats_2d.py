@@ -24,6 +24,7 @@ Created on Dec 1, 2015
 '''
 
 import unittest
+import pandas as pd
 
 import cytoflow as flow
 import cytoflow.utility as util
@@ -34,32 +35,24 @@ class Test2DStats(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-
-                                   
-        self.ex = flow.ChannelStatisticOp(name = "Y",
-                             channel = "Y2-A",
-                             by = ['Well', 'Dox'],
-                             function = flow.geom_mean).apply(self.ex)
-                             
-        self.ex = flow.ChannelStatisticOp(name = "Y",
-                             channel = "Y2-A",
-                             by = ['Well', 'Dox'],
-                             function = flow.geom_sd_range).apply(self.ex)
-                             
-        self.ex = flow.ChannelStatisticOp(name = "V",
-                             channel = "V2-A",
-                             by = ['Well', 'Dox'],
-                             function = flow.geom_mean).apply(self.ex)
-                             
-        self.ex = flow.ChannelStatisticOp(name = "V",
-                             channel = "V2-A",
-                             by = ['Well', 'Dox'],
-                             function = flow.geom_sd_range).apply(self.ex)
+                   
+        self.ex = flow.ChannelStatisticOp(name = "ByDox",
+                                          channel = "Y2-A",
+                                          by = ['Well', 'Dox'],
+                                          function = lambda x: pd.Series({'Mean' : x.mean(), 
+                                                                          'SD' : x.std(),
+                                                                          'MeanLo' : x.mean() - x.mean() * 0.2,
+                                                                          'MeanHi' : x.mean() + x.mean() * 0.2,
+                                                                          'SDLo' : x.std() - x.std() * 0.2,
+                                                                          'SDHi' : x.std() + x.std() * 0.2})).apply(self.ex)
                                      
-        self.view = flow.Stats2DView(xstatistic = ("Y", "geom_mean"),
-                                     x_error_statistic = ("Y", "geom_sd_range"),
-                                     ystatistic = ("V", "geom_mean"),
-                                     y_error_statistic = ("V", "geom_sd_range"),
+        self.view = flow.Stats2DView(statistic = "ByDox", 
+                                     xfeature = "Mean",
+                                     xerror_low = "MeanLo",
+                                     xerror_high = "MeanHi",
+                                     yfeature = "SD",
+                                     yerror_low = "SDLo",
+                                     yerror_high = "SDHi",
                                      variable = "Dox",
                                      huefacet = "Well")
         
@@ -67,15 +60,13 @@ class Test2DStats(ImportedDataTest):
         self.view.plot(self.ex)
         
     def testBadXErrorStatistic(self):
-        self.ex = flow.ChannelStatisticOp(name = "Y_bad",
-                             channel = "Y2-A",
-                             by = ['Well'],
-                             function = flow.geom_sd_range).apply(self.ex)
-                             
-        self.view = flow.Stats2DView(xstatistic = ("Y", "geom_mean"),
-                                     x_error_statistic = ("Y_bad", "geom_sd_range"),
-                                     ystatistic = ("V", "geom_mean"),
-                                     y_error_statistic = ("V", "geom_sd_range"),
+        self.view = flow.Stats2DView(statistic = "ByDox", 
+                                     xfeature = "Mean",
+                                     xerror_low = "MeanLo_BAD",
+                                     xerror_high = "MeanHi",
+                                     yfeature = "SD",
+                                     yerror_low = "SDLo",
+                                     yerror_high = "SDHi",
                                      variable = "Dox",
                                      huefacet = "Well")
         
@@ -83,15 +74,13 @@ class Test2DStats(ImportedDataTest):
 
         
     def testBadYErrorStatistic(self):
-        self.ex = flow.ChannelStatisticOp(name = "V_bad",
-                             channel = "V2-A",
-                             by = ['Well'],
-                             function = flow.geom_sd_range).apply(self.ex)
-                                     
-        self.view = flow.Stats2DView(xstatistic = ("Y", "geom_mean"),
-                                     x_error_statistic = ("Y", "geom_sd_range"),
-                                     ystatistic = ("V", "geom_mean"),
-                                     y_error_statistic = ("V_bad", "geom_sd_range"),
+        self.view = flow.Stats2DView(statistic = "ByDox", 
+                                     xfeature = "Mean",
+                                     xerror_low = "MeanLo_BAD",
+                                     xerror_high = "MeanHi",
+                                     yfeature = "SD",
+                                     yerror_low = "SDLo",
+                                     yerror_high = "SDHi_BAD",
                                      variable = "Dox",
                                      huefacet = "Well")
         
@@ -122,7 +111,8 @@ class Test2DStats(ImportedDataTest):
     def testSubset(self):
         self.view.huefacet = ""
         self.view.subset = "Well == 'A'"
-        self.view.plot(self.ex)
+        with self.assertWarns(util.CytoflowViewWarning):
+            self.view.plot(self.ex)
         
     # Base plot params
     

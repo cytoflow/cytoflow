@@ -122,7 +122,7 @@ class TestAutofluorescence(TasbeTest):
         self.assertEqual(self.wi, new_wi)
            
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
                     

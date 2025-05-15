@@ -57,6 +57,35 @@ class TestFlowpeaks(ImportedDataSmallTest):
         self.op.estimate(self.ex)
         self.op.default_view().plot(self.ex)
 
+    def testPlotBy1(self):
+        self.op.by = ["Well"]
+        self.op.estimate(self.ex)
+        self.op.default_view().plot(self.ex, plot_name = 'A')
+        
+    def testPlotByIter1(self):
+        self.op.by = ["Well"]
+        self.op.estimate(self.ex)
+        dv = self.op.default_view()
+        for v in dv.enum_plots(self.ex):
+            self.op.default_view().plot(self.ex, plot_name = v)
+        
+    def testPlotBy2(self):
+        self.op.by = ["Well", "Dox"]
+        self.op.estimate(self.ex)
+        self.op.default_view().plot(self.ex, plot_name = ('A', 10.0))
+        
+    def testPlotByIter2(self):
+        self.op.by = ["Well", "Dox"]
+        self.op.estimate(self.ex)
+        dv = self.op.default_view()
+        for v in dv.enum_plots(self.ex):
+            self.op.default_view().plot(self.ex, plot_name = v)
+        
+    def testPlotBySubset(self):
+        self.op.by = ["Well", "Dox"]
+        self.op.estimate(self.ex)
+        self.op.default_view(subset = "Dox == 10.0").plot(self.ex, plot_name = ('A', 10.0))
+
     def testPlotDensity(self):
         self.op.estimate(self.ex)
         self.op.default_view(density = True).plot(self.ex)

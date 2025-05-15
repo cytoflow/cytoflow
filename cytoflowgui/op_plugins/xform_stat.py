@@ -21,20 +21,16 @@
 Transform statistic
 -------------------
 
-Apply a function to a statistic, and add it as a statistic
+Apply a function to groups of a statistic, and add the result as a statistic
 to the experiment.
 
 First, the module groups the data by the unique values of the variables
-in **By**, then applies **Function** to the statistic in each group.
-
-.. note:: 
-
-    Statistics are a central part of *Cytoflow*.  More documentation is
-    forthcoming.
+in **By**, then applies **Function** to the values in each group. This is
+repeated for each feature (column) in the statistic.
 
 .. object:: Name
 
-    The operation name.  Becomes the first part of the new statistic's name.
+    The operation name.  Becomes the new statistic's name.
     
 .. object:: Statistic
 
@@ -46,8 +42,7 @@ in **By**, then applies **Function** to the statistic in each group.
         
 .. object:: Subset
 
-    Only apply the function to a subset of the input statistic.  Useful if the 
-    function is very slow.
+    Only apply the function to a subset of the input statistic. 
 
 '''
 
@@ -139,7 +134,7 @@ class TransformStatisticHandler(OpHandler):
              Item('statistic',
                   editor=EnumEditor(name='context_handler.previous_statistics_names'),
                   label = "Statistic"),
-             Item('statistic_name',
+             Item('function_name',
                   editor = EnumEditor(values = sorted(transform_functions.keys())),
                   label = "Function"),
              Item('by',
@@ -163,11 +158,11 @@ class TransformStatisticHandler(OpHandler):
 @provides(IOperationPlugin)
 class TransformStatisticPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.transform_statistic'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.transform_statistic'
+    id = 'cytoflowgui.op_plugins.transform_statistic'
+    operation_id = 'cytoflow.operations.transform_statistic'
     view_id = None
 
-    short_name = "Transform Statistic"
+    name = "Transform Statistic"
     menu_group = "Gates"
     
     def get_operation(self):

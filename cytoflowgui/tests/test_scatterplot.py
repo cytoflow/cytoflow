@@ -23,6 +23,11 @@ Created on Jan 4, 2018
 @author: brian
 '''
 import unittest, os, tempfile
+import cytoflow.utility as util
+
+# needed for testing lambdas
+import pandas as pd
+from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest
 from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS, ScatterplotWorkflowView, ScatterplotPlotParams
@@ -98,14 +103,15 @@ class TestScatterplot(ImportedDataTest, Base2DViewTest):
         self.assertEqual(self.wi, new_wi)
         
     def testNotebook(self):
-        code = "from cytoflow import *\n"
+        code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
             
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
         
-        exec(code)  # smoke test
+        with self.assertWarns(util.CytoflowWarning):
+            exec(code)  # smoke test
                 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestScatterplot.testSerialize']

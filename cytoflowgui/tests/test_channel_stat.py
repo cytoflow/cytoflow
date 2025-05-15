@@ -29,11 +29,14 @@ import pandas as pd
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.operations.channel_stat import summary_functions
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
+import cytoflow.utility as util
 
-# we need these to exec() code in testNotebook
-from cytoflow import ci, geom_mean  # @UnusedImport
+# to access these names in a lambda in exec() in testNotebook(), we need them in
+# the global namespace
+from cytoflow import ci, geom_mean, geom_sd, geom_sem  # @UnusedImport
 from numpy import mean, median, std  # @UnusedImport
 from scipy.stats import sem  # @UnusedImport
+import scipy.stats  # @UnusedImport
 from pandas import Series  # @UnusedImport
 
 class TestChannelStat(ImportedDataTest):
@@ -70,7 +73,7 @@ class TestChannelStat(ImportedDataTest):
     def testAllFunctions(self):
         for fn in summary_functions:
             self.workflow.wi_sync(self.wi, 'status', 'waiting')
-            self.op.statistic_name = fn
+            self.op.function_name = fn
             self.workflow.wi_waitfor(self.wi, 'status', 'valid')
             self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
@@ -108,18 +111,19 @@ class TestChannelStat(ImportedDataTest):
     def testNotebook(self):
         for fn in summary_functions:
             self.workflow.wi_sync(self.wi, 'status', 'waiting')
-            self.op.statistic_name = fn
+            self.op.function_name = fn
             self.workflow.wi_waitfor(self.wi, 'status', 'valid')
             self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
-            code = "from cytoflow import *\n"
+            code = "import cytoflow as flow"
             for i, wi in enumerate(self.workflow.workflow):
                 code = code + wi.operation.get_notebook_code(i)
             
                 for view in wi.views:
                     code = code + view.get_notebook_code(i)
-             
-            exec(code)
+            
+            with self.assertWarns(util.CytoflowWarning):
+                exec(code)
             nb_data = locals()['ex_2'].data
             remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
             

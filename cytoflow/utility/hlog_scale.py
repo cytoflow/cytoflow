@@ -40,7 +40,7 @@ tics are along a plot axis
 
 from traits.api import (HasTraits, Float, Property, Instance, Str,
                         Undefined, provides, Constant,
-                        Tuple, Array)
+                        List, Array)
                        
 import numpy as np
 import pandas as pd
@@ -82,7 +82,7 @@ class HlogScale(ScaleMixin):
         http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.20114/abstract
     """    
 
-    id = Constant("edu.mit.synbio.cytoflow.utility.hlog")        
+    id = Constant("cytoflow.utility.hlog")        
     name = "hlog"
     
     experiment = Instance("cytoflow.Experiment")
@@ -90,8 +90,8 @@ class HlogScale(ScaleMixin):
     # what data do we use to compute scale parameters?  set one.
     channel = Str
     condition = Str
-    statistic = Tuple(Str, Str)
-    error_statistic = Tuple(Str, Str)
+    statistic = Str
+    features = List(Str)
     data = Array
 
     range = Property(Float)
@@ -161,13 +161,9 @@ class HlogScale(ScaleMixin):
             vmin = self.experiment[self.condition].min()
             vmax = self.experiment[self.condition].max()
         elif self.statistic:
-            stat = self.experiment.statistics[self.statistic]
-            try:
-                vmin = min([min(x) for x in stat])
-                vmax = max([max(x) for x in stat])
-            except (TypeError, IndexError):
-                vmin = stat.min()
-                vmax = stat.max()
+            stat = self.experiment.statistics[self.statistic][self.features]
+            vmin = stat.min().min()
+            vmax = stat.max().max()
         elif self.data is not None:
             vmin = self.data.min()
             vmax = self.data.max()

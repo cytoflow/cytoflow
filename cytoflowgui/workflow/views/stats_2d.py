@@ -23,6 +23,7 @@ cytoflowgui.workflow.views.stats_2d
 
 """
 
+import logging
 from textwrap import dedent
 
 from traits.api import provides, Instance, Enum
@@ -30,10 +31,10 @@ from traits.api import provides, Instance, Enum
 from cytoflow import Stats2DView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
 from .view_base import IWorkflowView, WorkflowByView, Stats2DPlotParams as _Stats2DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
 
-Stats2DView.__repr__ = traits_repr
+Stats2DView.__repr__ = cytoflow_class_repr
 
 
 class Stats2DPlotParams(_Stats2DPlotParams):
@@ -63,8 +64,28 @@ class Stats2DWorkflowView(WorkflowByView, Stats2DView):
 
 ### Serialization
 
-@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 2)
+@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 3)
 def _dump(view):
+    return dict(statistic = view.statistic,
+                xfeature = view.xfeature,
+                xscale = view.xscale,
+                yfeature = view.yfeature,
+                yscale = view.yscale,
+                variable = view.variable,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                xerror_low = view.xerror_low,
+                xerror_high = view.xerror_high,
+                yerror_low = view.yerror_low,
+                yerror_high = view.yerror_high,
+                subset_list = view.subset_list,
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
+
+@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 2)
+def _dump_v2(view):
     return dict(xstatistic = view.xstatistic,
                 xscale = view.xscale,
                 ystatistic = view.ystatistic,
@@ -96,12 +117,34 @@ def _dump_v1(view):
                 subset_list = view.subset_list)
 
 
-@camel_registry.loader('stats-2d', version = any)
+@camel_registry.loader('stats-2d', version = 3)
 def _load(data, version):
-    data['xstatistic'] = tuple(data['xstatistic'])
-    data['ystatistic'] = tuple(data['ystatistic'])
-    data['x_error_statistic'] = tuple(data['x_error_statistic'])
-    data['y_error_statistic'] = tuple(data['y_error_statistic'])
+    return Stats2DWorkflowView(**data)
+
+@camel_registry.loader('stats-2d', version = 2)
+def _load_v2(data, version):
+    data['statistic'] = data['xstatistic'][0]
+    del data['ystatistic']
+    del data['x_error_statistic']
+    del data['y_error_statistic']
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
+    
+    return Stats2DWorkflowView(**data)
+
+    
+@camel_registry.loader('stats-2d', version = 1)
+def _load_v1(data, version):
+    data['statistic'] = data['xstatistic'][0]
+    del data['ystatistic']
+    del data['x_error_statistic']
+    del data['y_error_statistic']
+    
+    logging.warn("Statistics have changed substantially since you saved this "
+                 ".flow file, so you'll need to reset a few things. "
+                 "See the FAQ in the online documentation for details.")
 
     return Stats2DWorkflowView(**data)
 

@@ -30,10 +30,10 @@ from traits.api import (HasTraits, String, List, Dict, Str, Enum, Instance,
 import cytoflow.utility as util
 from cytoflow import Tube, ImportOp
                        
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-ImportOp.__repr__ = Tube.__repr__ = traits_repr
+ImportOp.__repr__ = Tube.__repr__ = cytoflow_class_repr
 
 
 class ValidPythonIdentifier(BaseCStr):
