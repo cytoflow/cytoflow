@@ -162,9 +162,9 @@ class BaseView(HasStrictTraits):
         sns_style : {"darkgrid", "whitegrid", "dark", "white", "ticks"}
             Which ``seaborn`` style to apply to the plot?  Default is ``whitegrid``.
             
-        sns_context : {"paper", "notebook", "talk", "poster"}
+        sns_context : {"notebook", "paper", "talk", "poster"}
             Which ``seaborn`` context to use?  Controls the scaling of plot 
-            elements such as tick labels and the legend.  Default is ``talk``.
+            elements such as tick labels and the legend.  Default is ``notebook``.
             
         palette : palette name, list, or dict
             Colors to use for the different levels of the hue variable. 
@@ -224,7 +224,7 @@ class BaseView(HasStrictTraits):
                
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
-            sns_context = kwargs.pop('sns_context', 'paper')
+            sns_context = kwargs.pop('sns_context', 'notebook')
             sns.set_style(sns_style, rc = {"xtick.bottom": True, "ytick.left": True})
             sns.set_context(sns_context)
         else:
