@@ -18,21 +18,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.views.heatmap
-----------------------
+cytoflow.views.petal
+--------------------
 
-A statistics view that plots a "circular" heatmap of a statistic. 
-Features can be specified to determine the circles' colors and sizes.
+A statistics view that plots a "petal plot" view of a statistic. A petal plot is
+kind of like a pie plot, except that instead of the arc length of as segment
+being proportional to a feature, the arc lengths of the segments are all the 
+same and the radii vary according to a feature.
 
-There are two different ways to lay out the heatmap. If either `xfacet`
-or `yfacet` are set, the heat map will be laid out in a grid
+There are two different ways to lay out the petal plots. If either `xfacet`
+or `yfacet` are set, the petal plots will be laid out in a grid
 according to these facets. (If you just want a row or a column, set
-only one of `xfacet` or `yfacet`; if you want just a single circle,
-don't set either.)
+only one of `xfacet` or `yfacet`; if you want just a single plot, don't
+set either.)
 
-Alternately, if `mst_facet` is set, the heat map will be laid out using a
+Alternately, if `mst_facet` is set, the plot will be laid out using a
 minumum spanning tree. Each unique value of the facet will get a node in the
 tree. You must also specify the feature(s) containing the location of each
 node using the `mst_locations` attribute.
+
 
 """

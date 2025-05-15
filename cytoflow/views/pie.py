@@ -18,13 +18,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.views.pie
-------------------
+cytoflow.views.petal
+--------------------
 
-A statistics view that plots a set of pie plots. The "value" parameter determines
-which facet is used in the pie plots; the rest of the levels are used to facet
-the grid plot. The size of the pie circles can be fixed, or relative to the
-number of events in the faceted groups. Optionally, a second statistic can
-be passed with the same index levels, and its values (single numbers or tuples) 
-are used as centroid locations in a minimum spanning tree.
+A statistics view that plots a pie plot view of a statistic.
+
+There are two different ways to lay out the plot. If either `xfacet`
+or `yfacet` are set, the plot will be laid out in a grid
+according to these facets. (If you just want a row or a column, set
+only one of `xfacet` or `yfacet`; if you want just a single plot, don't
+set either.)
+
+Alternately, if `mst_facet` is set, the plot will be laid out using a
+minumum spanning tree. Each unique value of the facet will get a node in the
+tree. You must also specify the feature(s) containing the location of each
+node using the `mst_locations` attribute.
+
+
 """

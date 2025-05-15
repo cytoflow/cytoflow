@@ -57,12 +57,11 @@ of a statistic.  See `BarChartView` for an example.
 of a statistic.  See `Stats2DView` for an example.
 """
 
-from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
+from traits.api import HasStrictTraits, Str, List, Dict, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import seaborn as sns
-import pandas as pd
 from natsort import natsorted
 
 from warnings import warn
@@ -711,7 +710,7 @@ class BaseStatisticsView(BaseView):
     variable = Str
     subset = Str
     
-    def enum_plots(self, experiment, data):
+    def enum_plots(self, experiment):
         """
         Enumerate the named plots we can make from this set of statistics.
         
@@ -736,6 +735,8 @@ class BaseStatisticsView(BaseView):
                                          "variable {0} not in the experiment"
                                     .format(self.variable))
             
+        data = self._get_stat(experiment)
+
         data, facets, names = self._subset_data(data)
 
         by = list(set(names) - set(facets))
@@ -913,13 +914,6 @@ class Base1DStatisticsView(BaseStatisticsView):
     
     error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'error_low' and 'error_high' instead of 'error_statistic'")
     
-    def enum_plots(self, experiment):
-        if experiment is None:
-            raise util.CytoflowViewError('experiment',
-                                         "No experiment specified")
-        stat = self._get_stat(experiment)
-        return super().enum_plots(experiment, stat)
-    
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Parameters
@@ -1064,13 +1058,6 @@ class Base2DStatisticsView(BaseStatisticsView):
     
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
-    
-    def enum_plots(self, experiment):
-        if experiment is None:
-            raise util.CytoflowViewError('experiment',
-                                         "No experiment specified")
-        data = self._get_stat(experiment)
-        return super().enum_plots(experiment, data)
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """

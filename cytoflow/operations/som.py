@@ -122,7 +122,7 @@ class SOMOp(HasStrictTraits):
     Statistics
     ----------
     
-    This operation adds a statistic whose columns are the channel names used in
+    This operation adds a statistic whose features are the channel names used in
     the clustering and whose values are the centroids of the clusters. Useful
     for hierarchical clustering, minimum spanning tree visualization, etc.
     The index has levels from `by`, plus a new level called ``Cluster``.
