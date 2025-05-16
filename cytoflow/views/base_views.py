@@ -697,9 +697,29 @@ class BaseStatisticsView(BaseView):
     
     Attributes
     ----------
-    variable : str
+    
+    statistic : Str
+        The statistic to plot. Must be a key in `Experiment.statistics`.
+        
+    variable : Str
         The condition that varies when plotting this statistic: used for the
-        x axis of line plots, the bar groups in bar plots, etc.
+        x axis of line plots, the bar groups in bar plots, etc. Must be a level
+        in the statistic's index.
+    
+    xfacet : String
+        Set to one of the index levels in the statistic being plotted, and 
+        a new column of subplots will be added for every unique value
+        of that index level.
+        
+    yfacet : String
+        Set to one of the index levels in the statistic being plotted, and 
+        a new row of subplots will be added for every unique value
+        of that index level.
+        
+    huefacet : String
+        Set to one of the index levels in the statistic being plotted, and 
+        a new colored artist (line, bar, etc) will be added for every unique value
+        of that index level.
         
     subset : str
         An expression that specifies the subset of the statistic to plot.
@@ -707,6 +727,7 @@ class BaseStatisticsView(BaseView):
 
     """
     
+    statistic = util.ChangedStr(err_string = "Statistics have changed dramatically -- see the documentation for updates.")   
     variable = Str
     subset = Str
     
@@ -887,8 +908,6 @@ class Base1DStatisticsView(BaseStatisticsView):
     
     Attributes
     ----------
-    statistic : Str
-        The statistic to plot (ie, a key in `Experiment.statistics`)
         
     feature : Str
         The column in the statistic to plot (often a channel name.)
@@ -904,9 +923,8 @@ class Base1DStatisticsView(BaseStatisticsView):
     scale : {'linear', 'log', 'logicle'}
         The scale applied to the data before plotting it.
     """
-        
-    statistic = util.ChangedStr(err_string = "Statistics have changed dramatically -- see the documentation for updates.")   
-    feature = Str
+    
+    feature = Str    
     error_low = Str
     error_high = Str
     
@@ -930,9 +948,9 @@ class Base1DStatisticsView(BaseStatisticsView):
             
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
-               
+                       
         stat = self._get_stat(experiment)
-        
+                       
         if not self.variable:
             raise util.CytoflowViewError('variable',
                                          "variable not set")
@@ -1008,9 +1026,6 @@ class Base2DStatisticsView(BaseStatisticsView):
     
     Attributes
     ----------
-    
-    statistic : Str
-        The statistic to plot. Must be a key in `Experiment.statistics`.
         
     xfeature : Str
         The name of the column to plot on the X axis.
@@ -1072,6 +1087,15 @@ class Base2DStatisticsView(BaseStatisticsView):
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
+
+        if not self.variable:
+            raise util.CytoflowViewError('variable',
+                                         "variable not set")
+            
+        if self.variable not in experiment.conditions:
+            raise util.CytoflowViewError('variable',
+                                         "variable {0} not in the experiment"
+                                    .format(self.variable))
         
         data = self._get_stat(experiment)
 
