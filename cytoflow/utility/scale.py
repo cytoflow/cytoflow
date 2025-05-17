@@ -35,6 +35,7 @@ Base classes and functions for `cytoflow` scales.
 """
 
 import numbers
+import logging
 
 from traits.api import Interface, Str, Instance, List, Array
 
@@ -203,7 +204,11 @@ def get_default_scale():
 # register the new scales
 import cytoflow.utility.linear_scale   # @UnusedImport
 import cytoflow.utility.log_scale      # @UnusedImport
-import cytoflow.utility.logicle_scale  # @UnusedImport
+try:
+    import cytoflow.utility.logicle_scale  # @UnusedImport
+except ModuleNotFoundError:
+    logger = logging.getLogger(__name__)
+    logger.debug("ModuleNotFound: Logicle module not included in the installation.")
 
 # this scale is REALLY SLOW.  If you want it for your analysis, you can
 # import it into your script, that will register it with the global list.
