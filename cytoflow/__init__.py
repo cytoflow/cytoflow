@@ -97,6 +97,7 @@ from .views.densityplot import DensityView
 from .views.stats_1d import Stats1DView
 from .views.stats_2d import Stats2DView
 from .views.bar_chart import BarChartView
+from .views.matrix import MatrixView
 
 from .views.kde_1d import Kde1DView
 from .views.kde_2d import Kde2DView

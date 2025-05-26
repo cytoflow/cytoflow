@@ -95,15 +95,6 @@ class Stats1DView(Base1DStatisticsView):
     
     variable_scale = util.ScaleEnum
     
-    def enum_plots(self, experiment):
-        """
-        Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to `plot`.
-        """
-                
-        return super().enum_plots(experiment)
-        
-    
     def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a chart of a variable's values against a statistic.
         

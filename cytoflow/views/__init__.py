@@ -40,12 +40,13 @@ from .i_selectionview import ISelectionView
 
 from .base_views import Base1DView, Base2DView
 
-from .bar_chart import BarChartView
 from .histogram import HistogramView
 from .scatterplot import ScatterplotView
 from .densityplot import DensityView
 from .stats_1d import Stats1DView
 from .stats_2d import Stats2DView
+from .bar_chart import BarChartView
+from .matrix import MatrixView
 from .kde_1d import Kde1DView
 from .kde_2d import Kde2DView
 from .histogram_2d import Histogram2DView

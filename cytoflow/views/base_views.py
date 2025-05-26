@@ -217,9 +217,11 @@ class BaseView(HasStrictTraits):
         aspect = kwargs.pop("aspect", 1.5)
         
         legend = kwargs.pop('legend', True)
+        legend_out = kwargs.pop('legend_out', False)
 
         despine = kwargs.pop('despine', False)
         palette = kwargs.pop('palette', None)
+        margin_titles = kwargs.pop('margin_titles', False)
                
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -251,11 +253,12 @@ class BaseView(HasStrictTraits):
                           row_order = row_order,
                           hue_order = hue_order,
                           col_wrap = col_wrap,
-                          legend_out = False,
+                          legend_out = legend_out,
                           sharex = sharex,
                           sharey = sharey,
                           despine = despine,
-                          palette = palette)
+                          palette = palette, 
+                          margin_titles = margin_titles)
         
         plot_ret = self._grid_plot(experiment = experiment, grid = g, **kwargs)
         
@@ -700,11 +703,6 @@ class BaseStatisticsView(BaseView):
     
     statistic : Str
         The statistic to plot. Must be a key in `Experiment.statistics`.
-        
-    variable : Str
-        The condition that varies when plotting this statistic: used for the
-        x axis of line plots, the bar groups in bar plots, etc. Must be a level
-        in the statistic's index.
     
     xfacet : String
         Set to one of the index levels in the statistic being plotted, and 
@@ -728,7 +726,6 @@ class BaseStatisticsView(BaseView):
     """
     
     statistic = util.ChangedStr(err_string = "Statistics have changed dramatically -- see the documentation for updates.")   
-    variable = Str
     subset = Str
     
     def enum_plots(self, experiment):
@@ -746,21 +743,11 @@ class BaseStatisticsView(BaseView):
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
-        
-        if not self.variable:
-            raise util.CytoflowViewError('variable',
-                                         "variable not set")
-            
-        if self.variable not in experiment.conditions:
-            raise util.CytoflowViewError('variable',
-                                         "variable {0} not in the experiment"
-                                    .format(self.variable))
             
         data = self._get_stat(experiment)
-
-        data, facets, names = self._subset_data(data)
-
-        by = list(set(names) - set(facets))
+        data = self._subset_data(data)
+        facets = self._get_facets(experiment)
+        by = list(set(data.index.names) - set(facets))
         
         class plot_enum(object):
             
@@ -806,18 +793,12 @@ class BaseStatisticsView(BaseView):
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
-        
-        if not self.variable:
-            raise util.CytoflowViewError('variable',
-                                         "variable not set")
             
-        if self.variable not in experiment.conditions:
-            raise util.CytoflowViewError('variable',
-                                         "variable {0} not in the experiment"
-                                    .format(self.variable))
-            
-        data, facets, names = self._subset_data(data)
-        unused_names = list(set(names) - set(facets))
+        data = self._get_stat(experiment)
+        data = self._subset_data(data)
+        facets = self._get_facets(data)
+
+        unused_names = list(set(data.index.names) - set(facets))
 
         if plot_name is not None and not unused_names:
             raise util.CytoflowViewError('plot_name',
@@ -875,9 +856,10 @@ class BaseStatisticsView(BaseView):
                     raise util.CytoflowViewError(None,
                                                  "Must have more than one "
                                                  "value to plot.") from e
-                
-        names = list(data.index.names)
 
+        return data
+    
+    def _get_facets(self, data):
         if self.xfacet and self.xfacet not in data.index.names:
             raise util.CytoflowViewError('xfacet',
                                          "X facet {} not in statistics; must be one of {}"
@@ -894,12 +876,13 @@ class BaseStatisticsView(BaseView):
                                          "Hue facet {} not in statistics; must be one of {}"
                                          .format(self.huefacet, data.index.names))
             
-            
-        facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x]
+        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None, "Can't reuse facets")
         
-        return data, facets, names
+        return facets
+        
+
 
 class Base1DStatisticsView(BaseStatisticsView):
     """
@@ -908,6 +891,11 @@ class Base1DStatisticsView(BaseStatisticsView):
     
     Attributes
     ----------
+
+    variable : Str
+        The condition that varies when plotting this statistic: used for the
+        x axis of line plots, the bar groups in bar plots, etc. Must be a level
+        in the statistic's index.
         
     feature : Str
         The column in the statistic to plot (often a channel name.)
@@ -924,6 +912,7 @@ class Base1DStatisticsView(BaseStatisticsView):
         The scale applied to the data before plotting it.
     """
     
+    variable = Str
     feature = Str    
     error_low = Str
     error_high = Str
@@ -1016,6 +1005,23 @@ class Base1DStatisticsView(BaseStatisticsView):
                                              "If error_high is set, error_low must be set too.")
                 
         return stat
+    
+    def _get_facets(self, data):
+        if not self.variable:
+            raise util.CytoflowViewError('variable',
+                                         "Must set a variable")
+                                          
+        if self.variable not in data.index.names:
+            raise util.CytoflowViewError('variable',
+                                         "Variable {} not in statistics; must be one of {}"
+                                         .format(self.xfacet, data.index.names))
+            
+        facets = super()._get_facets() + [self.variable]
+        
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError(None, "Can't reuse facets")
+        
+        return facets
 
 
 class Base2DStatisticsView(BaseStatisticsView):
@@ -1026,6 +1032,11 @@ class Base2DStatisticsView(BaseStatisticsView):
     
     Attributes
     ----------
+    
+    variable : Str
+        The condition that varies when plotting this statistic: used for the
+        x axis of line plots, the bar groups in bar plots, etc. Must be a level
+        in the statistic's index.
         
     xfeature : Str
         The name of the column to plot on the X axis.
@@ -1062,7 +1073,7 @@ class Base2DStatisticsView(BaseStatisticsView):
     y_error_statistic = util.Removed(err_string = "Statistics have changed dramatically -- use 'yerror_low' and 'yerror_high' instead of 'y_error_statistic'")
     
     statistic = Str
-    
+    variable = Str
     xfeature = Str
     xerror_low = Str
     xerror_high = Str
@@ -1191,5 +1202,23 @@ class Base2DStatisticsView(BaseStatisticsView):
                                              "If yerror_high is set, yerror_low must be set too.")
                 
         return stat
+    
+    def _get_facets(self, data):
+        if not self.variable:
+            raise util.CytoflowViewError('variable',
+                                         "Must set a variable")
+                                          
+        if self.variable not in data.index.names:
+            raise util.CytoflowViewError('variable',
+                                         "Variable {} not in statistics; must be one of {}"
+                                         .format(self.xfacet, data.index.names))
+            
+        facets = super()._get_facets() + [self.variable]
+        
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError(None, "Can't reuse facets")
+        
+        return facets
+
 
 
