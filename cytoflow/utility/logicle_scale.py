@@ -40,7 +40,7 @@ from warnings import warn
 
 from traits.api import (HasStrictTraits, HasTraits, Float, Property, Instance, Str,
                         cached_property, Undefined, provides, Constant,
-                        List, Array)
+                        List, Array, Union, Tuple)
                        
 import numpy as np
 import pandas as pd
@@ -136,7 +136,7 @@ class LogicleScale(HasStrictTraits):
     channel = Str
     condition = Str
     statistic = Str
-    features = List(Str)
+    features = List(Union(Str, Tuple(Str, Str)))
     data = Array
 
     W = Property(Float, depends_on = "[experiment, channel, M, _T, r]")

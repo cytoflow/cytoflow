@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Float)
+                        Callable, Float, Property)
 
 import cytoflow.utility as util
 
@@ -62,19 +62,30 @@ class ChannelStatisticOp(HasStrictTraits):
     name : Str
         The operation name.  Becomes the name of the new statistic.
     
-    channel : Str
-        The channel to apply the function to. The channels become the column 
-        (feature) name in the new statistic.
+    channels : List(Str)
+        The channels to apply the function to. The channels become the column 
+        (feature) names in the new statistic. If `function` returns a `pandas.Series`,
+        the column index becomes a `pandas.MultiIndex`, and the channel names are
+        the labels of the first level.
         
     function : Callable
         The function used to compute the statistic.  `function` must take 
         a `pandas.Series` as its only parameter and return either a ``float``,
-        a value that can be cast to ``float``, or a `pandas.Series`.  
+        a value that can be cast to ``float``, or a `pandas.Series` of ``float``.  
+        If `function` returns a `pandas.Series`, the column index of the new statistic
+        will be a `pandas.MultiIndex` whose second level has a name the same as
+        the name of the `pandas.Series` and whose labels are the row labels of
+        the `pandas.Series`.
+        
+        .. note::
+            If `function` returns a `pandas.Series`, please make sure that its
+            row index is a plain single-level index. No ``MultiIndex`` shenanigans
+            please!
         
         .. warning::
             Be careful!  Sometimes this function is called with an empty input!
             If this is the case, poorly-behaved functions can return ``NaN`` or 
-            throw an error.  If this happens, it will be reported.
+            throw an error.  If this happens, an exception will be raised.
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
@@ -136,12 +147,29 @@ class ChannelStatisticOp(HasStrictTraits):
     friendly_id = Constant("Channel Statistic")
     
     name = Str
-    channel = Str
+    channels = List(Str)
     function = Callable
     by = List(Str)
     subset = Str
     fill = Float(np.nan)
     
+    channel = util.Removed(err_string = "Statistics have changed dramatically "
+                           "-- use `channels` instead of `channel`, and see the "
+                           "documentation for more information.")
+    
+    # MAGIC: setter for attribute `channel`
+    def _set_channel(self, val):
+        print(val)
+        warn("Statistics have changed -- you should use `channels` instead of `channel`",
+             util.CytoflowOpWarning)
+        self.channels = [val]
+    
+    # MAGIC: getter for attribute `channel`
+    def _get_channel(self):
+        warn("Statistics have changed -- you should use `channels` instead of `channel`",
+             util.CytoflowOpWarning)
+        return self.channels[0]
+
     def apply(self, experiment):
         """
         Apply the operation to an `Experiment`.
@@ -167,16 +195,17 @@ class ChannelStatisticOp(HasStrictTraits):
                                        "Name can only contain letters, numbers and underscores."
                                        .format(self.name))  
         
-        if not self.channel:
+        if not self.channels:
             raise util.CytoflowOpError('channels', "Must specify a channel")
 
         if not self.function:
             raise util.CytoflowOpError('function', "Must specify a function")
 
-        if self.channel not in experiment.data:
-            raise util.CytoflowOpError('channels',
-                                       "Channel {} not found in the experiment"
-                                       .format(self.channel))
+        for c in self.channels:
+            if c not in experiment.data:
+                raise util.CytoflowOpError('channels',
+                                           "Channel {} not found in the experiment"
+                                           .format(c))
             
         if not self.by:
             raise util.CytoflowOpError('by',
@@ -220,58 +249,73 @@ class ChannelStatisticOp(HasStrictTraits):
         stat = None
         
         for group, data_subset in groupby:
-            try:
-                v = self.function(data_subset[self.channel])
-                
-            except Exception as e:
-                raise util.CytoflowOpError(None,
-                                           "Your function threw an error in group {}"
-                                           .format(group)) from e
-                                           
-            try:
-                v = float(v)
-            except (TypeError, ValueError) as e:
-                if not isinstance(v, pd.Series):
-                    raise util.CytoflowOpError(None,
-                                               "Your function returned a {}. It must return "
-                                               "a float, a value that can be cast to float, "
-                                               "or a pandas.Series (with type float)"
-                                               .format(type(v))) from e
+            for channel in self.channels:
+                try:
+                    v = self.function(data_subset[channel])
                     
-            if isinstance(v, pd.Series) and v.dtype.kind != 'f':
-                raise util.CytoflowOpError(None,
-                                           "Your function returned a pandas.Series with dtype {}. "
-                                           "If it returns a Series, the data must be floating point."
-                                           .format(v.dtype))
-                
-            if stat is None:
+                except Exception as e:
+                    raise util.CytoflowOpError(None,
+                                               "Your function threw an error in group {}"
+                                               .format(group)) from e
+                                               
+                try:
+                    v = float(v)
+                except (TypeError, ValueError) as e:
+                    if not isinstance(v, pd.Series):
+                        raise util.CytoflowOpError(None,
+                                                   "Your function returned a {}. It must return "
+                                                   "a float, a value that can be cast to float, "
+                                                   "or a pandas.Series (with type float)"
+                                                   .format(type(v))) from e
+                        
+                if isinstance(v, pd.Series) and v.dtype.kind != 'f':
+                    raise util.CytoflowOpError(None,
+                                               "Your function returned a pandas.Series with dtype {}. "
+                                               "If it returns a Series, the data must be floating point."
+                                               .format(v.dtype))
+                    
                 if isinstance(v, float):
-                    stat = pd.DataFrame(data = np.full((len(idx), 1), self.fill),
-                                        index = idx,
-                                        columns = [self.channel],
-                                        dtype = 'float' ).sort_index()
+                    # fail on NaNs.
+                    if pd.isna(v):
+                        raise util.CytoflowOpError(None,
+                                                   "Calling function on category {} returned {} "
+                                                   "which contains NaN".format(group, v))
+                    if stat is None:
+                        stat = pd.DataFrame(data = np.full((len(idx), len(self.channels)), self.fill),
+                                            index = idx,
+                                            columns = self.channels,
+                                            dtype = 'float' ).sort_index()
+                    stat.loc[group] = v
+                    
+
                 elif isinstance(v, pd.Series):
-                    stat = pd.DataFrame(data = np.full((len(idx), len(v)), self.fill),
-                                        index = idx,
-                                        columns = v.index.tolist(),
-                                        dtype = 'float').sort_index()
+                    # fail on NaNs.
+                    if v.isna().any():
+                        raise util.CytoflowOpError(None,
+                                                   "Calling function on category {} returned {} "
+                                                   "which contains NaN".format(group, v))
+                        
+                    if stat is None:
+                        stat = pd.DataFrame(data = np.full((len(idx), len(v) * len(self.channels)), self.fill),
+                                            index = idx,
+                                            columns = pd.MultiIndex.from_product([self.channels, v.index.to_list()],
+                                                                                 names = ["Channel", v.name]),
+                                            dtype = 'float').sort_index()
+                        first_v = v
+                        
+                    if not v.index.equals(first_v.index):
+                        raise util.CytoflowOpError(None,
+                                                   "The first call to your function returned a series with index {}, "
+                                                   "but calling it on group {} returned a series with index {}"
+                                                   .format(first_v.index, group, v.index))  
 
-                first_v = v
-                
-            if type(v) != type(first_v):
-                raise util.CytoflowOpError(None,
-                                           "The first call to your function returned a {}, "
-                                           "but calling it on group {} returned a {}"
-                                           .format(type(first_v), group, type(v)))                           
+                    stat.loc[group, channel] = v.values
+    
+                    
+                         
+        
 
-            stat.loc[group] = v
-
-            # fail on NaNs.
-            if stat.loc[group].isna().any():
-                raise util.CytoflowOpError(None,
-                                           "Calling function on category {} returned {} "
-                                           "which contains NaN".format(group, stat.loc[group]))
-                
+                    
         if stat.isna().any().any():
             raise util.CytoflowOpError(None,
                                        "The statistic has at least one NaN in it, which probably means "

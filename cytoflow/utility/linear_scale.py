@@ -28,7 +28,7 @@ A scale that doesn't transform data at all -- a "default" scale.
 
 import matplotlib.colors
 
-from traits.api import Instance, Str, provides, Constant, List, Array
+from traits.api import Instance, Str, provides, Constant, List, Array, Union, Tuple
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
 
@@ -47,7 +47,7 @@ class LinearScale(ScaleMixin):
     channel = Str
     condition = Str
     statistic = Str
-    features = List(Str)
+    features = List(Union(Str, Tuple))
     data = Array
 
     def __call__(self, data):

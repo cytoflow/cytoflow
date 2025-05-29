@@ -33,7 +33,7 @@ import pandas as pd
 import matplotlib.colors
 
 from traits.api import (Instance, Str, provides, Constant, Enum, Float, 
-                        Property, List, Array) 
+                        Property, List, Array, Union, Tuple) 
 
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
@@ -49,7 +49,7 @@ class LogScale(ScaleMixin):
     channel = Str
     condition = Str
     statistic = Str
-    features = List(Str)
+    features = List(Union(Str, Tuple(Str, Str)))
     data = Array
 
     mode = Enum("mask", "clip")

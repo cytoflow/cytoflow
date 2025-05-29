@@ -43,14 +43,20 @@ class TransformStatisticOp(HasStrictTraits):
     
     If you set `by`, then calling `apply` will group the input statistic by 
     unique combinations of the conditions in `by`, then call `function` on each 
-    column in each group. The `function` should take a `pandas.Series` and it
-    can return a ``float``, a value that can be cast to a ``float``, or 
-    `pandas.Series` whose `dtype` is a floating-point. The resulting statistic
-    will have the same columns as the original statistic. If `function` returns
-    a `float`, then the new statistic will have levels that are the same as the
-    conditions in `by`. If `function` returns a `pandas.Series`, then the name
-    of the series will be an extra level in the new statistic. 
+    column in each group (or on the column specified by `features`, if present.)
+    The `function` should take a `pandas.Series` and it can return a ``float``, 
+    a value that can be cast to a ``float``, or a `pandas.Series` whose `dtype` 
+    is a floating-point. 
     
+    If `function` returns a float, then the resulting statistic will have the 
+    same columns as the original statistic and levels that are the same as the
+    conditions in `by.`
+    
+    If `function` returns a `pandas.Series` and `by` is not empty, then a column 
+    is created in the new statistic for each index label of the `pandas.Series` 
+    (ie, the row labels). These new columns are named "oldColumnName_rowName", 
+    combining the old column name and the row name for each statistic.
+        
     .. note::
         If `function` returns a `pandas.Series`, it must have an index with only
         one level -- no hierarchical indexing, please!
@@ -67,6 +73,9 @@ class TransformStatisticOp(HasStrictTraits):
     
     statistic : Str
         The statistic to apply the function to.
+        
+    features : List(Str) (optional, default = empty)
+        Which features to apply `function` to?
         
     function : Callable
         The function used to transform the statistic.  `function` must 
@@ -230,17 +239,22 @@ class TransformStatisticOp(HasStrictTraits):
                         v = float(v)
                     except (TypeError, ValueError) as e:
                         if not isinstance(v, pd.Series):
-                            raise util.CytoflowOpError('callable',
+                            raise util.CytoflowOpError('function',
                                                        "Your function returned a {}. It must return "
                                                        "a float, a value that can be cast to float, "
                                                        "or a pandas.Series (with type float)"
                                                        .format(type(v))) from e        
                                                    
                     if isinstance(v, pd.Series) and v.dtype.kind != 'f':
-                        raise util.CytoflowOpError(None,
+                        raise util.CytoflowOpError('function',
                                                    "Your function returned a pandas.Series with dtype {}. "
                                                    "If it returns a Series, the data must be floating point."
                                                    .format(v.dtype))
+                        
+                    if isinstance(v, pd.Series) and not v.name:
+                        raise util.CytoflowOpError('function', 
+                                                   "Your function returned a pandas.Series, but it did not "
+                                                   "have a `name` attribute.")
                         
                     if new_stat is None:
                         if isinstance(v, float):
@@ -258,7 +272,12 @@ class TransformStatisticOp(HasStrictTraits):
                                         
 
                     if isinstance(v, pd.Series):
+                        # this assignment creates a new index level if necessary
                         new_stat.loc[group, column] = v.values
+                        
+                        # and we need to assign it a name!
+                        if new_stat.index.names[-1] is None:
+                            new_stat.index.names = new_stat.index.names[:-1] + [v.name]
                     else:
                         new_stat.loc[group, column] = v
                                             

@@ -57,7 +57,7 @@ of a statistic.  See `BarChartView` for an example.
 of a statistic.  See `Stats2DView` for an example.
 """
 
-from traits.api import HasStrictTraits, Str, List, Dict, provides
+from traits.api import HasStrictTraits, Str, List, Dict, provides, Union, Tuple
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -824,7 +824,7 @@ class BaseStatisticsView(BaseView):
             data = groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
         # FacetGrid needs a "long" data set
-        super().plot(experiment, data.reset_index(), **kwargs)
+        super().plot(experiment, data, **kwargs)
         
     def _subset_data(self, data):
         
@@ -913,7 +913,7 @@ class Base1DStatisticsView(BaseStatisticsView):
     """
     
     variable = Str
-    feature = Str    
+    feature = Union(Str, Tuple(Str, Str))    
     error_low = Str
     error_high = Str
     
@@ -1016,7 +1016,7 @@ class Base1DStatisticsView(BaseStatisticsView):
                                          "Variable {} not in statistics; must be one of {}"
                                          .format(self.xfacet, data.index.names))
             
-        facets = super()._get_facets() + [self.variable]
+        facets = super()._get_facets(data) + [self.variable]
         
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None, "Can't reuse facets")

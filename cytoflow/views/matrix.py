@@ -24,7 +24,7 @@ cytoflow.views.matrix
 
 import math
 
-from traits.api import provides, Enum, Str
+from traits.api import provides, Enum, Str, Callable
 import matplotlib.pyplot as plt
 
 import cytoflow.utility as util
@@ -59,8 +59,12 @@ class MatrixView(BaseStatisticsView):
       the intensity, so that the relationship between area and intensity remains the same.
           
     Optionally, you can set `size_feature` to scale the circles' (or pies or petals)' area
-    by another feature of the statistic. (Often used to scale by the count of a particular
-    population or subset.)
+    by another feature. (This is often used to scale by the count of a particular population
+    or subset.) In ``heat`` mode this is all you have to do, but in ``style`` or
+    ``petal`` mode you must also set `size_statistic`, which must be a *different* statistic
+    with all the levels of `statistic` **except** `variable`. That is, it must have a value for
+    every pie or petal plot, but *not* values for all of the pie slices.
+
     
     Attributes
     ----------
@@ -80,6 +84,9 @@ class MatrixView(BaseStatisticsView):
     feature = Str
     scale = util.ScaleEnum
     style = Enum("heat", "pie", "petal")
+    
+    size_feature = Str
+    size_statistic = Str
 
     def plot(self, experiment, plot_name = None, **kwargs):
         """
@@ -101,7 +108,7 @@ class MatrixView(BaseStatisticsView):
             
         kwargs.setdefault('aspect', 1.0)
         kwargs.setdefault('margin_titles', True)
-        kwargs.setdefault('xlabel', " ")  # I'm not sure why self.feature gets used as the x axis label otherwise.
+        kwargs.setdefault('xlabel', " ")  # self.feature gets used as the column name otherwise.
         kwargs.setdefault('legend_out', True)
         
         super().plot(experiment, plot_name, **kwargs)
