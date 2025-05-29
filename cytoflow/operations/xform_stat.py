@@ -39,26 +39,30 @@ from .i_operation import IOperation
 @provides(IOperation)
 class TransformStatisticOp(HasStrictTraits):
     """
-    Apply a function to a statistic, creating a new statistic.  
+    Apply a function to a feature of a statistic, creating a new statistic.  
     
     If you set `by`, then calling `apply` will group the input statistic by 
     unique combinations of the conditions in `by`, then call `function` on each 
     column in each group. The `function` should take a `pandas.Series` and it
     can return a ``float``, a value that can be cast to a ``float``, or 
-    `pandas.Series` whose `dtype` is a floating-point. The resulting statistic
-    will have the same columns as the original statistic. If `function` returns
-    a `float`, then the new statistic will have levels that are the same as the
-    conditions in `by`. If `function` returns a `pandas.Series`, then the name
-    of the series will be an extra level in the new statistic. 
+    `pandas.Series` whose `dtype` is a floating-point. 
+    
+    If `function` returns a ``float``, then the resulting statistic
+    will have one column with the name set to `feature` and levels that are the
+    same as the conditions in `by`.
+    
+    If `function` returns a `pandas.Series`, then the names of the rows will
+    become the names of the columns in the new statistic and the levels will
+    be the same as the conditions in `by`.
     
     .. note::
         If `function` returns a `pandas.Series`, it must have an index with only
         one level -- no hierarchical indexing, please!
     
-    Alternately, if `by` is left empty, then `function` must be a transformation.
+    Finally, if `by` is left empty, then `function` must be a transformation.
     `function` must take a `pandas.Series` as an argument and return a `pandas.Series`
-    with exactly the same index. `function` will be called on each column of the 
-    input statistic in turn.
+    with exactly the same index. The new statistic will contain that `pandas.Series`
+    as its only column, with the column name set to `feature`.
 
     Attributes
     ----------
@@ -66,11 +70,16 @@ class TransformStatisticOp(HasStrictTraits):
         The operation name.  Becomes the name of the new statistic.
     
     statistic : Str
-        The statistic to apply the function to.
+        The statistic to apply `function` to.
+        
+    feature : Str
+        The feature to apply `function` to.
         
     function : Callable
         The function used to transform the statistic.  `function` must 
-        take a `pandas.Series` as its only parameter and return a ``float``.
+        take a `pandas.Series` as its only parameter and return a ``float``,
+        a value that can be cast to ``float``, or a `pandas.Series` whose 
+        ``dtype`` is ``float``.
         
     by : List(Str)
         A list of metadata attributes to aggregate the input statistic before 
@@ -130,11 +139,12 @@ class TransformStatisticOp(HasStrictTraits):
         
         >>> xform_op = flow.TransformStatisticOp(name = 'LogMean',
         ...                                      statistic = 'MeanByDox',
+        ...                                      feature = 'Y2-A',
         ...                                      function = np.log)
         
         >>> ex_3 = xform_op.apply(ex2)
         >>> ex_3.statistics['LogMean']
-            Y2_A
+            Y2-A
         Dox    
         1.0    2.985965
         10.0    6.102518
@@ -146,6 +156,7 @@ class TransformStatisticOp(HasStrictTraits):
 
     name = Str
     statistic = Str
+    feature = Str
     function = Callable
     by = List(Str)    
 
@@ -189,6 +200,15 @@ class TransformStatisticOp(HasStrictTraits):
                                          .format(self.statistic))
         else:
             stat = experiment.statistics[self.statistic]
+            
+        if not self.feature:
+            raise util.CytoflowOpError('feature',
+                                       "Must set a feature")
+            
+        if self.feature not in stat:
+            raise util.CytoflowOpError('feature',
+                                       "Can't find feature {} in statistic {}"
+                                       .format(self.feature, self.statistic))
 
         if not self.function:
             raise util.CytoflowOpError('function',
@@ -213,79 +233,83 @@ class TransformStatisticOp(HasStrictTraits):
         new_stat = None
                     
         if self.by: 
+            idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
+                                             names = self.by)
             for group in data[self.by].itertuples(index = False, name = None):         
-                for column in stat.columns:                        
-                    s = stat.xs(group, level = self.by, drop_level = True)[column]
-                                        
-                    if len(s) == 0:
-                        continue
-                            
-                    try:
-                        v = self.function(s)
-                    except Exception as e:
-                        raise util.CytoflowOpError('function',
-                                                   "Your function threw an error in group {}".format(group)) from e
-                                                   
-                    try:
-                        v = float(v)
-                    except (TypeError, ValueError) as e:
-                        if not isinstance(v, pd.Series):
-                            raise util.CytoflowOpError('callable',
-                                                       "Your function returned a {}. It must return "
-                                                       "a float, a value that can be cast to float, "
-                                                       "or a pandas.Series (with type float)"
-                                                       .format(type(v))) from e        
-                                                   
-                    if isinstance(v, pd.Series) and v.dtype.kind != 'f':
-                        raise util.CytoflowOpError(None,
-                                                   "Your function returned a pandas.Series with dtype {}. "
-                                                   "If it returns a Series, the data must be floating point."
-                                                   .format(v.dtype))
+                s = stat.xs(group, level = self.by, drop_level = True)[self.feature]
+                                    
+                if len(s) == 0:
+                    continue
                         
-                    if new_stat is None:
-                        if isinstance(v, float):
-                            idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
-                                                             names = self.by)
-                        else:
-                            assert(v.index.nlevels == 1)
-                            idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by] +
-                                                             [v.index.values], 
-                                                             names = self.by + v.index.names)
-                        new_stat = pd.DataFrame(data = np.full((len(idx), len(stat.columns)), np.nan),
-                                                columns = stat.columns,
-                                                index = idx, 
-                                                dtype = 'float').sort_index()
-                                        
-
-                    if isinstance(v, pd.Series):
-                        new_stat.loc[group, column] = v.values
+                try:
+                    v = self.function(s)
+                except Exception as e:
+                    raise util.CytoflowOpError('function',
+                                               "Your function threw an error in group {}".format(group)) from e
+                                               
+                try:
+                    v = float(v)
+                except (TypeError, ValueError) as e:
+                    if not isinstance(v, pd.Series):
+                        raise util.CytoflowOpError('function',
+                                                   "Your function returned a {}. It must return "
+                                                   "a float, a value that can be cast to float, "
+                                                   "or a pandas.Series (with type float)"
+                                                   .format(type(v))) from e        
+                                               
+                if isinstance(v, pd.Series) and v.dtype.kind != 'f':
+                    raise util.CytoflowOpError('function',
+                                               "Your function returned a pandas.Series with dtype {}. "
+                                               "If it returns a Series, the data must be floating point."
+                                               .format(v.dtype))
+                #
+                # if isinstance(v, pd.Series) and v.index.inferred_type != 'string':
+                #     raise util.CytoflowOpError('function',
+                #                                "Your function returned a pandas.Series with an index "
+                #                                "of type '{}'. It must have an index of type 'string'."
+                #                                .format(v.index.inferred_type))
+                    
+                if new_stat is None:
+                    if isinstance(v, float):
+                        new_stat = pd.DataFrame(data = np.full((len(idx), 1), np.nan),
+                                    index = idx,
+                                    columns = [self.feature],
+                                    dtype = 'float' ).sort_index()
                     else:
-                        new_stat.loc[group, column] = v
-                                            
+                        assert(v.index.nlevels == 1)
+                        new_stat = pd.DataFrame(data = np.full((len(idx), len(v)), np.nan),
+                                                index = idx,
+                                                columns = v.index.tolist(),
+                                                dtype = 'float').sort_index()
+
+                new_stat.loc[group] = v
+                                        
                 # check for, and warn about, NaNs.
-                if np.any(np.isnan(new_stat.loc[group, column])):
+                if np.any(np.isnan(new_stat.loc[group])):
                     raise util.CytoflowOpError('function',
                                                "Category {} returned {}, which had NaNs that aren't allowed"
-                                               .format(group, stat.loc[group]))
-                    
+                                               .format(group, new_stat.loc[group]))
+                
         else:
             idx = stat.index.copy()
-            new_stat = pd.DataFrame(data = np.full((len(idx), len(stat.columns)), np.nan),
-                                   columns = stat.columns,
+            new_stat = pd.DataFrame(data = np.full((len(idx), 1), np.nan),
+                                   columns = [self.feature],
                                    index = idx, 
                                    dtype = 'float').sort_index()
 
-            for column in stat.columns: 
-                v = self.function(stat[column])
-                
-                if not isinstance(v, pd.Series):
-                    raise util.CytoflowOpError('function',
-                                               "If you don't specify 'by', your function must return a pandas.Series. "
-                                               "Instead, the function returned {} ({})".format(v, type(v)))
-                new_stat[column] = v
+            v = self.function(stat[self.feature])
+            
+            if not isinstance(v, pd.Series):
+                raise util.CytoflowOpError('function',
+                                           "If you don't specify 'by', your function must return a pandas.Series. "
+                                           "Instead, the function returned {} ({})".format(v, type(v)))
+            new_stat[self.feature] = v
         
         # sort the index, for performance
         new_stat = new_stat.sort_index()
+        
+        # make sure the new statistic's column index is a type 'string'
+        new_stat.rename(columns = str, inplace = True)
         
         new_experiment = experiment.clone(deep = False)
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))

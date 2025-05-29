@@ -1016,7 +1016,7 @@ class Base1DStatisticsView(BaseStatisticsView):
                                          "Variable {} not in statistics; must be one of {}"
                                          .format(self.xfacet, data.index.names))
             
-        facets = super()._get_facets() + [self.variable]
+        facets = super()._get_facets(data) + [self.variable]
         
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None, "Can't reuse facets")
@@ -1213,7 +1213,7 @@ class Base2DStatisticsView(BaseStatisticsView):
                                          "Variable {} not in statistics; must be one of {}"
                                          .format(self.xfacet, data.index.names))
             
-        facets = super()._get_facets() + [self.variable]
+        facets = super()._get_facets(data) + [self.variable]
         
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None, "Can't reuse facets")

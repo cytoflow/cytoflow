@@ -24,7 +24,7 @@ cytoflow.views.matrix
 
 import math
 
-from traits.api import provides, Enum, Str
+from traits.api import provides, Enum, Str, Callable
 import matplotlib.pyplot as plt
 
 import cytoflow.utility as util
@@ -59,8 +59,12 @@ class MatrixView(BaseStatisticsView):
       the intensity, so that the relationship between area and intensity remains the same.
           
     Optionally, you can set `size_feature` to scale the circles' (or pies or petals)' area
-    by another feature of the statistic. (Often used to scale by the count of a particular
-    population or subset.)
+    by another feature of the statistic. For example, you might scale the size of each
+    circle by the number of events in some subset. For the ``heat`` style, this is 
+    enough -- but for ``pie`` or ``petal`` plots, you need to *reduce* the feature
+    (because there is only one pie plot, but there are multiple slices of the pie.)
+    Set `size_function` to a callable that takes a `pandas.Series` as an argument and returns
+    a ``float``.
     
     Attributes
     ----------
@@ -80,6 +84,9 @@ class MatrixView(BaseStatisticsView):
     feature = Str
     scale = util.ScaleEnum
     style = Enum("heat", "pie", "petal")
+    
+    size_feature = Str
+    size_function = Callable
 
     def plot(self, experiment, plot_name = None, **kwargs):
         """
