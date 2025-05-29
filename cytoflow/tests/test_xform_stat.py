@@ -47,6 +47,7 @@ class Test(ImportedDataSmallTest):
     def testApply(self):
         ex = flow.TransformStatisticOp(name = "SumByDox",
                                        statistic = "LenByDox",
+                                       feature = "Y2-A",
                                        by = ['Dox'],
                                        function = lambda x: x.sum()).apply(self.ex)
                                      
@@ -72,6 +73,7 @@ class Test(ImportedDataSmallTest):
     def testSeries(self):      
         op = flow.TransformStatisticOp(name = "ByDox",
                                        statistic = "LenByDox",
+                                       feature = "Y2-A",
                                        function = lambda x: (x / x.sum()))
         
         ex2 = op.apply(self.ex)
