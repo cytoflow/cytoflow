@@ -247,16 +247,16 @@ class LogicleScale(HasStrictTraits):
                 super().__init__(vmin, vmax)
                 
                 self._scale = scale
-                self.vmin = scale.inverse(0.0)
-                self.vmax = scale.inverse(1.0 - sys.float_info.epsilon)
+                self.vmin = scale.get_transform().inverted().transform_non_affine(0.0)
+                self.vmax = scale.get_transform().inverted().transform_non_affine(1.0 - sys.float_info.epsilon)
                 
             def __call__(self, data, clip = None):
                 # it turns out that Logicle is already defined as a
                 # normalization to [0, 1].
-                ret = self._scale(data)
+                ret = self._scale.get_transform().transform_non_affine(data)
                 return np.ma.masked_array(ret)
             
-        return LogicleNormalize(scale = self, vmin = vmin, vmax = vmax)
+        return LogicleNormalize(scale = MatplotlibLogicleScale(None, logicle = self._logicle), vmin = vmin, vmax = vmax)
         
     
     @cached_property
