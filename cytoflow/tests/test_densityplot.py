@@ -63,7 +63,16 @@ class TestDensityPlot(View2DTestBase, unittest.TestCase):
 
     def testHueFacetOrder(self):
         pass  # not applicable
-
+    
+    
+    def testHueFacetLog(self):
+        self.view.huescale = 'log'
+        self.view.plot(self.ex)
+        
+    def testHueFacetLogicle(self):
+        self.view.huescale = 'logicle'
+        self.view.plot(self.ex)
+        
     # Density params
         
     def testGridsize(self):
