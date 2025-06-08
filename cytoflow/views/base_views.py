@@ -774,7 +774,7 @@ class BaseStatisticsView(BaseView):
             
         return plot_enum(data.reset_index(), by)
     
-    def plot(self, experiment, data, plot_name = None, **kwargs):
+    def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot some data from a statistic.
         
