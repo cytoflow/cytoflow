@@ -72,7 +72,8 @@ class FlowPeaksOp(HasStrictTraits):
       
     Calling `apply` creates a new categorical metadata variable 
     named ``name``, with possible values ``{name}_1`` .... ``name_n`` where 
-    ``n`` is the number of clusters estimated.
+    ``n`` is the number of clusters estimated and shows which cluster the
+    event was assigned to.
     
     The same model may not be appropriate for different subsets of the data set.
     If this is the case, you can use the `by` attribute to specify 
@@ -125,15 +126,15 @@ class FlowPeaksOp(HasStrictTraits):
             
     Statistics
     ----------
-    Calling `apply` adds a statistic with the following columns to the returned `Experiment`.
     
-    .. important::
-       **Component** is added as another level to the statistic index.
+    This operation adds a statistic whose features are the channel names used in
+    the clustering and whose values are the centroids of the clusters. Useful
+    for hierarchical clustering, minimum spanning tree visualization, etc.
+    The index has levels from `by`, plus a new level called ``Cluster``.  The
+    new statistic also has a column named ``Proportion``, 
     
-    - ``{{Channel}} Mean`` : The mean of the meta-cluster's centroid in each channel 
-        for each component.
-        
-    - ``Proportion`` : The proportion of events in this component's cluster.
+    The new statistic also has a feature named ``Proportion``, which has the 
+    proportion of events in each cluster.
         
     Notes
     -----
