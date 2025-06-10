@@ -24,6 +24,7 @@ cytoflowgui.workflow.views
 from .view_base import IWorkflowView, WorkflowView, WorkflowByView, WorkflowFacetView, Channel
 
 from .bar_chart import BarChartWorkflowView, BarChartPlotParams
+from .matrix import MatrixWorkflowView, MatrixPlotParams
 from .density import DensityWorkflowView, DensityPlotParams
 from .histogram_2d import Histogram2DWorkflowView, Histogram2DPlotParams
 from .histogram import HistogramWorkflowView, HistogramPlotParams

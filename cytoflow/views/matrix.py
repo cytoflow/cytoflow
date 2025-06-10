@@ -24,7 +24,7 @@ cytoflow.views.matrix
 
 import math
 
-from traits.api import provides, Enum, Str, Callable
+from traits.api import provides, Enum, Str, Callable, Constant
 import matplotlib.pyplot as plt
 
 import cytoflow.utility as util
@@ -53,7 +53,7 @@ class MatrixView(BaseStatisticsView):
       are used as the categories of the pie, and the arc length of each slice of pie is related 
       to the intensity of the value of `feature`.
       
-    * Set `style` to ``petal`` will draw a "petal plot" in each cell. The values of `variable` 
+    * Setting `style` to ``petal`` will draw a "petal plot" in each cell. The values of `variable` 
       are used as the categories, but unlike a pie plot, the arc width of each slice
       is equal. Instead, the radius of the pie slice scales with the square root of
       the intensity, so that the relationship between area and intensity remains the same.
@@ -79,6 +79,10 @@ class MatrixView(BaseStatisticsView):
     style : Enum(``heat``, ``pie``, ``petal``) (default = ``heat``)
         What kind of matrix plot to make?
         
+    scale : {'linear', 'log', 'logicle'}
+        How should the color, arc length, or radii be scaled before
+        plotting?
+        
     size_feature : String
         Which feature to use to scale the size of the circle/pie/petal?
         
@@ -87,14 +91,66 @@ class MatrixView(BaseStatisticsView):
         is used to reduce `size_feature` before scaling the pie plots. The function 
         should take a `pandas.Series` and return a ``float``. Often something like
         ``lambda x: x.sum()``.
+
+
+    Examples
+    --------
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
         
-    TODO - just change this to size_function...? apply to a frame group.
+    Add a threshold gate
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex2 = flow.ThresholdOp(name = 'Threshold',
+        ...                        channel = 'Y2-A',
+        ...                        threshold = 2000).apply(ex)
+        
+    Add a statistic
+    
+    .. plot::
+        :context: close-figs
+
+        >>> ex3 = flow.ChannelStatisticOp(name = "ByDox",
+        ...                               channel = "Y2-A",
+        ...                               by = ['Dox', 'Threshold'],
+        ...                               function = len).apply(ex2) 
+    
+    Plot the bar chart
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.MatrixView(statistic = "ByDox",
+        ...                 xfacet = 'Dox',
+        ...                 variable = 'Threshold',
+        ...                 feature = 'Y2-A',
+        ...                 style = 'pie').plot(ex3)
+        
     """
+    
+    id = Constant("cytoflow.view.matrix")
+    friendly_id = Constant("Matrix Chart") 
     
     variable = Str
     feature = Str
     scale = util.ScaleEnum
     style = Enum("heat", "pie", "petal")
+    huefacet = Constant("")   # can't facet by hue
+    huescale = Constant("linear")   # can't facet by hue. use `scale`.
     
     size_feature = Str
     size_function = Callable
@@ -105,8 +161,7 @@ class MatrixView(BaseStatisticsView):
         
         Parameters
         ----------
-        
-        soem parameters...
+
         """
         
         if self.huefacet:
@@ -117,7 +172,14 @@ class MatrixView(BaseStatisticsView):
             raise util.CytoflowViewError("variable",
                                          "If `style` is \"heat\", `variable` must be empty!")
             
+            
         stat = self._get_stat(experiment)
+        
+        if self.style != "heat" and self.variable not in stat.index.names:
+            raise util.CytoflowViewError('variable',
+                                         "Can't find variable '{}' in the statistic index."
+                                         .format(self.variable))
+        
         if self.size_feature and self.size_feature not in stat:
             raise util.CytoflowViewError('size_feature',
                                          "Feature {} not in statistic {}"
@@ -222,6 +284,14 @@ class MatrixView(BaseStatisticsView):
             
         elif self.style == "pie":
             patches = {}
+            
+            arc_scale = util.scale_factory(scale = self.scale,
+                                           experiment = experiment,
+                                           statistic = self.statistic,
+                                           features = [self.feature])
+            
+            kwargs['norm'] = arc_scale.norm()
+            
             grid.map(_pie_plot, self.feature, "_scale", patches = patches, **kwargs)
             
             # legends only get added in BaseView.plot for hue facets, so we need to add one here.
@@ -264,9 +334,10 @@ def _heat_plot(data, size, color = None, **kws):
 
     
 def _pie_plot(data, size, patches, color = None, **kws):
+    norm = kws.pop('norm')
     pie_patches, _ = plt.pie(data, **kws)
     for patch in pie_patches:
-        patch.set(radius = size.iat[0])
+        patch.set(radius = norm(size.iat[0]))
 
     patches[plt.gca()] = pie_patches
     
