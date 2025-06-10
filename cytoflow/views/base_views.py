@@ -746,7 +746,7 @@ class BaseStatisticsView(BaseView):
             
         data = self._get_stat(experiment)
         data = self._subset_data(data)
-        facets = self._get_facets(experiment)
+        facets = self._get_facets(data)
         by = list(set(data.index.names) - set(facets))
         
         class plot_enum(object):
@@ -957,7 +957,6 @@ class Base1DStatisticsView(BaseStatisticsView):
                                                 + ([self.error_low] if self.error_low else []))
                     
         super().plot(experiment, 
-                     stat, 
                      plot_name = plot_name, 
                      scale = scale, 
                      **kwargs)

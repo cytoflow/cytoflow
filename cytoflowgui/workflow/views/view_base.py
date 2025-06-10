@@ -156,7 +156,7 @@ class WorkflowView(HasStrictTraits):
     def enum_plots(self, experiment):
         try:
             return super().enum_plots(experiment)
-        except (util.CytoflowError, AttributeError):
+        except (util.CytoflowError, AttributeError) as e:
             return IterWrapper(iter([]), [])    
         
     def should_plot(self, changed, payload):
