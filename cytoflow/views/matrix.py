@@ -23,10 +23,15 @@ cytoflow.views.matrix
 """
 
 import math
+from warnings import warn
 
 from traits.api import provides, Enum, Str, Callable, Constant
+import seaborn as sns
+from natsort import natsorted
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import Grid
 
+import cytoflow
 import cytoflow.utility as util
 
 from .i_view import IView
@@ -91,6 +96,14 @@ class MatrixView(BaseStatisticsView):
         is used to reduce `size_feature` before scaling the pie plots. The function 
         should take a `pandas.Series` and return a ``float``. Often something like
         ``lambda x: x.sum()``.
+        
+    Note
+    ----
+    While `MatrixView` is a subclass of `BaseStatisticsView`, it does *not* call
+    `BaseStatisticsView.plot`. This is because `MatrixView` does not use 
+    `seaborn.FacetGrid` to lay out the subplots -- all the layout logic imposes 
+    a *huge* overhead cost. Instead `MatrixView` uses classes from 
+    `mpl_toolkits.axes_grid1`.
 
 
     Examples
@@ -163,18 +176,48 @@ class MatrixView(BaseStatisticsView):
         ----------
 
         """
-        
-        if self.huefacet:
-            raise util.CytoflowViewError('huefacet',
-                                         "Cannot set huefacet with this view.")
-        
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+            
+        if not self.xfacet and not self.yfacet:
+            raise util.CytoflowViewError('xfacet',
+                                         "At least one of 'xfacet' and 'yfacet' must be set.")
+
         if self.style == "heat" and self.variable != "":
             raise util.CytoflowViewError("variable",
                                          "If `style` is \"heat\", `variable` must be empty!")
-            
-            
+                        
         stat = self._get_stat(experiment)
+        data = self._subset_data(stat)
+        facets = self._get_facets(data)
+
+        unused_names = list(set(data.index.names) - set(facets))
+
+        if plot_name is not None and not unused_names:
+            raise util.CytoflowViewError('plot_name',
+                                         "You specified a plot name, but all "
+                                         "the facets are already used")
         
+        if unused_names:
+            groupby = data.groupby(unused_names, observed = True)
+
+            if plot_name is None:
+                raise util.CytoflowViewError('plot_name',
+                                             "You must use facets {} in either the "
+                                             "plot variables or the plot name. "
+                                             "Possible plot names: {}"
+                                             .format(unused_names, list(groupby.groups.keys())))
+
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError('plot_name',
+                                             "Plot {} not from plot_enum; must "
+                                             "be one of {}"
+                                             .format(plot_name, list(groupby.groups.keys())))
+                
+            data = groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+                
         if self.style != "heat" and self.variable not in stat.index.names:
             raise util.CytoflowViewError('variable',
                                          "Can't find variable '{}' in the statistic index."
@@ -185,18 +228,99 @@ class MatrixView(BaseStatisticsView):
                                          "Feature {} not in statistic {}"
                                          .format(self.size_feature, self.statistic))
             
-        kwargs.setdefault('aspect', 1.0)
-        kwargs.setdefault('margin_titles', True)
+        # kwargs.setdefault('aspect', 1.0)
+        # kwargs.setdefault('margin_titles', True)
+        #
+        # # xlabel and ylabel are the axis labels for the facet axes. of course,
+        # # we don't have any -- so clear them out.
+        # kwargs.setdefault('xlabel', " ") 
+        # kwargs.setdefault('ylabel', " ")
+        #
+        # # put the legend outside of the grid.
+        # kwargs.setdefault('legend_out', True)
         
-        # xlabel and ylabel are the axis labels for the facet axes. of course,
-        # we don't have any -- so clear them out.
-        kwargs.setdefault('xlabel', " ") 
-        kwargs.setdefault('ylabel', " ")
+        data.reset_index(inplace = True)
         
-        # put the legend outside of the grid.
-        kwargs.setdefault('legend_out', True)
+        title = kwargs.pop("title", None)
+        xlabel = kwargs.pop("xlabel", None)       
+        ylabel = kwargs.pop("ylabel", None)
+
+        legend = kwargs.pop('legend', True)
+        legend_out = kwargs.pop('legend_out', False)
         
-        super().plot(experiment, plot_name, **kwargs)
+        if cytoflow.RUNNING_IN_GUI:
+            sns_style = kwargs.pop('sns_style', 'whitegrid')
+            sns_context = kwargs.pop('sns_context', 'notebook')
+            sns.set_style(sns_style)
+            sns.set_context(sns_context)
+        else:
+            if 'sns_style' in kwargs:
+                kwargs.pop('sns_style')
+                warn("'sns_style' is ignored when not running in the GUI. Feel free to change the seaborn global settings.",
+                     util.CytoflowViewWarning)
+                
+            if 'sns_context' in kwargs:
+                kwargs.pop('sns_context')
+                warn("'sns_context' is ignored when not running in the GUI. Feel free to change the seaborn global settings.",
+                     util.CytoflowViewWarning)
+                
+        rows = kwargs.pop("row_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else []))
+        cols = kwargs.pop("col_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else []))
+
+        # set up the range of the color map
+        if 'norm' not in kwargs:
+            data_scale = util.scale_factory(scale = self.scale,
+                                            experiment = experiment,
+                                            statistic = self.statistic,
+                                            features = [self.feature])
+            data_norm = data_scale.norm()
+        else:
+            data_norm = kwargs.pop('norm)')
+        
+        grid = Grid(fig = plt.gcf(), 
+                    rect = 111, 
+                    nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+                                   len(cols) if len(cols) > 0 else 1),
+                    label_mode = "keep",
+                    axes_pad = 0.0)
+        
+        group_keys = []
+        group_keys += [self.xfacet] if self.xfacet else []
+        group_keys += [self.yfacet] if self.yfacet else []
+        
+        groups = data.groupby(by = group_keys)
+        
+        if self.style == "heat":
+            cmap = kwargs.pop('cmap', plt.get_cmap('viridis'))
+                    
+            for idx, (_, group) in enumerate(groups):
+                plt.sca(grid[idx])
+                patches, _ = plt.pie([1], **kwargs)
+                patches[0].set_facecolor(cmap(data_norm(group.reset_index().at[0, self.feature])))
+
+        elif self.style == "pie":
+            for idx, (_, group) in enumerate(groups):
+                plt.sca(grid[idx])
+                patches, _ = plt.pie(group[self.feature], **kwargs)
+            # for patch in pie_patches:
+            #     patch.set(radius = norm(size.iat[0]))
+        
+            # patches[plt.gca()] = pie_patches
+                        
+        #
+        # for idx, (_, group) in enumerate(groups):
+        #
+        #     if self.style == "heat":
+        #         self._heat_plot(group, self.feature)
+        #     elif self.style == "pie":
+        #         self._pie_plot(group, self.feature, self.variable)
+        #     elif self.style == "petal":
+        #         self._petal_plot(group, self.feature, self.variable)
+        #
+        #
+        #
+
+        
 
     def _get_stat(self, experiment):
         if experiment is None:
@@ -237,119 +361,119 @@ class MatrixView(BaseStatisticsView):
         return facets
     
 
-    def _grid_plot(self, experiment, grid, **kwargs):
+    # def _grid_plot(self, experiment, grid, **kwargs):
+    #
+    #     if self.size_feature and self.size_function:
+    #         for _, group in grid.facet_data():
+    #             try:
+    #                 v = self.size_function(group[self.size_feature])
+    #             except Exception as e:
+    #                 raise util.CytoflowViewError(None,
+    #                                            "Your function threw an error in group {}"
+    #                                            .format(group)) from e
+    #
+    #             try:
+    #                 v = float(v)
+    #             except (TypeError, ValueError) as e:
+    #                 raise util.CytoflowOpError(None,
+    #                                            "Your function returned a {}. It must return "
+    #                                            "a float or a value that can be cast to float."
+    #                                            .format(type(v))) from e
+    #
+    #             grid.data.loc[group.index, '_scale'] = v
+    #     elif self.size_feature:
+    #         grid.data['_scale'] = grid.data[self.size_feature]
+    #     else:
+    #         grid.data['_scale'] = [1.0] * len(grid.data)
+    #
+    #     grid.data['_scale'] = grid.data['_scale'] / grid.data['_scale'].max()
+    #
+    #     if self.style == "heat":
+    #         # set the default color map
+    #         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
+    #
+    #         # set up the range of the color map
+    #         if 'norm' not in kwargs:
+    #             hue_scale = util.scale_factory(scale = self.scale,
+    #                                            experiment = experiment,
+    #                                            statistic = self.statistic,
+    #                                            features = [self.feature])
+    #
+    #             kwargs['norm'] = hue_scale.norm()
+    #
+    #         grid.map(_heat_plot, self.feature, '_scale', **kwargs)
+    #
+    #         return {"cmap" : kwargs['cmap'], 
+    #                 "norm" : kwargs['norm']}
+    #
+    #     elif self.style == "pie":
+    #         patches = {}
+    #
+    #         arc_scale = util.scale_factory(scale = self.scale,
+    #                                        experiment = experiment,
+    #                                        statistic = self.statistic,
+    #                                        features = [self.feature])
+    #
+    #         kwargs['norm'] = arc_scale.norm()
+    #
+    #         grid.map(_pie_plot, self.feature, "_scale", patches = patches, **kwargs)
+    #
+    #         # legends only get added in BaseView.plot for hue facets, so we need to add one here.
+    #         grid.add_legend(title = self.variable, 
+    #                         legend_data = dict(zip(grid.data[self.variable].unique(),
+    #                                                [plt.Rectangle((0, 0), 1, 1, fc = p.get_facecolor()) for p in patches[plt.gca()]])),
+    #                         loc = 1)
+    #
+    #         return {}
+    #
+    #     elif self.style == "petal":
+    #         patches = {}
+    #         rad_scale = util.scale_factory(scale = self.scale,
+    #                                        experiment = experiment,
+    #                                        statistic = self.statistic,
+    #                                        features = [self.feature])
+    #
+    #         kwargs['norm'] = rad_scale.norm()
+    #         grid.map(_petal_plot, self.feature, "_scale", patches = patches, **kwargs)
+    #
+    #         # legends only get added in BaseView.plot for hue facets, so we need to add one here.
+    #         grid.add_legend(title = self.variable, 
+    #                         legend_data = dict(zip(grid.data[self.variable].unique(),
+    #                                                [plt.Rectangle((0, 0), 1, 1, fc = p.get_facecolor()) for p in patches[plt.gca()]])),
+    #                         loc = 1)
+    #
+    #         return {}
 
-        if self.size_feature and self.size_function:
-            for _, group in grid.facet_data():
-                try:
-                    v = self.size_function(group[self.size_feature])
-                except Exception as e:
-                    raise util.CytoflowViewError(None,
-                                               "Your function threw an error in group {}"
-                                               .format(group)) from e
-                                               
-                try:
-                    v = float(v)
-                except (TypeError, ValueError) as e:
-                    raise util.CytoflowOpError(None,
-                                               "Your function returned a {}. It must return "
-                                               "a float or a value that can be cast to float."
-                                               .format(type(v))) from e
-                                               
-                grid.data.loc[group.index, '_scale'] = v
-        elif self.size_feature:
-            grid.data['_scale'] = grid.data[self.size_feature]
-        else:
-            grid.data['_scale'] = [1.0] * len(grid.data)
-            
-        grid.data['_scale'] = grid.data['_scale'] / grid.data['_scale'].max()
-                    
-        if self.style == "heat":
-            # set the default color map
-            kwargs.setdefault('cmap', plt.get_cmap('viridis'))
-            
-            # set up the range of the color map
-            if 'norm' not in kwargs:
-                hue_scale = util.scale_factory(scale = self.scale,
-                                               experiment = experiment,
-                                               statistic = self.statistic,
-                                               features = [self.feature])
-                
-                kwargs['norm'] = hue_scale.norm()
-                
-            grid.map(_heat_plot, self.feature, '_scale', **kwargs)
-            
-            return {"cmap" : kwargs['cmap'], 
-                    "norm" : kwargs['norm']}
-            
-        elif self.style == "pie":
-            patches = {}
-            
-            arc_scale = util.scale_factory(scale = self.scale,
-                                           experiment = experiment,
-                                           statistic = self.statistic,
-                                           features = [self.feature])
-            
-            kwargs['norm'] = arc_scale.norm()
-            
-            grid.map(_pie_plot, self.feature, "_scale", patches = patches, **kwargs)
-            
-            # legends only get added in BaseView.plot for hue facets, so we need to add one here.
-            grid.add_legend(title = self.variable, 
-                            legend_data = dict(zip(grid.data[self.variable].unique(),
-                                                   [plt.Rectangle((0, 0), 1, 1, fc = p.get_facecolor()) for p in patches[plt.gca()]])),
-                            loc = 1)
-        
-            return {}
-    
-        elif self.style == "petal":
-            patches = {}
-            rad_scale = util.scale_factory(scale = self.scale,
-                                           experiment = experiment,
-                                           statistic = self.statistic,
-                                           features = [self.feature])
-            
-            kwargs['norm'] = rad_scale.norm()
-            grid.map(_petal_plot, self.feature, "_scale", patches = patches, **kwargs)
-            
-            # legends only get added in BaseView.plot for hue facets, so we need to add one here.
-            grid.add_legend(title = self.variable, 
-                            legend_data = dict(zip(grid.data[self.variable].unique(),
-                                                   [plt.Rectangle((0, 0), 1, 1, fc = p.get_facecolor()) for p in patches[plt.gca()]])),
-                            loc = 1)
-        
-            return {}
+
+# def _heat_plot(data, size, color = None, **kws):
+#     cmap = kws.pop('cmap')
+#     norm = kws.pop('norm')
+#
+#     pie_patches, _ = plt.pie(data, **kws)
+#
+#     pie_patches[0].set_facecolor(cmap(norm(data.iat[0])))
+#     pie_patches[0].set(radius = size.iat[0])       
+
+
+#
+# def _pie_plot(data, size, patches, color = None, **kws):
+#     norm = kws.pop('norm')
+#     pie_patches, _ = plt.pie(data, **kws)
+#     for patch in pie_patches:
+#         patch.set(radius = norm(size.iat[0]))
+#
+#     patches[plt.gca()] = pie_patches
+
+# def _petal_plot(data, patches, color = None, **kws):  
+#
+#     norm = kws.pop('norm')
+#     pie_patches, _ = plt.pie([1.0 / len(data)] * len(data), **kws)
+#     for i, p in enumerate(pie_patches):
+#         p.set(radius = math.sqrt(p.r * norm(data.iat[i])))
+#
+#     patches[plt.gca()] = pie_patches        
 
 util.expand_class_attributes(MatrixView)
-util.expand_method_parameters(MatrixView, MatrixView.plot)
-
-def _heat_plot(data, size, color = None, **kws):
-    cmap = kws.pop('cmap')
-    norm = kws.pop('norm')
-    
-    pie_patches, _ = plt.pie(data, **kws)
-    
-    pie_patches[0].set_facecolor(cmap(norm(data.iat[0])))
-    pie_patches[0].set(radius = size.iat[0])            
-
-    
-def _pie_plot(data, size, patches, color = None, **kws):
-    norm = kws.pop('norm')
-    pie_patches, _ = plt.pie(data, **kws)
-    for patch in pie_patches:
-        patch.set(radius = norm(size.iat[0]))
-
-    patches[plt.gca()] = pie_patches
-    
-
-def _petal_plot(data, patches, color = None, **kws):  
-    
-    norm = kws.pop('norm')
-    pie_patches, _ = plt.pie([1.0 / len(data)] * len(data), **kws)
-    for i, p in enumerate(pie_patches):
-        p.set(radius = math.sqrt(p.r * norm(data.iat[i])))
-        
-    patches[plt.gca()] = pie_patches        
 
     
 
