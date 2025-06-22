@@ -28,8 +28,9 @@ from warnings import warn
 from traits.api import provides, Enum, Str, Callable, Constant
 import seaborn as sns
 from natsort import natsorted
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import Grid
+from mpl_toolkits.axes_grid1 import Grid, ImageGrid
 
 import cytoflow
 import cytoflow.utility as util
@@ -239,7 +240,7 @@ class MatrixView(BaseStatisticsView):
         # # put the legend outside of the grid.
         # kwargs.setdefault('legend_out', True)
         
-        data.reset_index(inplace = True)
+        data = data.reset_index()
         
         title = kwargs.pop("title", None)
         xlabel = kwargs.pop("xlabel", None)       
@@ -247,7 +248,7 @@ class MatrixView(BaseStatisticsView):
 
         legend = kwargs.pop('legend', True)
         legend_out = kwargs.pop('legend_out', False)
-        
+                
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
             sns_context = kwargs.pop('sns_context', 'notebook')
@@ -275,14 +276,7 @@ class MatrixView(BaseStatisticsView):
                                             features = [self.feature])
             data_norm = data_scale.norm()
         else:
-            data_norm = kwargs.pop('norm)')
-        
-        grid = Grid(fig = plt.gcf(), 
-                    rect = 111, 
-                    nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
-                                   len(cols) if len(cols) > 0 else 1),
-                    label_mode = "keep",
-                    axes_pad = 0.0)
+            data_norm = kwargs.pop('norm')
         
         group_keys = []
         group_keys += [self.xfacet] if self.xfacet else []
@@ -292,22 +286,75 @@ class MatrixView(BaseStatisticsView):
         
         if self.style == "heat":
             cmap = kwargs.pop('cmap', plt.get_cmap('viridis'))
+            
+            grid = ImageGrid(fig = plt.gcf(), 
+                             rect = 111, 
+                             nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+                                            len(cols) if len(cols) > 0 else 1),
+                             label_mode = "keep",
+                             axes_pad = 0.0,
+                             cbar_mode = "single",
+                             cbar_pad = 0.1,
+                             cbar_size = 0.15)
                     
             for idx, (_, group) in enumerate(groups):
                 plt.sca(grid[idx])
                 patches, _ = plt.pie([1], **kwargs)
                 patches[0].set_facecolor(cmap(data_norm(group.reset_index().at[0, self.feature])))
+                
+            mpl.colorbar.Colorbar(grid[0].cax, 
+                                  cmap = cmap, 
+                                  norm = data_norm,
+                                  label = self.feature)
 
         elif self.style == "pie":
+            grid = ImageGrid(fig = plt.gcf(), 
+                             rect = 111, 
+                             nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+                                            len(cols) if len(cols) > 0 else 1),
+                             label_mode = "keep",
+                             axes_pad = 0.0,
+                             cbar_mode = None)
             for idx, (_, group) in enumerate(groups):
                 plt.sca(grid[idx])
+                # plt.gca().set_xmargin(-0.01)
+                # plt.gca().set_ymargin(-0.01)
                 patches, _ = plt.pie(group[self.feature], **kwargs)
-            # for patch in pie_patches:
-            #     patch.set(radius = norm(size.iat[0]))
+                            
+        for i, ax in enumerate(grid.axes_row[0]):
+            ax.xaxis.set_label_text(cols[i])
+            ax.xaxis.set_label_position("top")
+            ax.xaxis.label.set(size = 'small')
         
-            # patches[plt.gca()] = pie_patches
-                        
-        #
+        for i, ax in enumerate(grid.axes_column[0]):
+            ax.yaxis.set_label_text(rows[i])
+            ax.yaxis.label.set(rotation = 'horizontal', 
+                               horizontalalignment = 'right', 
+                               verticalalignment = 'center',
+                               size = 'small')
+
+        # x and y in supxlabel and supylabel are in figure units, but we dont
+        # know the size of the figure (with the labels) until we draw it!            
+        plt.gcf().draw_without_rendering()
+        
+        min_x = 1.0
+        for i, ax in enumerate(grid.axes_column[0]):        
+            bbox = ax.yaxis.label.get_window_extent(renderer = plt.gcf().canvas.get_renderer())
+            bbox = plt.gcf().transFigure.inverted().transform_bbox(bbox)
+            if bbox.x0 < min_x:
+                min_x = bbox.x0
+
+        plt.gcf().supylabel(self.yfacet, x = min_x - 0.04)
+        
+        max_y = 0.0
+        for i, ax in enumerate(grid.axes_row[0]):
+            bbox = ax.xaxis.label.get_window_extent(renderer = plt.gcf().canvas.get_renderer())
+            bbox = plt.gcf().transFigure.inverted().transform_bbox(bbox)
+            if bbox.y1 > max_y:
+                max_y = bbox.y1
+                
+        plt.gcf().supxlabel(self.xfacet, y = max_y + 0.01)
+        
         # for idx, (_, group) in enumerate(groups):
         #
         #     if self.style == "heat":
