@@ -155,7 +155,7 @@ class View1DTestBase(ImportedData):
     def testHueFacet(self):
         self.view.huefacet = "Dox"
         self.view.plot(self.ex)
-        self.assertEqual(['0.0', '10.0', '100.0'], get_legend_entries(plt.gca()))
+        self.assertEqual(['0.0', '10.0', '100.0'], get_legend_entries(plt.gcf()))
 
     def testSubset(self, has_colorbar=False):
         self.view.subset = "Dox == 10.0"
@@ -208,7 +208,7 @@ class View1DTestBase(ImportedData):
     def testHueFacetOrder(self):
         self.view.huefacet = "Dox"
         self.view.plot(self.ex, hue_order=(100., 0., 10.))
-        self.assertEqual(['100.0', '0.0', '10.0'], get_legend_entries(plt.gca()))
+        self.assertEqual(['100.0', '0.0', '10.0'], get_legend_entries(plt.gcf()))
 
     def testStyle(self):
         self.view.plot(self.ex, sns_style = "darkgrid")
@@ -301,5 +301,5 @@ class View2DTestBase(View1DTestBase):
         self.assertEqual(plt.gca().get_ylim(), (1, 1001))
 
 
-def get_legend_entries(ax):
-    return [t.get_text() for t in ax.get_legend().get_texts()]
+def get_legend_entries(fig):
+    return [t.get_text() for t in fig.legends[0].get_texts()]

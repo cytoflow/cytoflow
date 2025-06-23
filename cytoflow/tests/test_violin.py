@@ -96,7 +96,7 @@ class TestViolin(View1DTestBase, unittest.TestCase):
     def testHueFacet(self):
         self.view.huefacet = "Well"
         self.view.plot(self.ex)
-        self.assertEqual(["A", "B", "C"], get_legend_entries(plt.gca()))
+        self.assertEqual(["A", "B", "C"], get_legend_entries(plt.gcf()))
 
     def testXFacetOrder(self, has_colorbar=False):
         self.view.xfacet = "Well"
@@ -111,7 +111,7 @@ class TestViolin(View1DTestBase, unittest.TestCase):
     def testHueFacetOrder(self):
         self.view.huefacet = "Well"
         self.view.plot(self.ex, hue_order=("C", "A", "B"))
-        self.assertEqual(["C", "A", "B"], get_legend_entries(plt.gca()))
+        self.assertEqual(["C", "A", "B"], get_legend_entries(plt.gcf()))
 
     def testSubset(self):
         self.view.subset = "Dox == 10.0"

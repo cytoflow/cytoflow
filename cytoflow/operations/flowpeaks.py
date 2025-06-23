@@ -1123,6 +1123,8 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
                               self.op._peaks[k], 
                               self.op._cluster_peak[k],
                               self.op._density[k])
+            
+        kwargs.setdefault('palette', 'viridis')
                     
         super().plot(experiment,
                      annotations = annotations,
@@ -1138,7 +1140,6 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
         kwargs.setdefault('shading', 'auto')
-        kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
         xscale = kwargs['scale'][self.xchannel]
         xlim = kwargs['lim'][self.xchannel]
@@ -1146,7 +1147,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         ylim = kwargs['lim'][self.ychannel]
         
         # can't modify colormaps in place
-        cmap = copy.copy(kwargs['cmap'])
+        cmap = copy.copy(cmap)
         
         under_color = kwargs.pop('under_color', None)
         if under_color is not None:
@@ -1174,7 +1175,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
                     xlim = xlim,
                     yscale = yscale,
                     ylim = ylim,
-                    cmap = kwargs['cmap'])
+                    cmap = cmap)
  
     def _annotation_plot(self, axes, annotation, annotation_facet, 
                          annotation_value, annotation_color, **kwargs):

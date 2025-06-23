@@ -1110,8 +1110,6 @@ class Base2DStatisticsView(BaseStatisticsView):
                                          "variable {0} not in the experiment"
                                     .format(self.variable))
         
-        data = self._get_stat(experiment)
-
         xscale = util.scale_factory(self.xscale, 
                                     experiment, 
                                     statistic = self.statistic, 
@@ -1127,7 +1125,6 @@ class Base2DStatisticsView(BaseStatisticsView):
                                                 + ([self.yerror_high] if self.yerror_high else []))
             
         super().plot(experiment, 
-                     data, 
                      plot_name, 
                      xscale = xscale, 
                      yscale = yscale, 

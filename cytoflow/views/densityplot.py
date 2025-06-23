@@ -133,7 +133,6 @@ class DensityView(Base2DView):
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
-        kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
         lim = kwargs.pop('lim')
         xlim = lim[self.xchannel]
