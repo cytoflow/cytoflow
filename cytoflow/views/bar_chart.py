@@ -134,7 +134,7 @@ class BarChartView(Base1DStatisticsView):
 
         super().plot(experiment, plot_name, **kwargs)
         
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
                  
         # because the bottom of a bar chart is "0", masking out bad
         # values on a log scale doesn't work.  we must clip instead.

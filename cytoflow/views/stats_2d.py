@@ -128,7 +128,7 @@ class Stats2DView(Base2DStatisticsView):
         super().plot(experiment, plot_name, **kwargs)
 
 
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
 
         data = grid.data
         xscale = kwargs.pop('xscale')

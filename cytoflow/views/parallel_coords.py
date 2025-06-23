@@ -117,7 +117,7 @@ class ParallelCoordinatesView(BaseNDView):
             ax.set_ylabel("")
             ax.get_yaxis().set_ticks([])
         
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
         
         # xlim and ylim, xscale and yscale are the limits and scale of the
         # plane onto which we are projecting.  the kwargs 'scale' and 'lim'

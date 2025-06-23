@@ -164,7 +164,7 @@ class Stats1DView(Base1DStatisticsView):
                      variable_scale = variable_scale,
                      **kwargs)
 
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
 
         data = grid.data
         data_scale = kwargs.pop('scale')

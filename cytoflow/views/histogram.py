@@ -123,7 +123,7 @@ class HistogramView(Base1DView):
             kwargs.setdefault('ylabel', self.channel)
         super().plot(experiment, **kwargs)
 
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
                         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)

@@ -149,7 +149,7 @@ class ViolinPlotView(Base1DView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
 
         kwargs.setdefault('orientation', 'vertical')
         

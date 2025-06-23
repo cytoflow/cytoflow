@@ -124,6 +124,9 @@ class BaseView(HasStrictTraits):
         legend : bool
             Plot a legend for the color or hue facet?  Defaults to `True`.
             
+        legend_out : bool
+            Plot the legend outside of the plot or grid? Defaults to `True`.
+            
         sharex : bool
             If there are multiple subplots, should they share X axes?  Defaults
             to `True`.
@@ -174,16 +177,6 @@ class BaseView(HasStrictTraits):
         despine : Bool
             Remove the top and right axes from the plot?  Default is ``True``.
 
-        Other Parameters
-        ----------------
-        cmap : matplotlib colormap
-            If plotting a huefacet with many values, use this color map instead
-            of the default.
-            
-        norm : matplotlib.colors.Normalize
-            If plotting a huefacet with many values, use this object for color
-            scale normalization.
-
         """
         
         if experiment is None:
@@ -217,10 +210,9 @@ class BaseView(HasStrictTraits):
         aspect = kwargs.pop("aspect", 1.5)
         
         legend = kwargs.pop('legend', True)
-        legend_out = kwargs.pop('legend_out', False)
+        legend_out = kwargs.pop('legend_out', True)
 
         despine = kwargs.pop('despine', False)
-        palette = kwargs.pop('palette', None)
         margin_titles = kwargs.pop('margin_titles', False)
                
         if cytoflow.RUNNING_IN_GUI:
@@ -239,28 +231,49 @@ class BaseView(HasStrictTraits):
                 warn("'sns_context' is ignored when not running in the GUI. Feel free to change the seaborn global settings.",
                      util.CytoflowViewWarning)
                 
+        if 'palette' in kwargs:
+            palette = kwargs.pop('palette')
+            cmap = sns.color_palette(palette, as_cmap = True)
             
+            # if this is a qualitative colormap and we need more colors than it has,
+            # warn and default back to viridis
+            if self.huefacet and isinstance(cmap, list) and len(data[self.huefacet].unique() > len(cmap)): 
+                warn('There are more hues that can fit into palette {}; defaulting to viridis'.format(palette),
+                     util.CytoflowViewWarning)
+                palette = 'viridis'
+                cmap = sns.color_palette(palette, as_cmap = True)
+        
+        else:
+            if self.huefacet and len(data[self.huefacet].unique()) > len(sns.color_palette('deep')):
+                palette = 'viridis'
+                cmap = sns.color_palette('viridis', as_cmap = True)
+            else:
+                palette = 'deep'
+                cmap = sns.color_palette('deep')
+                            
         col_order = kwargs.pop("col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else None))
         row_order = kwargs.pop("row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else None))
         hue_order = kwargs.pop("hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet else None))
-        g = sns.FacetGrid(data, 
-                          height = height,
-                          aspect = aspect,
-                          col = (self.xfacet if self.xfacet else None),
-                          row = (self.yfacet if self.yfacet else None),
-                          hue = (self.huefacet if self.huefacet else None),
-                          col_order = col_order,
-                          row_order = row_order,
-                          hue_order = hue_order,
-                          col_wrap = col_wrap,
-                          legend_out = legend_out,
-                          sharex = sharex,
-                          sharey = sharey,
-                          despine = despine,
-                          palette = palette, 
-                          margin_titles = margin_titles)
         
-        plot_ret = self._grid_plot(experiment = experiment, grid = g, **kwargs)
+        with sns.color_palette(palette):
+            g = sns.FacetGrid(data, 
+                              height = height,
+                              aspect = aspect,
+                              col = (self.xfacet if self.xfacet else None),
+                              row = (self.yfacet if self.yfacet else None),
+                              hue = (self.huefacet if self.huefacet else None),
+                              col_order = col_order,
+                              row_order = row_order,
+                              hue_order = hue_order,
+                              col_wrap = col_wrap,
+                              legend_out = legend_out,
+                              sharex = sharex,
+                              sharey = sharey,
+                              despine = despine,
+                              palette = palette, 
+                              margin_titles = margin_titles)
+        
+        plot_ret = self._grid_plot(experiment = experiment, grid = g, cmap = cmap, **kwargs)
         
         kwargs.update(plot_ret)
         
@@ -311,12 +324,11 @@ class BaseView(HasStrictTraits):
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
 
-        cmap = kwargs.pop('cmap', None)
         norm = kwargs.pop('norm', None)
         legend_data = kwargs.pop('legend_data', None)
         
         if legend:
-            if cmap and norm:
+            if norm:
                 plot_ax = plt.gca()
                 cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
                 mpl.colorbar.ColorbarBase(cax, 
@@ -324,14 +336,8 @@ class BaseView(HasStrictTraits):
                                           norm = norm)
                 plt.sca(plot_ax)
             elif self.huefacet:
-        
-                current_palette = mpl.rcParams['axes.prop_cycle']
-            
-                if util.is_numeric(data[self.huefacet]) and \
-                   len(g.hue_names) > len(current_palette):
-    
-                    cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
-                                                                       n_colors = len(g.hue_names)))                
+                cmap = sns.color_palette(palette, as_cmap = True)
+                if util.is_numeric(data[self.huefacet]) and isinstance(cmap, mpl.colors.ListedColormap) and len(g.hue_names) > 10:               
                     hue_scale = util.scale_factory(self.huescale, 
                                                    experiment,
                                                    data = data[self.huefacet].values)
@@ -347,9 +353,6 @@ class BaseView(HasStrictTraits):
                     plt.sca(plot_ax)
                 else:
                     g.add_legend(title = huelabel, legend_data = legend_data)
-                    ax = g.axes.flat[0]
-                    legend = ax.legend_
-                    self._update_legend(legend)
                         
         if title:
             plt.suptitle(title, y = 1.02)
@@ -362,7 +365,7 @@ class BaseView(HasStrictTraits):
             
         g.set_axis_labels(xlabel, ylabel)
       
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
         raise NotImplementedError("You must override _grid_plot in a derived class")
     
     def _update_legend(self, legend):

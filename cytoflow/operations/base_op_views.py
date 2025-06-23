@@ -334,7 +334,7 @@ class NullView(BaseDataView):
     An `IView` that doesn't actually do any plotting.
     """
     
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
         return {}
 
 
@@ -382,7 +382,7 @@ class AnnotatingView(BaseDataView):
                      annotation_facet = annotation_facet,
                      **kwargs)
         
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
         
         # pop the annotation stuff off of kwargs so the underlying data plotter 
         # doesn't get confused
@@ -393,7 +393,7 @@ class AnnotatingView(BaseDataView):
         color = kwargs.get('color', None)
 
         # plot the underlying data plots
-        plot_ret = super()._grid_plot(experiment, grid, **kwargs)
+        plot_ret = super()._grid_plot(experiment, grid, cmap, **kwargs)
         kwargs.update(plot_ret)
                         
         # plot the annotations on top

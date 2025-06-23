@@ -1130,7 +1130,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
                      yscale = yscale,
                      **kwargs)
         
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
         # all the real plotting happens in _annotation_plot.  this just sets some
         # defaults and then stores them for later.
 
@@ -1168,7 +1168,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
             ax.fp_ybins = ybins
             ax.fp_keywords = kwargs
 
-        super()._grid_plot(experiment, grid, **kwargs)
+        super()._grid_plot(experiment, grid, cmap, **kwargs)
             
         return dict(xscale = xscale,
                     xlim = xlim,

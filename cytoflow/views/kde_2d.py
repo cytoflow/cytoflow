@@ -116,7 +116,7 @@ class Kde2DView(Base2DView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
 
         
         kwargs.setdefault('shade', False)

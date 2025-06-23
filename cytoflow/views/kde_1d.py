@@ -128,7 +128,7 @@ class Kde1DView(Base1DView):
             kwargs.setdefault('ylabel', self.channel)
         super().plot(experiment, **kwargs)
                 
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
 
         kwargs.setdefault('shade', True)
         kwargs.setdefault('orientation', "vertical")

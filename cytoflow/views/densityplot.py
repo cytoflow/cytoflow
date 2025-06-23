@@ -125,9 +125,10 @@ class DensityView(Base2DView):
         
         """
         
+        kwargs.setdefault('palette', 'viridis')
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, **kwargs):
+    def _grid_plot(self, experiment, grid, cmap, **kwargs):
 
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
@@ -143,7 +144,7 @@ class DensityView(Base2DView):
         yscale = scale[self.ychannel]
         
         # can't modify color maps in place!
-        cmap = copy.copy(kwargs['cmap'])
+        cmap = copy.copy(cmap)
         
         under_color = kwargs.pop('under_color', None)
         if under_color is not None:
@@ -156,6 +157,8 @@ class DensityView(Base2DView):
             cmap.set_bad(color = bad_color)
         else:
             cmap.set_bad(color = cmap(0.0))
+            
+        kwargs['cmap'] = cmap
             
         gridsize = kwargs.pop('gridsize', 50)
 
@@ -182,7 +185,6 @@ class DensityView(Base2DView):
                     xscale = xscale,
                     ylim = ylim,
                     yscale = yscale,
-                    cmap = kwargs['cmap'], 
                     norm = kwargs['norm'])
         
         
