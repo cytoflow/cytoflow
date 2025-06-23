@@ -104,7 +104,6 @@ class ScatterplotView(Base2DView):
         
     def _grid_plot(self, experiment, grid, cmap, **kwargs):
 
-        kwargs.pop('cmap')
         kwargs.setdefault('alpha', 0.25)
         kwargs.setdefault('s', 2)
         kwargs.setdefault('marker', 'o')
