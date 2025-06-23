@@ -104,7 +104,8 @@ class MatrixView(BaseStatisticsView):
     `BaseStatisticsView.plot`. This is because `MatrixView` does not use 
     `seaborn.FacetGrid` to lay out the subplots -- all the layout logic imposes 
     a *huge* overhead cost. Instead `MatrixView` uses classes from 
-    `mpl_toolkits.axes_grid1`.
+    `mpl_toolkits.axes_grid1` for its layout. It does use other functions in the
+    superclass such as `enum_plots`.
 
 
     Examples
@@ -175,6 +176,45 @@ class MatrixView(BaseStatisticsView):
         
         Parameters
         ----------
+        experiment: Experiment
+            The `Experiment` to plot using this view.
+            
+        plot_name : str
+            If this `IView` can make multiple plots, ``plot_name`` is
+            the name of the plot to make.  Must be one of the values retrieved
+            from `enum_plots`.
+            
+        title : str
+            Set the plot title
+            
+        xlabel : str
+            Set the X axis label
+        
+        ylabel : str
+            Set the Y axis label
+            
+        legend : bool
+            Plot a legend or color bar?  Defaults to `True`.
+            
+        legendlabel : str
+            Set the label for the color bar or legend
+
+        sns_style : {"darkgrid", "whitegrid", "dark", "white", "ticks"}
+            Which ``seaborn`` style to apply to the plot?  Default is ``whitegrid``.
+            
+        sns_context : {"notebook", "paper", "talk", "poster"}
+            Which ``seaborn`` context to use?  Controls the scaling of plot 
+            elements such as tick labels and the legend.  Default is ``notebook``.
+            
+        palette : palette name
+            Colors to use for the different levels of the hue variable. 
+            Should be something that can be interpreted by
+            `seaborn.color_palette`. If plotting a heat map, this should be
+            a continuous color map ('viridis' is the default.) Otherwise,
+            choose either a discrete color map ('deep' is the default) or
+            a continuous color map from which equi-spaced colors will be drawn.
+            
+        All other parameters are passed to `matplotlib.pyplot.pie`.
 
         """
 
@@ -243,11 +283,10 @@ class MatrixView(BaseStatisticsView):
         data = data.reset_index()
         
         title = kwargs.pop("title", None)
-        xlabel = kwargs.pop("xlabel", None)       
-        ylabel = kwargs.pop("ylabel", None)
+        xlabel = kwargs.pop("xlabel", self.xfacet)       
+        ylabel = kwargs.pop("ylabel", self.yfacet)
 
         legend = kwargs.pop('legend', True)
-        legend_out = kwargs.pop('legend_out', False)
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -285,7 +324,8 @@ class MatrixView(BaseStatisticsView):
         groups = data.groupby(by = group_keys)
         
         if self.style == "heat":
-            cmap = kwargs.pop('cmap', plt.get_cmap('viridis'))
+            cmap_name = kwargs.pop('palette', 'viridis')
+            cmap = sns.color_palette(cmap_name, as_cmap = True)
             
             grid = ImageGrid(fig = plt.gcf(), 
                              rect = 111, 
@@ -302,24 +342,61 @@ class MatrixView(BaseStatisticsView):
                 patches, _ = plt.pie([1], **kwargs)
                 patches[0].set_facecolor(cmap(data_norm(group.reset_index().at[0, self.feature])))
                 
-            mpl.colorbar.Colorbar(grid[0].cax, 
-                                  cmap = cmap, 
-                                  norm = data_norm,
-                                  label = self.feature)
+            if legend:
+                mpl.colorbar.Colorbar(grid[0].cax, 
+                                      cmap = cmap, 
+                                      norm = data_norm,
+                                      label = self.feature)
 
         elif self.style == "pie":
-            grid = ImageGrid(fig = plt.gcf(), 
-                             rect = 111, 
-                             nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
-                                            len(cols) if len(cols) > 0 else 1),
-                             label_mode = "keep",
-                             axes_pad = 0.0,
-                             cbar_mode = None)
+            palette_name = kwargs.pop('palette', 'deep')
+                       
+            # the context manager goes here because the color cycler is a
+            # property of the axes 
+            with sns.color_palette(palette_name):
+                grid = ImageGrid(fig = plt.gcf(), 
+                                 rect = 111, 
+                                 nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+                                                len(cols) if len(cols) > 0 else 1),
+                                 label_mode = "keep",
+                                 axes_pad = 0.0,
+                                 cbar_mode = None)
+            
             for idx, (_, group) in enumerate(groups):
                 plt.sca(grid[idx])
-                # plt.gca().set_xmargin(-0.01)
-                # plt.gca().set_ymargin(-0.01)
                 patches, _ = plt.pie(group[self.feature], **kwargs)
+                
+                for pi, patch in enumerate(patches):
+                    patch.set_label(group.reset_index().at[pi, self.variable])
+                
+            if(legend):
+                grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), title = self.feature)
+            
+        elif self.style == "petal":
+            palette_name = kwargs.pop('palette', 'deep')
+                       
+            # the context manager goes here because the color cycler is a
+            # property of the axes 
+            with sns.color_palette(palette_name):
+                grid = ImageGrid(fig = plt.gcf(), 
+                                 rect = 111, 
+                                 nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+                                                len(cols) if len(cols) > 0 else 1),
+                                 label_mode = "keep",
+                                 axes_pad = 0.0,
+                                 cbar_mode = None)
+            
+            for idx, (_, group) in enumerate(groups):
+                plt.sca(grid[idx])
+                patches, _ = plt.pie([1.0 / len(group[self.feature])] * len(group[self.feature]), **kwargs)
+                
+                for pi, patch in enumerate(patches):
+                    patch.set_label(group.reset_index().at[pi, self.variable])
+                    patch.set(radius = math.sqrt(group.reset_index().at[pi, self.feature] / group.reset_index()[self.feature].sum()))
+                    
+            if(legend):
+                grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), title = self.feature)
+            
                             
         for i, ax in enumerate(grid.axes_row[0]):
             ax.xaxis.set_label_text(cols[i])
@@ -337,15 +414,6 @@ class MatrixView(BaseStatisticsView):
         # know the size of the figure (with the labels) until we draw it!            
         plt.gcf().draw_without_rendering()
         
-        min_x = 1.0
-        for i, ax in enumerate(grid.axes_column[0]):        
-            bbox = ax.yaxis.label.get_window_extent(renderer = plt.gcf().canvas.get_renderer())
-            bbox = plt.gcf().transFigure.inverted().transform_bbox(bbox)
-            if bbox.x0 < min_x:
-                min_x = bbox.x0
-
-        plt.gcf().supylabel(self.yfacet, x = min_x - 0.04)
-        
         max_y = 0.0
         for i, ax in enumerate(grid.axes_row[0]):
             bbox = ax.xaxis.label.get_window_extent(renderer = plt.gcf().canvas.get_renderer())
@@ -353,21 +421,20 @@ class MatrixView(BaseStatisticsView):
             if bbox.y1 > max_y:
                 max_y = bbox.y1
                 
-        plt.gcf().supxlabel(self.xfacet, y = max_y + 0.01)
+        plt.gcf().supxlabel(xlabel, y = max_y + 0.01)
         
-        # for idx, (_, group) in enumerate(groups):
-        #
-        #     if self.style == "heat":
-        #         self._heat_plot(group, self.feature)
-        #     elif self.style == "pie":
-        #         self._pie_plot(group, self.feature, self.variable)
-        #     elif self.style == "petal":
-        #         self._petal_plot(group, self.feature, self.variable)
-        #
-        #
-        #
+        min_x = 1.0
+        for i, ax in enumerate(grid.axes_column[0]):        
+            bbox = ax.yaxis.label.get_window_extent(renderer = plt.gcf().canvas.get_renderer())
+            bbox = plt.gcf().transFigure.inverted().transform_bbox(bbox)
+            if bbox.x0 < min_x:
+                min_x = bbox.x0
 
+        plt.gcf().supylabel(ylabel, x = min_x - 0.04)
         
+        if title:
+            plt.suptitle(title, y = 1.02)
+            
 
     def _get_stat(self, experiment):
         if experiment is None:
