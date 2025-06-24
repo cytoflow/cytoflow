@@ -32,39 +32,20 @@ from traitsui.qt.enum_editor import SimpleEditor as _EnumEditor
 from traitsui.editors.enum_editor import EnumEditor
 
 class _ExtendableEnumEditor(_EnumEditor):
-
-    def _get_names ( self ):
-        """ Gets the current set of enumeration names.
-        """        
-        if self._object is None:
-            return self.factory._names + list(self.factory.extra_items.keys())
-        else:
-            return self._names + list(self.factory.extra_items.keys())
     
-    def _get_mapping ( self ):
-        """ Gets the current mapping.
-        """
-        if self._object is None:
-            m = dict(self.factory._mapping)
-        else:
-            m = self._mapping
-            
-        m.update(self.factory.extra_items)
+    def _get_names(self):
+        """Gets the current set of enumeration names."""
+        return self._names + list(self.factory.extra_items.keys())
 
-        return m
-    
-    def _get_inverse_mapping ( self ):
-        """ Gets the current inverse mapping.
-        """
-        
-        if self._object is None:
-            m = dict(self.factory._inverse_mapping)
-        else:
-            m = dict(self._inverse_mapping)
-            
-        m.update({v: k for k, v in list(self.factory.extra_items.items())})
-        
-        return m
+    def _get_mapping(self):
+        """Gets the current mapping."""
+        self._mapping.update(self.factory.extra_items)
+        return self._mapping
+
+    def _get_inverse_mapping(self):
+        """Gets the current inverse mapping."""
+        self._inverse_mapping.update({v: k for k, v in list(self.factory.extra_items.items())})
+        return self._inverse_mapping
         
 class ExtendableEnumEditor(EnumEditor):
     
