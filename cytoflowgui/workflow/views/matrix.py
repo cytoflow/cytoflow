@@ -43,16 +43,28 @@ cytoflowgui.workflow.views.matrix
 
 from textwrap import dedent
 
-from traits.api import provides, Instance
+from traits.api import provides, Instance, HasStrictTraits, Str, Bool, Enum
 
 from cytoflow import MatrixView
-from cytoflowgui.workflow.serialization import camel_registry, cytoflow_class_repr, traits_str
-from .view_base import IWorkflowView, WorkflowByView, BasePlotParams
+from ..serialization import camel_registry, cytoflow_class_repr, traits_str, traits_repr
+from .view_base import IWorkflowView, WorkflowByView, COLORMAPS
 
 MatrixView.__repr__ = cytoflow_class_repr
 
-class MatrixPlotParams(BasePlotParams):
-    pass
+class MatrixPlotParams(HasStrictTraits):
+    title = Str
+    xlabel = Str
+    ylabel = Str
+    legendlabel = Str
+
+    sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
+    sns_context = Enum(['notebook', 'paper', 'poster', 'talk'])
+
+    legend = Bool(True)
+    palette = Enum([''] + list(COLORMAPS.keys()))
+        
+    def __repr__(self):
+        return traits_repr(self)
 
 
 @provides(IWorkflowView)

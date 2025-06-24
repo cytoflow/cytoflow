@@ -261,17 +261,6 @@ class MatrixView(BaseStatisticsView):
             raise util.CytoflowViewError('size_feature',
                                          "Feature {} not in statistic {}"
                                          .format(self.size_feature, self.statistic))
-            
-        # kwargs.setdefault('aspect', 1.0)
-        # kwargs.setdefault('margin_titles', True)
-        #
-        # # xlabel and ylabel are the axis labels for the facet axes. of course,
-        # # we don't have any -- so clear them out.
-        # kwargs.setdefault('xlabel', " ") 
-        # kwargs.setdefault('ylabel', " ")
-        #
-        # # put the legend outside of the grid.
-        # kwargs.setdefault('legend_out', True)
         
         data = data.reset_index()
         

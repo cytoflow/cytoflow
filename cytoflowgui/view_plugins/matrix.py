@@ -48,7 +48,7 @@ Plots a "matrix" view. This can be a heat map, or a matrix of pie or petal plots
     
 .. object:: Variable
 
-    The statistic variable to use as the major bar groups.
+    The statistic variable to classify segments in ``pie`` or ``petal`` plots.
     
 .. object:: Style
 
@@ -110,15 +110,41 @@ from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import MatrixWorkflowView, MatrixPlotParams
+from ..workflow.views.view_base import COLORMAPS
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 from ..subset_controllers import subset_handler_factory
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
 from .view_plugin_base import ViewHandler, PluginHelpMixin, BasePlotParamsView
 
+
 class MatrixParamsHandler(Controller):
     view_params_view = BasePlotParamsView
-    #view_params_view = BasePlotParamsView.content
+    view_params_view = \
+        View(Item('title',
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
+             Item('xlabel',
+                  label = "X label",
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
+             Item('ylabel',
+                  label = "Y label",
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
+             Item('legendlabel',
+                  label = "Hue label",
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
+             Item('sns_style',
+                  label = "Style"),
+             Item('sns_context',
+                  label = "Context"),
+             Item('legend',
+                  label = "Show legend?"),
+             Item('palette',
+                  label = "Color palette",
+                  editor = EnumEditor(values = {'' : '0:(Default)'} | COLORMAPS)))
 
         
 class MatrixHandler(ViewHandler):
