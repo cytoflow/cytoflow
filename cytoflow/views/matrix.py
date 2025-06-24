@@ -198,14 +198,7 @@ class MatrixView(BaseStatisticsView):
             
         legendlabel : str
             Set the label for the color bar or legend
-
-        sns_style : {"darkgrid", "whitegrid", "dark", "white", "ticks"}
-            Which ``seaborn`` style to apply to the plot?  Default is ``whitegrid``.
-            
-        sns_context : {"notebook", "paper", "talk", "poster"}
-            Which ``seaborn`` context to use?  Controls the scaling of plot 
-            elements such as tick labels and the legend.  Default is ``notebook``.
-            
+ 
         palette : palette name
             Colors to use for the different levels of the hue variable. 
             Should be something that can be interpreted by
@@ -287,6 +280,7 @@ class MatrixView(BaseStatisticsView):
         ylabel = kwargs.pop("ylabel", self.yfacet)
 
         legend = kwargs.pop('legend', True)
+        legendlabel = kwargs.pop('legendlabel', self.feature)
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -321,7 +315,7 @@ class MatrixView(BaseStatisticsView):
         group_keys += [self.xfacet] if self.xfacet else []
         group_keys += [self.yfacet] if self.yfacet else []
         
-        groups = data.groupby(by = group_keys)
+        groups = data.groupby(by = group_keys, observed = True)
         
         if self.style == "heat":
             cmap_name = kwargs.pop('palette', 'viridis')
@@ -346,7 +340,7 @@ class MatrixView(BaseStatisticsView):
                 mpl.colorbar.Colorbar(grid[0].cax, 
                                       cmap = cmap, 
                                       norm = data_norm,
-                                      label = self.feature)
+                                      label = legendlabel)
 
         elif self.style == "pie":
             palette_name = kwargs.pop('palette', 'deep')
@@ -370,7 +364,8 @@ class MatrixView(BaseStatisticsView):
                     patch.set_label(group.reset_index().at[pi, self.variable])
                 
             if(legend):
-                grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), title = self.feature)
+                grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), 
+                                            title = self.feature)
             
         elif self.style == "petal":
             palette_name = kwargs.pop('palette', 'deep')
@@ -397,18 +392,19 @@ class MatrixView(BaseStatisticsView):
             if(legend):
                 grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), title = self.feature)
             
-                            
-        for i, ax in enumerate(grid.axes_row[0]):
-            ax.xaxis.set_label_text(cols[i])
-            ax.xaxis.set_label_position("top")
-            ax.xaxis.label.set(size = 'small')
+        if self.yfacet:
+            for i, ax in enumerate(grid.axes_row[0]):
+                ax.xaxis.set_label_text(cols[i])
+                ax.xaxis.set_label_position("top")
+                ax.xaxis.label.set(size = 'small')
         
-        for i, ax in enumerate(grid.axes_column[0]):
-            ax.yaxis.set_label_text(rows[i])
-            ax.yaxis.label.set(rotation = 'horizontal', 
-                               horizontalalignment = 'right', 
-                               verticalalignment = 'center',
-                               size = 'small')
+        if self.xfacet:
+            for i, ax in enumerate(grid.axes_column[0]):
+                ax.yaxis.set_label_text(rows[i])
+                ax.yaxis.label.set(rotation = 'horizontal', 
+                                   horizontalalignment = 'right', 
+                                   verticalalignment = 'center',
+                                   size = 'small')
 
         # x and y in supxlabel and supylabel are in figure units, but we dont
         # know the size of the figure (with the labels) until we draw it!            
