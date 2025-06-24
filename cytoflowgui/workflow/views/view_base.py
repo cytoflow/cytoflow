@@ -40,6 +40,23 @@ LINE_STYLES = ["solid", "dashed", "dashdot", "dotted","none"]
 SCATTERPLOT_MARKERS = ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
                        "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]
 
+COLORMAPS = {'deep' : "a:deep (Qual)",
+             'colorblind' : "b:colorblind (Qual)",
+             'Paired' : "c:Paired (Qual)",
+             'Accent' : "d:Accent (Qual)",
+             'Dark2' : "e:Dark2 (Qual)",
+             'Set1' : "f:Set1 (Qual)",
+             'Set2' : "g:Set2 (Qual)",
+             'tab20' : "h:tab20 (Qual)",
+             'viridis' : "i:viridis (Cont)",
+             'rocket' : "j:rocket (Cont)",
+             'mako' : "k:mako (Cont)",
+             'flare' : "l:flare (Cont)",
+             'crest' : "m:crest (Cont)",
+             'plasma' : "n:plasma (Cont)",
+             'inferno' : "o:inferno (Cont)",
+             'cividis' : "p:cividis (Cont)"}
+
 class IterWrapper(object):
     def __init__(self, iterator, by):
         self.iterator = iterator

@@ -372,6 +372,11 @@ class WorkflowItem(HasStrictTraits):
                 
                 plot_params = self.current_view.plot_params.trait_get()
                 
+                # filter out empty traits so we don't get a bunch of 
+                # empty kwargs in View.plot()
+                plot_params = {k:v for k, v in plot_params.items()
+                               if not (isinstance(v, str) and not v)}
+                
                 if self.result:
                     plt.clf()
                     self.current_view.plot(self.result, **plot_params)

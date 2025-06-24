@@ -172,7 +172,8 @@ class BaseView(HasStrictTraits):
             Colors to use for the different levels of the hue variable. 
             Should be something that can be interpreted by
             `seaborn.color_palette`, or a dictionary mapping hue levels to 
-            matplotlib colors.
+            matplotlib colors. See https://seaborn.pydata.org/tutorial/color_palettes.html
+            for a good overview.
             
         despine : Bool
             Remove the top and right axes from the plot?  Default is ``True``.
@@ -356,12 +357,6 @@ class BaseView(HasStrictTraits):
                         
         if title:
             plt.suptitle(title, y = 1.02)
-            
-        if xlabel == "":
-            xlabel = None
-            
-        if ylabel == "":
-            ylabel = None
             
         g.set_axis_labels(xlabel, ylabel)
       
