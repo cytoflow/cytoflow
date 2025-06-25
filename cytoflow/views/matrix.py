@@ -309,6 +309,9 @@ class MatrixView(BaseStatisticsView):
         if self.style == "heat":
             cmap_name = kwargs.pop('palette', 'viridis')
             cmap = sns.color_palette(cmap_name, as_cmap = True)
+            if isinstance(cmap, list):
+                raise util.CytoflowViewError('palette',
+                                             "{} is a qualitative (discrete) palette. Choose a continuous one such as 'rocket', 'mako' or 'viridis'")
             
             grid = ImageGrid(fig = plt.gcf(), 
                              rect = 111, 

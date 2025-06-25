@@ -61,6 +61,7 @@ class TestXformStat(ImportedDataTest):
         
         op.name = "Mean"
         op.statistic = "Count"
+        op.feature = "Y2-A"
         op.function_name = "Mean"
         op.by = ["Dox"]
         op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))

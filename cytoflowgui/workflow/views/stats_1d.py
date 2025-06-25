@@ -140,8 +140,8 @@ def _load_v2(data, version):
 def _load(data, version):
     return Stats1DWorkflowView(**data)
 
-@camel_registry.dumper(Stats1DPlotParams, 'stats-1d-params', version = 1)
-def _dump_params(params):
+@camel_registry.dumper(Stats1DPlotParams, 'stats-1d-params', version = 2)
+def _dump_params_v2(params):
     return dict(
                 # BasePlotParams
                 title = params.title,
@@ -151,6 +151,37 @@ def _dump_params(params):
                 col_wrap = params.col_wrap,
                 sns_style = params.sns_style,
                 sns_context = params.sns_context,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+                
+                # Base1DStatisticsView
+                orientation = params.orientation,
+                lim = params.lim,
+                
+                # Stats 1D View
+                variable_lim = params.variable_lim,
+                linestyle = params.linestyle,
+                marker = params.marker,
+                markersize = params.markersize,
+                capsize = params.capsize,
+                alpha = params.alpha,
+                shade_error = params.shade_error,
+                shade_alpha = params.shade_alpha)
+
+@camel_registry.dumper(Stats1DPlotParams, 'stats-1d-params', version = 1)
+def _dump_params_v1(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,

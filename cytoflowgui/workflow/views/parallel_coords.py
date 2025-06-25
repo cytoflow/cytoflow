@@ -99,8 +99,32 @@ def _dump_v1(view):
                 plotfacet = view.plotfacet,
                 subset_list = view.subset_list)
     
+@camel_registry.dumper(ParallelCoordinatesPlotParams, 'parallel-coords-params', version = 2)
+def _dump_params_v2(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                # DataplotParams
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                
+                # Parallel coords
+                alpha = params.alpha)
+    
 @camel_registry.dumper(ParallelCoordinatesPlotParams, 'parallel-coords-params', version = 1)
-def _dump_params(params):
+def _dump_params_v1(params):
     return dict(
                 # BasePlotParams
                 title = params.title,

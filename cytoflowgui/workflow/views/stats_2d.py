@@ -148,8 +148,36 @@ def _load_v1(data, version):
 
     return Stats2DWorkflowView(**data)
 
+@camel_registry.dumper(Stats2DPlotParams, 'stats-2d-params', version = 2)
+def _dump_params_v2(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+                
+                # Base2DStatisticsView
+                xlim = params.xlim,
+                ylim = params.ylim,
+                
+                # Stats 2D View
+                linestyle = params.linestyle,
+                marker = params.marker,
+                markersize = params.markersize,
+                capsize = params.capsize,
+                alpha = params.alpha)
+
 @camel_registry.dumper(Stats2DPlotParams, 'stats-2d-params', version = 1)
-def _dump_params(params):
+def _dump_params_v1(params):
     return dict(
                 # BasePlotParams
                 title = params.title,

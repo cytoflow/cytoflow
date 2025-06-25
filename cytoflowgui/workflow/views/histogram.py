@@ -154,7 +154,7 @@ def _dump_params_v2(params):
     
     
 @camel_registry.dumper(HistogramPlotParams, 'histogram-params', version = 3)
-def _dump_params(params):
+def _dump_params_v3(params):
     return dict(
                 # BasePlotParams
                 title = params.title,
@@ -164,6 +164,39 @@ def _dump_params(params):
                 col_wrap = params.col_wrap,
                 sns_style = params.sns_style,
                 sns_context = params.sns_context,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                # DataplotParams
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                
+                # Data1DPlotParams
+                lim = params.lim,
+                orientation = params.orientation,
+                
+                # Histogram
+                num_bins = params.num_bins,
+                histtype = params.histtype,
+                linestyle = params.linestyle,
+                linewidth = params.linewidth,
+                density = params.density,
+                alpha = params.alpha)
+    
+@camel_registry.dumper(HistogramPlotParams, 'histogram-params', version = 4)
+def _dump_params_v4(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
@@ -198,12 +231,8 @@ def _load_params_v1(data, version):
     return HistogramPlotParams(**data)
 
 
-@camel_registry.loader('histogram-params', version = 2)
-def _load_params_v2(data, version):
+@camel_registry.loader('histogram-params', version = any)
+def _load_params_v2_thru_v4(data, version):
     return HistogramPlotParams(**data)
 
-
-@camel_registry.loader('histogram-params', version = 3)
-def _load_params(data, version):
-    return HistogramPlotParams(**data)
 

@@ -79,7 +79,7 @@ class BarChartWorkflowView(WorkflowByView, BarChartView):
         
 ### Serialization
 @camel_registry.dumper(BarChartWorkflowView, 'bar-chart', version = 3)
-def _dump(view):
+def _dump_v3(view):
     return dict(statistic = view.statistic,
                 feature = view.feature,
                 variable = view.variable,
@@ -119,8 +119,33 @@ def _dump_v1(view):
                 error_statistic = view.error_statistic,
                 subset_list = view.subset_list)
     
+@camel_registry.dumper(BarChartPlotParams, 'barchart-params', version = 2)
+def _dump_params_v2(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+                
+                # Base1DStatisticsView
+                orientation = params.orientation,
+                lim = params.lim,
+                
+                # BarChartView
+                errwidth = params.errwidth,
+                capsize = params.capsize)
+    
 @camel_registry.dumper(BarChartPlotParams, 'barchart-params', version = 1)
-def _dump_params(params):
+def _dump_params_v1(params):
     return dict(
                 # BasePlotParams
                 title = params.title,
@@ -142,6 +167,8 @@ def _dump_params(params):
                 # BarChartView
                 errwidth = params.errwidth,
                 capsize = params.capsize)
+    
+
     
 @camel_registry.loader('bar-chart', version = 1)
 def _load_v1(data, version):

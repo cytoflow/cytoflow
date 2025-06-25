@@ -7,9 +7,10 @@ Created on Jan 16, 2021
 import inspect, pathlib
 
 from traits.api import HasTraits, observe, HTML, Instance
-from traitsui.api import View, Item, HGroup, TextEditor, Controller, TupleEditor
+from traitsui.api import View, Item, HGroup, TextEditor, Controller, TupleEditor, EnumEditor
 from pyface.qt import QtGui
 
+from ..workflow.views.view_base import COLORMAPS
 from ..editors import TabListEditor
 
 class PluginHelpMixin(HasTraits):
@@ -130,6 +131,9 @@ BasePlotParamsView = View(Item('title',
                                label = "Style"),
                           Item('sns_context',
                                label = "Context"),
+                          Item('palette',
+                               label = "Color palette",
+                               editor = EnumEditor(values = {'' : '0:(Default)'} | COLORMAPS)),
                           Item('legend',
                                label = "Show legend?"),
                           Item('sharex',

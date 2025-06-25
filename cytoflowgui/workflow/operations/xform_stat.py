@@ -151,8 +151,17 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
                 prev_idx = idx - 1) 
             
 ### Serialization
+@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 3)
+def _dump_v3(op):
+    return dict(name = op.name,
+                statistic = op.statistic,
+                feature = op.feature,
+                function_name = op.function_name,
+                by = op.by,
+                subset_list = op.subset_list)
+
 @camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 2)
-def _dump(op):
+def _dump_v2(op):
     return dict(name = op.name,
                 statistic = op.statistic,
                 function_name = op.function_name,
@@ -167,7 +176,7 @@ def _dump_v1(op):
                 by = op.by,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('transform-statistic', version = 2)
+@camel_registry.loader('transform-statistic', version = any)
 def _load(data, version):
     return TransformStatisticWorkflowOp(**data)
 

@@ -62,7 +62,7 @@ class ScatterplotWorkflowView(WorkflowFacetView, ScatterplotView):
 ### Serialization
 
 @camel_registry.dumper(ScatterplotWorkflowView, 'scatterplot', version = 2)
-def _dump(view):
+def _dump_v2(view):
     return dict(xchannel = view.xchannel,
                 xscale = view.xscale,
                 ychannel = view.ychannel,
@@ -89,8 +89,38 @@ def _dump_v1(view):
                 plotfacet = view.plotfacet,
                 subset_list = view.subset_list)
     
+@camel_registry.dumper(ScatterplotPlotParams, 'scatterplot-params', version = 2)
+def _dump_params_v2(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                # DataplotParams
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                
+                # Data2DPlotParams
+                xlim = params.xlim,
+                ylim = params.ylim,
+                
+                # Scatterplot params
+                alpha = params.alpha,
+                s = params.s,
+                marker = params.marker )
+    
 @camel_registry.dumper(ScatterplotPlotParams, 'scatterplot-params', version = 1)
-def _dump_params(params):
+def _dump_params_v1(params):
     return dict(
                 # BasePlotParams
                 title = params.title,
@@ -122,6 +152,6 @@ def _dump_params(params):
 def _load(data, version):
     return ScatterplotWorkflowView(**data)
 
-@camel_registry.loader('scatterplot-params', version = 1)
+@camel_registry.loader('scatterplot-params', version = any)
 def _load_params(data, version):
     return ScatterplotPlotParams(**data)

@@ -107,8 +107,39 @@ def _dump_v1(view):
                 subset_list = view.subset_list)
     
     
+@camel_registry.dumper(DensityPlotParams, 'density-view-params', version = 2)
+def _dump_params_v2(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                # DataplotParams
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                
+                # Data2DPlotParams
+                xlim = params.xlim,
+                ylim = params.ylim,
+                
+                # Density
+                gridsize = params.gridsize,
+                smoothed = params.smoothed,
+                smoothed_sigma = params.smoothed_sigma )
+    
+    
 @camel_registry.dumper(DensityPlotParams, 'density-view-params', version = 1)
-def _dump_params(params):
+def _dump_params_v1(params):
     return dict(
                 # BasePlotParams
                 title = params.title,
@@ -135,7 +166,7 @@ def _dump_params(params):
                 gridsize = params.gridsize,
                 smoothed = params.smoothed,
                 smoothed_sigma = params.smoothed_sigma )
-    
+
     
 @camel_registry.loader('density-view', version = any)
 def _load(data, version):

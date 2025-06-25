@@ -90,9 +90,42 @@ def _dump_v1(view):
 @camel_registry.loader('violin-plot', version = any)
 def _load(data, version):
     return ViolinPlotWorkflowView(**data)
+    
+@camel_registry.dumper(ViolinPlotParams, 'violin-plot-params', version = 2)
+def _dump_params_v2(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                palette = params.palette,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                # DataplotParams
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                
+                # Data1DPlotParams
+                lim = params.lim,
+                orientation = params.orientation,
+                
+                # Violin params
+                bw = params.bw,
+                scale_plot = params.scale_plot,
+                scale_hue = params.scale_hue,
+                gridsize = params.gridsize,
+                inner = params.inner,
+                split = params.split )
 
 @camel_registry.dumper(ViolinPlotParams, 'violin-plot-params', version = 1)
-def _dump_params(params):
+def _dump_params_v1(params):
     return dict(
                 # BasePlotParams
                 title = params.title,
@@ -123,6 +156,6 @@ def _dump_params(params):
                 inner = params.inner,
                 split = params.split )
     
-@camel_registry.loader('violin-plot-params', version = 1)
+@camel_registry.loader('violin-plot-params', version = any)
 def _load_params(data, version):
     return ViolinPlotParams(**data)

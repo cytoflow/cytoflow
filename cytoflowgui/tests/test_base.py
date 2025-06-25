@@ -341,6 +341,11 @@ class BaseViewTest:
             self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
             self.view.plot_params.sns_context = context
             self.workflow.wi_waitfor(self.wi, 'view_error', '')
+            
+        # palette
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view.plot_params.palette = 'flare'
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
          
         # legend
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')

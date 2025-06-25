@@ -288,7 +288,7 @@ class BasePlotParams(HasStrictTraits):
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
     sns_context = Enum(['notebook', 'paper', 'poster', 'talk'])
-
+    palette = Enum([''] + list(COLORMAPS.keys()))
     legend = Bool(True)
     sharex = Bool(True)
     sharey = Bool(True)
