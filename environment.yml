@@ -16,6 +16,7 @@ dependencies:
     - natsort==7.1.1
     - numba==0.60.0
     - opentsne==1.0.1
+    - python-igraph==0.11.5
 
     - traits==6.2.0
     - traitsui==8.0.0
