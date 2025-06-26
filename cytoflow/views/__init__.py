@@ -47,6 +47,7 @@ from .stats_1d import Stats1DView
 from .stats_2d import Stats2DView
 from .bar_chart import BarChartView
 from .matrix import MatrixView
+from .mst import MSTView
 from .kde_1d import Kde1DView
 from .kde_2d import Kde2DView
 from .histogram_2d import Histogram2DView

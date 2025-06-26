@@ -30,7 +30,7 @@ import seaborn as sns
 from natsort import natsorted
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import Grid, ImageGrid
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 import cytoflow
 import cytoflow.utility as util
@@ -63,7 +63,8 @@ class MatrixView(BaseStatisticsView):
       are used as the categories, but unlike a pie plot, the arc width of each slice
       is equal. Instead, the radius of the pie slice scales with the square root of
       the intensity, so that the relationship between area and intensity remains the same.
-          
+
+..          
     Optionally, you can set `size_feature` to scale the circles' (or pies or petals)' area
     by another feature of the statistic. For example, you might scale the size of each
     circle by the number of events in some subset. For the ``heat`` style, this is 
@@ -89,9 +90,11 @@ class MatrixView(BaseStatisticsView):
         How should the color, arc length, or radii be scaled before
         plotting?
         
+..
     size_feature : String
         Which feature to use to scale the size of the circle/pie/petal?
-        
+
+..        
     size_function : String
         If `size_feature` is set and `style` is ``pie`` or ``petal``, this function
         is used to reduce `size_feature` before scaling the pie plots. The function 
