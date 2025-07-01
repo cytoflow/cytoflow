@@ -278,15 +278,106 @@ class MSTView(BaseStatisticsView):
         mst_graph = igraph.Graph.spanning_tree(full_graph, weights = full_graph.es["weight"])
         
         # normalize the edge weights (necessary??)
-        mst_graph.es["weight"] = mst_graph.es["weight"] / np.mean(mst_graph.es["weight"])
+        mst_graph.es["weight"] = mst_graph.es["weight"] / np.mean(mst_graph.es["weight"]) 
         
         # optimize the layout for plotting
         layout = mst_graph.layout_kamada_kawai(seed = mst_graph.layout_grid(),
                                                maxiter = 50 * mst_graph.vcount(),
                                                kkconst = max([mst_graph.vcount(), 1]))
-        layout.fit_into((1, 1))
-        print(layout.coords)
+        layout.fit_into((0.1, 0.1, 0.9, 0.9))
+
+        # next, plot the edges connecting nodes
+        segments = [[layout.coords[edge[0]], layout.coords[edge[1]]] for edge in mst_graph.get_edgelist()]
+        segments = mpl.collections.LineCollection(segments, zorder = 1)
+        segments.set_edgecolor("black")
+        plt.gca().add_collection(segments)
         
+        # now, plot the patches
+                
+        if self.style == "heat":
+            cmap_name = kwargs.pop('palette', 'viridis')
+            cmap = sns.color_palette(cmap_name, as_cmap = True)
+            if isinstance(cmap, list):
+                raise util.CytoflowViewError('palette',
+                                             "{} is a qualitative (discrete) palette. Choose a continuous one such as 'rocket', 'mako' or 'viridis'")
+                    
+            patches = []
+            for idx, x in enumerate(data[self.feature]):
+                patch = mpl.patches.Circle(xy = layout.coords[idx], 
+                                           radius = 0.1, 
+                                           facecolor = cmap(data_norm(x)))
+                patches.append(patch)
+                
+            plt.gca().add_collection(mpl.collections.PatchCollection(patches, match_original = True))
+                
+                
+            if legend:
+                plt.colorbar(mpl.cm.ScalarMappable(norm = data_norm, cmap = cmap),
+                             ax = plt.gca(),
+                             label = legendlabel)
+
+        elif self.style == "pie":
+            palette_name = kwargs.pop('palette', 'deep')
+        
+            # the context manager goes here because the color cycler is a
+            # property of the axes 
+            # with sns.color_palette(palette_name):
+            #     grid = ImageGrid(fig = plt.gcf(), 
+            #                      rect = 111, 
+            #                      nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+            #                                     len(cols) if len(cols) > 0 else 1),
+            #                      label_mode = "keep",
+            #                      axes_pad = 0.0,
+            #                      cbar_mode = None)
+            
+            groups = data.groupby([self.variable], observed = True)
+        
+            for idx, (_, group) in enumerate(groups):
+                group = group[self.feature]
+                group = group / group.sum()
+                print(group)
+                # plt.sca(grid[idx])
+                # patches, _ = plt.pie(group[self.feature], **kwargs)
+                #
+                # for pi, patch in enumerate(patches):
+                #     patch.set_label(group.reset_index().at[pi, self.variable])
+        
+            # if(legend):
+            #     grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), 
+            #                                 title = self.feature)
+        #
+        # elif self.style == "petal":
+        #     palette_name = kwargs.pop('palette', 'deep')
+        #
+        #     # the context manager goes here because the color cycler is a
+        #     # property of the axes 
+        #     with sns.color_palette(palette_name):
+        #         grid = ImageGrid(fig = plt.gcf(), 
+        #                          rect = 111, 
+        #                          nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+        #                                         len(cols) if len(cols) > 0 else 1),
+        #                          label_mode = "keep",
+        #                          axes_pad = 0.0,
+        #                          cbar_mode = None)
+        #
+        #     for idx, (_, group) in enumerate(groups):
+        #         plt.sca(grid[idx])
+        #         patches, _ = plt.pie([1.0 / len(group[self.feature])] * len(group[self.feature]), **kwargs)
+        #
+        #         for pi, patch in enumerate(patches):
+        #             patch.set_label(group.reset_index().at[pi, self.variable])
+        #             patch.set(radius = math.sqrt(group.reset_index().at[pi, self.feature] / group.reset_index()[self.feature].sum()))
+        #
+        #     if(legend):
+        #         grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), title = self.feature)
+            
+
+        # make axes equal (spacing)
+        plt.gca().axis('equal')
+        plt.gca().set_axis_off()
+        
+        if title:
+            plt.suptitle(title, y = 1.02)
         
     def _get_stat(self, experiment):
         if experiment is None:
