@@ -54,7 +54,7 @@ class KMeansOp(HasStrictTraits):
     Call `estimate` to compute the cluster centroids.
       
     Calling `apply` creates a new categorical metadata variable 
-    named `name`, with possible values ``{name}_1`` .... ``name_n`` where 
+    named `{name}_Cluster`, with possible values ``Cluster_1`` .... ``Cluster_n`` where 
     ``n`` is the number of clusters, specified with `num_clusters`.
 
     The same model may not be appropriate for different subsets of the data set.
@@ -346,11 +346,12 @@ class KMeansOp(HasStrictTraits):
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
                 
-        if "Cluster" in self.by:
+        if "{}_Clusters".format(self.name) in self.by:
             raise util.CytoflowOpError('by',
-                                       "'Cluster' is going to be added as an "
+                                       "'{}_Clusters' is going to be added as an "
                                        "index level to the new statistic, so you "
-                                       "can't use it to aggregate events.")
+                                       "can't use it to aggregate events."
+                                       .format(self.name))
         
                  
         if self.by:
@@ -360,13 +361,13 @@ class KMeansOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
-        event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
+        event_assignments = pd.Series(["Cluster_None".format(self.name)] * len(experiment), dtype = "object")
          
         # make the statistics       
-        clusters = [x + 1 for x in range(self.num_clusters)]
+        clusters = ["Cluster_{}".format(x + 1) for x in range(self.num_clusters)]
           
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
-                                         names = list(self.by) + ["Cluster"])
+                                         names = list(self.by) + ["{}_Cluster".format(self.name)])
 
         new_stat = pd.DataFrame(index = idx,
                                 columns = list(self.channels) + ["Proportion"], 
@@ -405,17 +406,17 @@ class KMeansOp(HasStrictTraits):
                  
             predicted_str = pd.Series(["(none)"] * len(predicted))
             for c in range(0, self.num_clusters):
-                predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
-            predicted_str[predicted == -1] = "{0}_None".format(self.name)
+                predicted_str[predicted == c] = "Cluster_{}".format(c + 1)
+            predicted_str[predicted == -1] = "Cluster_None"
             predicted_str.index = group_idx
       
             event_assignments.iloc[group_idx] = predicted_str
             
             for c in range(self.num_clusters):
                 if len(self.by) == 0:
-                    g = tuple([c + 1])
+                    g = tuple(["Cluster_{}".format(c + 1)])
                 else:
-                    g = group + tuple([c + 1])
+                    g = group + tuple(["Cluster_{}".format(c + 1)])
                                     
                 for cidx1, channel1 in enumerate(self.channels):
                     new_stat.loc[g, channel1] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
@@ -423,7 +424,7 @@ class KMeansOp(HasStrictTraits):
                 new_stat.loc[g, "Proportion"] = sum(predicted == c) / len(predicted)
          
         new_experiment = experiment.clone(deep = False)          
-        new_experiment.add_condition(self.name, "category", event_assignments)
+        new_experiment.add_condition("{}_Cluster".format(self.name), "category", event_assignments)
         
         new_experiment.statistics[self.name] = new_stat
  
