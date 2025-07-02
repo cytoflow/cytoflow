@@ -31,7 +31,7 @@ from natsort import natsorted
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import Grid, ImageGrid
-from scipy.spatial.distance import cdist
+import scipy.spatial.distance
 import igraph
 import numpy as np
 
@@ -79,9 +79,14 @@ class MSTView(BaseStatisticsView):
     statistic : Str
         The statistic to plot. Must be a key in `Experiment.statistics`.
         
-    location : Str
+    locations : Str
         A statistic whose levels are the same as `statistic` and whose features
         are the dimensions of the locations of each node to plot.
+        
+    by : Str
+        Which level in the `locations` statistic to iterate over? The values 
+        of the others must be specified in the `plot_name` parameter of `plot`.
+        Optional if there is only one level in `locations`.
         
     location_features : List(Str)
         Which features in `location` to use. By default, use all of them. 
@@ -141,7 +146,8 @@ class MSTView(BaseStatisticsView):
     friendly_id = Constant("Matrix Chart") 
     
     statistic = Str
-    location = Str
+    locations = Str
+    by = Str
     location_features = List(Str)
     variable = Str
     feature = Str
@@ -198,26 +204,77 @@ class MSTView(BaseStatisticsView):
         stat = self._get_stat(experiment)
         locs = self._get_locs(experiment)
                 
-        stat = self._subset_data(stat)
-        locs = self._subset_data(locs)
+        stat = self._subset_data(self.statistic, stat)
+        locs = self._subset_data(self.locations, locs)
         
+        # the indices of `stat` and `locs` may have the same levels, or the index 
+        # of `stat` may have one more -- if so, it must be `self.variable`. to get
+        # things compatible, we'll re-order the index levels of stats.
         locs_names = set(stat.index.names) - set([self.variable]) if self.variable else set(stat.index.names)
         if locs_names != set(locs.index.names):
-            raise util.CytoflowViewError('location',
+            raise util.CytoflowViewError('locations',
                                          "Levels of 'locations' are not the same as levels of 'statistic'")
             
-        for lf in self.location_features:
-            if lf not in locs:
-                raise util.CytoflowViewError('location_features',
-                                             "Feature {} not found in location statistic {}"
-                                             .format(lf, self.location))
+        # need to re-index stat to be compatible with locs
+        stat_names = locs.index.names + self.variable if self.variable else locs.index.names
+        new_stat_idx = stat.index.reorder_levels(stat_names)
+        stat.set_index(new_stat_idx, inplace = True)
         
-        unused_names = list(set(stat.index.names) - set([self.variable]))
+        # do we have to get a plot_name?
+        if len(locs_names) > 1 and not self.by:
+            raise util.CytoflowViewError('by',
+                                         'If `locations` has more than one index level, you must set `by`.')
+        
+        if self.by and self.by not in locs_names:
+            raise util.CytoflowViewError('by',
+                                         '`by` value {} is not in {}'
+                                         .format(self.by, self.ocations))
+            
+        by = self.by if self.by else list(locs_names)[0]
+            
+        unused_names = list(set(locs_names) - set([by]))
 
         if plot_name is not None and not unused_names:
             raise util.CytoflowViewError('plot_name',
                                          "You specified a plot name, but all "
-                                         "the facets are already used")
+                                         "the index levels of `locations` are already used")
+        
+        if unused_names:
+            stat_groupby = stat.groupby(unused_names, observed = True)
+            locs_groupby = locs.groupby(unused_names, observed = True)
+
+            if plot_name is None:
+                raise util.CytoflowViewError('plot_name',
+                                             "You must use names {} in the plot name. "
+                                             "Possible plot names: {}"
+                                             .format(unused_names, list(stat_groupby.groups.keys())))
+
+            if plot_name not in set(stat_groupby.groups.keys()):
+                raise util.CytoflowViewError('plot_name',
+                                             "Plot {} not from plot_enum; must "
+                                             "be one of {}"
+                                             .format(plot_name, list(stat_groupby.groups.keys())))
+                
+            stat = stat_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+            locs = locs_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+                
+        print(stat)
+        
+        if self.style != "heat" and self.variable not in stat.index.names:
+            raise util.CytoflowViewError('variable',
+                                         "Can't find variable '{}' in the statistic index."
+                                         .format(self.variable))
+        
+        # if self.size_feature and self.size_feature not in stat:
+        #     raise util.CytoflowViewError('size_feature',
+        #                                  "Feature {} not in statistic {}"
+        #                                  .format(self.size_feature, self.statistic))
+
+        for lf in self.location_features:
+            if lf not in locs:
+                raise util.CytoflowViewError('location_features',
+                                             "Feature {} not found in location statistic {}"
+                                             .format(lf, self.locations))
 
         if self.style != "heat" and self.variable not in stat.index.names:
             raise util.CytoflowViewError('variable',
@@ -269,7 +326,7 @@ class MSTView(BaseStatisticsView):
         
         # compute the all-pairs distances
         locs_values = locs[self.location_features].values if self.location_features else locs.values
-        adjacency_graph = cdist(locs_values, locs_values, self.metric)
+        adjacency_graph = scipy.spatial.distance.cdist(locs_values, locs_values, self.metric)
         
         # create a fully-connected graph
         full_graph = igraph.Graph.Weighted_Adjacency(adjacency_graph, mode = "undirected", loops = False)
@@ -300,17 +357,16 @@ class MSTView(BaseStatisticsView):
             if isinstance(cmap, list):
                 raise util.CytoflowViewError('palette',
                                              "{} is a qualitative (discrete) palette. Choose a continuous one such as 'rocket', 'mako' or 'viridis'")
-                    
-            patches = []
+                  
+            patches = []  
             for idx, x in enumerate(data[self.feature]):
                 patch = mpl.patches.Circle(xy = layout.coords[idx], 
-                                           radius = 0.1, 
+                                           radius = 0.05, 
                                            facecolor = cmap(data_norm(x)))
                 patches.append(patch)
-                
+
             plt.gca().add_collection(mpl.collections.PatchCollection(patches, match_original = True))
-                
-                
+                                
             if legend:
                 plt.colorbar(mpl.cm.ScalarMappable(norm = data_norm, cmap = cmap),
                              ax = plt.gca(),
@@ -406,19 +462,19 @@ class MSTView(BaseStatisticsView):
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
         
-        if not self.location:
+        if not self.locations:
             raise util.CytoflowViewError('location', "Location not set")
         
-        if self.location not in experiment.statistics:
+        if self.locations not in experiment.statistics:
             raise util.CytoflowViewError('location',
                                          "Can't find the location statistic {} in the experiment"
                                          .format(self.location))
             
-        locs = experiment.statistics[self.location]
+        locs = experiment.statistics[self.locations]
 
         return locs
     
-    def _subset_data(self, data):
+    def _subset_data(self, stat_name, data):
         
         if self.subset:
             try:
@@ -427,20 +483,20 @@ class MSTView(BaseStatisticsView):
                 data = data.query(self.subset)
             except Exception as e:
                 raise util.CytoflowViewError('subset',
-                                             "Subset string '{0}' isn't valid"
-                                             .format(self.subset)) from e
+                                             "Subset string '{0}' isn't valid for '{}'"
+                                             .format(self.subset, stat_name)) from e
                 
             if len(data) == 0:
                 raise util.CytoflowViewError('subset',
-                                             "Subset string '{0}' returned no values"
-                                             .format(self.subset))
+                                             "Subset string '{0}' returned no values from '{}'"
+                                             .format(self.subset, stat_name))
                 
         names = list(data.index.names)
         
         for name in names:
             unique_values = data.index.get_level_values(name).unique()
             if len(unique_values) == 1:
-                warn("Only one value for level {}; dropping it.".format(name),
+                warn("Only one value for level {} in {}; dropping it.".format(name, stat_name),
                      util.CytoflowViewWarning)
                 try:
                     data.index = data.index.droplevel(name)
