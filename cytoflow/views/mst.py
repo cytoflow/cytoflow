@@ -216,7 +216,7 @@ class MSTView(BaseStatisticsView):
                                          "Levels of 'locations' are not the same as levels of 'statistic'")
             
         # need to re-index stat to be compatible with locs
-        stat_names = locs.index.names + self.variable if self.variable else locs.index.names
+        stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
         new_stat_idx = stat.index.reorder_levels(stat_names)
         stat.set_index(new_stat_idx, inplace = True)
         
@@ -257,9 +257,7 @@ class MSTView(BaseStatisticsView):
                 
             stat = stat_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
             locs = locs_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
-                
-        print(stat)
-        
+                        
         if self.style != "heat" and self.variable not in stat.index.names:
             raise util.CytoflowViewError('variable',
                                          "Can't find variable '{}' in the statistic index."
@@ -350,6 +348,7 @@ class MSTView(BaseStatisticsView):
         plt.gca().add_collection(segments)
         
         # now, plot the patches
+        # TODO - figure out how to auto-set radii
                 
         if self.style == "heat":
             cmap_name = kwargs.pop('palette', 'viridis')
@@ -361,7 +360,7 @@ class MSTView(BaseStatisticsView):
             patches = []  
             for idx, x in enumerate(data[self.feature]):
                 patch = mpl.patches.Circle(xy = layout.coords[idx], 
-                                           radius = 0.05, 
+                                           radius = 0.01, 
                                            facecolor = cmap(data_norm(x)))
                 patches.append(patch)
 
@@ -373,61 +372,71 @@ class MSTView(BaseStatisticsView):
                              label = legendlabel)
 
         elif self.style == "pie":
+            num_wedges = len(data[self.variable].unique())
             palette_name = kwargs.pop('palette', 'deep')
-        
-            # the context manager goes here because the color cycler is a
-            # property of the axes 
-            # with sns.color_palette(palette_name):
-            #     grid = ImageGrid(fig = plt.gcf(), 
-            #                      rect = 111, 
-            #                      nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
-            #                                     len(cols) if len(cols) > 0 else 1),
-            #                      label_mode = "keep",
-            #                      axes_pad = 0.0,
-            #                      cbar_mode = None)
+            palette = sns.color_palette(palette_name, n_colors = num_wedges)
             
-            groups = data.groupby([self.variable], observed = True)
+            groups = data.groupby([by], observed = True)
         
             for idx, (_, group) in enumerate(groups):
-                group = group[self.feature]
-                group = group / group.sum()
-                print(group)
-                # plt.sca(grid[idx])
-                # patches, _ = plt.pie(group[self.feature], **kwargs)
-                #
-                # for pi, patch in enumerate(patches):
-                #     patch.set_label(group.reset_index().at[pi, self.variable])
-        
-            # if(legend):
-            #     grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), 
-            #                                 title = self.feature)
-        #
-        # elif self.style == "petal":
-        #     palette_name = kwargs.pop('palette', 'deep')
-        #
-        #     # the context manager goes here because the color cycler is a
-        #     # property of the axes 
-        #     with sns.color_palette(palette_name):
-        #         grid = ImageGrid(fig = plt.gcf(), 
-        #                          rect = 111, 
-        #                          nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
-        #                                         len(cols) if len(cols) > 0 else 1),
-        #                          label_mode = "keep",
-        #                          axes_pad = 0.0,
-        #                          cbar_mode = None)
-        #
-        #     for idx, (_, group) in enumerate(groups):
-        #         plt.sca(grid[idx])
-        #         patches, _ = plt.pie([1.0 / len(group[self.feature])] * len(group[self.feature]), **kwargs)
-        #
-        #         for pi, patch in enumerate(patches):
-        #             patch.set_label(group.reset_index().at[pi, self.variable])
-        #             patch.set(radius = math.sqrt(group.reset_index().at[pi, self.feature] / group.reset_index()[self.feature].sum()))
-        #
-        #     if(legend):
-        #         grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), title = self.feature)
+                loc = layout.coords[idx]
+                group_data = group[self.feature]
+                group_data = group_data / group_data.sum()
+                
+                theta1 = 0
+                for frac_idx, frac in enumerate(group_data):
+                    theta2 = theta1 + frac
+                    w = mpl.patches.Wedge(center = loc, 
+                                          r = 0.04, 
+                                          theta1 = 360 * theta1, 
+                                          theta2 = 360 * theta2, 
+                                          facecolor = palette[frac_idx],
+                                          edgecolor = 'white',
+                                          clip_on = False,)
+                    
+                    if idx == 0:
+                        w.set(label = group[self.variable].iloc[frac_idx])
+                        
+                    plt.gca().add_artist(w)
+                    theta1 = theta2
+                            
+            if(legend):
+                plt.gca().legend(title = legendlabel)
+                
+        elif self.style == "petal":
+            num_wedges = len(data[self.variable].unique())
+            palette_name = kwargs.pop('palette', 'deep')
+            palette = sns.color_palette(palette_name, n_colors = num_wedges)
+            wedge_theta = 360 / num_wedges
             
-
+            groups = data.groupby([by], observed = True)
+        
+            for idx, (_, group) in enumerate(groups):
+                loc = layout.coords[idx]
+                group_data = group[self.feature]
+                group_data = group_data / group_data.sum()
+                
+                theta1 = 0
+                for frac_idx, frac in enumerate(group_data):
+                    theta2 = theta1 + wedge_theta
+                    radius = 0.04 * math.sqrt(frac)
+                    w = mpl.patches.Wedge(center = loc, 
+                                          r = radius, 
+                                          theta1 = theta1, 
+                                          theta2 = theta2, 
+                                          facecolor = palette[frac_idx],
+                                          edgecolor = 'white',
+                                          clip_on = False)
+                    
+                    if idx == 0:
+                        w.set(label = group[self.variable].iloc[frac_idx])
+                        
+                    plt.gca().add_artist(w)
+                    theta1 = theta2
+                            
+            if(legend):
+                plt.gca().legend(title = legendlabel)    
+        
         # make axes equal (spacing)
         plt.gca().axis('equal')
         plt.gca().set_axis_off()
