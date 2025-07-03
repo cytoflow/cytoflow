@@ -27,10 +27,8 @@ from warnings import warn
 
 from traits.api import provides, Enum, Str, Callable, Constant, List
 import seaborn as sns
-from natsort import natsorted
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import Grid, ImageGrid
 import scipy.spatial.distance
 import igraph
 import numpy as np
@@ -189,7 +187,11 @@ class MSTView(BaseStatisticsView):
             choose either a discrete color map ('deep' is the default) or
             a continuous color map from which equi-spaced colors will be drawn.
             
-        All other parameters are passed to ???.
+        radius : float
+            The radius of the circle or pie plots, on a scale from 0 to 1.
+            
+        All other parameters are passed to the `matplotlib.patches.Circle` or
+        `matplotlib.patches.Wedge` construtors (ie, they should be patch attributes).
 
         """
         
@@ -212,8 +214,12 @@ class MSTView(BaseStatisticsView):
         # things compatible, we'll re-order the index levels of stats.
         locs_names = set(stat.index.names) - set([self.variable]) if self.variable else set(stat.index.names)
         if locs_names != set(locs.index.names):
-            raise util.CytoflowViewError('locations',
-                                         "Levels of 'locations' are not the same as levels of 'statistic'")
+            if self.style == "heat":
+                raise util.CytoflowViewError('locations',
+                                             "If `style` is \"heat\", the levels of 'locations' the same as levels of 'statistic'")
+            else:
+                raise util.CytoflowViewError('locations',
+                                             "If `style` is not \"heat\", then the levels of 'locations' must be the same as the levels of 'statistic' without 'variable'.")
             
         # need to re-index stat to be compatible with locs
         stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
@@ -251,8 +257,7 @@ class MSTView(BaseStatisticsView):
 
             if plot_name not in set(stat_groupby.groups.keys()):
                 raise util.CytoflowViewError('plot_name',
-                                             "Plot {} not from plot_enum; must "
-                                             "be one of {}"
+                                             "Plot {} is invalid; must  be one of {}"
                                              .format(plot_name, list(stat_groupby.groups.keys())))
                 
             stat = stat_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
@@ -287,6 +292,7 @@ class MSTView(BaseStatisticsView):
         title = kwargs.pop("title", None)
         legend = kwargs.pop('legend', True)
         legendlabel = kwargs.pop('legendlabel', self.feature)
+
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -319,7 +325,7 @@ class MSTView(BaseStatisticsView):
             
         # groupby = data.groupby(locs_names, observed = True)
         
-        # first, find the locations for the groups
+        # find the locations for the groups
         # MST logic: https://github.com/saeyslab/FlowSOM_Python/blob/d8cb6a5934b1ca9c82f4bba27a1f3cd9862a0596/src/flowsom/main.py#L255
         
         # compute the all-pairs distances
@@ -339,16 +345,25 @@ class MSTView(BaseStatisticsView):
         layout = mst_graph.layout_kamada_kawai(seed = mst_graph.layout_grid(),
                                                maxiter = 50 * mst_graph.vcount(),
                                                kkconst = max([mst_graph.vcount(), 1]))
-        layout.fit_into((0.1, 0.1, 0.9, 0.9))
+        layout.fit_into((0.05, 0.05, 0.95, 0.95))
 
-        # next, plot the edges connecting nodes
+        # plot the edges connecting nodes
         segments = [[layout.coords[edge[0]], layout.coords[edge[1]]] for edge in mst_graph.get_edgelist()]
         segments = mpl.collections.LineCollection(segments, zorder = 1)
         segments.set_edgecolor("black")
         plt.gca().add_collection(segments)
         
         # now, plot the patches
-        # TODO - figure out how to auto-set radii
+        
+        # since the edge length is uniform (i thiiiiink?), set the radii of the patches
+        # to 1/3 of the edge length.
+        edge_len = scipy.spatial.distance.euclidean(layout.coords[mst_graph.get_edgelist()[0][0]],
+                                                    layout.coords[mst_graph.get_edgelist()[0][1]])
+        
+        radius = kwargs.pop('radius', edge_len * 0.3)
+        if radius < 0 or radius > 1:
+            raise util.CytoflowViewError('radius',
+                                         'Radius must be between 0 and 1.')
                 
         if self.style == "heat":
             cmap_name = kwargs.pop('palette', 'viridis')
@@ -360,8 +375,9 @@ class MSTView(BaseStatisticsView):
             patches = []  
             for idx, x in enumerate(data[self.feature]):
                 patch = mpl.patches.Circle(xy = layout.coords[idx], 
-                                           radius = 0.01, 
-                                           facecolor = cmap(data_norm(x)))
+                                           radius = radius, 
+                                           facecolor = cmap(data_norm(x)),
+                                           clip_on = False)
                 patches.append(patch)
 
             plt.gca().add_collection(mpl.collections.PatchCollection(patches, match_original = True))
@@ -387,7 +403,7 @@ class MSTView(BaseStatisticsView):
                 for frac_idx, frac in enumerate(group_data):
                     theta2 = theta1 + frac
                     w = mpl.patches.Wedge(center = loc, 
-                                          r = 0.04, 
+                                          r = radius, 
                                           theta1 = 360 * theta1, 
                                           theta2 = 360 * theta2, 
                                           facecolor = palette[frac_idx],
@@ -419,9 +435,9 @@ class MSTView(BaseStatisticsView):
                 theta1 = 0
                 for frac_idx, frac in enumerate(group_data):
                     theta2 = theta1 + wedge_theta
-                    radius = 0.04 * math.sqrt(frac)
+                    r = radius * math.sqrt(frac)
                     w = mpl.patches.Wedge(center = loc, 
-                                          r = radius, 
+                                          r = r, 
                                           theta1 = theta1, 
                                           theta2 = theta2, 
                                           facecolor = palette[frac_idx],
@@ -443,6 +459,70 @@ class MSTView(BaseStatisticsView):
         
         if title:
             plt.suptitle(title, y = 1.02)
+            
+    def enum_plots(self, experiment):
+        """
+        Enumerate the named plots we can make from this set of statistics.
+        
+        Returns
+        -------
+        iterator
+            An iterator across the possible plot names. The iterator ALSO has an instance
+            attribute called ``by``, which holds a list of the facets that are
+            not yet set (and thus need to be specified in the plot name.)
+        """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+
+        if self.style == "heat" and self.variable != "":
+            raise util.CytoflowViewError("variable",
+                                         "If `style` is \"heat\", `variable` must be empty!")
+                        
+        stat = self._get_stat(experiment)
+        locs = self._get_locs(experiment)
+                
+        stat = self._subset_data(self.statistic, stat)
+        locs = self._subset_data(self.locations, locs)
+        
+        # the indices of `stat` and `locs` may have the same levels, or the index 
+        # of `stat` may have one more -- if so, it must be `self.variable`. to get
+        # things compatible, we'll re-order the index levels of stats.
+        locs_names = set(stat.index.names) - set([self.variable]) if self.variable else set(stat.index.names)
+        if locs_names != set(locs.index.names):
+            if self.style == "heat":
+                raise util.CytoflowViewError('locations',
+                                             "If `style` is \"heat\", the levels of 'locations' the same as levels of 'statistic'")
+            else:
+                raise util.CytoflowViewError('locations',
+                                             "If `style` is not \"heat\", then the levels of 'locations' must be the same as the levels of 'statistic' without 'variable'.")
+            
+        # need to re-index stat to be compatible with locs
+        stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
+        new_stat_idx = stat.index.reorder_levels(stat_names)
+        stat.set_index(new_stat_idx, inplace = True)
+        
+        # do we have to get a plot_name?
+        if len(locs_names) > 1 and not self.by:
+            raise util.CytoflowViewError('by',
+                                         'If `locations` has more than one index level, you must set `by`.')
+        
+        if self.by and self.by not in locs_names:
+            raise util.CytoflowViewError('by',
+                                         '`by` value {} is not in {}'
+                                         .format(self.by, self.ocations))
+            
+        by = self.by if self.by else list(locs_names)[0]
+            
+        unused_names = list(set(locs_names) - set([by]))
+
+        if unused_names:
+            stat_groupby = stat.groupby(unused_names, observed = True)
+            return iter(stat_groupby.groups)
+        else:
+            return iter([])
+    
         
     def _get_stat(self, experiment):
         if experiment is None:
