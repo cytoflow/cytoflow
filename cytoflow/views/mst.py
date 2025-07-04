@@ -25,7 +25,7 @@ cytoflow.views.matrix
 import math
 from warnings import warn
 
-from traits.api import provides, Enum, Str, Callable, Constant, List
+from traits.api import HasStrictTraits, provides, Enum, Str, Callable, Constant, List
 import seaborn as sns
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -37,10 +37,9 @@ import cytoflow
 import cytoflow.utility as util
 
 from .i_view import IView
-from .base_views import BaseStatisticsView
 
 @provides(IView)
-class MSTView(BaseStatisticsView):
+class MSTView(HasStrictTraits):
     """
     A view that creates a minimum spanning tree view of a statistic. 
     
@@ -66,10 +65,9 @@ class MSTView(BaseStatisticsView):
       is equal. Instead, the radius of the pie slice scales with the square root of
       the intensity, so that the relationship between area and intensity remains the same.
       
-..
-    Optionally, you can set `size_feature` to scale the circles (or pies or petals)
-    by another feature of the statistic. (Often used to scale by the count of a particular
-    population or subset.)
+    Optionally, you can set `size_function` to scale the circles (or pies or petals)
+    by a function computed on `Experiment.data`. (Often used to scale by the number
+    of events in each cluster.)
     
     Attributes
     ----------
@@ -93,7 +91,7 @@ class MSTView(BaseStatisticsView):
         The `KMeansOp` statistic is mostly locations, but also has the a 
         **Proportion** feature. You likely don't want to use it as a location 
         for laying out the minimum spanning tree!
-    
+            
     variable : Str
         The variable used for plotting pie and petal plots. Must be left empty
         for a heatmap.
@@ -107,6 +105,9 @@ class MSTView(BaseStatisticsView):
     scale : {'linear', 'log', 'logicle'}
         How should the color, arc length, or radii be scaled before
         plotting?
+        
+    resize : Bool or Callable (default: False)
+        
         
     metric : Str (default: ``euclidean``)
         What metric should be used to compute distance in the tree? Must be one
@@ -152,8 +153,8 @@ class MSTView(BaseStatisticsView):
     scale = util.ScaleEnum
     style = Enum("heat", "pie", "petal")
     metric = Str("euclidean")
+    subset = Str
     
-    size_feature = Str
     size_function = Callable
 
     def plot(self, experiment, plot_name = None, **kwargs):
@@ -208,6 +209,7 @@ class MSTView(BaseStatisticsView):
                 
         stat = self._subset_data(self.statistic, stat)
         locs = self._subset_data(self.locations, locs)
+        experiment_data = experiment.data
         
         # the indices of `stat` and `locs` may have the same levels, or the index 
         # of `stat` may have one more -- if so, it must be `self.variable`. to get
@@ -262,16 +264,14 @@ class MSTView(BaseStatisticsView):
                 
             stat = stat_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
             locs = locs_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+            if self.size_function:
+                experiment_data = experiment.data.groupby(unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+        
                         
         if self.style != "heat" and self.variable not in stat.index.names:
             raise util.CytoflowViewError('variable',
                                          "Can't find variable '{}' in the statistic index."
                                          .format(self.variable))
-        
-        # if self.size_feature and self.size_feature not in stat:
-        #     raise util.CytoflowViewError('size_feature',
-        #                                  "Feature {} not in statistic {}"
-        #                                  .format(self.size_feature, self.statistic))
 
         for lf in self.location_features:
             if lf not in locs:
@@ -283,11 +283,6 @@ class MSTView(BaseStatisticsView):
             raise util.CytoflowViewError('variable',
                                          "Can't find variable '{}' in the statistic index."
                                          .format(self.variable))
-        
-        if self.size_feature and self.size_feature not in stat:
-            raise util.CytoflowViewError('size_feature',
-                                         "Feature {} not in statistic {}"
-                                         .format(self.size_feature, self.statistic))
 
         title = kwargs.pop("title", None)
         legend = kwargs.pop('legend', True)
@@ -311,6 +306,29 @@ class MSTView(BaseStatisticsView):
                      util.CytoflowViewWarning)
         
         data = stat.reset_index()
+        
+        if self.size_function:
+            group_scale = {}
+            s_max = 0.0
+            for group_name, group in experiment_data.groupby(by = list(locs_names), observed = True):
+                s = self.size_function(group)
+                try:
+                    s = float(s)
+                except Exception as e:
+                    raise util.CytoflowViewError('size_function',
+                                                 'Called size_function on group {} and return type was {}; must return a float!'
+                                                 .format(group_name, type(s))) from e
+                                                 
+                if s < 0.0:
+                    raise util.CytoflowViewError('size_function',
+                                                 'Called size_function on group {} and return was {}; must be >0!'
+                                                 .format(group_name, s))
+                if s > s_max:
+                    s_max = s
+                group_scale[group_name] = s
+                
+            
+            group_scale = {k : v / s_max for k, v in group_scale.items()}
         
         # set up the range of the color map
         if 'norm' not in kwargs:
@@ -378,6 +396,11 @@ class MSTView(BaseStatisticsView):
                                            radius = radius, 
                                            facecolor = cmap(data_norm(x)),
                                            clip_on = False)
+                if self.size_function:
+                    patch.set_radius(radius * group_scale[locs.index.to_flat_index()[idx]])
+                    
+                patch.set(**kwargs)
+                    
                 patches.append(patch)
 
             plt.gca().add_collection(mpl.collections.PatchCollection(patches, match_original = True))
@@ -408,10 +431,15 @@ class MSTView(BaseStatisticsView):
                                           theta2 = 360 * theta2, 
                                           facecolor = palette[frac_idx],
                                           edgecolor = 'white',
-                                          clip_on = False,)
+                                          clip_on = False)
                     
                     if idx == 0:
                         w.set(label = group[self.variable].iloc[frac_idx])
+                        
+                    if self.size_function:
+                        w.set_radius(w.r * group_scale[locs.index.to_flat_index()[idx]])
+                        
+                    w.set(**kwargs)
                         
                     plt.gca().add_artist(w)
                     theta1 = theta2
@@ -446,6 +474,11 @@ class MSTView(BaseStatisticsView):
                     
                     if idx == 0:
                         w.set(label = group[self.variable].iloc[frac_idx])
+                        
+                    if self.size_function:
+                        w.set_radius(w.r * group_scale[locs.index.to_flat_index()[idx]])
+                        
+                    w.set(**kwargs)
                         
                     plt.gca().add_artist(w)
                     theta1 = theta2

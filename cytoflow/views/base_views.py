@@ -815,8 +815,7 @@ class BaseStatisticsView(BaseView):
 
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError('plot_name',
-                                             "Plot {} not from plot_enum; must "
-                                             "be one of {}"
+                                             "plot_name must be one of {}"
                                              .format(plot_name, list(groupby.groups.keys())))
                 
             data = groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
