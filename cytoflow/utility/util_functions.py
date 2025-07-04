@@ -136,7 +136,7 @@ def geom_mean(a):
     
     a = np.array(a)
     pos = a[a > 0]
-    pos_mean = stats.gmean(pos)
+    pos_mean = stats.gmean(pos) if pos.size > 0 else 0
     pos_prop = pos.size / a.size
     
     neg = a[a < 0]
