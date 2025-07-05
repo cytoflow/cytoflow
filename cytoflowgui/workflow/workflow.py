@@ -618,7 +618,7 @@ class RemoteWorkflow(HasStrictTraits):
                                                                                           parent_conn = parent_conn, 
                                                                                           process_events = process_events,
                                                                                           plot_lock = plot_lock, 
-                                                                                          constrained_layout = True,
+                                                                                          layout = 'constrained',
                                                                                           *args, 
                                                                                           **kwargs)
          

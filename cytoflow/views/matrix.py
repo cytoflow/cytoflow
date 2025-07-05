@@ -27,8 +27,7 @@ from warnings import warn
 
 from traits.api import HasStrictTraits, provides, Enum, Str, Constant, Callable
 import seaborn as sns
-import numpy as np
-from natsort import natsorted
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid
@@ -106,6 +105,10 @@ class MatrixView(HasStrictTraits):
         positive ``float`` or value that can be cast to ``float`` (such as 
         ``int``).  Of particular use is ``len``, which will scale the cells 
         by the number of events in each subset.
+        
+    subset : Str
+        Only plot a subset of the data in `statistic`. Passed directly to 
+        `pandas.DataFrame.query`.
         
     Note
     ----
@@ -225,6 +228,14 @@ class MatrixView(HasStrictTraits):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
             
+        if not self.statistic:
+            raise util.CytoflowViewError('statistic',
+                                         "Must set a statistic to plot")
+            
+        if not self.feature:
+            raise util.CytoflowViewError('feature',
+                                         "Must set a feature to plot")
+            
         if not self.xfacet and not self.yfacet:
             raise util.CytoflowViewError('xfacet',
                                          "At least one of 'xfacet' and 'yfacet' must be set.")
@@ -271,7 +282,7 @@ class MatrixView(HasStrictTraits):
                                          "Can't find variable '{}' in the statistic index."
                                          .format(self.variable))
         
-        data = data.reset_index()
+        # data = data.reset_index()
         
         title = kwargs.pop("title", None)
         xlabel = kwargs.pop("xlabel", self.yfacet)       
@@ -296,8 +307,9 @@ class MatrixView(HasStrictTraits):
                 warn("'sns_context' is ignored when not running in the GUI. Feel free to change the seaborn global settings.",
                      util.CytoflowViewWarning)
                 
-        rows = kwargs.pop("row_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else []))
-        cols = kwargs.pop("col_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else []))
+        index = data.index.remove_unused_levels()
+        rows = kwargs.pop("row_order", (index.levels[index.names.index(self.xfacet)].to_list() if self.xfacet else []))
+        cols = kwargs.pop("col_order", (index.levels[index.names.index(self.yfacet)].to_list() if self.yfacet else []))
 
         # set up the range of the color map
         if 'norm' not in kwargs:
@@ -355,8 +367,20 @@ class MatrixView(HasStrictTraits):
                              cbar_pad = 0.1,
                              cbar_size = 0.15)
                     
-            for idx, (group_name, group) in enumerate(groups):
-                plt.sca(grid[idx])
+            for group_name, group in groups:
+                if not self.xfacet:
+                    # only yfacet -- ie, one row
+                    row_idx = 0
+                    col_idx = cols.index(group_name[0])
+                elif not self.yfacet:
+                    # only xfacet -- ie, one column
+                    row_idx = rows.index(group_name[0])
+                    col_idx = 0
+                else:
+                    row_idx = rows.index(group_name[0])
+                    col_idx = cols.index(group_name[1])
+                    
+                plt.sca(grid.axes_row[row_idx][col_idx])
                 patches, _ = plt.pie([1], wedgeprops = kwargs)
                 patches[0].set_facecolor(cmap(data_norm(group.reset_index().at[0, self.feature])))
                 
@@ -368,6 +392,10 @@ class MatrixView(HasStrictTraits):
                                       cmap = cmap, 
                                       norm = data_norm,
                                       label = legendlabel)
+                
+            for ax in grid:
+                if not ax.has_data():
+                    ax.set_frame_on(False)
 
         elif self.style == "pie":
             palette_name = kwargs.pop('palette', 'deep')
@@ -383,18 +411,40 @@ class MatrixView(HasStrictTraits):
                                  axes_pad = 0.0,
                                  cbar_mode = None)
             
-            for idx, (group_name, group) in enumerate(groups):
-                plt.sca(grid[idx])
+            for group_name, group in groups:
+                if not self.xfacet:
+                    # only yfacet -- ie, one row
+                    row_idx = 0
+                    col_idx = cols.index(group_name[0])
+                elif not self.yfacet:
+                    # only xfacet -- ie, one column
+                    row_idx = rows.index(group_name[0])
+                    col_idx = 0
+                else:
+                    row_idx = rows.index(group_name[0])
+                    col_idx = cols.index(group_name[1])
+                    
+                plt.sca(grid.axes_row[row_idx][col_idx])
                 patches, _ = plt.pie(group[self.feature], wedgeprops = kwargs)
                 
+                legend_artists = {}
                 for pi, patch in enumerate(patches):
-                    patch.set_label(group.reset_index().at[pi, self.variable])
+                    label = group.reset_index().at[pi, self.variable]
+                    patch.set_label(label)
+                    if label not in legend_artists:
+                        legend_artists[label] = patch
                     if self.size_function:
                         patch.set_radius(patch.r * group_scale[group_name])
                 
             if(legend):
-                grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), 
+                grid.axes_row[0][-1].legend(handles = legend_artists.values(),
+                                            bbox_to_anchor = (1, 1), 
+                                            loc = "upper left",
                                             title = self.variable)
+                
+            for ax in grid:
+                if not ax.has_data():
+                    ax.set_frame_on(False)
             
         elif self.style == "petal":
             palette_name = kwargs.pop('palette', 'deep')
@@ -410,18 +460,41 @@ class MatrixView(HasStrictTraits):
                                  axes_pad = 0.0,
                                  cbar_mode = None)
             
-            for idx, (_, group) in enumerate(groups):
-                plt.sca(grid[idx])
+            for group_name, group in groups:
+                if not self.xfacet:
+                    # only yfacet -- ie, one row
+                    row_idx = 0
+                    col_idx = cols.index(group_name[0])
+                elif not self.yfacet:
+                    # only xfacet -- ie, one column
+                    row_idx = rows.index(group_name[0])
+                    col_idx = 0
+                else:
+                    row_idx = rows.index(group_name[0])
+                    col_idx = cols.index(group_name[1])
+                    
+                plt.sca(grid.axes_row[row_idx][col_idx])
                 patches, _ = plt.pie([1.0 / len(group[self.feature])] * len(group[self.feature]), wedgeprops = kwargs)
                 
+                legend_artists = {}
                 for pi, patch in enumerate(patches):
-                    patch.set_label(group.reset_index().at[pi, self.variable])
+                    label = group.reset_index().at[pi, self.variable]
+                    patch.set_label(label)
+                    if label not in legend_artists:
+                        legend_artists[label] = patch
                     patch.set(radius = math.sqrt(group.reset_index().at[pi, self.feature] / group.reset_index()[self.feature].max()))
                     if self.size_function:
                         patch.set_radius(patch.r * group_scale[group_name])
                     
             if(legend):
-                grid.axes_row[0][-1].legend(bbox_to_anchor = (1, 1), title = self.variable)
+                grid.axes_row[0][-1].legend(handles = legend_artists.values(),
+                                            bbox_to_anchor = (1, 1), 
+                                            loc = "upper left",
+                                            title = self.variable)
+                
+            for ax in grid:
+                if not ax.has_data():
+                    ax.set_frame_on(False)
             
         if self.yfacet:
             for i, ax in enumerate(grid.axes_row[0]):
@@ -480,11 +553,31 @@ class MatrixView(HasStrictTraits):
         facets = self._get_facets(data)
 
         unused_names = list(set(data.index.names) - set(facets))      
-        if unused_names:
-            return iter(data.groupby(unused_names, observed = True).groups)
-        else:
-            return iter([])
-
+        
+        class plot_iter(object):
+            
+            def __init__(self, data, by):
+                self.by = by
+                self._iter = None
+                self._returned = False
+                
+                if by:
+                    self._iter = data.groupby(by, observed = True).groups.keys().__iter__()
+                
+            def __iter__(self):
+                return self
+            
+            def __next__(self):
+                if self._iter:
+                    return next(self._iter)
+                else:
+                    if self._returned:
+                        raise StopIteration
+                    else:
+                        self._returned = True
+                        return None
+            
+        return plot_iter(data.reset_index(), unused_names)
 
     def _get_stat(self, experiment):
         if experiment is None:
@@ -553,7 +646,7 @@ class MatrixView(HasStrictTraits):
                                              .format(self.subset))
                 
         names = list(data.index.names)
-        
+
         for name in names:
             unique_values = data.index.get_level_values(name).unique()
             if len(unique_values) == 1:
@@ -565,6 +658,11 @@ class MatrixView(HasStrictTraits):
                     raise util.CytoflowViewError(None,
                                                  "Must have more than one "
                                                  "value to plot.") from e
+                                                 
+        # droplevel makes this a plain Index instead of a MultiIndex. no bueno.
+        if not isinstance(data.index, pd.MultiIndex):
+            data.index = pd.MultiIndex.from_tuples([(x,) for x in data.index.to_list()], 
+                                                   names = [data.index.name])
 
         return data
     

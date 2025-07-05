@@ -42,8 +42,9 @@ cytoflowgui.workflow.views.matrix
 """
 
 from textwrap import dedent
+import matplotlib.pyplot as plt
 
-from traits.api import provides, Instance, HasStrictTraits, Str, Bool, Enum
+from traits.api import provides, Instance, HasStrictTraits, Str, Bool, Enum, Callable
 
 from cytoflow import MatrixView
 from ..serialization import camel_registry, cytoflow_class_repr, traits_str, traits_repr
@@ -69,7 +70,27 @@ class MatrixPlotParams(HasStrictTraits):
 
 @provides(IWorkflowView)
 class MatrixWorkflowView(WorkflowByView, MatrixView):
+    
+    # callables aren't picklable, so make this one transient 
+    # and send scale_by_events instead
+    size_function = Callable(transient = True)
+    scale_by_events = Bool(False)
+    
     plot_params = Instance(MatrixPlotParams, ())
+    
+    def plot(self, experiment, **kwargs):
+        if self.scale_by_events:
+            self.size_function = len
+        else:
+            self.size_function = lambda _: 1.0
+            
+        # gets rid of the "bad gridspec" error from the layout engine
+        le = plt.gcf().get_layout_engine()
+        plt.gcf().set_layout_engine('none')
+        
+        super().plot(experiment, **kwargs)
+        
+        plt.gcf().set_layout_engine(le)
     
     def get_notebook_code(self, idx):
         view = MatrixView()
@@ -94,24 +115,21 @@ def _dump(view):
                 xfacet = view.xfacet,   
                 yfacet = view.yfacet,   
                 subset_list = view.subset_list,   
+                scale_by_events = view.scale_by_events,
                 plot_params = view.plot_params,   
                 current_plot = view.current_plot) 
     
 @camel_registry.dumper(MatrixPlotParams, 'matrix-params', version = 1)
 def _dump_params(params):
     return dict(
-                # BasePlotParams
                 title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
-                huelabel = params.huelabel,
-                col_wrap = params.col_wrap,
+                legendlabel = params.legendlabel,
                 sns_style = params.sns_style,
                 sns_context = params.sns_context,
                 legend = params.legend,
-                sharex = params.sharex,
-                sharey = params.sharey,
-                despine = params.despine,
+                palette = params.palette,
                 )
 
 @camel_registry.loader('matrix', version = 3)

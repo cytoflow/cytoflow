@@ -42,6 +42,16 @@ Plots a "matrix" view. This can be a heat map, or a matrix of pie or petal plots
     Which statistic to plot. This is usually the name of the operation that 
     added the statistic. 
     
+.. object:: Horizontal Facet
+
+    What statistic variable should be plotted in the columns of the matrix plot?
+    If left unset, there will only be one column.
+        
+.. object:: Vertical Facet
+
+    What statistic variable should be plotted in the rows of the matrix plot?
+    If left unset, there will only be one row.
+    
 .. object:: Feature
 
     Which column in the statistic should be plotted?
@@ -58,19 +68,13 @@ Plots a "matrix" view. This can be a heat map, or a matrix of pie or petal plots
 
     How to scale the color, arc length or radii of the plots.
     
-.. object:: Horizontal Facet
-
-    What statistic variable should be plotted in the columns of the matrix plot?
-    If left unset, there will only be one column.
-        
-.. object:: Vertical Facet
-
-    What statistic variable should be plotted in the rows of the matrix plot?
-    If left unset, there will only be one row.
-    
 .. object:: Subset
 
     Plot only a subset of the statistic.
+    
+.. object:: Scale by Events
+
+    If set, scale each circle/pie/petal by the number of matching events.
     
 .. plot::
    :include-source: False
@@ -161,6 +165,14 @@ class MatrixHandler(ViewHandler):
                     Item('feature',
                          editor = EnumEditor(name = 'handler.features'),
                          label = "Feature"),
+                    Item('xfacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label = "Horizontal\nFacet"),
+                    Item('yfacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label = "Vertical\nFacet"),
                     Item('variable',
                          editor=ExtendableEnumEditor(name='handler.indices',
                                                      extra_items = {"None" : ""}),
@@ -171,16 +183,9 @@ class MatrixHandler(ViewHandler):
                                                        'petal' : "Petal Plot"}),
                          label = "Style"),
                     Item('scale', label = "Scale"),
-                    Item('xfacet',
-                         editor=ExtendableEnumEditor(name='handler.indices',
-                                                     extra_items = {"None" : ""}),
-                         label = "Horizontal\nFacet"),
-                    Item('yfacet',
-                         editor=ExtendableEnumEditor(name='handler.indices',
-                                                     extra_items = {"None" : ""}),
-                         label = "Vertical\nFacet"),
-                      label = "Matrix",
-                      show_border = False),
+                    Item('scale_by_events', label = "Scale by events"),
+                    label = "Matrix",
+                    show_border = False),
              VGroup(Item('subset_list',
                          show_label = False,
                          editor = SubsetListEditor(conditions = "handler.levels",
