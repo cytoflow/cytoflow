@@ -55,13 +55,13 @@ class TestSOM(ImportedDataTest):
         self.op.by = ["Well"]
         self.op.estimate(self.ex)
     
-        ex2 = self.op.apply(self.ex)
+        self.op.apply(self.ex)
     
     def testEstimateBy2(self):
         self.op.by = ["Well", "Dox"]
         self.op.estimate(self.ex)
     
-        ex2 = self.op.apply(self.ex)
+        self.op.apply(self.ex)
         
     def testPlot(self):
         self.op.estimate(self.ex)
@@ -88,7 +88,7 @@ class TestSOM(ImportedDataTest):
     def testPlotBy2(self):
         self.op.by = ["Well", "Dox"]
         self.op.estimate(self.ex)
-        self.op.default_view().plot(self.ex, plot_name = ('B', 10.0))
+        self.op.default_view().plot(self.ex, plot_name = ('C', 10.0))
     
     def testPlotByIter2(self):
         self.op.by = ["Well", "Dox"]

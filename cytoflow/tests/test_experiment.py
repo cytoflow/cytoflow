@@ -53,7 +53,7 @@ class TestExperiment(ImportedDataTest):
             self.ex.add_condition('B1_A', 'bool', pd.Series([True] * len(self.ex)))
     
     def testSubset(self):
-        ex2 = self.ex.subset(['Dox', 'Well'], (100.0, 'C'))
+        ex2 = self.ex.subset(['Dox', 'Well'], (10.0, 'C'))
         self.assertEqual(len(ex2['Dox'].unique()), 1)
         self.assertEqual(len(ex2['Well'].unique()), 1)
         self.assertEqual(len(ex2), 100)
@@ -61,17 +61,17 @@ class TestExperiment(ImportedDataTest):
     def testSubset2(self):
         ex2 = self.ex.subset('Dox', 100.0)
         self.assertEqual(len(ex2['Dox'].unique()), 1)
-        self.assertEqual(len(ex2['Well'].unique()), 3)
-        self.assertEqual(len(ex2), 300)
+        self.assertEqual(len(ex2['Well'].unique()), 2)
+        self.assertEqual(len(ex2), 200)
         
     def testQuery(self):
-        ex2 = self.ex.query('Dox == 100.0 and Well == "C"')
+        ex2 = self.ex.query('Dox == 10.0 and Well == "C"')
         self.assertEqual(len(ex2['Dox'].unique()), 1)
         self.assertEqual(len(ex2['Well'].unique()), 1)
         self.assertEqual(len(ex2), 100)
         
     def testAddEvents(self):
-        ex2 = self.ex.subset(['Dox', 'Well'], (100.0, 'C'))
+        ex2 = self.ex.subset(['Dox', 'Well'], (10.0, 'C'))
         old_len = len(self.ex)
         
         self.ex.add_events(ex2.data[ex2.channels], {'Dox' : 1000.0, 

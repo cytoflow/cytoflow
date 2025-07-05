@@ -140,7 +140,6 @@ class ChannelStatisticOp(HasStrictTraits):
     function = Callable
     by = List(Str)
     subset = Str
-    fill = Float(np.nan)
     
     def apply(self, experiment):
         """
@@ -208,15 +207,12 @@ class ChannelStatisticOp(HasStrictTraits):
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
-        groupby = experiment.data.groupby(self.by, observed = False)  
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
-                                         names = self.by)
-
-        for i in idx:
-            if (i[0] if idx.nlevels == 1 else i) not in groupby.indices:
-                warn("No events for category {}".format( [str(i[0]) + "=" + str(i[1])  for i in zip(idx.names, i)]),
-                     util.CytoflowOpWarning)
-              
+        groupby = experiment.data.groupby(self.by, observed = True)  
+        keys = [x if isinstance(x, tuple)
+                  else (x,)
+                  for x in groupby.groups.keys()]
+        idx = pd.MultiIndex.from_tuples(keys, names = self.by)
+                      
         stat = None
         
         for group, data_subset in groupby:
@@ -246,12 +242,12 @@ class ChannelStatisticOp(HasStrictTraits):
                 
             if stat is None:
                 if isinstance(v, float):
-                    stat = pd.DataFrame(data = np.full((len(idx), 1), self.fill),
+                    stat = pd.DataFrame(data = np.full((len(idx), 1), np.nan),
                                         index = idx,
                                         columns = [self.channel],
                                         dtype = 'float' ).sort_index()
                 elif isinstance(v, pd.Series):
-                    stat = pd.DataFrame(data = np.full((len(idx), len(v)), self.fill),
+                    stat = pd.DataFrame(data = np.full((len(idx), len(v)), np.nan),
                                         index = idx,
                                         columns = v.index.tolist(),
                                         dtype = 'float').sort_index()
@@ -271,13 +267,14 @@ class ChannelStatisticOp(HasStrictTraits):
                 raise util.CytoflowOpError(None,
                                            "Calling function on category {} returned {} "
                                            "which contains NaN".format(group, stat.loc[group]))
-                
-        if stat.isna().any().any():
-            raise util.CytoflowOpError(None,
-                                       "The statistic has at least one NaN in it, which probably means "
-                                       "one of the groups did not have any events AND you forgot to set "
-                                       "'fill' to something other than NaN.".format(group, stat.loc[group]))
-                
+        #
+        # if stat.isna().any().any():
+        #     raise util.CytoflowOpError(None,
+        #                                "The statistic has at least one NaN in it, which probably means "
+        #                                "one of the groups did not have any events AND you forgot to set "
+        #                                "'fill' to something other than NaN.".format(group, stat.loc[group]))
+        #
+
         
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         new_experiment.statistics[self.name] = stat

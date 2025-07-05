@@ -62,6 +62,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import seaborn as sns
+import pandas as pd
 from natsort import natsorted
 
 from warnings import warn
@@ -204,8 +205,8 @@ class BaseView(HasStrictTraits):
         huelabel = kwargs.pop("huelabel", self.huefacet)
         if huelabel == "": huelabel = self.huefacet
         
-        sharex = kwargs.pop("sharex", True)
-        sharey = kwargs.pop("sharey", True)
+        sharex = kwargs.pop("sharex", False)
+        sharey = kwargs.pop("sharey", False)
         
         height = kwargs.pop("height", 3)
         aspect = kwargs.pop("aspect", 1.5)
@@ -275,8 +276,12 @@ class BaseView(HasStrictTraits):
                               margin_titles = margin_titles)
         
         plot_ret = self._grid_plot(experiment = experiment, grid = g, cmap = cmap, **kwargs)
-        
         kwargs.update(plot_ret)
+        
+        # get rid of empty axes
+        for ax in plt.gcf().get_axes():
+            if not ax.has_data():
+                ax.remove()
         
         xscale = kwargs.pop("xscale", None)
         yscale = kwargs.pop("yscale", None)
@@ -747,7 +752,7 @@ class BaseStatisticsView(BaseView):
         facets = self._get_facets(data)
         by = list(set(data.index.names) - set(facets))
         
-        class plot_enum(object):
+        class plot_iter(object):
             
             def __init__(self, data, by):
                 self.by = by
@@ -770,7 +775,7 @@ class BaseStatisticsView(BaseView):
                         self._returned = True
                         return None
             
-        return plot_enum(data.reset_index(), by)
+        return plot_iter(data.reset_index(), by)
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """
@@ -853,6 +858,11 @@ class BaseStatisticsView(BaseView):
                     raise util.CytoflowViewError(None,
                                                  "Must have more than one "
                                                  "value to plot.") from e
+                                                                                                  
+        # droplevel makes this a plain Index instead of a MultiIndex. no bueno.
+        if not isinstance(data.index, pd.MultiIndex):
+            data.index = pd.MultiIndex.from_tuples([(x,) for x in data.index.to_list()], 
+                                                   names = [data.index.name])
 
         return data
     
@@ -934,9 +944,7 @@ class Base1DStatisticsView(BaseStatisticsView):
             
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
-                       
-        stat = self._get_stat(experiment)
-                       
+                                              
         if not self.variable:
             raise util.CytoflowViewError('variable',
                                          "variable not set")

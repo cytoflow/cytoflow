@@ -19,7 +19,6 @@
 
 import unittest, tempfile, os
 import cytoflow as flow
-import cytoflow.utility as util
 
 from .test_base import ImportedDataTest
 
@@ -31,12 +30,10 @@ class TestTable(ImportedDataTest):
                                    channel = "Y2-A",
                                    threshold = 500).apply(self.ex)
 
-        with self.assertWarns(util.CytoflowOpWarning):
-            self.ex = flow.ChannelStatisticOp(name = "ByDoxWell",
-                                              channel = "Y2-A",
-                                              by = ['Dox', 'Well', 'T'],
-                                              function = flow.geom_mean,
-                                              fill = 0).apply(self.ex)
+        self.ex = flow.ChannelStatisticOp(name = "ByDoxWell",
+                                          channel = "Y2-A",
+                                          by = ['Dox', 'Well', 'T'],
+                                          function = flow.geom_mean).apply(self.ex)
                                  
     def tearDown(self):
         fh, filename = tempfile.mkstemp()

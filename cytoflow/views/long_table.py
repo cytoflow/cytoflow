@@ -46,14 +46,14 @@ class LongTableView(HasStrictTraits):
     
     Attributes
     ----------
-    statistic : (str, str)
+    statistic : Str
         The name of the statistic to plot.  Must be a key in the  
         `Experiment.statistics` attribute of the `Experiment`
         being plotted.  Each level of the statistic's index must be used 
         in `row_facet`, `column_facet`, `subrow_facet`, or
         `subcolumn_facet`.
                 
-    subset : str
+    subset : Str
         A Python expression used to select a subset of the statistic to plot.
         
     Examples

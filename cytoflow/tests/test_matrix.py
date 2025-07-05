@@ -28,7 +28,7 @@ from .test_base import ImportedDataTest
 class TestMatrix(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
                    
         self.ex = flow.ChannelStatisticOp(name = "ByDox",
                                           channel = "Y2-A",

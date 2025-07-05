@@ -141,26 +141,28 @@ class FrameStatisticOp(HasStrictTraits):
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
                 
-        groupby = experiment.data.groupby(self.by, observed = False)
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
-                                         names = self.by)
+        groupby = experiment.data.groupby(self.by, observed = True)
+        keys = [x if isinstance(x, tuple)
+                  else (x,)
+                  for x in groupby.groups.keys()]
+        idx = pd.MultiIndex.from_tuples(keys, names = self.by)
 
-        for i in idx:
-            if (i[0] if idx.nlevels == 1 else i) not in groupby.indices:
-                warn("No events for category {}".format( [str(i[0]) + "=" + str(i[1])  for i in zip(idx.names, i)]),
-                     util.CytoflowOpWarning)
-
-        stat = pd.DataFrame(index = idx, 
-                            dtype = 'float').sort_index()
+        stat = None
         
         for group, data_subset in groupby:
-            if len(data_subset) == 0:
-                warn("Group {} had no data".format(group), 
-                     util.CytoflowOpWarning)
-                continue
-            
             try:
                 v = self.function(data_subset)
+                
+                if v.isna().any():
+                    raise util.CytoflowOpError('function',
+                                               "`function` must not return any NAs! Category {} returned {}".format(group, stat.loc[group]))
+                
+                if stat is None:
+                    stat = pd.DataFrame(np.full((len(idx), len(v.index)), np.nan),
+                                        index = idx, 
+                                        columns = v.index.to_list(),
+                                        dtype = 'float').sort_index()
+
                 if not isinstance(v, pd.Series):
                     raise util.CytoflowOpError('function',
                                                "'function' must return a pandas.Series")
@@ -168,18 +170,13 @@ class FrameStatisticOp(HasStrictTraits):
                 if len(stat.columns) == 0:
                     for col in v.index:
                         stat.insert(len(stat.columns), col, value = np.nan)
-                
+
                 stat.loc[group] = v
 
             except Exception as e:
                 raise util.CytoflowOpError('function',
                                            "Your function threw an error in group {}"
                                            .format(group)) from e    
-                            
-            # check for, and warn about, NaNs.
-            if pd.Series(stat.loc[group]).isna().any():
-                raise util.CytoflowOpError('',
-                                           "Category {} returned {}".format(group, stat.loc[group]))
 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         new_experiment.statistics[self.name] = stat

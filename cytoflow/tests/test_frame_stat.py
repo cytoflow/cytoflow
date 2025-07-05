@@ -26,10 +26,10 @@ import unittest
 import cytoflow as flow
 import pandas as pd
 import cytoflow.utility as util
-from .test_base import ImportedDataSmallTest
+from .test_base import ImportedDataTest
 
 
-class Test(ImportedDataSmallTest):
+class Test(ImportedDataTest):
 
     def setUp(self):
         super().setUp()

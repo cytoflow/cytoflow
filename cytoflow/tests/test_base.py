@@ -52,8 +52,8 @@ class ImportedData(object):
         
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
      
-        tube1 = Tube(file = self.cwd + "CFP_Well_A4.fcs",
-                     conditions = {"Dox" : 0.0, "Well" : 'A'})
+        # tube1 = Tube(file = self.cwd + "CFP_Well_A4.fcs",
+        #              conditions = {"Dox" : 0.0, "Well" : 'A'})
      
         tube2 = Tube(file = self.cwd + "RFP_Well_A3.fcs",
                      conditions = {"Dox" : 10.0, "Well" : 'A'})
@@ -64,8 +64,8 @@ class ImportedData(object):
         tube4 = Tube(file = self.cwd + "CFP_Well_B4.fcs",
                      conditions = {"Dox" : 0.0, "Well" : 'B'})
      
-        tube5 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
-                     conditions = {"Dox" : 10.0, "Well" : 'B'})
+        # tube5 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
+        #              conditions = {"Dox" : 10.0, "Well" : 'B'})
 
         tube6 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
                      conditions = {"Dox" : 100.0, "Well" : 'B'})
@@ -75,14 +75,20 @@ class ImportedData(object):
      
         tube8 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
                      conditions = {"Dox" : 10.0, "Well" : 'C'})
-
-        tube9 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
-                     conditions = {"Dox" : 100.0, "Well" : 'C'})
+        #
+        # tube9 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
+        #              conditions = {"Dox" : 100.0, "Well" : 'C'})
         
+        # self.ex = flow.ImportOp(conditions = {"Dox" : "float", "Well" : "category"},
+        #                         tubes = [tube1, tube2, tube3,
+        #                                  tube4, tube5, tube6,
+        #                                  tube7, tube8, tube9]).apply()
+                            
         self.ex = flow.ImportOp(conditions = {"Dox" : "float", "Well" : "category"},
-                                tubes = [tube1, tube2, tube3,
-                                         tube4, tube5, tube6,
-                                         tube7, tube8, tube9]).apply()
+                                tubes = [tube2, tube3,
+                                         tube4, tube6,
+                                         tube7, tube8]).apply()
+                                         
         if thin > 1:
             # thin the dataset 100-fold from 90k to 900 rows for thin=100
             self.ex.add_condition("bucket", "int", np.arange(self.ex.data.shape[0]) % thin)

@@ -292,10 +292,10 @@ class TableView(HasStrictTraits):
         height = t._approx_text_height() * 1.8
          
         # make the main table       
-        for (ri, r) in enumerate(row_groups):
-            for (rri, rr) in enumerate(subrow_groups):
-                for (ci, c) in enumerate(col_groups):
-                    for (cci, cc) in enumerate(subcol_groups):
+        for ri, r in enumerate(row_groups):
+            for rri, rr in enumerate(subrow_groups):
+                for ci, c in enumerate(col_groups):
+                    for cci, cc in enumerate(subcol_groups):
                         row_idx = ri * len(subrow_groups) + rri + row_offset
                         col_idx = ci * len(subcol_groups) + cci + col_offset
                         
@@ -317,6 +317,8 @@ class TableView(HasStrictTraits):
                             text = "{:g}".format(data.loc[agg_idx, self.feature])
                         except (TypeError, ValueError):
                             text = data.loc[agg_idx, self.feature]
+                        except KeyError:
+                            text = ""
                             
                         t.add_cell(row_idx, 
                                    col_idx,
@@ -548,8 +550,11 @@ class TableView(HasStrictTraits):
                             elif data_idx == self.subcolumn_facet:
                                 agg_idx.append(cc)
                         
-                        agg_idx = tuple(agg_idx)                            
-                        t[row_idx, col_idx] = data.loc[agg_idx, column_name]
+                        agg_idx = tuple(agg_idx)      
+                        try:                      
+                            t[row_idx, col_idx] = data.loc[agg_idx, column_name]
+                        except KeyError:
+                            text = ""
                         
         # row headers
         if self.row_facet:
