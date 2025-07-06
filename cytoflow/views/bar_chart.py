@@ -160,16 +160,19 @@ class BarChartView(Base1DStatisticsView):
         if self.error_low and self.error_high:
             map_args.append(self.error_low)
             map_args.append(self.error_high)
+            
+        print(kwargs)
                         
-        grid.map(_barplot, 
-                 *map_args,
-                 view = self,
-                 feature = self.feature,
-                 error_low = self.error_low if self.error_low else None,
-                 error_high = self.error_high if self.error_high else None,
-                 orientation = orientation,
-                 grid = grid,
-                 **kwargs)
+        grid.map_dataframe(_barplot, 
+                           *map_args,
+                           feature = self.feature,
+                           variable = self.variable,
+                           huefacet = self.huefacet if self.huefacet else None,
+                           error_low = self.error_low if self.error_low else None,
+                           error_high = self.error_high if self.error_high else None,
+                           orientation = orientation,
+                           grid = grid,
+                           **kwargs)
         
         if orientation == 'horizontal':
             return dict(xscale = scale,
@@ -178,22 +181,20 @@ class BarChartView(Base1DStatisticsView):
             return dict(yscale = scale,
                         ylim = lim)
             
-def _barplot(*args, view, feature, error_low, error_high, orientation, grid, **kwargs):
+def _barplot(*args, data, feature, variable, huefacet, error_low, error_high, orientation, grid, **kwargs):
     """ 
     A custom barchart function.  This is assembled from pieces cobbled
     together from seaborn v0.7.1.
     """
-  
-    data = pd.DataFrame({s.name: s for s in args}).sort_values(view.variable)
-    categories = data[view.variable].unique()
- 
+
+    # figure out the categories from the GRID data
+    variable_categories = list(grid.data[variable].unique())
+    # hue_categories = list(grid.data[huefacet].unique()) if huefacet else []
+
     # plot the bars
     width = kwargs.pop('width', 0.8)
-    ax = kwargs.pop('ax', None)
 
-    if ax is None:
-        ax = plt.gca()
-    
+    ax = plt.gca()    
     err_kws = {}
     errwidth = kwargs.pop('errwidth', None)
     if errwidth:
@@ -206,37 +207,39 @@ def _barplot(*args, view, feature, error_low, error_high, orientation, grid, **k
 
     # Get the right matplotlib function depending on the orientation
     barfunc = ax.bar if orientation == "vertical" else ax.barh
-    barpos = np.arange(len(categories))
     
-    if view.huefacet:
+    # Figure out the bar offset  
+    barpos = [variable_categories.index(data[variable].iat[i]) for i in range(len(data))]
+    
+    if huefacet:
         hue_names = grid.hue_names
-        hue_level = data[view.huefacet].iloc[0]
+        hue_level = data[huefacet].iloc[0]
         hue_idx = hue_names.index(hue_level)
         hue_offsets = np.linspace(0, width - (width / len(hue_names)), len(hue_names))
         hue_offsets -= hue_offsets.mean()
         nested_width = width / len(hue_names) * 0.98
-        
+    
         offpos = barpos + hue_offsets[hue_idx]
         barfunc(offpos,
                 data[feature], 
                 nested_width,
                 align="center",
                 **kwargs)
-                
+    
         if error_low and error_high:
             interval_low = data[error_low]
             interval_high = data[error_high]
             errcolors = [errcolor] * len(offpos)
             _draw_confints(ax,
                            offpos,
-                           data[data[view.huefacet] == hue_level][feature],
+                           data[data[huefacet] == hue_level][feature],
                            interval_low,
                            interval_high,
                            errcolors,
                            orientation,
                            errwidth = errwidth,
                            capsize = capsize)
-                
+    
     else:
         barfunc(barpos, data[feature], width, align="center", **kwargs)
          
@@ -255,21 +258,19 @@ def _barplot(*args, view, feature, error_low, error_high, orientation, grid, **k
                            capsize = capsize)
 
     if orientation == "vertical":
-        ax.set_xticks(np.arange(len(categories)))
-        ax.set_xticklabels(categories)
+        ax.set_xticks(np.arange(len(variable_categories)))
+        ax.set_xticklabels(variable_categories)
     else:
-        ax.set_yticks(np.arange(len(categories)))
-        ax.set_yticklabels(categories)
+        ax.set_yticks(np.arange(len(variable_categories)))
+        ax.set_yticklabels(variable_categories)
  
     if orientation == "vertical":
         ax.xaxis.grid(False)
-        ax.set_xlim(-.5, len(categories) - .5)
+        ax.set_xlim(-.5, len(variable_categories) - .5)
     else:
         ax.yaxis.grid(False)
-        ax.set_ylim(-.5, len(categories) - .5)  
+        ax.set_ylim(-.5, len(variable_categories) - .5)  
             
-    return ax 
-
 
 def _draw_confints(ax, at_group, stat, int_low, int_high, colors, 
                    orient, errwidth=None, capsize=None, **kws):
