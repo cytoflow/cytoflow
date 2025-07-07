@@ -42,7 +42,7 @@ class TestMST(ImportedDataTest):
                                           
         self.view = flow.MSTView(statistic = "DoxLen", 
                                  locations = "KMeans", 
-                                 location_features = ["V2-A", "Y2-A", "B1-A"],
+                                 locations_features = ["V2-A", "Y2-A", "B1-A"],
                                  feature = "Y2-A",
                                  size_function = len)
         

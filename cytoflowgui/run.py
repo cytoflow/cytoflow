@@ -232,6 +232,7 @@ def run_gui():
                                           Stats1DPlugin, 
                                           Stats2DPlugin,
                                           MatrixPlugin,
+                                          MSTPlugin,
                                           Kde1DPlugin, 
                                           Kde2DPlugin,
                                           ViolinPlotPlugin,
@@ -259,6 +260,7 @@ def run_gui():
                     Stats1DPlugin(),
                     Stats2DPlugin(),
                     MatrixPlugin(),
+                    MSTPlugin(),
                     TablePlugin(),
                     LongTablePlugin(),
                     ExportFCSPlugin()]

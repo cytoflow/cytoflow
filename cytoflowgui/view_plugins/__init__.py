@@ -36,6 +36,7 @@ from .density import DensityPlugin
 from .scatterplot import ScatterplotPlugin
 from .bar_chart import BarChartPlugin
 from .matrix import MatrixPlugin
+from .mst import MSTPlugin
 from .stats_1d import Stats1DPlugin
 from .stats_2d import Stats2DPlugin
 from .kde_1d import Kde1DPlugin

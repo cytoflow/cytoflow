@@ -87,12 +87,12 @@ class MSTView(HasStrictTraits):
               same as the levels of `locations`. If `style` is ``pie`` or ``petal``,
               the levels of `statistic` must be the levels of `location` plus `variable`.
         
-    location_level : Str
+    locations_level : Str
         Which level in the `locations` statistic is different at each location? 
         The values of the others must be specified in the `plot_name` parameter 
         of `plot`.  Optional if there is only one level in `locations`.
         
-    location_features : List(Str)
+    locations_features : List(Str)
         Which features in `location` to use. By default, use all of them. 
         
     .. warning::
@@ -189,11 +189,10 @@ class MSTView(HasStrictTraits):
         
         >>> flow.MSTView(statistic = "DoxLen", 
         ...     locations = "KMeans", 
-        ...     location_features = ["V2-A", "Y2-A", "B1-A"],
+        ...     locations_features = ["V2-A", "Y2-A", "B1-A"],
         ...     feature = "Y2-A",
         ...     variable = "Dox",
-        ...     style = "pie",
-        ...     scale = "linear").plot(ex3)
+        ...     style = "pie").plot(ex3)
     
     """
     
@@ -202,8 +201,8 @@ class MSTView(HasStrictTraits):
     
     statistic = Str
     locations = Str
-    location_level = Str
-    location_features = List(Str)
+    locations_level = Str
+    locations_features = List(Str)
     variable = Str
     feature = Str
     scale = util.ScaleEnum
@@ -286,19 +285,20 @@ class MSTView(HasStrictTraits):
         # need to re-index stat to be compatible with locs
         stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
         new_stat_idx = stat.index.reorder_levels(stat_names)
-        stat.set_index(new_stat_idx, inplace = True)
+        stat = stat.copy()
+        stat.index = new_stat_idx
         
         # do we have to get a plot_name?
-        if len(locs_names) > 1 and not self.location_level:
+        if len(locs_names) > 1 and not self.locations_level:
             raise util.CytoflowViewError('location_level',
                                          'If `locations` has more than one index level, you must set `location_level`.')
         
-        if self.location_level and self.location_level not in locs_names:
+        if self.locations_level and self.locations_level not in locs_names:
             raise util.CytoflowViewError('location_level',
                                          '`location_level` value {} is not in {}'
-                                         .format(self.location_level, self.ocations))
+                                         .format(self.locations_level, self.ocations))
             
-        loc_level = self.location_level if self.location_level else list(locs_names)[0]
+        loc_level = self.locations_level if self.locations_level else list(locs_names)[0]
             
         unused_names = list(set(locs_names) - set([loc_level]))
 
@@ -338,7 +338,7 @@ class MSTView(HasStrictTraits):
                                          "If `style` is not \"heat\", then every element of `feature` must be greater than"
                                          "or equal to 0")  
 
-        for lf in self.location_features:
+        for lf in self.locations_features:
             if lf not in locs:
                 raise util.CytoflowViewError('location_features',
                                              "Feature {} not found in location statistic {}"
@@ -375,6 +375,9 @@ class MSTView(HasStrictTraits):
             group_scale = {}
             s_max = 0.0
             for group_name, group in experiment_data.groupby(by = list(locs_names), observed = True):
+                if group_name not in locs.index:
+                    continue
+                
                 s = self.size_function(group)
                 try:
                     s = float(s)
@@ -411,7 +414,7 @@ class MSTView(HasStrictTraits):
         # MST logic: https://github.com/saeyslab/FlowSOM_Python/blob/d8cb6a5934b1ca9c82f4bba27a1f3cd9862a0596/src/flowsom/main.py#L255
         
         # compute the all-pairs distances
-        locs_values = locs[self.location_features].values if self.location_features else locs.values
+        locs_values = locs[self.locations_features].values if self.locations_features else locs.values
         adjacency_graph = scipy.spatial.distance.cdist(locs_values, locs_values, self.metric)
         
         # create a fully-connected graph
@@ -598,7 +601,8 @@ class MSTView(HasStrictTraits):
         # need to re-index stat to be compatible with locs
         stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
         new_stat_idx = stat.index.reorder_levels(stat_names)
-        stat.set_index(new_stat_idx, inplace = True)
+        stat = stat.copy()
+        stat.index = new_stat_idx
         
         # do we have to get a plot_name?
         if len(locs_names) > 1 and not self.by:
@@ -654,7 +658,7 @@ class MSTView(HasStrictTraits):
         if self.locations not in experiment.statistics:
             raise util.CytoflowViewError('location',
                                          "Can't find the location statistic {} in the experiment"
-                                         .format(self.location))
+                                         .format(self.locations))
             
         locs = experiment.statistics[self.locations]
 
