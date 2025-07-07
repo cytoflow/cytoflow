@@ -27,6 +27,7 @@ from warnings import warn
 
 from traits.api import HasStrictTraits, provides, Enum, Str, Callable, Constant, List
 import seaborn as sns
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.spatial.distance
@@ -52,9 +53,9 @@ class MSTView(HasStrictTraits):
     
     There are three different ways of plotting the value at each location in tree: 
     
-    * Setting `style` to ``heat`` (the default) will produce a "traditional" heat map, 
-      where each location is a circle and the color of the circle is related to the 
-      intensity of the value of `feature`. (In this scenario, `variable` must be left empty.).
+    * Setting `style` to ``heat`` (the default) will produce an MST with a circle 
+      at each vertex and the color of the circle is related to the intensity of 
+      the value of `feature`. (In this scenario, `variable` must be left empty.).
       
     * Setting `style` to ``pie`` will draw a pie plot at each location. The values of `variable`
       are used as the categories of the pie, and the arc length of each slice of pie is related 
@@ -64,6 +65,9 @@ class MSTView(HasStrictTraits):
       are used as the categories, but unlike a pie plot, the arc width of each slice
       is equal. Instead, the radius of the pie slice scales with the square root of
       the intensity, so that the relationship between area and intensity remains the same.
+      
+    .. warning::
+        If `style` is ``pie`` or ``petal``, then all of the data being plotted must be >0!
       
     Optionally, you can set `size_function` to scale the circles (or pies or petals)
     by a function computed on `Experiment.data`. (Often used to scale by the number
@@ -79,10 +83,14 @@ class MSTView(HasStrictTraits):
         A statistic whose levels are the same as `statistic` and whose features
         are the dimensions of the locations of each node to plot.
         
-    by : Str
-        Which level in the `locations` statistic to iterate over? The values 
-        of the others must be specified in the `plot_name` parameter of `plot`.
-        Optional if there is only one level in `locations`.
+    .. note:: If `style` is ``heat``, then the levels of `statistic` must be the
+              same as the levels of `locations`. If `style` is ``pie`` or ``petal``,
+              the levels of `statistic` must be the levels of `location` plus `variable`.
+        
+    location_level : Str
+        Which level in the `locations` statistic is different at each location? 
+        The values of the others must be specified in the `plot_name` parameter 
+        of `plot`.  Optional if there is only one level in `locations`.
         
     location_features : List(Str)
         Which features in `location` to use. By default, use all of them. 
@@ -100,14 +108,20 @@ class MSTView(HasStrictTraits):
         The column in the statistic to plot (often a channel name.)
         
     style : Enum(``heat``, ``pie``, ``petal``) (default = ``heat``)
-        What kind of matrix plot to make?
+        What kind of plot to make?
         
     scale : {'linear', 'log', 'logicle'}
-        How should the color, arc length, or radii be scaled before
-        plotting?
-        
-    resize : Bool or Callable (default: False)
-        
+        For a heat map, how should the color of `feature` be scaled before 
+        plotting? If `style` is not ``heat``, `scale` *must* be `linear`.
+                
+    size_function : Callable (default: None)
+        If set, separate the `Experiment` into subsets by `xfacet` and `yfacet` 
+        (which should be conditions in the `Experiment`), compute a function on
+        them, and scale the size of each matrix cell by those values. The 
+        callable should take a single `pandas.DataFrame` argument and return a 
+        *positive* ``float`` or value that can be cast to ``float`` (such as 
+        ``int``).  Of particular use is ``len``, which will scale the cells 
+        by the number of events in each subset.
         
     metric : Str (default: ``euclidean``)
         What metric should be used to compute distance in the tree? Must be one
@@ -122,31 +136,73 @@ class MSTView(HasStrictTraits):
         An expression that specifies the subset of the statistic to plot.
         Passed unmodified to `pandas.DataFrame.query`.
         
-..
-    size_feature : String
-        Which feature to use to scale the size of the circle/pie/petal?
-
-..        
-    size_function : String
-        If `size_feature` is set and `style` is ``pie`` or ``petal``, this function
-        is used to reduce `size_feature` before scaling the pie plots. The function 
-        should take a `pandas.Series` and return a ``float``. Often something like
-        ``lambda x: x.sum()``.
-        
     Note
     ----
     `MSTView` is *not* a subclass of `BaseView` or any of its descendants.
     It implements the `IView` but does it does not use `seaborn.FacetGrid` 
     for laying out its plots.
     
+
+    Examples
+    --------
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+        
+    Compute some KMeans clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = flow.KMeansOp(name = "KMeans",
+        ...                     channels = ["V2-A", "Y2-A", "B1-A"],
+        ...                     scale = {"V2-A" : "logicle",
+        ...                              "Y2-A" : "logicle",
+        ...                              "B1-A" : "logicle"},
+        ...                     num_clusters = 20)        
+        
+    Add a statistic
+    
+    .. plot::
+        :context: close-figs
+
+        >>> ex3 = flow.ChannelStatisticOp(name = "ByDox",
+        ...                               channel = "Y2-A",
+        ...                               by = ['KMeans_Cluster", "Dox"],
+        ...                               function = flow.geom_mean).apply(ex2) 
+    
+    Plot the minimum spanning tree
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.MSTView(statistic = "DoxLen", 
+        ...     locations = "KMeans", 
+        ...     location_features = ["V2-A", "Y2-A", "B1-A"],
+        ...     feature = "Y2-A",
+        ...     variable = "Dox",
+        ...     style = "pie",
+        ...     scale = "linear").plot(ex3)
+    
     """
     
-    id = Constant("cytoflow.view.matrix")
-    friendly_id = Constant("Matrix Chart") 
+    id = Constant("cytoflow.view.mst")
+    friendly_id = Constant("Minimum Spanning Tree") 
     
     statistic = Str
     locations = Str
-    by = Str
+    location_level = Str
     location_features = List(Str)
     variable = Str
     feature = Str
@@ -203,6 +259,10 @@ class MSTView(HasStrictTraits):
         if self.style == "heat" and self.variable != "":
             raise util.CytoflowViewError("variable",
                                          "If `style` is \"heat\", `variable` must be empty!")
+            
+        if self.style == "heat" and self.scale != "linear":
+            raise util.CytoflowViewError('scale',
+                                         "If `style` is not \"heat\", `scale` must be \"linear\"!")
                         
         stat = self._get_stat(experiment)
         locs = self._get_locs(experiment)
@@ -218,7 +278,7 @@ class MSTView(HasStrictTraits):
         if locs_names != set(locs.index.names):
             if self.style == "heat":
                 raise util.CytoflowViewError('locations',
-                                             "If `style` is \"heat\", the levels of 'locations' the same as levels of 'statistic'")
+                                             "If `style` is \"heat\", the levels of 'locations' must be the same as levels of 'statistic'")
             else:
                 raise util.CytoflowViewError('locations',
                                              "If `style` is not \"heat\", then the levels of 'locations' must be the same as the levels of 'statistic' without 'variable'.")
@@ -229,18 +289,18 @@ class MSTView(HasStrictTraits):
         stat.set_index(new_stat_idx, inplace = True)
         
         # do we have to get a plot_name?
-        if len(locs_names) > 1 and not self.by:
-            raise util.CytoflowViewError('by',
-                                         'If `locations` has more than one index level, you must set `by`.')
+        if len(locs_names) > 1 and not self.location_level:
+            raise util.CytoflowViewError('location_level',
+                                         'If `locations` has more than one index level, you must set `location_level`.')
         
-        if self.by and self.by not in locs_names:
-            raise util.CytoflowViewError('by',
-                                         '`by` value {} is not in {}'
-                                         .format(self.by, self.ocations))
+        if self.location_level and self.location_level not in locs_names:
+            raise util.CytoflowViewError('location_level',
+                                         '`location_level` value {} is not in {}'
+                                         .format(self.location_level, self.ocations))
             
-        by = self.by if self.by else list(locs_names)[0]
+        loc_level = self.location_level if self.location_level else list(locs_names)[0]
             
-        unused_names = list(set(locs_names) - set([by]))
+        unused_names = list(set(locs_names) - set([loc_level]))
 
         if plot_name is not None and not unused_names:
             raise util.CytoflowViewError('plot_name',
@@ -272,6 +332,11 @@ class MSTView(HasStrictTraits):
             raise util.CytoflowViewError('variable',
                                          "Can't find variable '{}' in the statistic index."
                                          .format(self.variable))
+            
+        if self.style != "heat" and (stat[self.feature] < 0.0).any():
+            raise util.CytoflowViewError('feature',
+                                         "If `style` is not \"heat\", then every element of `feature` must be greater than"
+                                         "or equal to 0")  
 
         for lf in self.location_features:
             if lf not in locs:
@@ -287,7 +352,6 @@ class MSTView(HasStrictTraits):
         title = kwargs.pop("title", None)
         legend = kwargs.pop('legend', True)
         legendlabel = kwargs.pop('legendlabel', self.feature)
-
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -330,12 +394,12 @@ class MSTView(HasStrictTraits):
             
             group_scale = {k : v / s_max for k, v in group_scale.items()}
         
+        data_scale = util.scale_factory(scale = self.scale,
+                                        experiment = experiment,
+                                        statistic = self.statistic,
+                                        features = [self.feature])
         # set up the range of the color map
         if 'norm' not in kwargs:
-            data_scale = util.scale_factory(scale = self.scale,
-                                            experiment = experiment,
-                                            statistic = self.statistic,
-                                            features = [self.feature])
             data_norm = data_scale.norm()
         else:
             data_norm = kwargs.pop('norm')
@@ -415,7 +479,7 @@ class MSTView(HasStrictTraits):
             palette_name = kwargs.pop('palette', 'deep')
             palette = sns.color_palette(palette_name, n_colors = num_wedges)
             
-            groups = data.groupby([by], observed = True)
+            groups = data.groupby([loc_level], observed = True)
         
             for idx, (_, group) in enumerate(groups):
                 loc = layout.coords[idx]
@@ -453,7 +517,7 @@ class MSTView(HasStrictTraits):
             palette = sns.color_palette(palette_name, n_colors = num_wedges)
             wedge_theta = 360 / num_wedges
             
-            groups = data.groupby([by], observed = True)
+            groups = data.groupby([loc_level], observed = True)
         
             for idx, (_, group) in enumerate(groups):
                 loc = layout.coords[idx]
@@ -605,12 +669,12 @@ class MSTView(HasStrictTraits):
                 data = data.query(self.subset)
             except Exception as e:
                 raise util.CytoflowViewError('subset',
-                                             "Subset string '{0}' isn't valid for '{}'"
+                                             "Subset string '{}' isn't valid for '{}'"
                                              .format(self.subset, stat_name)) from e
                 
             if len(data) == 0:
                 raise util.CytoflowViewError('subset',
-                                             "Subset string '{0}' returned no values from '{}'"
+                                             "Subset string '{}' returned no values from '{}'"
                                              .format(self.subset, stat_name))
                 
         names = list(data.index.names)
@@ -626,6 +690,11 @@ class MSTView(HasStrictTraits):
                     raise util.CytoflowViewError(None,
                                                  "Must have more than one "
                                                  "value to plot.") from e
+                                                 
+        # droplevel makes this a plain Index instead of a MultiIndex. no bueno.
+        if not isinstance(data.index, pd.MultiIndex):
+            data.index = pd.MultiIndex.from_tuples([(x,) for x in data.index.to_list()], 
+                                                   names = [data.index.name])
 
         return data
         

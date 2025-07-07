@@ -62,6 +62,9 @@ class MatrixView(HasStrictTraits):
       are used as the categories, but unlike a pie plot, the arc width of each slice
       is equal. Instead, the radius of the pie slice scales with the square root of
       the intensity, so that the relationship between area and intensity remains the same.
+      
+    .. warning::
+        If `style` is ``pie`` or ``petal``, then all of the data being plotted must be >0!
 
     Optionally, you can set `size_function` to scale the circles (or pies or petals)
     by a function computed on `Experiment.data`. (Often used to scale by the number
@@ -94,15 +97,15 @@ class MatrixView(HasStrictTraits):
         What kind of matrix plot to make?
         
     scale : Enum(``linear``, ``log``, ``logicle``} (default = ``linear``)
-        How should the color, arc length, or radii be scaled before
-        plotting?
+        For a heat map, how should the color of `feature` be scaled before 
+        plotting? If `style` is not ``heat``, `scale` *must* be `linear`.
         
     size_function : Callable
         If set, separate the `Experiment` into subsets by `xfacet` and `yfacet` 
         (which should be conditions in the `Experiment`), compute a function on
         them, and scale the size of each matrix cell by those values. The 
         callable should take a single `pandas.DataFrame` argument and return a 
-        positive ``float`` or value that can be cast to ``float`` (such as 
+        *positive* ``float`` or value that can be cast to ``float`` (such as 
         ``int``).  Of particular use is ``len``, which will scale the cells 
         by the number of events in each subset.
         
@@ -243,6 +246,10 @@ class MatrixView(HasStrictTraits):
         if self.style == "heat" and self.variable != "":
             raise util.CytoflowViewError("variable",
                                          "If `style` is \"heat\", `variable` must be empty!")
+            
+        if self.style == "heat" and self.scale != "linear":
+            raise util.CytoflowViewError('scale',
+                                         "If `style` is not \"heat\", `scale` must be \"linear\"!")
                         
         stat = self._get_stat(experiment)
         data = self._subset_data(stat)
@@ -276,12 +283,16 @@ class MatrixView(HasStrictTraits):
             if self.size_function:
                 experiment_data = experiment.data.groupby(unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
-                
+            
         if self.style != "heat" and self.variable not in stat.index.names:
             raise util.CytoflowViewError('variable',
                                          "Can't find variable '{}' in the statistic index."
                                          .format(self.variable))
-        
+            
+        if self.style != "heat" and (data[self.feature] < 0.0).any():
+            raise util.CytoflowViewError('feature',
+                                         "If `style` is not \"heat\", then every element of `feature` must be greater than 0")     
+
         # data = data.reset_index()
         
         title = kwargs.pop("title", None)
