@@ -18,10 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Bar Chart
----------
+Matrix Chart
+------------
 
-Plots a "matrix" view. This can be a heat map, or a matrix of pie or petal plots:
+Plots a "matrix" chart. This can be a heat map, or a matrix of pie or petal plots:
 
     * The default behavior will produce a "traditional" heat map, where each "cell" 
       is a circle and the color of the circle is related to the intensity of the 
@@ -123,7 +123,6 @@ from .view_plugin_base import ViewHandler, PluginHelpMixin, BasePlotParamsView
 
 
 class MatrixParamsHandler(Controller):
-    view_params_view = BasePlotParamsView
     view_params_view = \
         View(Item('title',
                   editor = TextEditor(auto_set = False,
