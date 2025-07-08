@@ -259,7 +259,7 @@ class MSTView(HasStrictTraits):
             raise util.CytoflowViewError("variable",
                                          "If `style` is \"heat\", `variable` must be empty!")
             
-        if self.style == "heat" and self.scale != "linear":
+        if self.style != "heat" and self.scale != "linear":
             raise util.CytoflowViewError('scale',
                                          "If `style` is not \"heat\", `scale` must be \"linear\"!")
                         

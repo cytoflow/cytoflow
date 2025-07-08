@@ -226,7 +226,6 @@ class ImportedDataTest(WorkflowTest):
                                   status = "waiting",
                                   view_error = "Not yet plotted")
         self.workflow.workflow.append(stats_wi_2)
-        self.workflow.selected = stats_wi_2
         self.workflow.wi_waitfor(stats_wi_2, 'status', 'valid')
 
 class TasbeTest(WorkflowTest):

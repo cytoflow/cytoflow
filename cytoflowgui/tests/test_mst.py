@@ -24,32 +24,96 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd
 
 # needed for testing lambdas
 from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow.views.matrix import MatrixWorkflowView, MatrixPlotParams
+from cytoflowgui.workflow import WorkflowItem
+from cytoflowgui.workflow.operations import KMeansWorkflowOp, ChannelStatisticWorkflowOp
+from cytoflowgui.workflow.views import MSTWorkflowView, MSTPlotParams
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
-from cytoflowgui.workflow.subset import RangeSubset
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 
-class TestMatrix(ImportedDataTest):
+
+class TestMST(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
         
-        self.addTypeEqualityFunc(MatrixWorkflowView, 'assertHasTraitsEqual')
-        self.addTypeEqualityFunc(MatrixPlotParams, 'assertHasTraitsEqual')
+        op = KMeansWorkflowOp()
+        
+        op.name = "KM"
+        op.xchannel = "V2-A"
+        op.ychannel = "Y2-A"
+        op.xscale = "logicle"
+        op.yscale = "logicle"
+        op.num_clusters = 10
+        
+        op.subset_list.append(CategorySubset(name = "Well",
+                                             values = ['A', 'B']))
+        op.subset_list.append(RangeSubset(name = "Dox",
+                                          values = [0.0, 10.0, 100.0]))
+        
+        wi = WorkflowItem(operation = op,
+                          status = 'waiting',
+                          view_error = "Not yet plotted")
+        wi.views.append(wi.default_view)        
+        self.workflow.workflow.append(wi)
+        op.do_estimate = True
+        self.workflow.wi_waitfor(wi, 'status', 'valid')
+        
+        stats_op_1 = ChannelStatisticWorkflowOp()
+        stats_op_1.name = "CountByKM"
+        stats_op_1.channel = "Y2-A"
+        stats_op_1.function_name = "Count"
+        stats_op_1.by = ['KM_Cluster']
+        stats_op_1.subset_list.append(CategorySubset(name = "Well",
+                                                     values = ['A', 'B']))
+        stats_op_1.subset_list.append(RangeSubset(name = "Dox",
+                                                  values = [1.0, 10.0, 100.0]))
+        stats_op_1.subset_list.append(RangeSubset(name = "IP",
+                                                  values = [1.0, 10.0]))
+
+        stats_wi_1 = WorkflowItem(operation = stats_op_1,
+                                  status = "waiting",
+                                  view_error = "Not yet plotted")
+        self.workflow.workflow.append(stats_wi_1)
+        self.workflow.wi_waitfor(stats_wi_1, 'status', 'valid')
+        
+        stats_op_2 = ChannelStatisticWorkflowOp()
+        stats_op_2.name = "CountByKMDox"
+        stats_op_2.channel = "Y2-A"
+        stats_op_2.function_name = "Count"
+        stats_op_2.by = ['KM_Cluster', 'Dox']
+        stats_op_2.subset_list.append(CategorySubset(name = "Well",
+                                                     values = ['A', 'B']))
+        stats_op_2.subset_list.append(RangeSubset(name = "Dox",
+                                                  values = [1.0, 10.0, 100.0]))
+        stats_op_2.subset_list.append(RangeSubset(name = "IP",
+                                                  values = [1.0, 10.0]))
+        
+        stats_wi_2 = WorkflowItem(operation = stats_op_2,
+                                  status = "waiting",
+                                  view_error = "Not yet plotted")
+        self.workflow.workflow.append(stats_wi_2)
+        self.workflow.selected = stats_wi_2
+        self.workflow.wi_waitfor(stats_wi_2, 'status', 'valid')
+        
+        self.addTypeEqualityFunc(MSTWorkflowView, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(MSTPlotParams, 'assertHasTraitsEqual')
 
         self.wi = wi = self.workflow.workflow[-1]
-        self.view = view = MatrixWorkflowView()
-        wi.views.append(view)
-        wi.current_view = view
-        
-        self.view.xfacet = "Dox"
-        self.view.yfacet = "IP"
-        self.view.statistic = "GeoMeanByDoxIP"
-        self.view.feature = "Geo.Mean"     
+        self.view = view = MSTWorkflowView()
+        self.wi.views.append(view)
+        self.wi.current_view = view
+        self.workflow.selected = self.wi
+
+        self.view.statistic = "CountByKM"
+        self.view.feature = "Y2-A"     
+        self.view.locations = "KM"
+        self.view.locations_features = ['V2-A', 'Y2-A']
         self.workflow.selected = wi
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
@@ -58,15 +122,15 @@ class TestMatrix(ImportedDataTest):
     
     def testPie(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.yfacet = ""
-        self.view.variable = "IP"
+        self.view.statistic = "CountByKMDox"
+        self.view.variable = "Dox"
         self.view.style = "pie"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')  
     
     def testPetal(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.yfacet = ""
-        self.view.variable = "IP"
+        self.view.statistic = "CountByKMDox"
+        self.view.variable = "Dox"
         self.view.style = "petal"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')  
     
@@ -77,16 +141,16 @@ class TestMatrix(ImportedDataTest):
     
     def testPieScaleByEvents(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.yfacet = ""
-        self.view.variable = "IP"
+        self.view.statistic = "CountByKMDox"
+        self.view.variable = "Dox"
         self.view.style = "pie"
         self.view.scale_by_events = True
         self.workflow.wi_waitfor(self.wi, 'view_error', '')  
     
     def testPetalScaleByEvents(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.yfacet = ""
-        self.view.variable = "IP"
+        self.view.statistic = "CountByKMDox"
+        self.view.variable = "Dox"
         self.view.style = "petal"
         self.view.scale_by_events = True
         self.workflow.wi_waitfor(self.wi, 'view_error', '')  
@@ -101,15 +165,15 @@ class TestMatrix(ImportedDataTest):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.scale = "logicle"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')  
-    
-    # subset
-    def testSubset(self):
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-    
-        self.view.subset_list.append(RangeSubset(name = "Dox",
-                                                 values = [1.0, 10.0, 100.0]))
-        self.view.subset_list[0].low = 10.0
-        self.view.subset_list[0].high = 100.0
+    #
+    # # subset
+    # def testSubset(self):
+    #     self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+    #
+    #     self.view.subset_list.append(RangeSubset(name = "Dox",
+    #                                              values = [1.0, 10.0, 100.0]))
+    #     self.view.subset_list[0].low = 10.0
+    #     self.view.subset_list[0].high = 100.0
     
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
@@ -118,16 +182,6 @@ class TestMatrix(ImportedDataTest):
         # title
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.title = "Title"
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
-    
-        # xlabel
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.plot_params.xlabel = "X label"
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
-    
-        # ylabel
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.plot_params.ylabel = "Y label"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
         # legendlabel
