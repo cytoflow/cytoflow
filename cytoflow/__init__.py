@@ -80,6 +80,7 @@ from .operations.flowpeaks import FlowPeaksOp
 from .operations.pca import PCAOp
 from .operations.tsne import tSNEOp
 from .operations.som import SOMOp
+from .operations.mst import MSTOp
 
 # channels
 from .operations.channel_stat import ChannelStatisticOp

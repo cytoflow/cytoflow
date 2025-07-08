@@ -45,6 +45,7 @@ from .flowpeaks import FlowPeaksOp
 from .pca import PCAOp
 from .tsne import tSNEOp
 from .som import SOMOp
+from .mst import MSTOp
 
 # statistics
 from .channel_stat import ChannelStatisticOp

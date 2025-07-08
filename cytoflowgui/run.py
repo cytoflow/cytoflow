@@ -222,7 +222,8 @@ def run_gui():
                                         KMeansPlugin,
                                         PCAPlugin,
                                         FlowCleanPlugin, 
-                                        tSNEPlugin)
+                                        tSNEPlugin,
+                                        MSTPlugin as MSTOpPlugin)
     
     from cytoflowgui.view_plugins import (ViewPluginManager,
                                           HistogramPlugin, 
@@ -232,7 +233,7 @@ def run_gui():
                                           Stats1DPlugin, 
                                           Stats2DPlugin,
                                           MatrixPlugin,
-                                          MSTPlugin,
+                                          MSTPlugin as MSTViewPlugin,
                                           Kde1DPlugin, 
                                           Kde2DPlugin,
                                           ViolinPlotPlugin,
@@ -260,7 +261,7 @@ def run_gui():
                     Stats1DPlugin(),
                     Stats2DPlugin(),
                     MatrixPlugin(),
-                    MSTPlugin(),
+                    MSTViewPlugin(),
                     TablePlugin(),
                     LongTablePlugin(),
                     ExportFCSPlugin()]
@@ -288,6 +289,7 @@ def run_gui():
                   FlowPeaksPlugin(),
                   PCAPlugin(),
                   tSNEPlugin(),
+                  MSTOpPlugin(),
                   AutofluorescencePlugin(),
                   BleedthroughLinearPlugin(),
                   BeadCalibrationPlugin(),

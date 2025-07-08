@@ -46,6 +46,7 @@ from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
 from .pca import PCAWorkflowOp, Channel as PCAChannel
 from .flowclean import FlowCleanWorkflowOp, Channel as FlowCleanChannel, FlowCleanWorkflowView
 from .tsne import tSNEWorkflowOp, Channel as tSNEChannel
+from .mst import MSTWorkflowOp, MSTWorkflowSelectionView
 
 from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkflowView
 from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, Unit as BeadCalibrationUnit

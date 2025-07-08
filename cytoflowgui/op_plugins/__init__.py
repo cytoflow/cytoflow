@@ -56,6 +56,7 @@ from .kmeans import KMeansPlugin
 from .pca import PCAPlugin
 from .flowclean import FlowCleanPlugin
 from .tsne import tSNEPlugin
+from .mst import MSTPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin

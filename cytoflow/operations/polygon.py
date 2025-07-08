@@ -177,7 +177,7 @@ class PolygonOp(HasStrictTraits):
     _selection_view = Instance('_PolygonSelection', transient = True)
         
     def apply(self, experiment):
-        """Applies the threshold to an experiment.
+        """Applies the gate to an experiment.
         
         Parameters
         ----------

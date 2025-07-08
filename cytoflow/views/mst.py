@@ -25,7 +25,8 @@ cytoflow.views.matrix
 import math
 from warnings import warn
 
-from traits.api import HasStrictTraits, provides, Enum, Str, Callable, Constant, List
+from traits.api import HasStrictTraits, provides, Enum, Str, Callable, Constant, \
+                       List, Dict, Tuple, Float, Any
 import seaborn as sns
 import pandas as pd
 import matplotlib as mpl
@@ -211,7 +212,12 @@ class MSTView(HasStrictTraits):
     subset = Str
     
     size_function = Callable
-
+    
+    # bits to support the interactive selector for MSTOp
+    _loc_level = Str
+    _vertices = List(List(Float))
+    _groups = List(Str)
+    
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot a chart of a variable's values against a statistic.
@@ -298,7 +304,7 @@ class MSTView(HasStrictTraits):
                                          '`location_level` value {} is not in {}'
                                          .format(self.locations_level, self.ocations))
             
-        loc_level = self.locations_level if self.locations_level else list(locs_names)[0]
+        self._loc_level = loc_level = self.locations_level if self.locations_level else list(locs_names)[0]
             
         unused_names = list(set(locs_names) - set([loc_level]))
 
@@ -437,6 +443,10 @@ class MSTView(HasStrictTraits):
         segments = mpl.collections.LineCollection(segments, zorder = 1)
         segments.set_edgecolor("black")
         plt.gca().add_collection(segments)
+        
+        # save the locations for MSTOp
+        self._groups = list(data.groupby([loc_level], observed = True).groups.keys())
+        self._vertices = layout.coords
         
         # now, plot the patches
         
