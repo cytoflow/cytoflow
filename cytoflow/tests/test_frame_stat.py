@@ -64,7 +64,7 @@ class Test(ImportedDataTest):
 
         stat = ex.statistics["ByDox"]
         
-        self.assertEquals(stat.index.to_list(), [(10.0, False), (10.0, True)])
+        self.assertEqual(stat.index.to_list(), [(10.0, False), (10.0, True)])
         self.assertEqual(stat.columns.to_list(), ["Y2-A", "V2-A"])
         
     def testBadFunction(self):

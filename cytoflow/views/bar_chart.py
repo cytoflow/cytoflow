@@ -31,7 +31,6 @@ from traits.api import provides, Constant
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -160,9 +159,7 @@ class BarChartView(Base1DStatisticsView):
         if self.error_low and self.error_high:
             map_args.append(self.error_low)
             map_args.append(self.error_high)
-            
-        print(kwargs)
-                        
+                                    
         grid.map_dataframe(_barplot, 
                            *map_args,
                            feature = self.feature,

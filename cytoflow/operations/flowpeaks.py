@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 from warnings import warn
 
 from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, provides, Array, Function)
+                        Constant, List, provides, Array, Callable)
 
 import numpy as np
 import sklearn.cluster
@@ -257,8 +257,8 @@ class FlowPeaksOp(HasStrictTraits):
     # estimate internals
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _means = Dict(Any, List, transient = True)
-    _normals = Dict(Any, List(Function), transient = True)
-    _density = Dict(Any, Function, transient = True)
+    _normals = Dict(Any, List(Callable), transient = True)
+    _density = Dict(Any, Callable, transient = True)
     _peaks = Dict(Any, List(Array), transient = True)  
     _peak_clusters = Dict(Any, List(Array), transient = True)
     _cluster_peak = Dict(Any, List, transient = True)  # kmeans cluster idx --> peak idx

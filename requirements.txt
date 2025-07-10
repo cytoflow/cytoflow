@@ -1,27 +1,29 @@
-numpy==1.26.4
+numpy==2.2.5
 pandas==2.2.3
-matplotlib==3.9.2
+matplotlib==3.10.0
 bottleneck==1.4.2
 numexpr==2.10.1
-scipy==1.14.4
-scikit-learn==1.5.1
+scipy==1.15.3
+scikit-learn==1.6.1
 seaborn==0.13.2
 statsmodels==0.14.4
 natsort==7.1.1
-numba==0.60.0
-opentsne==1.0.1
+numba==0.61.2
+opentsne==1.0.2
+python-igraph==0.11.9
+scikit-fda==0.10.1
 
-traits==6.2.0
-traitsui==7.2.1
-pyface==7.3.0
-envisage==6.0.1
+traits==7.2.0
+traitsui==8.0.0
+pyface==8.0.0
+envisage==7.0.4
 nbformat==5.10.4
 python-dateutil==2.9.0post0
 importlib_resources==6.4.0
 
 # qt, pyqt are not in pip - install through your package manager
-pyopengl==3.1.1a1
+# pyopengl==3.1.1a1
 
 # in the `cytoflow` conda channel
 camel==0.1.2
-yapf==0.30.0
+yapf==0.40.2

@@ -200,11 +200,11 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
     color = kwargs.pop("color")
     kwargs['colors'] = (color, )
     
-    min_alpha = kwargs.pop("min_alpha", 0.2)
+    min_alpha = kwargs.pop("min_alpha", 0.1)
     if shade:
         min_alpha = 0
         
-    max_alpha = kwargs.pop("max_alpha", 0.9)
+    max_alpha = kwargs.pop("max_alpha", 1.0)
     
     x_support = xscale.inverse(x_support)
     y_support = yscale.inverse(y_support)
@@ -217,11 +217,9 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
         raise util.CytoflowViewError(None,
                                      "Something went wrong in {}, bandwidth = {}.  "
                                      .format(contour_func.__name__, bw)) from e
-    num_collections = len(cset.collections)
-    
+    num_collections = len(cset.get_paths())    
     alpha = np.linspace(min_alpha, max_alpha, num = num_collections)
-    for el in range(num_collections):
-        cset.collections[el].set_alpha(alpha[el])
+    cset.set(alpha = alpha)
 
     # Label the axes
     if hasattr(x, "name") and legend:
