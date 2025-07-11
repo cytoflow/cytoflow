@@ -21,24 +21,26 @@ build:
 
 requirements:
   host:
-    - python=3.11.11
-    - numpy==1.26.4
+    - python=3.13.5
+    - numpy==2.2.5
     - pandas==2.2.3
-    - matplotlib==3.9.2
+    - matplotlib==3.10.0
     - bottleneck==1.4.2
     - numexpr==2.10.1
-    - scipy==1.14.1
-    - scikit-learn==1.5.2
+    - scipy==1.15.3
+    - scikit-learn==1.6.1
     - seaborn==0.13.2
     - statsmodels==0.14.4
     - natsort==7.1.1
-    - numba==0.60.0
-    - opentsne==1.0.1
+    - numba==0.61.2
+    - opentsne==1.0.2
+    - conda-forge::python-igraph==0.11.9
+    - conda-forge::scikit-fda==0.10.1
 
-    - traits==6.2.0
+    - traits==7.0.2
     - traitsui==8.0.0
     - pyface==8.0.0
-    - envisage==7.0.3
+    - conda-forge::envisage==7.0.4
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
@@ -59,24 +61,26 @@ requirements:
     - pip
 
   run:
-    - python=3.11.11
-    - numpy==1.26.4
+    - python=3.13.5
+    - numpy==2.2.5
     - pandas==2.2.3
-    - matplotlib==3.9.2
+    - matplotlib==3.10.0
     - bottleneck==1.4.2
     - numexpr==2.10.1
-    - scipy==1.14.1
-    - scikit-learn==1.5.2
+    - scipy==1.15.3
+    - scikit-learn==1.6.1
     - seaborn==0.13.2
     - statsmodels==0.14.4
     - natsort==7.1.1
-    - numba==0.60.0
-    - opentsne==1.0.1
+    - numba==0.61.2
+    - opentsne==1.0.2
+    - conda-forge::python-igraph==0.11.9
+    - conda-forge::scikit-fda==0.10.1
 
-    - traits==6.2.0
+    - traits==7.0.2
     - traitsui==8.0.0
     - pyface==8.0.0
-    - envisage==7.0.3
+    - conda-forge::envisage==7.0.4
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
