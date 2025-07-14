@@ -29,18 +29,21 @@ The `registration` module contains two classes:
 that `RegistrationOp` performed correctlyu
 """
 
-from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
-                        Float, Constant, provides, Callable, Any,
-                        Instance)
+from traits.api import (HasStrictTraits, Str, Dict, Int, List, 
+                        Float, Constant, provides, Instance, Union,
+                        Callable, Any, Enum, Tuple)
 import numpy as np
 import math
 import scipy.signal
 import scipy.optimize
+from sklearn.neighbors import KernelDensity
+from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
         
 import matplotlib.pyplot as plt
 
 import cytoflow.views
 import cytoflow.utility as util
+from cytoflow.views.kde_1d import _kde_support
 
 from .i_operation import IOperation
 from .import_op import check_tube, Tube, ImportOp
@@ -48,15 +51,87 @@ from .import_op import check_tube, Tube, ImportOp
 @provides(IOperation)
 class RegistrationOp(HasStrictTraits):
     """
-    <description>
+    `RegistrationOp` is used to *register* different data sets with eachother.
+    It identifies areas of high density that are shared across all most of the
+    data sets, then applies a warp function to align those areas of high
+    density. This is commonly used to correct sample-to-sample variation
+    across large data sets. This is *not* a multidimensional algorithm --
+    if you apply it to multiple channels, each channel is warped 
+    independently.
     
     Attributes
     ----------
    
-           
+    channels : List(Str)
+        The channels to register.
+        
+    scale : Dict(Str : {"linear", "logicle", "log"})
+        How to scale the channels before registering.
+        
+    by : List(Str)
+        Which conditions to use to group samples? These are usually
+        experimental conditions, not gates!
+        
+    subset : Str
+        How to filter the data before estimating the transformation?
+        
+    **Smoothing parameters**
+        
+    kernel : Str (default = ``gaussian``)
+        The kernel to use for the kernel density estimate. Choices are:
+        
+            - ``gaussian`` (the default)
+            - ``tophat``
+            - ``epanechnikov``
+            - ``exponential``
+            - ``linear``
+            - ``cosine``
+            
+    bw : Str or Float (deafult = ``scott``)
+        The bandwidth for the kernel, controls how lumpy or smooth the
+        kernel estimate is.  Choices are:
+        
+            - ``scott`` (the default) - ``1.059 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
+            - ``silverman`` - ``.9 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
+            
+        If a float is given, it is the bandwidth.   Note, this is in 
+        scaled units, not data units.
+        
+    gridsize : int (default = 100)
+        How many locations should we evaluate the kernel?
+        
+    ** Peak finding parameters **
+    
+    ** Peak clustering parameters **
+        
+    
     Notes
     -----
-
+    The registration algorithm follows the approach from the ``warpSet`` 
+    function in the R/Bioconductor ``flowStats`` package. The precise details
+    differ depending on what is available in the scientific Python ecosystem,
+    but the overall flow remains the same. For each channel:
+    
+    - Rescale the data (if necessary)
+    
+    - Smooth the data using a kernel density estimate
+    
+    - Use a peak-finding algorithm to find landmarks in the distribution
+    
+    - Use 1-dimensional K-means across groups to group landmarks together
+    
+    - Determine the median of each group. These are the "destinations" for our 
+      warp functions.
+      
+    - Using tools from functional data analysis, compute a "warp" function
+      that can be applied to each group to move the landmarks to the median.
+      
+    - Apply the warp function to the underlying data, scaling and then 
+      inverting as you do so.
+      
+    Every step except the last is performed by the `estimate` function. The 
+    diagnostic plot shows the smoothed distribution, the peaks, their medians
+    and clusters for each division of data.
     
     Examples
     --------
@@ -68,8 +143,25 @@ class RegistrationOp(HasStrictTraits):
     friendly_id = Constant("Density Registration")
     
     name = Constant("Registration")
+    channels = List(Str)
+    scale = Dict(Str, util.ScaleEnum)
+    by = List(Str)
+    
+    # Smoothing
+    
+    kernel = Enum('gaussian','tophat','epanechnikov','exponential','linear','cosine')
+    bw = Union(Enum('scott', 'silverman'), Float)
+    gridsize = Int(100)
+    
+    # Peak clustering
+    max_clusters = 
+    _scale = Dict(Str, Instance(util.IScale))
+    _kde = Dict(Tuple(Any, Str), Tuple(np.ndarray, np.ndarray))
+    _peaks = Dict(Tuple(Any, Str), np.ndarray)
+    _warp_functions = Dict(Tuple(Any, Str), Callable)
 
-    def estimate(self, experiment): 
+
+    def estimate(self, experiment, subset = None): 
         """
         Estimate the calibration coefficients from the beads file.
         
@@ -79,36 +171,113 @@ class RegistrationOp(HasStrictTraits):
             The experiment used to compute the calibration.
             
         """
+        
         if experiment is None:
-            raise util.CytoflowOpError('experiment', "No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
         
-        if not self.beads_file:
-            raise util.CytoflowOpError('beads_file', "No beads file specified")
+        if len(self.channels) == 0:
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
 
-        if not set(self.units.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError('units',
-                                       "Specified channels that weren't found in "
-                                       "the experiment.")
+        if len(self.channels) != len(set(self.channels)):
+            raise util.CytoflowOpError('channels', 
+                                       "Must not duplicate channels")
+
+        for c in self.channels:
+            if c not in experiment.data:
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
+                                      .format(c))
+                
+        for c in self.scale:
+            if c not in self.channels:
+                raise util.CytoflowOpError('channels',
+                                           "Scale set for channel {0}, but it isn't "
+                                           "in the experiment"
+                                           .format(c))
+       
+        for b in self.by:
+            if b not in experiment.data:
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
+                
+        if self.kernel not in ['gaussian','tophat','epanechnikov','exponential','linear','cosine']:
+            raise util.CytoflowOpError(None,
+                                       "kernel must be one of ['gaussian'|'tophat'|'epanechnikov'|'exponential'|'linear'|'cosine']")
+                
+        if self.num_components > 1 and "Component" in self.by:
+            raise util.CytoflowOpError('by',
+                                       "'Component' is going to be added as an "
+                                       "index level to the new statistic, so you "
+                                       "can't use it to aggregate events.")
+                
+        if subset:
+            try:
+                experiment = experiment.query(subset)
+            except:
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(subset))
+                
+            if len(experiment) == 0:
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no events"
+                                             .format(subset))
+                
+        if self.by:
+            groupby = experiment.data.groupby(self.by, observed = False)
+        else:
+            # use a lambda expression to return a group that contains
+            # all the events
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
             
-        if not set(self.units.values()) <= set(self.beads.keys()):
-            raise util.CytoflowOpError('units',
-                                       "Units don't match beads.")
+        self._warp_functions.clear()
+        self._scale.clear()
             
-        self._histograms.clear()
-        self._calibration_functions.clear()
-        self._peaks.clear()
-        self._mefs.clear()
-                        
-        # make a little Experiment
-        check_tube(self.beads_file, experiment)
-        beads_exp = ImportOp(tubes = [Tube(file = self.beads_file)],
-                             channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                             name_metadata = experiment.metadata['name_metadata']).apply()
+        # get the scale. estimate the scale params for the ENTIRE data set,
+        # not subsets we get from groupby().  And we need to save it so that
+        # the data is transformed the same way when we apply()
+        for c in self.channels:
+            if c in self.scale:
+                self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
+            else:
+                self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
         
-        channels = list(self.units.keys())
-
-        # make the histogram
-        for channel in channels:
+   
+        warp_functions = {}
+        for channel in self.channels:
+            for group, group_data in groupby:
+            
+                #compute the KDE 
+                scaled_data = self._scale[channel](group_data[channel])
+                
+                if self.bw == 'scott':
+                    bw = bw_scott(scaled_data)
+                elif self.bw == 'silverman':
+                    bw = bw_silverman(scaled_data)
+                else:
+                    bw = self.bw
+    
+                support = _kde_support(scaled_data, bw, self.gridsize, 3.0, (-np.inf, np.inf))[:, np.newaxis]
+                kde = KernelDensity(kernel = self.kernel, bandwidth = bw).fit(scaled_data.to_numpy()[:, np.newaxis])
+                density = kde.score_samples(support)
+                self._kde[(channel, group)] = (support, density)
+                
+                # find the peaks
+                self._peaks[(channel, group)] = scipy.signal.find_peaks()
+                
+                
+            # cluster the peaks ACROSS GROUPS
+            
+            
+                
+        # set atomically to support the GUI
+        self._warp_functions = warp_functions
+                
+    
             data = beads_exp.data[channel]
             data_range = experiment.metadata[channel]['range']
                                      
@@ -362,6 +531,7 @@ class RegistrationDiagnosticView(HasStrictTraits):
     friendly_id = Constant("Bead Calibration Diagnostic")
         
     op = Instance(RegistrationOp)
+    channel = Str
     
     def plot(self, experiment):
         """
