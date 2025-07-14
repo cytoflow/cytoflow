@@ -81,7 +81,7 @@ class KMeansOp(HasStrictTraits):
            an event has a negative measurement in a channel and that channel's
            scale is set to "log", this event will be set to ``{name}_None``.
 
-    num_clusters : Int (default = 2)
+    num_clusters : Int 
         How many components to fit to the data?  Must be greater or equal to 2.
     
     by : List(Str)
