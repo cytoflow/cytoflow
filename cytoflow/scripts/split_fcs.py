@@ -69,7 +69,7 @@ def main():
                                 '$BYTEORD', '$DATATYPE', '$MODE', '$NEXTDATA', 
                                 '$TOT', '$PAR']
             metadata = {str(k) : str(v) for k, v in metadata.items()
-                                        if re.search('^\$P\d+[BENRDSG]$', k) is None
+                                        if re.search(r'^\$P\d+[BENRDSG]$', k) is None
                                         and k not in exclude_keywords}
         
             util.write_fcs(str(path),

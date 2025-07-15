@@ -454,7 +454,7 @@ class BaseDataView(BaseView):
             elif isinstance(lim[c], list) or isinstance(lim[c], tuple):
                 if len(lim[c]) != 2:
                     raise util.CytoflowError('lim',
-                                             'Length of lim\[{}\] must be 2'
+                                             'Length of lim[{}] must be 2'
                                              .format(c))
                 if lim[c][0] is None:
                     lim[c] = (experiment[c].quantile(min_quantile),
@@ -466,7 +466,7 @@ class BaseDataView(BaseView):
                  
             else:
                 raise util.CytoflowError('lim',
-                                         "lim\[{}\] is an unknown data type"
+                                         "lim[{}] is an unknown data type"
                                          .format(c))
  
             lim[c] = [scale[c].clip(x) for x in lim[c]]

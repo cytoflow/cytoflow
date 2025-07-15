@@ -744,7 +744,7 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
             return
         elif type(annotation_value) is str:
             try:
-                idx_re = re.compile(annotation_facet + '_(\d+)')
+                idx_re = re.compile(annotation_facet + r'_(\d+)')
                 idx = idx_re.match(annotation_value).group(1)
                 idx = int(idx) - 1            
             except:
@@ -880,7 +880,7 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
             return
         elif isinstance(annotation_value, str):
             try:
-                idx_re = re.compile(annotation_facet + '_(\d+)')
+                idx_re = re.compile(annotation_facet + r'_(\d+)')
                 idx = idx_re.match(annotation_value).group(1)
                 idx = int(idx) - 1             
             except:

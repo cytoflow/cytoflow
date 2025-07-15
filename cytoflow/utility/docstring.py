@@ -302,7 +302,7 @@ def _get_params_and_attrs(lines, first_attr_line, last_attr_line):
             attr_names = [x.strip() for x in attr_names]
             attr_type = lines[i][colon_idx + 1:].strip()
             
-        if re.match('^\s*$', lines[i]):
+        if re.match(r'^\s*$', lines[i]):
             for attr_name in attr_names:
                 yield attr_name, attr_type, attr_body[1:]
             attr_names = None
