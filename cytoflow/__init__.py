@@ -81,6 +81,7 @@ from .operations.pca import PCAOp
 from .operations.tsne import tSNEOp
 from .operations.som import SOMOp
 from .operations.mst import MSTOp
+from .operations.register import RegistrationOp
 
 # channels
 from .operations.channel_stat import ChannelStatisticOp

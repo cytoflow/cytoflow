@@ -46,6 +46,7 @@ from .pca import PCAOp
 from .tsne import tSNEOp
 from .som import SOMOp
 from .mst import MSTOp
+from .register import RegistrationOp
 
 # statistics
 from .channel_stat import ChannelStatisticOp

@@ -43,8 +43,9 @@ import statistics
         
 import matplotlib.pyplot as plt
 
-import cytoflow.views
 import cytoflow.utility as util
+from cytoflow.views import IView
+from .base_op_views import ByView
 from cytoflow.views.kde_1d import _kde_support
 
 from .i_operation import IOperation
@@ -160,9 +161,10 @@ class RegistrationOp(HasStrictTraits):
 
     # these are really only saved to support plotting
     _scale = Dict(Str, Instance(util.IScale))
-    _kde = Dict(Tuple(Any, Str), Tuple(np.ndarray, np.ndarray))
-    _peaks = Dict(Tuple(Any, Str), List(Float)) # group,channel --> peaks
-    _clusters = Dict(Tuple(Any, Str), List(Int)) # group,channel --> cluster assignments
+    _groups = List(Any)
+    _kde = Dict(Tuple(Str, Any), Tuple(np.ndarray, np.ndarray)) # channel,group --> kde support, density
+    _peaks = Dict(Tuple(Str, Any), List(Float)) # channel,group --> peaks
+    _clusters = Dict(Tuple(Str, Any), List(Int)) # channel,group --> cluster assignments
     _medians = Dict(Str, List(Float)) # channel --> cluster medians
     
     _warp_functions = Dict(Tuple(Any, Str), Callable) # group,channel --> warp function
@@ -211,16 +213,6 @@ class RegistrationOp(HasStrictTraits):
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
                 
-        if self.kernel not in ['gaussian','tophat','epanechnikov','exponential','linear','cosine']:
-            raise util.CytoflowOpError(None,
-                                       "kernel must be one of ['gaussian'|'tophat'|'epanechnikov'|'exponential'|'linear'|'cosine']")
-                
-        if self.num_components > 1 and "Component" in self.by:
-            raise util.CytoflowOpError('by',
-                                       "'Component' is going to be added as an "
-                                       "index level to the new statistic, so you "
-                                       "can't use it to aggregate events.")
-                
         if subset:
             try:
                 experiment = experiment.query(subset)
@@ -240,7 +232,7 @@ class RegistrationOp(HasStrictTraits):
             # use a lambda expression to return a group that contains
             # all the events
             groupby = experiment.data.groupby(lambda _: True, observed = False)
-            
+                    
         self._warp_functions.clear()
         self._scale.clear()
             
@@ -259,7 +251,7 @@ class RegistrationOp(HasStrictTraits):
             
             all_peaks = []
             for group, group_data in groupby:
-            
+                self._groups.append(group)
                 #compute the KDE 
                 scaled_data = self._scale[channel](group_data[channel])
                 
@@ -277,62 +269,62 @@ class RegistrationOp(HasStrictTraits):
                 density = kde.score_samples(support)
                 self._kde[(channel, group)] = (support, density)
                 
-                # find the peaks
-                peaks = scipy.signal.find_peaks().tolist()
-                self._peaks[(channel, group)] = peaks
-                
-                if not all_peaks:
-                    all_peaks = peaks
-                else:
-                    all_peaks = all_peaks.append(peaks)
-
-            # cluster the peaks ACROSS GROUPS. we want the minumum number
-            # of clusters where no two peaks in the same group are
-            # assigned to the same cluster.
-            
-            for n_clusters in range(len(all_peaks)):
-                km = sklearn.cluster.KMeans(n_clusters = n_clusters,
-                                            random_state = 0)
-                km.fit(all_peaks)
-                
-                for group, _ in groupby:
-                    peaks = self._peaks[(channel, group)]
-                    cluster_assignments = km.predict(peaks).tolist()
-                    
-                    # quick check for duplicates
-                    if len(cluster_assignments) != len(set(cluster_assignments)):
-                        break
-                    
-                    self._clusters[(group, channel)] = cluster_assignments
-                    
-                if len(cluster_assignments) == len(set(cluster_assignments)):
-                    break
-            
-            # now that we have clusters, compute the median of each cluster
-
-            for cluster in range(n_clusters):
-                clust_peaks = []
-
-                for group, _ in groupby:
-                    peaks = self._peaks[(group, channel)]
-                    cluster_assignments = self._clusters[(group, channel)]
-                    try:
-                        peak_idx = cluster_assignments.index(cluster)
-                    except ValueError:
-                        # this group didn't have a peak assigned to this cluster
-                        continue
-                    clust_peaks.append([peaks[peak_idx]])
-                    
-                _medians[]
-                    
-                
-                    
-                    
-                    
-            
-                
-        # set atomically to support the GUI
-        self._warp_functions = warp_functions
+        #         # find the peaks
+        #         peaks = scipy.signal.find_peaks().tolist()
+        #         self._peaks[(channel, group)] = peaks
+        #
+        #         if not all_peaks:
+        #             all_peaks = peaks
+        #         else:
+        #             all_peaks = all_peaks.append(peaks)
+        #
+        #     # cluster the peaks ACROSS GROUPS. we want the minumum number
+        #     # of clusters where no two peaks in the same group are
+        #     # assigned to the same cluster.
+        #
+        #     for n_clusters in range(len(all_peaks)):
+        #         km = sklearn.cluster.KMeans(n_clusters = n_clusters,
+        #                                     random_state = 0)
+        #         km.fit(all_peaks)
+        #
+        #         for group, _ in groupby:
+        #             peaks = self._peaks[(channel, group)]
+        #             cluster_assignments = km.predict(peaks).tolist()
+        #
+        #             # quick check for duplicates
+        #             if len(cluster_assignments) != len(set(cluster_assignments)):
+        #                 break
+        #
+        #             self._clusters[(group, channel)] = cluster_assignments
+        #
+        #         if len(cluster_assignments) == len(set(cluster_assignments)):
+        #             break
+        #
+        #     # now that we have clusters, compute the median of each cluster
+        #
+        #     for cluster in range(n_clusters):
+        #         clust_peaks = []
+        #
+        #         for group, _ in groupby:
+        #             peaks = self._peaks[(group, channel)]
+        #             cluster_assignments = self._clusters[(group, channel)]
+        #             try:
+        #                 peak_idx = cluster_assignments.index(cluster)
+        #             except ValueError:
+        #                 # this group didn't have a peak assigned to this cluster
+        #                 continue
+        #             clust_peaks.append([peaks[peak_idx]])
+        #
+        #         _medians[]
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        # # set atomically to support the GUI
+        # self._warp_functions = warp_functions
                 
     
 
@@ -359,54 +351,54 @@ class RegistrationOp(HasStrictTraits):
                 The units this channel was calibrated to
         """
         
-        if experiment is None:
-            raise util.CytoflowOpError('experiment', "No experiment specified")
-        
-        channels = list(self.units.keys())
-
-        if not self.units:
-            raise util.CytoflowOpError('units', "No channels to calibrate.")
-        
-        if not self._calibration_functions:
-            raise util.CytoflowOpError(None,
-                                       "Calibration not found. "
-                                       "Did you forget to call estimate()?")
-        
-        if not set(channels) <= set(experiment.channels):
-            raise util.CytoflowOpError('units',
-                                       "Module units don't match experiment channels")
-                
-        if set(channels) != set(self._calibration_functions.keys()):
-            raise util.CytoflowOpError('units',
-                                       "Calibration doesn't match units. "
-                                       "Did you forget to call estimate()?")
-
-        # two things.  first, you can't raise a negative value to a non-integer
-        # power.  second, negative physical units don't make sense -- how can
-        # you have the equivalent of -5 molecules of fluoresceine?  so,
-        # we filter out negative values here.
-
-        new_experiment = experiment.clone(deep = True)
-        
-        for channel in channels:
-            new_experiment.data = \
-                new_experiment.data[new_experiment.data[channel] > 0]
-                                
-        new_experiment.data.reset_index(drop = True, inplace = True)
-        
-        for channel in channels:
-            calibration_fn = self._calibration_functions[channel]
-            
-            new_experiment[channel] = calibration_fn(new_experiment[channel])
-            new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
-            new_experiment.metadata[channel]['bead_units'] = self.units[channel]
-            if 'range' in experiment.metadata[channel]:
-                new_experiment.metadata[channel]['range'] = calibration_fn(experiment.metadata[channel]['range'])
-            if 'voltage' in experiment.metadata[channel]:
-                del new_experiment.metadata[channel]['voltage']
-            
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True)) 
-        return new_experiment
+        # if experiment is None:
+        #     raise util.CytoflowOpError('experiment', "No experiment specified")
+        #
+        # channels = list(self.units.keys())
+        #
+        # if not self.units:
+        #     raise util.CytoflowOpError('units', "No channels to calibrate.")
+        #
+        # if not self._calibration_functions:
+        #     raise util.CytoflowOpError(None,
+        #                                "Calibration not found. "
+        #                                "Did you forget to call estimate()?")
+        #
+        # if not set(channels) <= set(experiment.channels):
+        #     raise util.CytoflowOpError('units',
+        #                                "Module units don't match experiment channels")
+        #
+        # if set(channels) != set(self._calibration_functions.keys()):
+        #     raise util.CytoflowOpError('units',
+        #                                "Calibration doesn't match units. "
+        #                                "Did you forget to call estimate()?")
+        #
+        # # two things.  first, you can't raise a negative value to a non-integer
+        # # power.  second, negative physical units don't make sense -- how can
+        # # you have the equivalent of -5 molecules of fluoresceine?  so,
+        # # we filter out negative values here.
+        #
+        # new_experiment = experiment.clone(deep = True)
+        #
+        # for channel in channels:
+        #     new_experiment.data = \
+        #         new_experiment.data[new_experiment.data[channel] > 0]
+        #
+        # new_experiment.data.reset_index(drop = True, inplace = True)
+        #
+        # for channel in channels:
+        #     calibration_fn = self._calibration_functions[channel]
+        #
+        #     new_experiment[channel] = calibration_fn(new_experiment[channel])
+        #     new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
+        #     new_experiment.metadata[channel]['bead_units'] = self.units[channel]
+        #     if 'range' in experiment.metadata[channel]:
+        #         new_experiment.metadata[channel]['range'] = calibration_fn(experiment.metadata[channel]['range'])
+        #     if 'voltage' in experiment.metadata[channel]:
+        #         del new_experiment.metadata[channel]['voltage']
+        #
+        # new_experiment.history.append(self.clone_traits(transient = lambda t: True)) 
+        # return new_experiment
     
     def default_view(self, **kwargs):
         """
@@ -424,7 +416,7 @@ class RegistrationOp(HasStrictTraits):
         return v
     
 
-@provides(cytoflow.views.IView)
+@provides(IView)
 class RegistrationDiagnosticView(HasStrictTraits):
     """
     A diagnostic view for `RegistrationOp`.
@@ -444,8 +436,8 @@ class RegistrationDiagnosticView(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("cytoflow.view.beadcalibrationdiagnosticview")
-    friendly_id = Constant("Bead Calibration Diagnostic")
+    id = Constant("cytoflow.views.registrationdiagnosticview")
+    friendly_id = Constant("Registration Diagnostic")
         
     op = Instance(RegistrationOp)
     channel = Str
@@ -460,54 +452,82 @@ class RegistrationDiagnosticView(HasStrictTraits):
             The experiment used to create the diagnostic plot.
         
         """
-
+        
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
-
-        channels = list(self.op.units.keys())
-
-        if not channels:
-            raise util.CytoflowViewError(None, "No channels to plot")
-
-        if set(channels) != set(self.op._histograms.keys()):
-            raise util.CytoflowViewError(None, "You must estimate the parameters "
-                                               "before plotting")
-
-        plt.figure()
         
-        for idx, channel in enumerate(channels):            
-            _, hist_bins, hist_smooth = self.op._histograms[channel]
-                
-            plt.subplot(len(channels), 2, 2 * idx + 1)
-            plt.xscale('log')
-            plt.xlabel(channel)
-            plt.plot(hist_bins[1:], hist_smooth)
+        # channels = list(self.op.units.keys())
+        #
+        if not self.channel in experiment.channels:
+            raise util.CytoflowViewError('channel', 
+                                         "Channel {} not in the experiment"
+                                         .format(self.channel))
             
-            plt.axvline(self.op.bead_brightness_threshold, color = 'blue', linestyle = '--' )
-            if self.op.bead_brightness_cutoff:
-                plt.axvline(self.op.bead_brightness_cutoff, color = 'blue', linestyle = '--' )
-            else:
-                plt.axvline(experiment.metadata[channel]['range'] * 0.7, color = 'blue', linestyle = '--')                
+        if not self.op._kde:
+            raise util.CytoflowViewError(None,
+                                         "You must estimate the parameters before plotting!")
+            
+        scale = self.op._scale[self.channel]
+        # let's not use the FacetGrid stuff here, eh?
+        plt.figure()
+        print(self.op._groups)
+        print(list(self.op._kde.keys()))
+        for i, group in enumerate(self.op._groups):
+            # if (self.channel, group) not in self.op._kde:
+            #     raise util.CytoflowViewError(None,
+            #                                  "You must estimate the parameters before plotting!")
+            #
 
-            if channel in self.op._peaks:
-                for peak in self.op._peaks[channel]:
-                    plt.axvline(peak, color = 'r')
-                    
-            if channel in self.op._peaks and channel in self.op._mefs:
-                plt.subplot(len(channels), 2, 2 * idx + 2)
-                plt.xscale('log')
-                plt.yscale('log')
-                plt.xlabel(channel)
-                plt.ylabel(self.op.units[channel])
-                plt.plot(self.op._peaks[channel], 
-                         self.op._mefs[channel], 
-                         marker = 'o')
-                
-                xmin, xmax = plt.xlim()
-                x = np.logspace(np.log10(xmin), np.log10(xmax))
-                plt.plot(x, 
-                         self.op._calibration_functions[channel](x), 
-                         color = 'r', linestyle = ':')
+            kde_support, kde_density = self.op._kde[(self.channel, group)]
             
-        plt.tight_layout(pad = 0.8)
+            plt.subplot(len(self.op._groups), 1, i+1)
+            plt.xscale(scale.name, **scale.get_mpl_params(plt.gca().get_xaxis()))
+            
+            x = scale.inverse(kde_support[:, 0])
+            y = np.exp(kde_density)
+            plt.plot(x, y)
+            
+            
+        
+        # if set(channels) != set(self.op._histograms.keys()):
+        #     raise util.CytoflowViewError(None, "You must estimate the parameters "
+        #                                        "before plotting")
+        #
+        # plt.figure()
+        #
+        # for idx, channel in enumerate(channels):            
+        #     _, hist_bins, hist_smooth = self.op._histograms[channel]
+        #
+        #     plt.subplot(len(channels), 2, 2 * idx + 1)
+        #     plt.xscale('log')
+        #     plt.xlabel(channel)
+        #     plt.plot(hist_bins[1:], hist_smooth)
+        #
+        #     plt.axvline(self.op.bead_brightness_threshold, color = 'blue', linestyle = '--' )
+        #     if self.op.bead_brightness_cutoff:
+        #         plt.axvline(self.op.bead_brightness_cutoff, color = 'blue', linestyle = '--' )
+        #     else:
+        #         plt.axvline(experiment.metadata[channel]['range'] * 0.7, color = 'blue', linestyle = '--')                
+        #
+        #     if channel in self.op._peaks:
+        #         for peak in self.op._peaks[channel]:
+        #             plt.axvline(peak, color = 'r')
+        #
+        #     if channel in self.op._peaks and channel in self.op._mefs:
+        #         plt.subplot(len(channels), 2, 2 * idx + 2)
+        #         plt.xscale('log')
+        #         plt.yscale('log')
+        #         plt.xlabel(channel)
+        #         plt.ylabel(self.op.units[channel])
+        #         plt.plot(self.op._peaks[channel], 
+        #                  self.op._mefs[channel], 
+        #                  marker = 'o')
+        #
+        #         xmin, xmax = plt.xlim()
+        #         x = np.logspace(np.log10(xmin), np.log10(xmax))
+        #         plt.plot(x, 
+        #                  self.op._calibration_functions[channel](x), 
+        #                  color = 'r', linestyle = ':')
+        #
+        # plt.tight_layout(pad = 0.8)
             
