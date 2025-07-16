@@ -165,7 +165,7 @@ class RegistrationOp(HasStrictTraits):
     _kde = Dict(Tuple(Str, Any), Tuple(np.ndarray, np.ndarray)) # channel,group --> kde support, density
     _peaks = Dict(Tuple(Str, Any), List(Float)) # channel,group --> peaks
     _clusters = Dict(Tuple(Str, Any), List(Int)) # channel,group --> cluster assignments
-    _medians = Dict(Str, List(Float)) # channel --> cluster medians
+    _means = Dict(Str, List(Float)) # channel --> cluster medians
     
     _warp_functions = Dict(Tuple(Any, Str), Callable) # group,channel --> warp function
 
@@ -266,54 +266,59 @@ class RegistrationOp(HasStrictTraits):
                                        (-np.inf, np.inf))[:, np.newaxis]
                 kde = KernelDensity(kernel = self.kernel, bandwidth = bw)
                 kde.fit(scaled_data.to_numpy()[:, np.newaxis])
-                density = kde.score_samples(support)
+                density = np.exp(kde.score_samples(support))
                 self._kde[(channel, group)] = (support, density)
                 
-        #         # find the peaks
-        #         peaks = scipy.signal.find_peaks().tolist()
-        #         self._peaks[(channel, group)] = peaks
-        #
-        #         if not all_peaks:
-        #             all_peaks = peaks
-        #         else:
-        #             all_peaks = all_peaks.append(peaks)
-        #
-        #     # cluster the peaks ACROSS GROUPS. we want the minumum number
-        #     # of clusters where no two peaks in the same group are
-        #     # assigned to the same cluster.
-        #
-        #     for n_clusters in range(len(all_peaks)):
-        #         km = sklearn.cluster.KMeans(n_clusters = n_clusters,
-        #                                     random_state = 0)
-        #         km.fit(all_peaks)
-        #
-        #         for group, _ in groupby:
-        #             peaks = self._peaks[(channel, group)]
-        #             cluster_assignments = km.predict(peaks).tolist()
-        #
-        #             # quick check for duplicates
-        #             if len(cluster_assignments) != len(set(cluster_assignments)):
-        #                 break
-        #
-        #             self._clusters[(group, channel)] = cluster_assignments
-        #
-        #         if len(cluster_assignments) == len(set(cluster_assignments)):
-        #             break
-        #
-        #     # now that we have clusters, compute the median of each cluster
-        #
-        #     for cluster in range(n_clusters):
-        #         clust_peaks = []
-        #
-        #         for group, _ in groupby:
-        #             peaks = self._peaks[(group, channel)]
-        #             cluster_assignments = self._clusters[(group, channel)]
-        #             try:
-        #                 peak_idx = cluster_assignments.index(cluster)
-        #             except ValueError:
-        #                 # this group didn't have a peak assigned to this cluster
-        #                 continue
-        #             clust_peaks.append([peaks[peak_idx]])
+                # find the peaks
+                peaks = scipy.signal.find_peaks(density)[0].tolist()
+                peaks = [support[p] for p in peaks]
+                self._peaks[(channel, group)] = [self._scale[channel].inverse(p) for p in peaks]
+
+                if not all_peaks:
+                    all_peaks = peaks
+                else:
+                    all_peaks.extend(peaks)
+        
+            # cluster the peaks ACROSS GROUPS. we want the minumum number
+            # of clusters where no two peaks in the same group are
+            # assigned to the same cluster.
+        
+            for n_clusters in range(1, len(all_peaks)):
+                km = sklearn.cluster.KMeans(n_clusters = n_clusters,
+                                            random_state = 0)
+                km.fit(np.array(all_peaks).reshape(-1, 1))
+        
+                for group, _ in groupby:
+                    peaks = self._scale[channel](self._peaks[(channel, group)])
+                    cluster_assignments = km.predict(np.array(peaks).reshape(-1, 1)).tolist()
+        
+                    # check for duplicates
+                    if len(cluster_assignments) != len(set(cluster_assignments)):
+                        continue
+        
+                    self._clusters[(channel, group)] = cluster_assignments
+    
+                if len(self._clusters) == groupby.ngroups:
+                    break
+        
+            # now that we have clusters, compute the median of each cluster
+            self._means[channel] = []
+            for cluster in range(n_clusters):
+                clust_peaks = []
+            
+                for group, _ in groupby:
+                    peaks = self._scale[channel](self._peaks[(channel, group)])
+                    cluster_assignments = self._clusters[(channel, group)]
+                    try:
+                        peak_idx = cluster_assignments.index(cluster)
+                    except ValueError:
+                        # this group didn't have a peak assigned to this cluster
+                        continue
+                    
+                    clust_peaks.append(peaks[peak_idx])
+                                
+                self._means[channel].append(self._scale[channel].inverse(np.mean(clust_peaks)))                    
+                
         #
         #         _medians[]
         #
@@ -470,22 +475,58 @@ class RegistrationDiagnosticView(HasStrictTraits):
         scale = self.op._scale[self.channel]
         # let's not use the FacetGrid stuff here, eh?
         plt.figure()
-        print(self.op._groups)
-        print(list(self.op._kde.keys()))
+
+        last_ax = plt.subplot(len(self.op._groups), 1, len(self.op._groups))
+        last_ax.yaxis.set_visible(False)
+        # plt.setp(last_ax.get_yticklabels(), visible = False)
         for i, group in enumerate(self.op._groups):
             # if (self.channel, group) not in self.op._kde:
             #     raise util.CytoflowViewError(None,
             #                                  "You must estimate the parameters before plotting!")
             #
 
+            # plot the density
             kde_support, kde_density = self.op._kde[(self.channel, group)]
             
-            plt.subplot(len(self.op._groups), 1, i+1)
+            ax = plt.subplot(len(self.op._groups), 1, i+1, sharex = last_ax)
+            if ax != last_ax:
+                ax.yaxis.set_visible(False)
+                plt.setp(ax.get_xticklabels(), visible = False)
+            
             plt.xscale(scale.name, **scale.get_mpl_params(plt.gca().get_xaxis()))
             
             x = scale.inverse(kde_support[:, 0])
-            y = np.exp(kde_density)
-            plt.plot(x, y)
+            plt.plot(x, kde_density)
+            
+            # plot the peaks
+            peaks = self.op._peaks[(self.channel, group)]
+            for peak in peaks:
+                plt.axvline(peak, color = 'b', linestyle = '--')
+                
+            # plot cluster peaks, means
+            means = self.op._means[self.channel]
+            cluster_assignments = self.op._clusters[(self.channel, group)]
+            for cluster_idx, mean in enumerate(means):
+                plt.axvline(mean, color = 'r', linestyle = '-')
+                
+                try:
+                    peak_idx = cluster_assignments.index(cluster_idx)
+                    y = np.max(kde_density) / 2
+                    plt.annotate("", xytext = (peaks[peak_idx], y), xy = (mean, y), 
+                                 arrowprops=dict(width = 1, headwidth = 5, headlength = 3, color = 'k'))
+                    # plt.hlines(np.max(kde_density) / 2, mean, peaks[peak_idx])
+                except ValueError:
+                    # this group didn't have a peak assigned to this cluster
+                    continue
+                
+            plt.title("{} = {}".format(', '.join(self.op.by), 
+                                       ', '.join([str(g) for g in group])))
+            
+        plt.tight_layout()
+                
+            
+                
+        
             
             
         
