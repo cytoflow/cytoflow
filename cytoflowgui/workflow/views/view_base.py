@@ -57,17 +57,6 @@ COLORMAPS = {'deep' : "a:deep (Qual)",
              'inferno' : "o:inferno (Cont)",
              'cividis' : "p:cividis (Cont)"}
 
-class IterWrapper(object):
-    def __init__(self, iterator, by):
-        self.iterator = iterator
-        self.by = by
-        
-    def __iter__(self):
-        return self
-        
-    def __next__(self):
-        return next(self.iterator)
-
 class IWorkflowView(IView):
     """
     An interface that extends a `cytoflow` view with functions 
@@ -174,7 +163,7 @@ class WorkflowView(HasStrictTraits):
         try:
             return super().enum_plots(experiment)
         except (util.CytoflowError, AttributeError):
-            return IterWrapper(iter([]), [])    
+            return util.IterByWrapper(iter([]), [])    
         
     def should_plot(self, changed, payload):
         """
@@ -225,13 +214,13 @@ class WorkflowFacetView(WorkflowView):
     
     def enum_plots(self, experiment):
         if not self.plotfacet:
-            return IterWrapper(iter([]), [])
+            return util.IterByWrapper(iter([]), [])
           
         if self.plotfacet and self.plotfacet not in experiment.conditions:
             raise util.CytoflowViewError("Plot facet {0} not in the experiment"
                                     .format(self.huefacet))
         values = natsort.natsorted(pd.unique(experiment[self.plotfacet]))
-        return IterWrapper(iter(values), [self.plotfacet])
+        return util.IterByWrapper(iter(values), [self.plotfacet])
     
     def plot(self, experiment, **kwargs):
         """
@@ -275,7 +264,7 @@ class WorkflowByView(WorkflowView):
         try:
             return super().enum_plots(experiment)
         except (util.CytoflowError, AttributeError):
-            return IterWrapper(iter([]), [])    
+            return util.IterByWrapper(iter([]), [])    
         
     
 class BasePlotParams(HasStrictTraits):

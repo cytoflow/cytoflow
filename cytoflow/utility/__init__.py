@@ -49,3 +49,15 @@ from .minisom import MiniSom
 from .consensus import ConsensusClustering
 
 from pandas.core.dtypes.inference import is_list_like
+
+
+class IterByWrapper(object):
+    def __init__(self, iterator, by):
+        self.iterator = iterator
+        self.by = by
+        
+    def __iter__(self):
+        return self
+        
+    def __next__(self):
+        return next(self.iterator)

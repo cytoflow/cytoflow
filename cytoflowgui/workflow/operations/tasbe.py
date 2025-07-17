@@ -35,7 +35,6 @@ import cytoflow.utility as util
 
 from .. import Changed
 from ..views import IWorkflowView, WorkflowView
-from ..views.view_base import IterWrapper
 from ..serialization import camel_registry, cytoflow_class_repr, traits_repr, dedent
 from ..subset import ISubset
 
@@ -378,11 +377,11 @@ class TasbeWorkflowView(WorkflowView):
     name = Constant("TASBE Calibration")
 
     def enum_plots(self, experiment):
-        return IterWrapper(iter(["Autofluorescence",
-                                 "Bleedthrough",
-                                 "Bead Calibration",
-                                 "Color Translation"]),
-                           [])
+        return util.IterByWrapper(iter(["Autofluorescence",
+                                      "Bleedthrough",
+                                      "Bead Calibration",
+                                      "Color Translation"]),
+                                [])
         
     def should_plot(self, changed, payload):
         if changed == Changed.RESULT or changed == Changed.PREV_RESULT:

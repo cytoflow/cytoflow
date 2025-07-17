@@ -577,9 +577,7 @@ class MSTView(HasStrictTraits):
         Returns
         -------
         iterator
-            An iterator across the possible plot names. The iterator ALSO has an instance
-            attribute called ``by``, which holds a list of the facets that are
-            not yet set (and thus need to be specified in the plot name.)
+            An iterator across the possible plot names. 
         """
         
         if experiment is None:
@@ -630,9 +628,9 @@ class MSTView(HasStrictTraits):
 
         if unused_names:
             stat_groupby = stat.groupby(unused_names, observed = True)
-            return iter(stat_groupby.groups)
+            return util.IterByWrapper(iter(stat_groupby.groups), unused_names)
         else:
-            return iter([])
+            return util.IterByWrapper(iter([]), [])
     
         
     def _get_stat(self, experiment):
