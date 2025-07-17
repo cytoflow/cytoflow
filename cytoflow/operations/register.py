@@ -33,6 +33,7 @@ from traits.api import (HasStrictTraits, Str, Dict, Int, List,
                         Float, Constant, provides, Instance, Union,
                         Callable, Any, Enum, Tuple)
 import numpy as np
+import pandas as pd
 import math
 import scipy.signal
 import scipy.optimize
@@ -40,6 +41,10 @@ import sklearn
 from sklearn.neighbors import KernelDensity
 from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
 import statistics
+from skfda import FDataGrid
+from skfda.preprocessing.registration import landmark_elastic_registration_warping, invert_warping
+from skfda.representation.interpolation import SplineInterpolation
+
         
 import matplotlib.pyplot as plt
 
@@ -100,7 +105,7 @@ class RegistrationOp(HasStrictTraits):
         If a float is given, it is the bandwidth.   Note, this is in 
         scaled units, not data units.
         
-    gridsize : int (default = 100)
+    gridsize : int (default = 200)
         How many locations should we evaluate the kernel?
         
     ** Peak finding parameters **
@@ -123,7 +128,7 @@ class RegistrationOp(HasStrictTraits):
     
     - Use 1-dimensional K-means across groups to group landmarks together
     
-    - Determine the median of each group. These are the "destinations" for our 
+    - Determine the (scaled) mean of each group. These are the "destinations" for our 
       warp functions.
       
     - Using tools from functional data analysis, compute a "warp" function
@@ -133,8 +138,8 @@ class RegistrationOp(HasStrictTraits):
       inverting as you do so.
       
     Every step except the last is performed by the `estimate` function. The 
-    diagnostic plot shows the smoothed distribution, the peaks, their medians
-    and clusters for each division of data.
+    diagnostic plot shows the smoothed distribution, the peaks, their 
+    clusters and means, and the warped (smoothed) distribution.
     
     Examples
     --------
@@ -154,7 +159,7 @@ class RegistrationOp(HasStrictTraits):
     
     kernel = Enum('gaussian','tophat','epanechnikov','exponential','linear','cosine')
     bw = Union(Enum('scott', 'silverman'), Float)
-    gridsize = Int(100)
+    gridsize = Int(200)
     
     # Peak clustering
     max_clusters = Int(None)
@@ -162,12 +167,13 @@ class RegistrationOp(HasStrictTraits):
     # these are really only saved to support plotting
     _scale = Dict(Str, Instance(util.IScale))
     _groups = List(Any)
-    _kde = Dict(Tuple(Str, Any), Tuple(np.ndarray, np.ndarray)) # channel,group --> kde support, density
+    _support = Dict(Str, np.ndarray) # channel --> kde support
+    _kde = Dict(Tuple(Str, Any), np.ndarray) # channel,group --> kde density
     _peaks = Dict(Tuple(Str, Any), List(Float)) # channel,group --> peaks
-    _clusters = Dict(Tuple(Str, Any), List(Int)) # channel,group --> cluster assignments
-    _means = Dict(Str, List(Float)) # channel --> cluster medians
+    _clusters = Dict(Tuple(Str, Any), List(Union(Int, None))) # channel,group --> cluster assignments
+    _means = Dict(Str, List(Union(Float, None))) # channel --> cluster medians
     
-    _warp_functions = Dict(Tuple(Any, Str), Callable) # group,channel --> warp function
+    _warping = Dict(Str, Callable) # channel --> warping
 
 
     def estimate(self, experiment, subset = None): 
@@ -233,7 +239,7 @@ class RegistrationOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda _: True, observed = False)
                     
-        self._warp_functions.clear()
+        self._warping.clear()
         self._scale.clear()
             
         # get the scale. estimate the scale params for the ENTIRE data set,
@@ -244,30 +250,42 @@ class RegistrationOp(HasStrictTraits):
                 self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
             else:
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
-        
    
-        warp_functions = {}
         for channel in self.channels:
             
+            # scikit-fda requires that all the functions (in this case, the
+            # KDEs) be on the same support.
+            
+            all_data = pd.concat([group_data[channel] for _, group_data in groupby],
+                                 ignore_index = True, sort = True)
+            all_scaled_data = self._scale[channel](all_data)
+            
+            if self.bw == 'scott':
+                bw = bw_scott(all_scaled_data)
+            elif self.bw == 'silverman':
+                bw = bw_silverman(all_scaled_data)
+            else:
+                bw = self.bw
+                                
+            # support is RE-SCALED, not in data units.
+            support = _kde_support(all_scaled_data, bw, self.gridsize, 3.0, 
+                                   (-np.inf, np.inf))
+                                               
+            # but the support we SAVE is in DATA UNITS
+            self._support[channel] = self._scale[channel].inverse(support)
+            
             all_peaks = []
+            
             for group, group_data in groupby:
                 self._groups.append(group)
+                
                 #compute the KDE 
                 scaled_data = self._scale[channel](group_data[channel])
                 
-                if self.bw == 'scott':
-                    bw = bw_scott(scaled_data)
-                elif self.bw == 'silverman':
-                    bw = bw_silverman(scaled_data)
-                else:
-                    bw = self.bw
-    
-                support = _kde_support(scaled_data, bw, self.gridsize, 3.0, 
-                                       (-np.inf, np.inf))[:, np.newaxis]
                 kde = KernelDensity(kernel = self.kernel, bandwidth = bw)
                 kde.fit(scaled_data.to_numpy()[:, np.newaxis])
-                density = np.exp(kde.score_samples(support))
-                self._kde[(channel, group)] = (support, density)
+                density = np.exp(kde.score_samples(support[:, np.newaxis]))
+                self._kde[(channel, group)] = density
                 
                 # find the peaks
                 peaks = scipy.signal.find_peaks(density)[0].tolist()
@@ -300,6 +318,18 @@ class RegistrationOp(HasStrictTraits):
     
                 if len(self._clusters) == groupby.ngroups:
                     break
+                                
+            # get rid of clusters that don't have a peak in each group
+            for cluster in range(0, n_clusters):
+                in_group = [cluster in self._clusters[(channel, group)] for group in self._groups]
+                if not all(in_group):
+                    for group  in self._groups:
+                        try:
+                            clust_idx = self._clusters[(channel, group)].index(cluster) # after previous, should only be in here once!
+                            self._clusters[(channel, group)][clust_idx] = None  
+                        except ValueError:
+                            # value wasn't in the list
+                            pass
         
             # now that we have clusters, compute the median of each cluster
             self._means[channel] = []
@@ -317,23 +347,38 @@ class RegistrationOp(HasStrictTraits):
                     
                     clust_peaks.append(peaks[peak_idx])
                                 
-                self._means[channel].append(self._scale[channel].inverse(np.mean(clust_peaks)))                    
+                if clust_peaks:
+                    self._means[channel].append(self._scale[channel].inverse(np.mean(clust_peaks)))
+                else:
+                    self._means[channel].append(None)     
                 
-        #
-        #         _medians[]
-        #
-        #
-        #
-        #
-        #
-        #
-        #
+
+            # compute the warping to register the landmarks to the means
+            # we compute the warping on SCALED data
+            fd = FDataGrid(data_matrix = [self._scale[channel](self._kde[(channel, group)]) for group in self._groups], 
+                           grid_points = self._scale[channel](self._support[channel]))
+            
+            landmarks = [[self._peaks[(channel, group)][i] 
+                          for i in range(len(self._peaks[(channel, group)]))
+                          if self._clusters[(channel, group)][i] is not None] 
+                         for group in self._groups]
+            landmarks = self._scale[channel]([sorted(s) for s in landmarks])
+
+            location = [s for s in self._means[channel] if s is not None]
+            location = self._scale[channel](sorted(location))
+
+            warping = landmark_elastic_registration_warping(fd, 
+                                                            landmarks = landmarks,
+                                                            location = location)
+            
+            # i don't know why i need to do this :(
+            # clearly i don't understand FDA
+            self._warping[channel] = invert_warping(warping)
+            
         # # set atomically to support the GUI
         # self._warp_functions = warp_functions
                 
     
-
-
     def apply(self, experiment):
         """
         Applies the bleedthrough correction to an experiment.
@@ -445,9 +490,28 @@ class RegistrationDiagnosticView(HasStrictTraits):
     friendly_id = Constant("Registration Diagnostic")
         
     op = Instance(RegistrationOp)
-    channel = Str
     
-    def plot(self, experiment):
+    def enum_plots(self, experiment):
+        """
+        Enumerate the named plots we can make from this set of statistics.
+        
+        Returns
+        -------
+        iterator
+            An iterator across the possible plot names.
+        """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+            
+        if self.op._support:
+            return util.IterByWrapper(iter(self.op._support.keys()), [])
+        else:
+            return util.IterByWrapper(iter([]), [])
+        
+           
+    def plot(self, experiment, plot_name = None):
         """
         Plots the diagnostic view.
         
@@ -461,114 +525,94 @@ class RegistrationDiagnosticView(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
         
-        # channels = list(self.op.units.keys())
-        #
-        if not self.channel in experiment.channels:
-            raise util.CytoflowViewError('channel', 
-                                         "Channel {} not in the experiment"
+        if not self.op._support:
+            raise util.CytoflowViewError(None, "Must estimate the operations parameters first!")
+        
+        if plot_name is None and len(self.op._support) == 1:
+            plot_name = list(self.op._support.keys())[0]
+        
+        if not plot_name:
+            raise util.CytoflowViewError('plot_name', "Must set 'plot_name' to one of the channels that was estimated!")
+        
+        if not plot_name in self.op._support:
+            raise util.CytoflowViewError('plot_name', 
+                                         "Channel {} was not estimated!"
                                          .format(self.channel))
             
-        if not self.op._kde:
-            raise util.CytoflowViewError(None,
-                                         "You must estimate the parameters before plotting!")
-            
-        scale = self.op._scale[self.channel]
+        channel = plot_name
+        scale = self.op._scale[channel]
+        
+        kde_support = self.op._support[channel]
+        
         # let's not use the FacetGrid stuff here, eh?
-        plt.figure()
-
-        last_ax = plt.subplot(len(self.op._groups), 1, len(self.op._groups))
-        last_ax.yaxis.set_visible(False)
-        # plt.setp(last_ax.get_yticklabels(), visible = False)
+        fig, axes = plt.subplots(len(self.op._groups), 1, sharex = True, constrained_layout = True)
+        fig.set_constrained_layout_pads(hspace = 0.0, h_pad = 0.0)
         for i, group in enumerate(self.op._groups):
-            # if (self.channel, group) not in self.op._kde:
-            #     raise util.CytoflowViewError(None,
-            #                                  "You must estimate the parameters before plotting!")
-            #
+            ax = axes[i]
+            ax.spines['top'].set_visible(False)
+            ax.spines['bottom'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.set_ylabel(', '.join([str(g) for g in group]))
+            ax.set_xscale(scale.name, **scale.get_mpl_params(plt.gca().get_xaxis()))
+            ax.grid(False)
+            ax.tick_params(axis = 'y', which = "both", left = False, labelleft = False)
+            if i < len(self.op._groups) - 1:
+                ax.tick_params(axis = 'x', which = "both", bottom = False, labelbottom = False)
 
             # plot the density
-            kde_support, kde_density = self.op._kde[(self.channel, group)]
+            kde_density = self.op._kde[(channel, group)]
             
-            ax = plt.subplot(len(self.op._groups), 1, i+1, sharex = last_ax)
-            if ax != last_ax:
-                ax.yaxis.set_visible(False)
-                plt.setp(ax.get_xticklabels(), visible = False)
+            # if ax != last_ax:
+            #     ax.yaxis.set_visible(False)
+            #     plt.setp(ax.get_xticklabels(), visible = False)
             
-            plt.xscale(scale.name, **scale.get_mpl_params(plt.gca().get_xaxis()))
             
-            x = scale.inverse(kde_support[:, 0])
-            plt.plot(x, kde_density)
+            x = kde_support
+            before_artist = axes[i].plot(x, kde_density)
+            
+            scaled_support = self.op._scale[channel](kde_support)
+            warped_x = self.op._warping[channel](scaled_support)[i]
+            warped_x = self.op._scale[channel].inverse(warped_x)
+            
+            after_artist = axes[i].plot(warped_x, kde_density, color = 'r')
+            
+            if i == 0:
+                before_artist[0].set_label("Before registration")
+                after_artist[0].set_label("After registration")
             
             # plot the peaks
-            peaks = self.op._peaks[(self.channel, group)]
+            peaks = self.op._peaks[(channel, group)]
             for peak in peaks:
-                plt.axvline(peak, color = 'b', linestyle = '--')
-                
+                ax.axvline(peak, color = 'b', linestyle = '--')
+            
             # plot cluster peaks, means
-            means = self.op._means[self.channel]
-            cluster_assignments = self.op._clusters[(self.channel, group)]
+            means = self.op._means[channel]
+            cluster_assignments = self.op._clusters[(channel, group)]
             for cluster_idx, mean in enumerate(means):
-                plt.axvline(mean, color = 'r', linestyle = '-')
-                
+                if mean is None:
+                    continue
+            
+                ax.axvline(mean, color = 'grey', linestyle = '-')
+            
                 try:
                     peak_idx = cluster_assignments.index(cluster_idx)
-                    y = np.max(kde_density) / 2
-                    plt.annotate("", xytext = (peaks[peak_idx], y), xy = (mean, y), 
-                                 arrowprops=dict(width = 1, headwidth = 5, headlength = 3, color = 'k'))
-                    # plt.hlines(np.max(kde_density) / 2, mean, peaks[peak_idx])
+                    y = 0.1
+                    if abs(scale(peaks[peak_idx]) - scale(mean)) > 0.01:
+                        ax.annotate("", xytext = (peaks[peak_idx], y), xy = (mean, y), 
+                                    arrowprops=dict(width = 1, headwidth = 5, headlength = 3, color = 'k'))
                 except ValueError:
                     # this group didn't have a peak assigned to this cluster
                     continue
-                
-            plt.title("{} = {}".format(', '.join(self.op.by), 
-                                       ', '.join([str(g) for g in group])))
             
-        plt.tight_layout()
-                
-            
-                
+            # axes[i].set_title("{} = {}".format(', '.join(self.op.by), 
+            #                                    ', '.join([str(g) for g in group])))
         
-            
-            
+        fig.draw_without_rendering()
+        fig.supylabel(', '.join(self.op.by))
+        # plot a figure legend
+        fig.legend(loc = 'outside right upper')   
         
-        # if set(channels) != set(self.op._histograms.keys()):
-        #     raise util.CytoflowViewError(None, "You must estimate the parameters "
-        #                                        "before plotting")
-        #
-        # plt.figure()
-        #
-        # for idx, channel in enumerate(channels):            
-        #     _, hist_bins, hist_smooth = self.op._histograms[channel]
-        #
-        #     plt.subplot(len(channels), 2, 2 * idx + 1)
-        #     plt.xscale('log')
-        #     plt.xlabel(channel)
-        #     plt.plot(hist_bins[1:], hist_smooth)
-        #
-        #     plt.axvline(self.op.bead_brightness_threshold, color = 'blue', linestyle = '--' )
-        #     if self.op.bead_brightness_cutoff:
-        #         plt.axvline(self.op.bead_brightness_cutoff, color = 'blue', linestyle = '--' )
-        #     else:
-        #         plt.axvline(experiment.metadata[channel]['range'] * 0.7, color = 'blue', linestyle = '--')                
-        #
-        #     if channel in self.op._peaks:
-        #         for peak in self.op._peaks[channel]:
-        #             plt.axvline(peak, color = 'r')
-        #
-        #     if channel in self.op._peaks and channel in self.op._mefs:
-        #         plt.subplot(len(channels), 2, 2 * idx + 2)
-        #         plt.xscale('log')
-        #         plt.yscale('log')
-        #         plt.xlabel(channel)
-        #         plt.ylabel(self.op.units[channel])
-        #         plt.plot(self.op._peaks[channel], 
-        #                  self.op._mefs[channel], 
-        #                  marker = 'o')
-        #
-        #         xmin, xmax = plt.xlim()
-        #         x = np.logspace(np.log10(xmin), np.log10(xmax))
-        #         plt.plot(x, 
-        #                  self.op._calibration_functions[channel](x), 
-        #                  color = 'r', linestyle = ':')
-        #
-        # plt.tight_layout(pad = 0.8)
+        # clean up layout issues
+        # fig.tight_layout()         
+        
             
