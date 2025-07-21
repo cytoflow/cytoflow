@@ -161,9 +161,9 @@ class RegistrationOp(HasStrictTraits):
     _scale = Dict(Str, Instance(util.IScale))
     _groups = List(Any)
     _support = Dict(Str, np.ndarray) # channel --> kde support
-    _kde = Dict(Tuple(Str, Any), np.ndarray) # channel,group --> kde density
-    _peaks = Dict(Tuple(Str, Any), List(Float)) # channel,group --> peaks
-    _clusters = Dict(Tuple(Str, Any), List(Union(Int, None))) # channel,group --> cluster assignments
+    _kde = Dict(Str, Dict(Any, np.ndarray)) # channel, group --> kde density
+    _peaks = Dict(Str, Dict(Any, List(Float))) # channel, group --> peaks
+    _clusters = Dict(Str, Dict(Any, List(Union(Int, None)))) # channel, group --> cluster assignments
     _means = Dict(Str, List(Union(Float, None))) # channel --> cluster medians
     
     _warping = Dict(Str, Callable) # channel --> warping
@@ -202,7 +202,7 @@ class RegistrationOp(HasStrictTraits):
             if c not in self.channels:
                 raise util.CytoflowOpError('channels',
                                            "Scale set for channel {0}, but it isn't "
-                                           "in the experiment"
+                                           "'channels'"
                                            .format(c))
        
         for b in self.by:
@@ -268,9 +268,9 @@ class RegistrationOp(HasStrictTraits):
             self._support[channel] = self._scale[channel].inverse(support)
             
             all_peaks = []
-            
+            self._kde[channel] = {}
+            self._peaks[channel] = {}
             for group, group_data in groupby:
-                self._groups.append(group)
                 
                 #compute the KDE 
                 scaled_data = self._scale[channel](group_data[channel])
@@ -278,12 +278,12 @@ class RegistrationOp(HasStrictTraits):
                 kde = KernelDensity(kernel = self.kernel, bandwidth = bw)
                 kde.fit(scaled_data.to_numpy()[:, np.newaxis])
                 density = np.exp(kde.score_samples(support[:, np.newaxis]))
-                self._kde[(channel, group)] = density
+                self._kde[channel][group] = density
                 
                 # find the peaks
                 peaks = scipy.signal.find_peaks(density)[0].tolist()
                 peaks = [support[p] for p in peaks]
-                self._peaks[(channel, group)] = [self._scale[channel].inverse(p) for p in peaks]
+                self._peaks[channel][group] = [self._scale[channel].inverse(p) for p in peaks]
 
                 if not all_peaks:
                     all_peaks = peaks
@@ -294,32 +294,33 @@ class RegistrationOp(HasStrictTraits):
             # of clusters where no two peaks in the same group are
             # assigned to the same cluster.
         
+            self._clusters[channel] = {}
             for n_clusters in range(1, len(all_peaks)):
                 km = sklearn.cluster.KMeans(n_clusters = n_clusters,
                                             random_state = 0)
                 km.fit(np.array(all_peaks).reshape(-1, 1))
         
                 for group, _ in groupby:
-                    peaks = self._scale[channel](self._peaks[(channel, group)])
+                    peaks = self._scale[channel](self._peaks[channel][group])
                     cluster_assignments = km.predict(np.array(peaks).reshape(-1, 1)).tolist()
         
                     # check for duplicates
                     if len(cluster_assignments) != len(set(cluster_assignments)):
                         continue
         
-                    self._clusters[(channel, group)] = cluster_assignments
+                    self._clusters[channel][group] = cluster_assignments
     
-                if len(self._clusters) == groupby.ngroups:
+                if len(self._clusters[channel]) == groupby.ngroups:
                     break
                                 
             # get rid of clusters that don't have a peak in each group
             for cluster in range(0, n_clusters):
-                in_group = [cluster in self._clusters[(channel, group)] for group in self._groups]
+                in_group = [cluster in self._clusters[channel][group] for group in self._clusters[channel]]
                 if not all(in_group):
-                    for group  in self._groups:
+                    for group in self._clusters[channel]:
                         try:
-                            clust_idx = self._clusters[(channel, group)].index(cluster) # after previous, should only be in here once!
-                            self._clusters[(channel, group)][clust_idx] = None  
+                            clust_idx = self._clusters[channel][group].index(cluster) # after previous, should only be in here once!
+                            self._clusters[channel][group][clust_idx] = None  
                         except ValueError:
                             # value wasn't in the list
                             pass
@@ -330,8 +331,8 @@ class RegistrationOp(HasStrictTraits):
                 clust_peaks = []
             
                 for group, _ in groupby:
-                    peaks = self._scale[channel](self._peaks[(channel, group)])
-                    cluster_assignments = self._clusters[(channel, group)]
+                    peaks = self._scale[channel](self._peaks[channel][group])
+                    cluster_assignments = self._clusters[channel][group]
                     try:
                         peak_idx = cluster_assignments.index(cluster)
                     except ValueError:
@@ -348,13 +349,13 @@ class RegistrationOp(HasStrictTraits):
 
             # compute the warping to register the landmarks to the means
             # we compute the warping on SCALED data
-            fd = FDataGrid(data_matrix = [self._scale[channel](self._kde[(channel, group)]) for group in self._groups], 
+            fd = FDataGrid(data_matrix = [self._scale[channel](self._kde[channel][group]) for group in self._kde[channel]], 
                            grid_points = self._scale[channel](self._support[channel]))
             
-            landmarks = [[self._peaks[(channel, group)][i] 
-                          for i in range(len(self._peaks[(channel, group)]))
-                          if self._clusters[(channel, group)][i] is not None] 
-                         for group in self._groups]
+            landmarks = [[self._peaks[channel][group][i] 
+                          for i in range(len(self._peaks[channel][group]))
+                          if self._clusters[channel][group][i] is not None] 
+                         for group in self._peaks[channel]]
             landmarks = self._scale[channel]([sorted(s) for s in landmarks])
 
             location = [s for s in self._means[channel] if s is not None]
@@ -400,7 +401,7 @@ class RegistrationOp(HasStrictTraits):
             raise util.CytoflowOpError('units',
                                        "Warp channels don't match experiment channels")
         
-        if set(self.channels) != set(self._warping.keys()):
+        if set(self.channels) != set(self._warping):
             raise util.CytoflowOpError('units',
                                        "Registration warp doesn't match channels. "
                                        "Did you forget to call estimate()?")
@@ -486,7 +487,7 @@ class RegistrationDiagnosticView(HasStrictTraits):
                                          "No experiment specified")
             
         if self.op._support:
-            return util.IterByWrapper(iter(self.op._support.keys()), [])
+            return util.IterByWrapper(iter(self.op._support), [])
         else:
             return util.IterByWrapper(iter([]), [])
         
@@ -509,7 +510,7 @@ class RegistrationDiagnosticView(HasStrictTraits):
             raise util.CytoflowViewError(None, "Must estimate the operations parameters first!")
         
         if plot_name is None and len(self.op._support) == 1:
-            plot_name = list(self.op._support.keys())[0]
+            plot_name = list(self.op._support)[0]
         
         if not plot_name:
             raise util.CytoflowViewError('plot_name', "Must set 'plot_name' to one of the channels that was estimated!")
@@ -521,13 +522,14 @@ class RegistrationDiagnosticView(HasStrictTraits):
             
         channel = plot_name
         scale = self.op._scale[channel]
+        groups = self.op._kde[channel].keys()
         
         kde_support = self.op._support[channel]
         
         # let's not use the FacetGrid stuff here, eh?
-        fig, axes = plt.subplots(len(self.op._groups), 1, sharex = True, constrained_layout = True)
+        fig, axes = plt.subplots(len(groups), 1, sharex = True, constrained_layout = True)
         fig.set_constrained_layout_pads(hspace = 0.0, h_pad = 0.0)
-        for i, group in enumerate(self.op._groups):
+        for i, group in enumerate(groups):
             ax = axes[i]
             ax.spines['top'].set_visible(False)
             ax.spines['bottom'].set_visible(False)
@@ -540,19 +542,14 @@ class RegistrationDiagnosticView(HasStrictTraits):
                 ax.tick_params(axis = 'x', which = "both", bottom = False, labelbottom = False)
 
             # plot the density
-            kde_density = self.op._kde[(channel, group)]
-            
-            # if ax != last_ax:
-            #     ax.yaxis.set_visible(False)
-            #     plt.setp(ax.get_xticklabels(), visible = False)
-            
-            
+            kde_density = self.op._kde[channel][group]
+
             x = kde_support
             before_artist = axes[i].plot(x, kde_density)
             
-            scaled_support = self.op._scale[channel](kde_support)
+            scaled_support = scale(kde_support)
             warped_x = self.op._warping[channel](scaled_support)[i]
-            warped_x = self.op._scale[channel].inverse(warped_x)
+            warped_x = scale.inverse(warped_x)
             
             after_artist = axes[i].plot(warped_x, kde_density, color = 'r')
             
@@ -561,13 +558,13 @@ class RegistrationDiagnosticView(HasStrictTraits):
                 after_artist[0].set_label("After registration")
             
             # plot the peaks
-            peaks = self.op._peaks[(channel, group)]
+            peaks = self.op._peaks[channel][group]
             for peak in peaks:
                 ax.axvline(peak, color = 'b', linestyle = '--')
             
             # plot cluster peaks, means
             means = self.op._means[channel]
-            cluster_assignments = self.op._clusters[(channel, group)]
+            cluster_assignments = self.op._clusters[channel][group]
             for cluster_idx, mean in enumerate(means):
                 if mean is None:
                     continue
