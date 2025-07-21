@@ -260,13 +260,20 @@ class RegistrationOp(HasStrictTraits):
             else:
                 bw = self.bw
                                 
-            # support is RE-SCALED, not in data units.
+            # support we calculate on is scaled, not in data units.
             support = _kde_support(all_scaled_data, bw, self.gridsize, 3.0, 
                                    (-np.inf, np.inf))
-                                               
-            # but the support we SAVE is in DATA UNITS
-            self._support[channel] = self._scale[channel].inverse(support)
+                        
+            # but the support we SAVE is in DATA UNITS.
+            support = self._scale[channel].inverse(support)
             
+            # the support must be strictly increasing, so remove duplicates
+            # (ie, values that were clipped in the inverse)
+            self._support[channel] = support = np.unique(support)
+            
+            # re-scale the (inverted) support
+            support = self._scale[channel](support)
+                                               
             all_peaks = []
             self._kde[channel] = {}
             self._peaks[channel] = {}
@@ -356,7 +363,8 @@ class RegistrationOp(HasStrictTraits):
                           for i in range(len(self._peaks[channel][group]))
                           if self._clusters[channel][group][i] is not None] 
                          for group in self._peaks[channel]]
-            landmarks = self._scale[channel]([sorted(s) for s in landmarks])
+
+            landmarks = [self._scale[channel](el) for el in ([sorted(s) for s in landmarks])]
 
             location = [s for s in self._means[channel] if s is not None]
             location = self._scale[channel](sorted(location))
