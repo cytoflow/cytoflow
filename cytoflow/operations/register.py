@@ -34,27 +34,20 @@ from traits.api import (HasStrictTraits, Str, Dict, Int, List,
                         Callable, Any, Enum, Tuple)
 import numpy as np
 import pandas as pd
-import math
 import scipy.signal
-import scipy.optimize
 import sklearn
 from sklearn.neighbors import KernelDensity
 from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
-import statistics
 from skfda import FDataGrid
 from skfda.preprocessing.registration import landmark_elastic_registration_warping, invert_warping
-from skfda.representation.interpolation import SplineInterpolation
-
         
 import matplotlib.pyplot as plt
 
 import cytoflow.utility as util
 from cytoflow.views import IView
-from .base_op_views import ByView
 from cytoflow.views.kde_1d import _kde_support
 
 from .i_operation import IOperation
-from .import_op import check_tube, Tube, ImportOp
 
 @provides(IOperation)
 class RegistrationOp(HasStrictTraits):
@@ -120,7 +113,7 @@ class RegistrationOp(HasStrictTraits):
     differ depending on what is available in the scientific Python ecosystem,
     but the overall flow remains the same. For each channel:
     
-    - Rescale the data (if necessary)
+    - Rescale the data (if requested)
     
     - Smooth the data using a kernel density estimate
     
@@ -391,64 +384,51 @@ class RegistrationOp(HasStrictTraits):
         Returns
         -------
         Experiment 
-            A new experiment with the specified channels calibrated in
-            physical units.  The calibrated channels also have new metadata:
-            
-            - **bead_calibration_fn** : Callable (`pandas.Series` --> `pandas.Series`)
-                The function to calibrate raw data to bead units
-        
-            - **bead_units** : Str
-                The units this channel was calibrated to
+            A new experiment with the specified channels warped to bring their
+            density maxima into registration.
         """
         
-        # if experiment is None:
-        #     raise util.CytoflowOpError('experiment', "No experiment specified")
-        #
-        # channels = list(self.units.keys())
-        #
-        # if not self.units:
-        #     raise util.CytoflowOpError('units', "No channels to calibrate.")
-        #
-        # if not self._calibration_functions:
-        #     raise util.CytoflowOpError(None,
-        #                                "Calibration not found. "
-        #                                "Did you forget to call estimate()?")
-        #
-        # if not set(channels) <= set(experiment.channels):
-        #     raise util.CytoflowOpError('units',
-        #                                "Module units don't match experiment channels")
-        #
-        # if set(channels) != set(self._calibration_functions.keys()):
-        #     raise util.CytoflowOpError('units',
-        #                                "Calibration doesn't match units. "
-        #                                "Did you forget to call estimate()?")
-        #
-        # # two things.  first, you can't raise a negative value to a non-integer
-        # # power.  second, negative physical units don't make sense -- how can
-        # # you have the equivalent of -5 molecules of fluoresceine?  so,
-        # # we filter out negative values here.
-        #
-        # new_experiment = experiment.clone(deep = True)
-        #
-        # for channel in channels:
-        #     new_experiment.data = \
-        #         new_experiment.data[new_experiment.data[channel] > 0]
-        #
-        # new_experiment.data.reset_index(drop = True, inplace = True)
-        #
-        # for channel in channels:
-        #     calibration_fn = self._calibration_functions[channel]
-        #
-        #     new_experiment[channel] = calibration_fn(new_experiment[channel])
-        #     new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
-        #     new_experiment.metadata[channel]['bead_units'] = self.units[channel]
-        #     if 'range' in experiment.metadata[channel]:
-        #         new_experiment.metadata[channel]['range'] = calibration_fn(experiment.metadata[channel]['range'])
-        #     if 'voltage' in experiment.metadata[channel]:
-        #         del new_experiment.metadata[channel]['voltage']
-        #
-        # new_experiment.history.append(self.clone_traits(transient = lambda t: True)) 
-        # return new_experiment
+        if experiment is None:
+            raise util.CytoflowOpError('experiment', "No experiment specified")
+
+        if not self._warping:
+            raise util.CytoflowOpError(None,
+                                       "Registration warp not found. "
+                                       "Did you forget to call estimate()?")
+        
+        if not set(self.channels) <= set(experiment.channels):
+            raise util.CytoflowOpError('units',
+                                       "Warp channels don't match experiment channels")
+        
+        if set(self.channels) != set(self._warping.keys()):
+            raise util.CytoflowOpError('units',
+                                       "Registration warp doesn't match channels. "
+                                       "Did you forget to call estimate()?")
+            
+        new_experiment = experiment.clone(deep = True)
+        
+        if self.by:
+            groupby = experiment.data.groupby(self.by, observed = False)
+        else:
+            # use a lambda expression to return a group that contains
+            # all the events
+            groupby = experiment.data.groupby(lambda _: True, observed = False)
+            
+        for channel in self.channels:
+            scale = self._scale[channel]
+            warping = self._warping[channel]
+            for group_idx, (_, group_data) in enumerate(groupby):
+                new_experiment.data.loc[group_data.index, channel] = \
+                    scale.inverse(warping(scale(group_data[channel])))[group_idx]
+                
+        if 'range' in new_experiment.metadata[channel]:
+            new_experiment.metadata[channel]['range'] = max(warping(new_experiment.metadata[channel]['range']))
+        if 'voltage' in new_experiment.metadata[channel]:
+            del new_experiment.metadata[channel]['voltage']
+                
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        return new_experiment    
+        
     
     def default_view(self, **kwargs):
         """
@@ -608,6 +588,7 @@ class RegistrationDiagnosticView(HasStrictTraits):
             #                                    ', '.join([str(g) for g in group])))
         
         fig.draw_without_rendering()
+        plt.xlabel(channel)
         fig.supylabel(', '.join(self.op.by))
         # plot a figure legend
         fig.legend(loc = 'outside right upper')   
