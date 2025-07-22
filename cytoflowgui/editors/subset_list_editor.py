@@ -29,8 +29,7 @@ values, etc. from the experiment conditions and metadata.
 
 import pandas as pd
 
-from traits.api import Dict, Str, Bool, Any, Trait, on_trait_change
-from traits.trait_handlers import TraitPrefixList
+from traits.api import Dict, Str, Bool, Any, Trait, on_trait_change, PrefixList
 
 import cytoflow.utility as util
 
@@ -123,7 +122,7 @@ class SubsetListEditor(VerticalListEditor):
     """
     
     # override some defaults
-    style = Trait("custom", TraitPrefixList('simple', 'custom', 'text', 'readonly'))
+    style = Trait("custom", PrefixList(['simple', 'custom', 'text', 'readonly']))
     mutable = Bool(False)
     
     # use the custom editor above, which extends the qt4.ListEditor class

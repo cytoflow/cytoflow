@@ -28,8 +28,8 @@ of the text.
 
 from pyface.qt import QtGui, QtCore
 from traitsui.qt.editor_factory import ReadonlyEditor
-from traitsui.api import BasicEditorFactory
-from traits.api import Color, Instance, Str, Undefined
+from traitsui.api import BasicEditorFactory, Color
+from traits.api import Instance, Str, Undefined
 
 class _ColorTextEditor(ReadonlyEditor):
 

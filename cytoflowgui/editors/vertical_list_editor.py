@@ -155,7 +155,7 @@ class _VerticalListEditor(_ListEditor):
             if resizable:
                 control.proxy = proxy
             peditor = editor(self.ui, proxy, 'value', self.description,
-                             self.control).set(object_name='')
+                             self.control).trait_set(object_name='')
             peditor.prepare(self.control)
             pcontrol = peditor.control
             pcontrol.proxy = proxy

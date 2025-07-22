@@ -61,9 +61,9 @@ class _VerticalNotebookEditor(Editor):
         """
         
         factory = self.factory
-        self.notebook = VerticalNotebook(**factory.get('multiple_open',
-                                                       'delete',
-                                                       'double_click')).set(editor=self)
+        print(factory)
+        self.notebook = VerticalNotebook(**factory.trait_get('multiple_open',
+                                                             'delete')).trait_set(editor=self)
         self.control = self.notebook.create_control(parent)
 
         # Set up the additional 'list items changed' event handler needed for
@@ -156,13 +156,13 @@ class _VerticalNotebookEditor(Editor):
         Creates and returns a notebook page for a specified object with traits.
         """
         # Create a new notebook page:
-        page = self.notebook.create_page().set(data = obj)
+        page = self.notebook.create_page().trait_set(data = obj)
 
         # Create the Traits UI for the object to put in the notebook page:                                
         ui = obj.edit_traits(parent=page.parent,
                              view=self.factory.view,
                              handler=self.factory.handler_factory(obj) if self.factory.handler_factory else None,
-                             kind='subpanel').set(parent=self.ui)
+                             kind='subpanel').trait_set(parent=self.ui)
 
         # Get the name of the page being added to the notebook:
         name = ''
