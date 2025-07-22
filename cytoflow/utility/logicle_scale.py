@@ -39,7 +39,7 @@ import math, sys
 from warnings import warn
 
 from traits.api import (HasStrictTraits, HasTraits, Float, Property, Instance, Str,
-                        cached_property, Undefined, provides, Constant,
+                        cached_property, Undefined, provides, Constant,  # @UnresolvedImport
                         List, Array)
                        
 import numpy as np

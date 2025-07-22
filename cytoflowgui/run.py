@@ -169,7 +169,7 @@ def run_gui():
     
     
     # define and install a message handler for Qt errors
-    from traits.api import push_exception_handler
+    from traits.api import push_exception_handler  # @UnresolvedImport
                              
     def QtMsgHandler(msg_type, msg_context, msg_string):
         # Convert Qt msg type to logging level
@@ -223,7 +223,8 @@ def run_gui():
                                         PCAPlugin,
                                         FlowCleanPlugin, 
                                         tSNEPlugin,
-                                        MSTPlugin as MSTOpPlugin)
+                                        MSTPlugin as MSTOpPlugin,
+                                        RegistrationPlugin)
     
     from cytoflowgui.view_plugins import (ViewPluginManager,
                                           HistogramPlugin, 
@@ -281,6 +282,7 @@ def run_gui():
                   #MergeStatisticsPlugin(),
                   RatioPlugin(),
                   FlowCleanPlugin(),
+                  RegistrationPlugin(),
                   BinningPlugin(),
                   GaussianMixture1DPlugin(),
                   GaussianMixture2DPlugin(),

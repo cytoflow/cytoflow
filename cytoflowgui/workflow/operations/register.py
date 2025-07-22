@@ -18,27 +18,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflowgui.workflow.operations.tsne
-------------------------------------
+cytoflowgui.workflow.operations.register
+----------------------------------------
 
 """
 
-import logging
+from traits.api import (HasTraits, provides, Str, observe, Instance,
+                        List, Dict, Float, Int, Callable, Property,
+                        Union, Enum)
 
-from traits.api import (HasTraits, provides, Str, Property, observe, 
-                        List, Dict, Any, Enum)
-
-from cytoflow.operations.tsne import tSNEOp
+from cytoflow.operations.register import RegistrationOp, RegistrationDiagnosticView
 import cytoflow.utility as util
-from ...utility import CallbackHandler
 
-from ..serialization import camel_registry, cytoflow_class_repr, traits_repr, dedent
+from .. import Changed
+from ..views import IWorkflowView, WorkflowView
 from ..subset import ISubset
+from ..serialization import camel_registry, traits_str, traits_repr, cytoflow_class_repr, dedent
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-tSNEOp.__repr__ = cytoflow_class_repr
-
+RegistrationOp.__repr__ = cytoflow_class_repr
 
 class Channel(HasTraits):
     channel = Str
@@ -46,10 +45,10 @@ class Channel(HasTraits):
     
     def __repr__(self):
         return traits_repr(self)
-    
-    
+
+
 @provides(IWorkflowOperation)    
-class tSNEWorkflowOp(WorkflowOperation, tSNEOp):
+class RegistrationWorkflowOp(WorkflowOperation, RegistrationOp):
     # use a list of _Channel instead of separate lists/dicts of channels/scales
     channels_list = List(Channel, estimate = True)
     channels = Property(List(Str), 
@@ -57,17 +56,18 @@ class tSNEWorkflowOp(WorkflowOperation, tSNEOp):
     scale = Property(Dict(Str, util.ScaleEnum),
                      observe = '[channels_list.items,channels_list.items.channel,channels_list.items.scale]')
     
-    # add 'estimate', 'apply' metadata
-    name = Str(apply = True)
-    by = List(Str, estimate = True)
-    perplexity = util.PositiveFloat(10, estimate = True)
-    sample = util.UnitFloat(0.01, estimate = True)
-    metric = Enum("euclidean", "cosine", "manhattan", "hamming", "dot", "l1", "l2", "taxicab", estimate = True)
-    status = Str(status = True)
+    # add the 'estimate' metadata
+    by = List(Str)
     
-    # add the 'estimate_result' metadata
-    _tsne = Dict(Any, Any, estimate_result = True, transient = True)
+    # Smoothing
     
+    kernel = Enum('gaussian','tophat','epanechnikov','exponential','linear','cosine', estimate = True)
+    bw = Union(Enum('scott', 'silverman'), Float, estimate = True)
+    gridsize = Int(200, estimate = True)
+    
+    # add 'estimate_result' metadata
+    _warping = Dict(Str, Callable, transient = True, estimate_result = True)
+
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
     subset = Property(Str, observe = "subset_list.items.str")
@@ -93,47 +93,42 @@ class tSNEWorkflowOp(WorkflowOperation, tSNEOp):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
+    def default_view(self, **kwargs):
+        return RegistrationDiagnosticWorkflowView(op = self, **kwargs)
+    
     def estimate(self, experiment):
         for i, channel_i in enumerate(self.channels_list):
             for j, channel_j in enumerate(self.channels_list):
                 if channel_i.channel == channel_j.channel and i != j:
                     raise util.CytoflowOpError("Channel {0} is included more than once"
                                                .format(channel_i.channel))
-        
-        gui_handler = CallbackHandler(lambda rec, op = self: op.trait_set(status = rec.getMessage()))
-        gui_handler.setLevel(logging.INFO)
-        logging.getLogger().addHandler(gui_handler)
-        try:
-            super().estimate(experiment, subset = self.subset)
-        finally:
-            logging.getLogger().removeHandler(gui_handler)
-        
-    def apply(self, experiment):
-        if not self._tsne:
-            raise util.CytoflowOpError(None, 'Click "Estimate"!')
-        
-        gui_handler = CallbackHandler(lambda rec, op = self: op.trait_set(status = rec.getMessage()))
-        gui_handler.setLevel(logging.INFO)
-        logging.getLogger().addHandler(gui_handler)
-        try:
-            ex = super().apply(experiment)
-        finally:
-            logging.getLogger().removeHandler(gui_handler)
-        
-        return ex
+                    
+        super().estimate(experiment, subset = self.subset)
     
+    def should_clear_estimate(self, changed, payload):
+        if changed == Changed.ESTIMATE:
+            return True
+        
+        return False
         
     def clear_estimate(self):
-        self._tsne = {}
         self._scale = {}
-    
+        self._groups = []
+        self._support = {}
+        self._kde = {}
+        self._peaks = {}
+        self._clusters = {}
+        self._means = {}
+        self._warping = {}
+        
     def get_notebook_code(self, idx):
-        op = tSNEOp()
+        op = RegistrationOp()
         op.copy_traits(self, op.copyable_trait_names())
+        
         
         op.channels = [c.channel for c in self.channels_list]
         op.scale = {c.channel : c.scale for c in self.channels_list}
-
+        
         return dedent("""
         op_{idx} = {repr}
         
@@ -145,27 +140,49 @@ class tSNEWorkflowOp(WorkflowOperation, tSNEOp):
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))
         
+        
+@provides(IWorkflowView)
+class RegistrationDiagnosticWorkflowView(WorkflowView, RegistrationDiagnosticView):
+    plot_params = Instance(HasTraits, ())
+    
+    def should_plot(self, changed, payload):
+        if changed == Changed.ESTIMATE_RESULT:
+            return True
+        
+        return False
+    
+    def get_notebook_code(self, idx):
+        view = RegistrationDiagnosticView()
+        view.copy_traits(self, view.copyable_trait_names())
+        
+        return dedent("""
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        """
+        .format(traits = traits_str(view),
+                idx = idx,
+                prev_idx = idx - 1))
+    
 
 ### Serialization
-@camel_registry.dumper(tSNEWorkflowOp, 'tsne', version = 1)
+@camel_registry.dumper(RegistrationWorkflowOp, 'registration', version = 1)
 def _dump(op):
-    return dict(name = op.name,
-                channels_list = op.channels_list,
-                perplexity = op.perplexity,
-                sample = op.sample,
-                metric = op.metric,
+    return dict(channels_list = op.channels_list,
                 by = op.by,
-                subset_list = op.subset_list)
-    
-@camel_registry.loader('tsne', version = 1)
-def _load(data, version):
-    return tSNEWorkflowOp(**data)
+                kernel = op.kernel,
+                bw = op.bw,
+                gridsize = op.gridsize)
 
-@camel_registry.dumper(Channel, 'tsne-channel', version = 1)
+    
+@camel_registry.loader('registration', version = 1)
+def _load(data, version):
+    return RegistrationWorkflowOp(**data)
+    
+    
+@camel_registry.dumper(Channel, 'registration-channel', version = 1)
 def _dump_channel(channel):
     return dict(channel = channel.channel,
                 scale = channel.scale)
     
-@camel_registry.loader('tsne-channel', version = 1)
+@camel_registry.loader('registration-channel', version = 1)
 def _load_channel(data, version):
     return Channel(**data)

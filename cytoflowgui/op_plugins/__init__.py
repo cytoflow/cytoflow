@@ -57,6 +57,7 @@ from .pca import PCAPlugin
 from .flowclean import FlowCleanPlugin
 from .tsne import tSNEPlugin
 from .mst import MSTPlugin
+from .register import RegistrationPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin

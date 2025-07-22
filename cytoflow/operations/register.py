@@ -75,9 +75,7 @@ class RegistrationOp(HasStrictTraits):
         
     subset : Str
         How to filter the data before estimating the transformation?
-        
-    **Smoothing parameters**
-        
+                
     kernel : Str (default = ``gaussian``)
         The kernel to use for the kernel density estimate. Choices are:
         
@@ -100,10 +98,6 @@ class RegistrationOp(HasStrictTraits):
         
     gridsize : int (default = 200)
         How many locations should we evaluate the kernel?
-        
-    ** Peak finding parameters **
-    
-    ** Peak clustering parameters **
         
     
     Notes
@@ -136,11 +130,13 @@ class RegistrationOp(HasStrictTraits):
     
     Examples
     --------
+    
+    TODO
         
     """
     
     # traits
-    id = Constant('cytoflow.operations.registration')
+    id = Constant('cytoflow.operations.register')
     friendly_id = Constant("Density Registration")
     
     name = Constant("Registration")
@@ -153,9 +149,6 @@ class RegistrationOp(HasStrictTraits):
     kernel = Enum('gaussian','tophat','epanechnikov','exponential','linear','cosine')
     bw = Union(Enum('scott', 'silverman'), Float)
     gridsize = Int(200)
-    
-    # Peak clustering
-    max_clusters = Int(None)
 
     # these are really only saved to support plotting
     _scale = Dict(Str, Instance(util.IScale))
@@ -244,6 +237,7 @@ class RegistrationOp(HasStrictTraits):
             else:
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
    
+        warpings = {}
         for channel in self.channels:
             
             # scikit-fda requires that all the functions (in this case, the
@@ -375,9 +369,10 @@ class RegistrationOp(HasStrictTraits):
             
             # i don't know why i need to do this :(
             # clearly i don't understand FDA
-            self._warping[channel] = invert_warping(warping)
+            warpings[channel] = invert_warping(warping)
             
         # # set atomically to support the GUI
+        self._warping = warpings
         # self._warp_functions = warp_functions
                 
     
