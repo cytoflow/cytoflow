@@ -436,5 +436,5 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    multiprocessing.set_start_method('spawn')
+    multiprocessing.set_start_method('spawn', force = True)
     run_gui()
