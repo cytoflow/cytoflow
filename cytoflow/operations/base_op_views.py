@@ -41,7 +41,7 @@ plots some annotations on top of it.
 '''
 
 from warnings import warn
-import collections
+import collections.abc
 from natsort import natsorted
 
 from traits.api import (provides, Instance, Property, List, DelegatesTo)

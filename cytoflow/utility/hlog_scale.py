@@ -39,7 +39,7 @@ tics are along a plot axis
 """
 
 from traits.api import (HasTraits, Float, Property, Instance, Str,
-                        Undefined, provides, Constant,
+                        Undefined, provides, Constant,  # @UnresolvedImport
                         List, Array)
                        
 import numpy as np
