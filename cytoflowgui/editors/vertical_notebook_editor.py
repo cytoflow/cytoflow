@@ -30,7 +30,7 @@ in *notebook* mode, but vertically instead of horizontally
 from traits.api import HasTraits
 
 from traitsui.basic_editor_factory import BasicEditorFactory
-from traits.api import Bool, Any, List, Instance, Undefined, on_trait_change, Str, Callable
+from traits.api import Bool, Any, List, Instance, Undefined, on_trait_change, Str, Callable  # @UnresolvedImport
 from traits.trait_base import user_name_for
 from traitsui.ui_traits import AView
 from traitsui.qt.editor import Editor
