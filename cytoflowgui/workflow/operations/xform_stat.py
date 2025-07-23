@@ -27,7 +27,7 @@ import scipy.stats
 import pandas
 from warnings import warn
 
-from traits.api import (Str, Callable, Property, List, provides, observe, Undefined)
+from traits.api import (Str, Callable, Property, List, provides, observe, Undefined)  # @UnresolvedImport
 
 import cytoflow.utility as util
 from cytoflow import TransformStatisticOp
