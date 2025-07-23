@@ -37,7 +37,7 @@ argument to `IOperation.estimate` or `IView.plot`.
 """
 
 from traits.api import (provides, Interface, Str, List, Property, Bool,
-                        HasStrictTraits, CFloat, Undefined, observe)
+                        HasStrictTraits, CFloat, Undefined, observe)  # @UnresolvedImport
 
 from cytoflow import utility as util
 

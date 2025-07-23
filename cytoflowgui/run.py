@@ -419,7 +419,7 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
 
     # install a global (gui) error handler for traits notifications
         
-    from traits.api import push_exception_handler        
+    from traits.api import push_exception_handler        # @UnresolvedImport
     push_exception_handler(handler = log_notification_handler,
                            reraise_exceptions = False,
                            main = True)

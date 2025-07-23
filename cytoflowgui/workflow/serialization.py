@@ -102,7 +102,7 @@ def _dump_bool(b):
 
 from traits.trait_dict_object import TraitDictObject
 from traits.trait_list_object import TraitListObject
-from traits.api import Undefined
+from traits.api import Undefined  # @UnresolvedImport
 
 @standard_types_registry.dumper(TraitListObject, 'seq', version = None)
 def _dump_list(tlo):
