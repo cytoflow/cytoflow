@@ -31,7 +31,7 @@ from cytoflow.operations.register import RegistrationOp, RegistrationDiagnosticV
 import cytoflow.utility as util
 
 from .. import Changed
-from ..views import IWorkflowView, WorkflowView
+from ..views import IWorkflowView, WorkflowByView
 from ..subset import ISubset
 from ..serialization import camel_registry, traits_str, traits_repr, cytoflow_class_repr, dedent
 
@@ -57,10 +57,7 @@ class RegistrationWorkflowOp(WorkflowOperation, RegistrationOp):
                      observe = '[channels_list.items,channels_list.items.channel,channels_list.items.scale]')
     
     # add the 'estimate' metadata
-    by = List(Str)
-    
-    # Smoothing
-    
+    by = List(Str, estimate = True)    
     kernel = Enum('gaussian','tophat','epanechnikov','exponential','linear','cosine', estimate = True)
     bw = Union(Enum('scott', 'silverman'), Float, estimate = True)
     gridsize = Int(200, estimate = True)
@@ -142,23 +139,18 @@ class RegistrationWorkflowOp(WorkflowOperation, RegistrationOp):
         
         
 @provides(IWorkflowView)
-class RegistrationDiagnosticWorkflowView(WorkflowView, RegistrationDiagnosticView):
+class RegistrationDiagnosticWorkflowView(WorkflowByView, RegistrationDiagnosticView):
     plot_params = Instance(HasTraits, ())
-    
-    def should_plot(self, changed, payload):
-        if changed == Changed.ESTIMATE_RESULT:
-            return True
-        
-        return False
     
     def get_notebook_code(self, idx):
         view = RegistrationDiagnosticView()
         view.copy_traits(self, view.copyable_trait_names())
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        op_{idx}.default_view({traits}).plot(ex_{idx}{plot})
         """
         .format(traits = traits_str(view),
+                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 idx = idx,
                 prev_idx = idx - 1))
     
@@ -170,13 +162,21 @@ def _dump(op):
                 by = op.by,
                 kernel = op.kernel,
                 bw = op.bw,
-                gridsize = op.gridsize)
-
+                gridsize = op.gridsize,
+                subset_list = op.subset_list)
     
 @camel_registry.loader('registration', version = 1)
 def _load(data, version):
     return RegistrationWorkflowOp(**data)
-    
+
+@camel_registry.dumper(RegistrationDiagnosticWorkflowView, 'registration-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op,
+                current_plot = view.current_plot)
+
+@camel_registry.loader('registration-view', version = 1)
+def _load_view(data, version):
+    return RegistrationDiagnosticWorkflowView(**data)
     
 @camel_registry.dumper(Channel, 'registration-channel', version = 1)
 def _dump_channel(channel):

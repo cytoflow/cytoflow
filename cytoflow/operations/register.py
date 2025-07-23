@@ -131,7 +131,68 @@ class RegistrationOp(HasStrictTraits):
     Examples
     --------
     
-    TODO
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "module_examples/itn_02.fcs",
+        ...                              conditions = {'Sample' : 2}),
+        ...                    flow.Tube(file = "module_examples/itn_03.fcs",
+        ...                              conditions = {'Sample' : 3})]
+        >>> import_op.conditions = {'Sample' : 'category'}
+        >>> ex = import_op.apply()
+        
+    Plot the samples "before":
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.Kde1DView(channel = 'CD3',
+        ...                huefacet = 'Sample',
+        ...                scale = 'log').plot(ex)
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> op = flow.RegistrationOp(channels = ['CD3', 'CD4'],
+        ...                          scale = {'CD3' : 'log',
+        ...                                   'CD4' : 'log'},
+        ...                          by = ['Sample'])
+        
+    Estimate the clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> op.estimate(ex)
+        
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> op.default_view().plot(ex, plot_name = 'CD3')
+
+    Apply the warp
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = op.apply(ex)
+
+    Plot the same KDE after the warp.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.Kde1DView(channel = 'CD3',
+        ...                huefacet = 'Sample',
+        ...                scale = 'log').plot(ex2)
         
     """
     
@@ -198,6 +259,10 @@ class RegistrationOp(HasStrictTraits):
                                            "'channels'"
                                            .format(c))
        
+        if not self.by:
+            raise util.CytoflowOpError('by',
+                                       "'by' must not be empty!")
+            
         for b in self.by:
             if b not in experiment.data:
                 raise util.CytoflowOpError('by',
@@ -209,21 +274,21 @@ class RegistrationOp(HasStrictTraits):
             try:
                 experiment = experiment.query(subset)
             except:
-                raise util.CytoflowViewError('subset',
+                raise util.CytoflowOpError('subset',
                                              "Subset string '{0}' isn't valid"
                                              .format(subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError('subset',
+                raise util.CytoflowOpError('subset',
                                              "Subset string '{0}' returned no events"
                                              .format(subset))
                 
-        if self.by:
-            groupby = experiment.data.groupby(self.by, observed = False)
-        else:
-            # use a lambda expression to return a group that contains
-            # all the events
-            groupby = experiment.data.groupby(lambda _: True, observed = False)
+        groupby = experiment.data.groupby(self.by, observed = True)
+        
+        if len(groupby.groups) < 2:
+            raise util.CytoflowOpError('by',
+                                         "Must be more than one group after grouping by 'by'")
+
                     
         self._warping.clear()
         self._scale.clear()
@@ -489,13 +554,13 @@ class RegistrationDiagnosticView(HasStrictTraits):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
             
-        if self.op._support:
-            return util.IterByWrapper(iter(self.op._support), [])
+        if self.op._support and self.op.by:
+            return util.IterByWrapper(iter(self.op._support), ["Channel"])
         else:
             return util.IterByWrapper(iter([]), [])
         
            
-    def plot(self, experiment, plot_name = None):
+    def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plots the diagnostic view.
         
@@ -503,6 +568,9 @@ class RegistrationDiagnosticView(HasStrictTraits):
         ----------
         experiment : `Experiment`
             The experiment used to create the diagnostic plot.
+            
+        plot_name : Str
+            The channel name to plot.
         
         """
         
@@ -530,7 +598,7 @@ class RegistrationDiagnosticView(HasStrictTraits):
         kde_support = self.op._support[channel]
         
         # let's not use the FacetGrid stuff here, eh?
-        fig, axes = plt.subplots(len(groups), 1, sharex = True, constrained_layout = True)
+        fig, axes = plt.subplots(len(groups), 1, sharex = True)
         fig.set_constrained_layout_pads(hspace = 0.0, h_pad = 0.0)
         for i, group in enumerate(groups):
             ax = axes[i]
@@ -592,6 +660,10 @@ class RegistrationDiagnosticView(HasStrictTraits):
         fig.supylabel(', '.join(self.op.by))
         # plot a figure legend
         fig.legend(loc = 'outside right upper')   
+        
+        title = kwargs.pop('title', None)
+        if title:
+            plt.suptitle(title)
         
         # clean up layout issues
         # fig.tight_layout()         

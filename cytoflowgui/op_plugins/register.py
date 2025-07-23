@@ -72,14 +72,29 @@ independently.
 .. plot::
    :include-source: False
 
-    TODO
-
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "module_examples/itn_02.fcs",
+                                 conditions = {'Sample' : 2}),
+                       flow.Tube(file = "module_examples/itn_03.fcs",
+                                 conditions = {'Sample' : 3})]
+    import_op.conditions = {'Sample' : 'category'}
+    ex = import_op.apply()
+        
+    op = flow.RegistrationOp(channels = ['CD3', 'CD4'],
+                             scale = {'CD3' : 'log',
+                                      'CD4' : 'log'},
+                             by = ['Sample'])
+        
+    op.estimate(ex)
+        
+    op.default_view().plot(ex, plot_name = 'CD3')
 
 '''
 from natsort import natsorted
 
 from traits.api import provides, Event, Property, List, Str
-from traitsui.api import (View, Item, EnumEditor, HGroup, VGroup, TextEditor, 
+from traitsui.api import (View, Item, EnumEditor, HGroup, VGroup, 
                           CheckListEditor, ButtonEditor, Controller)
 from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
