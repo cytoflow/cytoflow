@@ -27,16 +27,21 @@ import unittest
 import cytoflow as flow
 import pandas as pd
 
+import cytoflow.utility as util
+
 class TestRegistration(unittest.TestCase):
 
     def setUp(self):
         import os
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        self.ex = flow.ImportOp(conditions = {'Sample' : 'category'},
-                                tubes = [flow.Tube(file = self.cwd + '/data/module_examples/itn_02.fcs', conditions = {'Sample' : 2}),
-                                         flow.Tube(file = self.cwd + '/data/module_examples/itn_03.fcs', conditions = {'Sample' : 3})],
-                                channels = {'CD3' : 'CD3', 
-                                            'CD4' : 'CD4'}).apply()        
+        import_op = flow.ImportOp(conditions = {'Sample' : 'category'},
+                                  tubes = [flow.Tube(file = self.cwd + '/data/module_examples/itn_02.fcs', conditions = {'Sample' : 2}),
+                                           flow.Tube(file = self.cwd + '/data/module_examples/itn_03.fcs', conditions = {'Sample' : 3})],
+                                  channels = {'CD3' : 'CD3', 
+                                              'CD4' : 'CD4'})
+        
+        with self.assertWarns(util.CytoflowOpWarning):
+            self.ex = import_op.apply()        
         
         self.op = flow.RegistrationOp(channels = ["CD3", "CD4"],
                                       scale = {"CD3" : "log",
@@ -81,7 +86,8 @@ class TestRegistration(unittest.TestCase):
     def testLogicle(self):
         self.op.scale = {"CD3" : "logicle",
                          "CD4" : "logicle"}
-        self.op.estimate(self.ex)
+        with self.assertWarns(util.CytoflowWarning):
+            self.op.estimate(self.ex)
         self.op.default_view().plot(self.ex, plot_name = "CD3")
         self.op.default_view().plot(self.ex, plot_name = "CD4")
 
