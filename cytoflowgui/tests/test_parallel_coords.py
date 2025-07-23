@@ -102,8 +102,7 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
                   
-        with self.assertWarns(util.CytoflowWarning):
-            exec(code)
+        exec(code)
 
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()

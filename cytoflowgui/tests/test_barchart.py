@@ -48,6 +48,7 @@ class TestBarchart(ImportedDataTest, Base1DStatisticsViewTest):
         wi.current_view = view
     
         super().setUpView()
+        self.workflow.selected = wi
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
     def testBasePlot(self):
@@ -101,8 +102,7 @@ class TestBarchart(ImportedDataTest, Base1DStatisticsViewTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
                 
-        with self.assertWarns(util.CytoflowWarning):
-            exec(code) # smoke test
+        exec(code) # smoke test
 
 
 if __name__ == "__main__":

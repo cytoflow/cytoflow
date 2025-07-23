@@ -161,8 +161,9 @@ class TestBeadCalibration(TasbeTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
                 
-        exec(code)
-        nb_data = locals()['ex_2'].data
+        code_locals = {}
+        exec(code, locals = code_locals)
+        nb_data = code_locals['ex_2'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)

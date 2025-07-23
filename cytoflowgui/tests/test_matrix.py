@@ -24,6 +24,7 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd  # @UnusedImport, to shut up exec() below
 
 # needed for testing lambdas
 from cytoflow import geom_mean, geom_sd  # @UnusedImport

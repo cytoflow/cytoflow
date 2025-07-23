@@ -45,7 +45,7 @@ import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt']))
 import matplotlib
 matplotlib.use("Agg")
 
-from traits.api import HasTraits, TraitListObject, TraitDictObject
+from traits.api import HasTraits, TraitListObject, TraitDictObject  # @UnresolvedImport
 
 import unittest, multiprocessing, os, logging
 from logging.handlers import QueueHandler, QueueListener
@@ -69,7 +69,8 @@ def remote_main(parent_workflow_conn, log_q, running_event):
     # process -- we'll filter/handle then in the local
     # process
     logging.getLogger().setLevel(logging.DEBUG)   
-
+    
+    # tell the local process we've started
     running_event.set()
     
     # some of the sklearn things get sad when there are lots of threads. 
@@ -102,6 +103,11 @@ class WorkflowTest(unittest.TestCase):
             if logger.isEnabledFor(record.levelno):
                 logger.handle(record)
                 
+            if record.levelno >= logging.ERROR:
+                self.workflow.eval_event.set()
+                self.workflow.exec_event.set()
+                self.fail()
+
         handler = CallbackHandler(handle)
         self.queue_listener = QueueListener(log_q, handler)
         self.queue_listener.start()

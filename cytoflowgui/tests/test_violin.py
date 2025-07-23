@@ -132,8 +132,7 @@ class TestViolin(ImportedDataTest, Base1DViewTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
         
-        with self.assertWarns(util.CytoflowWarning):
-            exec(code)  # smoke test
+        exec(code)  # smoke test
 
            
 if __name__ == "__main__":

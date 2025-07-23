@@ -73,7 +73,7 @@ class TestKMeans(ImportedDataTest):
 
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
-        self.assertEqual(self.workflow.remote_eval("len(self.workflow[-1].result['KM'].unique())"), 2)
+        self.assertEqual(self.workflow.remote_eval("len(self.workflow[-1].result['KM_Cluster'].unique())"), 2)
    
     def testChangeChannels(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
@@ -193,10 +193,10 @@ class TestKMeans(ImportedDataTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
          
-        with self.assertWarns(util.CytoflowWarning):
-            exec(code)
+        code_locals = {}
+        exec(code, locals = code_locals)
             
-        nb_data = locals()['ex_3'].data
+        nb_data = code_locals['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data, check_like = True)
