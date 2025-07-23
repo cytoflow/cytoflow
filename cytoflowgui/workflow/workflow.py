@@ -235,7 +235,7 @@ class LocalWorkflow(HasStrictTraits):
     """
     
     workflow = List(WorkflowItem, comparison_mode = ComparisonMode.identity)
-    """The list of `WorkflowItem`\s"""
+    """The list of `WorkflowItem`s"""
     
     selected = Instance(WorkflowItem)
     """The currently-selected `WorkflowItem`"""
@@ -624,8 +624,8 @@ class RemoteWorkflow(HasStrictTraits):
          
         # start threads
         self.recv_thread = threading.Thread(target = self.recv_main, 
-                             name = "remote recv thread",
-                             args = [parent_workflow_conn])
+                                            name = "remote recv thread",
+                                            args = [parent_workflow_conn])
         self.recv_thread.start()
         
         self.send_thread = threading.Thread(target = self.send_main,

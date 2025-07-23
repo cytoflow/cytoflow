@@ -22,7 +22,7 @@ cytoflowgui.subset_controllers
 ------------------------------
 
 Instances of `traitsui.handler.Controller` for the various `ISubset` classes.
-These contain the `traitsui.view.View`\s for them.  Also a utility function
+These contain the `traitsui.view.View`s for them.  Also a utility function
 to return the appropriate handler for an arbitrary `ISubset` model.
 """
 
