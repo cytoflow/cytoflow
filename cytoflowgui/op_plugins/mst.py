@@ -89,8 +89,8 @@ class MSTPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operation.mst'
     view_id = 'cytoflow.view.mst_selection'
 
-    name = "MST"
-    menu_group = "Gates"
+    name = "Minimum Spanning Tree"
+    menu_group = "Computational"
     
     def get_operation(self):
         return MSTWorkflowOp()
