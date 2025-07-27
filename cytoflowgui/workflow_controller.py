@@ -22,7 +22,7 @@
 cytoflowgui.workflow_controllers
 --------------------------------
 
-Controllers for `LocalWorkflow` and the `WorkflowItem`\s it contains -- these
+Controllers for `LocalWorkflow` and the `WorkflowItem`s it contains -- these
 dynamically create the `traitsui.view.View` instances for the workflow's
 operations and views.
 
@@ -80,7 +80,7 @@ logger = logging.getLogger(__name__)
 class WorkflowItemHandler(Controller):
     """
     A controller for a `WorkflowItem`.  It dynamically creates views for the
-    `IWorkflowOperation` and `IWorkflowView`\s that are contained, as well
+    `IWorkflowOperation` and `IWorkflowView`s that are contained, as well
     as exposing channels, conditions, statistics and numeric statistics as
     properties (so they can be accessed by the views.
     """

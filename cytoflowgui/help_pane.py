@@ -56,10 +56,10 @@ class HelpDockPane(TraitsDockPane):
     """The Task that serves as the controller"""
 
     view_plugins = List(IViewPlugin)
-    """The `IViewPlugin`\s to search for help pages"""
+    """The `IViewPlugin`s to search for help pages"""
     
     op_plugins = List(IOperationPlugin)
-    """The `IOperationPlugin`\s to search for help pages"""
+    """The `IOperationPlugin`s to search for help pages"""
     
     help_id = Str
     """The GUID of the operation or view whose help we're currently showing"""
