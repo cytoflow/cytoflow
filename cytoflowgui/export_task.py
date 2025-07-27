@@ -215,9 +215,24 @@ class ExportTask(Task):
         """
                   
         f = ""
-        filetypes_groups = self.application.canvas.get_supported_filetypes_grouped()
+        filetypes_groups = list(self.application.canvas.get_supported_filetypes_grouped().items())
+        
+        def sort_fn(key):
+            if key[1][0] == 'png':
+                return 0
+            elif key[1][0] == 'jpeg':
+                return 1
+            elif key[1][0] == 'pdf':
+                return 2
+            elif key[1][0] == 'svg':
+                return 3
+            else:
+                return 4
+            
+        filetypes_groups.sort(key = sort_fn)
+         
         filename_exts = []
-        for name, ext in filetypes_groups.items():
+        for name, ext in filetypes_groups:
             if f:
                 f += ";"
             f += FileDialog.create_wildcard(name, " ".join(["*." + e for e in ext])) #@UndefinedVariable  
