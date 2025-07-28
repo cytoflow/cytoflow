@@ -378,9 +378,9 @@ class TasbeWorkflowView(WorkflowView):
 
     def enum_plots(self, experiment):
         return util.IterByWrapper(iter(["Autofluorescence",
-                                      "Bleedthrough",
-                                      "Bead Calibration",
-                                      "Color Translation"]),
+                                        "Bleedthrough",
+                                        "Bead Calibration",
+                                        "Color Translation"]),
                                 [])
         
     def should_plot(self, changed, payload):

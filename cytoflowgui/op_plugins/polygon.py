@@ -82,18 +82,46 @@ polygon, click the first vertex a second time.
 '''
 
 from traits.api import provides, List
-from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
-from ..view_plugins.scatterplot import ScatterplotParamsHandler
+from ..view_plugins.view_plugin_base import Data2DPlotParamsView
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 from ..workflow.operations import PolygonWorkflowOp, PolygonSelectionView
 from ..subset_controllers import subset_handler_factory
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
 from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
+
+class PolygonViewParamsHandler(Controller):
+    view_params_view = \
+        View(Item('density'),
+             # density-specific
+             Item('gridsize',
+                  editor = TextEditor(auto_set = False),
+                  visible_when = 'density',
+                  label = "Grid size"),
+             Item('smoothed',
+                  visible_when = 'density',
+                  label = "Smooth"),
+             Item('smoothed_sigma',
+                  editor = TextEditor(auto_set = False),
+                  label = "Smooth\nsigma",
+                  visible_when = "density and smoothed"),
+             
+             # scatterplot-specific
+             Item('alpha',
+                  editor = TextEditor(auto_set = False),
+                  visible_when = 'not density'),
+             Item('s',
+                  editor = TextEditor(auto_set = False),
+                  visible_when = 'not density',
+                  label = "Size"),
+             Item('marker',
+                  visible_when = 'not density'),
+             Data2DPlotParamsView.content)
 
 class PolygonHandler(OpHandler):
     operation_traits_view = \
@@ -124,7 +152,11 @@ class PolygonViewHandler(ViewHandler):
                     Item('huefacet',
                          editor=ExtendableEnumEditor(name='context_handler.previous_conditions_names',
                                                      extra_items = {"None" : ""}),
+                         visible_when = 'not plot_params.density',
                          label="Color\nFacet"),
+                    Item('huescale',
+                         visible_when = 'plot_params.density',
+                         label = "Color\nScale"),
                     label = "Polygon Setup View",
                     show_border = False),
              VGroup(Item('subset_list',
@@ -150,7 +182,7 @@ class PolygonViewHandler(ViewHandler):
     view_params_view = \
         View(Item('plot_params',
                   editor = InstanceHandlerEditor(view = 'view_params_view',
-                                                 handler_factory = ScatterplotParamsHandler),
+                                                 handler_factory = PolygonViewParamsHandler),
                   style = 'custom',
                   show_label = False))
         
@@ -162,7 +194,7 @@ class PolygonPlugin(Plugin, PluginHelpMixin):
     
     id = 'cytoflowgui.op_plugins.polygon'
     operation_id = 'cytoflow.operations.polygon'
-    view_id = 'cytoflow.views.polygon'
+    view_id = 'cytoflowgui.workflow.operations.polygonview'
 
     name = "Polygon Gate"
     menu_group = "Gates"

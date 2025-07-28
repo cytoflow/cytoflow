@@ -359,7 +359,6 @@ class _PolygonSelection(Op2DView):
      
     def _onselect(self, vertices):
         self.op.vertices = vertices
-        self.interactive = False
   
 
 @provides(ISelectionView)

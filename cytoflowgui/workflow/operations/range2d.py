@@ -24,7 +24,7 @@ cytoflowgui.workflow.operations.range2d
 """
 
 from traits.api import (provides, Instance, Str, Property, Tuple, Constant, 
-                        Bool, Enum, HasStrictTraits, observe)
+                        Bool, Enum, observe)
 
 from cytoflow.operations.range2d import Range2DOp, Op2DView, ScatterplotRangeSelection2DView, DensityRangeSelection2DView, _RangeSelection2D
 import cytoflow.utility as util
@@ -53,6 +53,17 @@ class Range2DPlotParams(Data2DPlotParams):
     
 class _RangeSelection2DWorkflowView(_RangeSelection2D):
     parent = Instance(IWorkflowView)
+    
+    # data flow: user drags cursor. remote canvas calls _onselect, sets 
+    # _range. _range is copied back to local view (because it's 
+    # "status = True"). _update_range is called, and because 
+    # self.interactive is false, then the operation is updated.  the
+    # operation's range is sent back to the remote operation (because 
+    # "apply = True"), where the remote operation is updated.
+    
+    # low ahd high are properties (both in the view and in the operation) 
+    # so that the update can happen atomically. otherwise, they happen 
+    # one after the other, which is noticably slow!
             
     def _onselect(self, pos1, pos2): 
         """Update selection traits"""
@@ -60,30 +71,6 @@ class _RangeSelection2DWorkflowView(_RangeSelection2D):
                        max(pos1.xdata, pos2.xdata),
                        min(pos1.ydata, pos2.ydata),
                        max(pos1.ydata, pos2.ydata))
-        
-    _range = Tuple(util.FloatOrNone(None), util.FloatOrNone(None),
-                   util.FloatOrNone(None), util.FloatOrNone(None), status = True)
-    
-    xlow = Property(util.FloatOrNone(None), observe = '_range')
-    xhigh = Property(util.FloatOrNone(None), observe = '_range')
-    ylow = Property(util.FloatOrNone(None), observe = '_range')
-    yhigh = Property(util.FloatOrNone(None), observe = '_range')
-    
-    def _get_xlow(self):
-        return self._range[0]
-
-    def _get_xhigh(self):
-        return self._range[1]
-    
-    def _get_ylow(self):
-        return self._range[2]
-
-    def _get_yhigh(self):
-        return self._range[3]
-    #
-    # @observe('interactive', post_init = True)
-    # def _interactive(self, _):
-    #     self.parent.interactive = self.interactive
     
 @provides(IWorkflowView)
 class ScatterPlotRangeSelection2DWorkflowView(_RangeSelection2DWorkflowView, ScatterplotRangeSelection2DView):
@@ -110,7 +97,6 @@ class Range2DSelectionView(WorkflowView, Op2DView):
     
     interactive = Bool(False, transient = True)
 
-    
     def clear_estimate(self):
         # no-op
         return
@@ -141,9 +127,17 @@ class Range2DSelectionView(WorkflowView, Op2DView):
         self._view.plot(experiment, **kwargs)
         
     def get_notebook_code(self, idx):
-        view = ScatterplotRangeSelection2DView()
+        if self.plot_params.density:
+            view = DensityRangeSelection2DWorkflowView()
+            plot_params = self.plot_params.clone_traits(copy = "deep")
+            plot_params.reset_traits(traits = ['alpha', 's', 'marker'])
+        else:
+            view = ScatterPlotRangeSelection2DWorkflowView()
+            plot_params = self.plot_params.clone_traits(copy = "deep")
+            plot_params.reset_traits(traits = ['gridsize', 'smoothed', 'smoothed_sigma'])
+            
         view.copy_traits(self, view.copyable_trait_names())
-        plot_params_str = traits_str(self.plot_params)
+        plot_params_str = traits_str(plot_params)
         
         return dedent("""
         op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot_params})
@@ -154,13 +148,23 @@ class Range2DSelectionView(WorkflowView, Op2DView):
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
     
     @observe('interactive', post_init = True)
-    def _interactive(self, e):
+    def _interactive(self, _):
         if self._view:
-            self._view.interactive = e.new
+            self._view.interactive = self.interactive
             
     @observe('_range', post_init = True)
     def _update_range(self, _):
         self.op._range = self._range
+        
+    @observe('huefacet', post_init = True)
+    def _update_huefacet(self, _):
+        if self._view:
+            self._view.huefacet = self.huefacet
+        
+    @observe('huescale', post_init = True)
+    def _update_huescale(self, _):
+        if self._view:
+            self._view.huescale = self.huescale
 
     
 @provides(IWorkflowOperation)
