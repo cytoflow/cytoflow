@@ -31,8 +31,7 @@ from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import PolygonWorkflowOp, PolygonSelectionView
-from cytoflowgui.workflow.views import ScatterplotPlotParams
+from cytoflowgui.workflow.operations import PolygonWorkflowOp, PolygonSelectionView, PolygonPlotParams
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 
@@ -44,7 +43,7 @@ class TestPolygon(ImportedDataTest):
 
         self.addTypeEqualityFunc(PolygonWorkflowOp, 'assertHasTraitsEqual')
         self.addTypeEqualityFunc(PolygonSelectionView, 'assertHasTraitsEqual')
-        self.addTypeEqualityFunc(ScatterplotPlotParams, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(PolygonPlotParams, 'assertHasTraitsEqual')
 
         self.op = op = PolygonWorkflowOp()
         op.name = "Poly"
@@ -130,6 +129,12 @@ class TestPolygon(ImportedDataTest):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.huefacet = "Dox"
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
+        
+    def testDensity(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view.plot_params.density = True
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+        
  
     def testSubset(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
@@ -171,6 +176,64 @@ class TestPolygon(ImportedDataTest):
         self.assertEqual(self.wi, new_wi)
                                      
     def testNotebook(self):
+        code = "import cytoflow as flow\n"
+        for i, wi in enumerate(self.workflow.workflow):
+            code = code + wi.operation.get_notebook_code(i)
+            
+            for view in wi.views:
+                code = code + view.get_notebook_code(i)
+         
+        code_locals = {}
+        exec(code, locals = code_locals)
+             
+        nb_data = code_locals['ex_3'].data
+        remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
+        
+        pd.testing.assert_frame_equal(nb_data, remote_data)
+        
+    def testSerializeDensity(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view.plot_params.density = True
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+        
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.op, filename)
+            new_op = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+                      
+        self.assertEqual(self.op, new_op,)
+                      
+    def testSerializeWorkflowItemDensity(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view.plot_params.density = True
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+        
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+             
+            save_yaml(self.wi, filename)
+            new_wi = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+        
+        self.assertEqual(self.wi, new_wi)
+                                     
+    def testNotebookDensity(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view.plot_params.density = True
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+        
         code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)

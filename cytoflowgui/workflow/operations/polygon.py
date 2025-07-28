@@ -28,7 +28,7 @@ from traits.api import provides, Instance, Str, observe, List, Float, Bool, Enum
 from cytoflow.operations.polygon import PolygonOp, ScatterplotPolygonSelectionView, DensityPolygonSelectionView, Op2DView, _PolygonSelection
 import cytoflow.utility as util
 
-from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
+from ..views import IWorkflowView, WorkflowView
 from ..views.view_base import Data2DPlotParams
 from ..views.scatterplot import SCATTERPLOT_MARKERS
 from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
@@ -93,9 +93,6 @@ class PolygonSelectionView(WorkflowView, Op2DView):
     op = Instance(IWorkflowOperation, fixed = True)
     plot_params = Instance(PolygonPlotParams, ()) 
     
-    xscale = util.ScaleEnum
-    yscale = util.ScaleEnum
-    
     _view = Instance(IWorkflowView)
     _vertices = List((Float, Float), status = True)
     
@@ -143,20 +140,22 @@ class PolygonSelectionView(WorkflowView, Op2DView):
         if self.plot_params.density:
             view = DensityPolygonSelectionWorkflowView()
             plot_params = self.plot_params.clone_traits(copy = "deep")
-            plot_params.reset_traits(traits = ['alpha', 's', 'marker'])
+            plot_params.reset_traits(traits = ['density', 'alpha', 's', 'marker'])
         else:
             view = ScatterplotPolygonSelectionWorkflowView()
             plot_params = self.plot_params.clone_traits(copy = "deep")
-            plot_params.reset_traits(traits = ['gridsize', 'smoothed', 'smoothed_sigma'])
+            plot_params.reset_traits(traits = ['density', 'gridsize', 'smoothed', 'smoothed_sigma'])
             
         view.copy_traits(self, view.copyable_trait_names())
         plot_params_str = traits_str(plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot_params})
+        op_{idx}.default_view({traits}{comma}{density}).plot(ex_{prev_idx}{plot_params})
         """
         .format(idx = idx,
                 traits = traits_str(view), 
+                comma = ", " if traits_str(view) and self.plot_params.density else "",
+                density = "density = True" if self.plot_params.density else "",
                 prev_idx = idx - 1,
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
@@ -257,7 +256,9 @@ def _load_view(data, version):
 
 @camel_registry.dumper(PolygonPlotParams, 'polygon-params', version = 1)
 def _dump_view_params(params):
-    return dict(# BasePlotParams
+    return dict(density = params.density,
+                
+                # BasePlotParams
                 title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
