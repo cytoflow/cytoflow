@@ -31,7 +31,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Instance, Str, Enum, Any, Dict, 
-                        Tuple, List, DelegatesTo, ComparisonMode, Property,
+                        List, DelegatesTo, ComparisonMode, Property,
                         observe, cached_property)
 
 from cytoflow import Experiment

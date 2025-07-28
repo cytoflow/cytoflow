@@ -324,7 +324,7 @@ class _RangeSelection2D(Op2DView):
                                          'linewidth' : 2,
                                          'fill' : False})
         
-        super(_RangeSelection2D, self).plot(experiment, **kwargs)
+        super().plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_rect(None)
         self._interactive(None)

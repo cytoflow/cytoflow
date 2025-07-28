@@ -23,23 +23,44 @@ cytoflowgui.workflow.operations.range2d
 
 """
 
-from traits.api import provides, Instance, Str, Property, Tuple, observe
+from traits.api import (provides, Instance, Str, Property, Tuple, Constant, 
+                        Bool, Enum, HasStrictTraits, observe)
 
-from cytoflow.operations.range2d import Range2DOp, ScatterplotRangeSelection2DView
+from cytoflow.operations.range2d import Range2DOp, Op2DView, ScatterplotRangeSelection2DView, DensityRangeSelection2DView, _RangeSelection2D
 import cytoflow.utility as util
 
-from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
+from ..views import IWorkflowView, WorkflowView
+from ..views.scatterplot import SCATTERPLOT_MARKERS
+from ..views.view_base import Data2DPlotParams
 from ..serialization import camel_registry, traits_str, cytoflow_class_repr, dedent
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
 Range2DOp.__repr__ = cytoflow_class_repr
 
-@provides(IWorkflowView)
-class Range2DSelectionView(WorkflowView, ScatterplotRangeSelection2DView):
-    op = Instance(IWorkflowOperation, fixed = True)
-    plot_params = Instance(ScatterplotPlotParams, ())
+class Range2DPlotParams(Data2DPlotParams):
+    density = Bool(False)
     
+    # density-specific
+    gridsize = util.PositiveCInt(50, allow_zero = False)
+    smoothed = Bool(False)
+    smoothed_sigma = util.PositiveCFloat(1.0, allow_zero = False)
+
+    # scatterplot-specific
+    alpha = util.PositiveCFloat(0.25)
+    s = util.PositiveCFloat(2)
+    marker = Enum(SCATTERPLOT_MARKERS)
+    
+class _RangeSelection2DWorkflowView(_RangeSelection2D):
+    parent = Instance(IWorkflowView)
+            
+    def _onselect(self, pos1, pos2): 
+        """Update selection traits"""
+        self.parent._range = (min(pos1.xdata, pos2.xdata),
+                       max(pos1.xdata, pos2.xdata),
+                       min(pos1.ydata, pos2.ydata),
+                       max(pos1.ydata, pos2.ydata))
+        
     _range = Tuple(util.FloatOrNone(None), util.FloatOrNone(None),
                    util.FloatOrNone(None), util.FloatOrNone(None), status = True)
     
@@ -48,29 +69,6 @@ class Range2DSelectionView(WorkflowView, ScatterplotRangeSelection2DView):
     ylow = Property(util.FloatOrNone(None), observe = '_range')
     yhigh = Property(util.FloatOrNone(None), observe = '_range')
     
-    # data flow: user drags cursor. remote canvas calls _onselect, sets 
-    # _range. _range is copied back to local view (because it's 
-    # "status = True"). _update_range is called, and because 
-    # self.interactive is false, then the operation is updated.  the
-    # operation's range is sent back to the remote operation (because 
-    # "apply = True"), where the remote operation is updated.
-    
-    # low ahd high are properties (both in the view and in the operation) 
-    # so that the update can happen atomically. otherwise, they happen 
-    # one after the other, which is noticably slow!
-    
-    def _onselect(self, pos1, pos2): 
-        """Update selection traits"""
-        self._range = (min(pos1.xdata, pos2.xdata),
-                       max(pos1.xdata, pos2.xdata),
-                       min(pos1.ydata, pos2.ydata),
-                       max(pos1.ydata, pos2.ydata))
-        
-    @observe('_range')
-    def _update_range(self, _):
-        if not self.interactive:
-            self.op._range = self._range
-
     def _get_xlow(self):
         return self._range[0]
 
@@ -82,10 +80,65 @@ class Range2DSelectionView(WorkflowView, ScatterplotRangeSelection2DView):
 
     def _get_yhigh(self):
         return self._range[3]
+    #
+    # @observe('interactive', post_init = True)
+    # def _interactive(self, _):
+    #     self.parent.interactive = self.interactive
+    
+@provides(IWorkflowView)
+class ScatterPlotRangeSelection2DWorkflowView(_RangeSelection2DWorkflowView, ScatterplotRangeSelection2DView):
+    pass
+
+@provides(IWorkflowView)
+
+class DensityRangeSelection2DWorkflowView(_RangeSelection2DWorkflowView, DensityRangeSelection2DView):
+    pass
+
+@provides(IWorkflowView)
+class Range2DSelectionView(WorkflowView, Op2DView):
+    id = Constant('cytoflowgui.workflow.operations.range2dview')
+
+    op = Instance(IWorkflowOperation, fixed = True)
+    plot_params = Instance(Range2DPlotParams, ())
+    
+    xscale = util.ScaleEnum
+    yscale = util.ScaleEnum
+    
+    _view = Instance(IWorkflowView)
+    _range = Tuple(util.FloatOrNone(None), util.FloatOrNone(None),
+                   util.FloatOrNone(None), util.FloatOrNone(None), status = True)
+    
+    interactive = Bool(False, transient = True)
+
     
     def clear_estimate(self):
         # no-op
         return
+    
+    def plot(self, experiment, **kwargs):
+        density = kwargs.pop('density')
+        if density:
+            kwargs.pop('alpha')
+            kwargs.pop('s')
+            kwargs.pop('marker')
+            if not self._view or not isinstance(self._view, DensityRangeSelection2DWorkflowView):
+                self._view = DensityRangeSelection2DWorkflowView(op = self.op,
+                                                                 parent = self, 
+                                                                 interactive = self.interactive,
+                                                                 huescale = self.huescale)
+            kwargs['patch_props'] = {'edgecolor' : 'white', 'linewidth' : 3, 'fill' : False}
+        else:
+            kwargs.pop('gridsize')
+            kwargs.pop('smoothed')
+            kwargs.pop('smoothed_sigma')
+            if not self._view or not isinstance(self._view, ScatterPlotRangeSelection2DWorkflowView):
+                self._view = ScatterPlotRangeSelection2DWorkflowView(op = self.op,
+                                                                     parent = self,
+                                                                     interactive = self.interactive,
+                                                                     huefacet = self.huefacet)
+            kwargs['patch_props'] = {'edgecolor' : 'black', 'linewidth' : 3, 'fill' : False}
+
+        self._view.plot(experiment, **kwargs)
         
     def get_notebook_code(self, idx):
         view = ScatterplotRangeSelection2DView()
@@ -100,6 +153,15 @@ class Range2DSelectionView(WorkflowView, ScatterplotRangeSelection2DView):
                 prev_idx = idx - 1,
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
     
+    @observe('interactive', post_init = True)
+    def _interactive(self, e):
+        if self._view:
+            self._view.interactive = e.new
+            
+    @observe('_range', post_init = True)
+    def _update_range(self, _):
+        self.op._range = self._range
+
     
 @provides(IWorkflowOperation)
 class Range2DWorkflowOp(WorkflowOperation, Range2DOp):
@@ -170,8 +232,19 @@ def _dump(op):
 def _load(data, version):
     return Range2DWorkflowOp(**data)
 
-@camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 2)
+@camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 3)
 def _dump_view(view):
+    return dict(op = view.op,
+                xscale = view.xscale,
+                yscale = view.yscale,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                subset_list = view.subset_list,
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
+
+@camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 2)
+def _dump_view_v2(view):
     return dict(op = view.op,
                 xscale = view.xscale,
                 yscale = view.yscale,
@@ -191,4 +264,41 @@ def _dump_view_v1(view):
 @camel_registry.loader('range2d-view', version = any)
 def _load_view(data, version):
     return Range2DSelectionView(**data)
+
+@camel_registry.dumper(Range2DPlotParams, 'range2d-params', version = 1)
+def _dump_view_params(params):
+    return dict(# BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                # DataplotParams
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                
+                # Data2DPlotParams
+                xlim = params.xlim,
+                ylim = params.ylim,
+                
+                # Scatterplot params
+                alpha = params.alpha,
+                s = params.s,
+                marker = params.marker,
+                
+                 # Density plot params
+                gridsize = params.gridsize,
+                smoothed = params.smoothed,
+                smoothed_sigma = params.smoothed_sigma )
+    
+@camel_registry.loader('range2d-params', version = any)
+def _load_params(data, version):
+    return Range2DPlotParams(**data)
 

@@ -28,7 +28,7 @@ from .import_op import ImportWorkflowOp, Channel as ImportChannel
 from .threshold import ThresholdWorkflowOp, ThresholdSelectionView
 from .quad import QuadWorkflowOp, QuadSelectionView
 from .range import RangeWorkflowOp, RangeSelectionView
-from .range2d import Range2DWorkflowOp, Range2DSelectionView
+from .range2d import Range2DWorkflowOp, Range2DSelectionView, Range2DPlotParams
 from .polygon import PolygonWorkflowOp, PolygonSelectionView
 
 from .channel_stat import ChannelStatisticWorkflowOp
