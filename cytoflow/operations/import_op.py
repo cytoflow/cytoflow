@@ -44,6 +44,7 @@ from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
 
 from fcsparser import fcsparser
 import numpy as np
+import pandas as pd
 from pathlib import Path
 
 import cytoflow.utility as util
@@ -453,6 +454,21 @@ class ImportOp(HasStrictTraits):
                 experiment.metadata[new_name] = experiment.metadata[channel]
                 experiment.metadata[new_name]["fcs_name"] = channel
                 del experiment.metadata[channel]
+                
+        # create a statistic named "Conditions" that contains an index level for
+        # each condition, a row for each tube and a column for each numeric condition
+        idx = pd.MultiIndex.from_tuples([tuple([i[1] for i in sorted(t.conditions.items())]) for t in self.tubes],
+                                        names = sorted(self.conditions))
+        cols = [x for x in experiment.conditions
+                  if np.issubdtype(experiment.conditions[x].dtype, np.number)]
+        df = pd.DataFrame(index = idx, columns = cols)
+        for tube in self.tubes:
+            tube_idx = tuple([i[1] for i in sorted(tube.conditions.items())])
+            for col in cols:
+                df.loc[tube_idx, col] = tube.conditions[col]
+        
+        assert(not df.isnull().values.any())
+        experiment.statistics["Conditions"] = df
 
         experiment.history.append(self.clone_traits(transient = lambda _: True))
         return experiment
