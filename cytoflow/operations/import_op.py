@@ -402,8 +402,9 @@ class ImportOp(HasStrictTraits):
             tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
-            
-        experiment.add_events_multi(tube_datas, tube_conditions)
+        
+        if not metadata_only:    
+            experiment.add_events_multi(tube_datas, tube_conditions)
             
         # take care of strange encodings
         for channel in channels:
@@ -457,18 +458,19 @@ class ImportOp(HasStrictTraits):
                 
         # create a statistic named "Conditions" that contains an index level for
         # each condition, a row for each tube and a column for each numeric condition
-        idx = pd.MultiIndex.from_tuples([tuple([i[1] for i in sorted(t.conditions.items())]) for t in self.tubes],
-                                        names = sorted(self.conditions))
-        cols = [x for x in experiment.conditions
-                  if np.issubdtype(experiment.conditions[x].dtype, np.number)]
-        df = pd.DataFrame(index = idx, columns = cols)
-        for tube in self.tubes:
-            tube_idx = tuple([i[1] for i in sorted(tube.conditions.items())])
-            for col in cols:
-                df.loc[tube_idx, col] = tube.conditions[col]
-        
-        assert(not df.isnull().values.any())
-        experiment.statistics["Conditions"] = df
+        if self.conditions:
+            idx = pd.MultiIndex.from_tuples([tuple([i[1] for i in sorted(t.conditions.items())]) for t in self.tubes],
+                                            names = sorted(self.conditions))
+            cols = [x for x in experiment.conditions
+                      if np.issubdtype(experiment.conditions[x].dtype, np.number)]
+            df = pd.DataFrame(index = idx, columns = cols)
+            for tube in self.tubes:
+                tube_idx = tuple([i[1] for i in sorted(tube.conditions.items())])
+                for col in cols:
+                    df.loc[tube_idx, col] = tube.conditions[col]
+            
+            assert(not df.isnull().values.any())
+            experiment.statistics["Conditions"] = df
 
         experiment.history.append(self.clone_traits(transient = lambda _: True))
         return experiment
