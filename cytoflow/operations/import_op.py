@@ -339,6 +339,8 @@ class ImportOp(HasStrictTraits):
                 
                                 
         experiment.metadata['fcs_metadata'] = {}
+        tube_datas = []
+        tube_conditions = []
         for tube in self.tubes:
             if metadata_only:
                 try:
@@ -372,9 +374,10 @@ class ImportOp(HasStrictTraits):
                         warnings.warn("Only {0} events in tube {1}"
                                       .format(len(tube_data), tube.file),
                                       util.CytoflowOpWarning)
-    
-                experiment.add_events(tube_data[channels], tube.conditions)
-                        
+                 
+                tube_datas.append(tube_data[channels])
+                tube_conditions.append(tube.conditions)       
+                                            
             # extract the row and column from wells collected on a 
             # BD HTS
             if 'WELL ID' in tube_meta:               
@@ -398,6 +401,8 @@ class ImportOp(HasStrictTraits):
             tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
+            
+        experiment.add_events_multi(tube_datas, tube_conditions)
             
         # take care of strange encodings
         for channel in channels:

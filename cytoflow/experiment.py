@@ -495,7 +495,7 @@ class Experiment(HasStrictTraits):
         
         Parameters
         ----------
-        tube : pandas.DataFrame
+        data : pandas.DataFrame
             A single tube or well's worth of data. Must be a DataFrame with
             the same columns as `channels`
         
@@ -581,6 +581,102 @@ class Experiment(HasStrictTraits):
         # update the metadata 'values'
         for condition in self.conditions:
             self.metadata[condition]['values'] = natsorted(self.data[condition].unique())
+            
+    def add_events_multi(self, data, conditions):
+        """
+        Add new events to this `Experiment`.  `add_events_multi` 
+        operates **in place**, modifying the `Experiment` object
+        that it's called on.
+        
+        `add_events_multi` is more efficient than `add_events` if you are adding
+        lots of tubes of data. This is what `ImportOp` uses.
+        
+        Parameters
+        ----------
+        data : List(pandas.DataFrame)
+            A list of wells' or tubes' data. Must be a DataFrame with
+            the same columns as `channels`
+        
+        conditions : List(Dict(Str, Any))
+            A list of dictionaries of the tube's metadata.  The keys must match 
+            `conditions`, and the values must be coercable to the
+            relevant ``numpy`` dtype. The length of ``conditions`` must be the
+            same as the length of ``data``.
+ 
+        Raises
+        ------
+        :exc:`.CytoflowError`
+            `add_events_multi` pukes if:
+            * there are columns in ``data`` that aren't channels in the 
+              experiment, or vice versa. 
+            * there are keys in ``conditions`` that aren't conditions in
+              the experiment, or vice versa.
+            * there is metadata specified in ``conditions`` that can't be
+              converted to the corresponding metadata ``dtype``.
+
+        """
+    
+        # make sure the new tubes' channels all match eachother
+        data0_columns = set(data[0].columns)
+        for i, d in enumerate(data[1:]):
+            if set(d.columns) != data0_columns:
+                raise util.CytoflowError("Events in dataset index {} don't match the first dataset.".format(i))
+        # make sure the new tubes' channels match the rest of the 
+        # channels in the Experiment
+    
+        if len(self) > 0 and set(data.columns) != set(self.channels):
+            raise util.CytoflowError("New events don't have the same channels")
+            
+        # check that the conditions for this tube exist in the experiment
+        # already
+
+        for i, c in enumerate(conditions):
+            if( any(True for k in c if k not in self.conditions) or \
+                any(True for k in self.conditions if k not in c) ):
+                raise util.CytoflowError("Metadata dataset {} should be {}"
+                                         .format(i, list(self.conditions.keys())))
+            
+        # add the conditions to tube's internal data frame.  specify the conditions
+        # dtype using self.conditions.  check for errors as we do so.
+        
+        # take this chance to up-convert the float32s to float64.
+        # this happened automatically in DataFrame.append(), below, but 
+        # only in certain cases.... :-/
+        
+        # TODO - the FCS standard says you can specify the precision.  
+        # check with int/float/double files!
+        
+        new_data = [d.astype("float64", copy=True) for d in data]
+        
+        for d, c in zip(new_data, conditions):
+            for meta_name, meta_value in c.items():
+                meta_type = self.conditions[meta_name].dtype
+                
+                if isinstance(meta_type, pd.CategoricalDtype):
+                    meta_type = CategoricalDtype([meta_value])
+    
+                d[meta_name] = \
+                    pd.Series(data = [meta_value] * len(d),
+                              index = d.index,
+                              dtype = meta_type)
+                
+                # if we're categorical, merge the categories
+                if isinstance(meta_type, pd.CategoricalDtype) and meta_name in self.data:
+                    cats = set(self.data[meta_name].cat.categories) | set(d[meta_name].cat.categories)
+                    cats = sorted(cats) 
+                    self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
+                    d[meta_name] = d[meta_name].cat.set_categories(cats)
+                    
+                # update the metadata 'values'
+                self.metadata[meta_name]['values'].append(meta_value)
+                self.metadata[meta_name]['values'] = natsorted(set(self.metadata[meta_name]['values']))
+            
+        self.data = pd.concat([self.data] + new_data, ignore_index = True, sort = True)
+        del new_data
+        
+        # update the metadata 'values'
+        # for condition in self.conditions:
+        #     self.metadata[condition]['values'] = natsorted(self.data[condition].unique())
 
 if __name__ == "__main__":
     from fcsparser import fcsparser
