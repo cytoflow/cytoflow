@@ -1,5 +1,6 @@
 import sys, os, re, weakref, glob, logging
 from PyInstaller.compat import is_win, is_darwin, is_linux
+from PyInstaller.utils.hooks import copy_metadata
 
 a = Analysis(['../cytoflowgui/run.py'],
              pathex=['cytoflowgui/'],
