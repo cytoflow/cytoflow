@@ -34,8 +34,6 @@ Base classes and functions for `cytoflow` scales.
 `set_default_scale`, `get_default_scale` -- sets and gets the default scale
 """
 
-import numbers
-
 from traits.api import Interface, Str, Instance, List, Array
 
 from .cytoflow_errors import CytoflowError

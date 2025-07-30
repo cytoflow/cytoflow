@@ -1021,7 +1021,7 @@ class TestMinisom(unittest.TestCase):
         # checks whether the decay_factor stays constant during one epoch
         # and that its values range from 0 to num_epochs-1
         decay_factors = []
-        for t, iteration in enumerate(iterations):
+        for t, _ in enumerate(iterations):
             decay_factor = int(t / len_data)
             decay_factors.append(decay_factor)
         for i in range(num_epochs):

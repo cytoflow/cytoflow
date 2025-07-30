@@ -60,11 +60,11 @@ class FlowCleanOp(HasStrictTraits):
     
     The operation assesses whether a tube is "clean" using an algorithm 
     described below. If the tube is already clean, only low-density slices are 
-    removed. If the tube is not clean, then a cleaning is attempted, removing
+    gated. If the tube is not clean, then a cleaning is attempted, gating
     slices that are substantially statistically different than the majority.
     Cleanliness is then assessed again. After calling `estimate()`, `tube_status` 
-    is set for each tube, indicating whether it was CLEAN (clean before the operation),
-    CLEANED (clean after the gated events are dropped), or UNCLEAN (still unclean 
+    is set for each tube, indicating whether it was ``CLEAN`` (clean before the operation),
+    ``CLEANED`` (clean after the gated events are dropped), or ``UNCLEAN`` (still unclean 
     after the gated events are dropped.)
     
     This operation is applied to every tube independently -- that is, to every
@@ -133,7 +133,7 @@ class FlowCleanOp(HasStrictTraits):
         
     force_clean : Bool (default = False)
         If ``True``, force cleaning even if the tube passes the original quality checks.
-        Remember, the operation **always** removes low-density bins.
+        Remember, the operation **always** gates low-density bins.
         
     tube_status : Dict(Tube : {"CLEAN", "UNCLEAN", "CLEANED"})
         Set by `estimate`, has the status of each tube. If the tube didn't
@@ -144,7 +144,7 @@ class FlowCleanOp(HasStrictTraits):
     Notes
     -----
     
-    This is inspired by the falgorithm in the Bioconductor package 
+    This is inspired by the algorithm in the Bioconductor package 
     ``flowCut`` [1]_. The algorithm works in the following way:
     
     1. Bin the events along the time they were collected. The bin size is 
@@ -172,7 +172,7 @@ class FlowCleanOp(HasStrictTraits):
        for each bin in each channel, then sum them over all the channels to obtain 
        a single number for each bin. Estimate a kernel density of that distribution
        and find the peak with the largest prominence. Fit a normal curve with that
-       peak as the center and discard any bins whose sume-of-measures' two-sided
+       peak as the center and discard any bins whose sum-of-measures' two-sided
        CDF is less than `segment_cutoff`.
        
     7. Re-compute the drift in each channel, the mean drift and maximum drift, and
@@ -396,11 +396,11 @@ class FlowCleanOp(HasStrictTraits):
             # compute density for each bin
             bin_density = np.zeros((num_segments))
             
-            for bin, events in self._tube_bins[tube]:                
+            for binn, events in self._tube_bins[tube]:                
                 start_time = events[self.time_channel].iat[0]
                 end_time = events[self.time_channel].iat[len(events) - 1]
                 assert(end_time >= start_time)
-                bin_density[bin] = len(events) / (end_time - start_time)
+                bin_density[binn] = len(events) / (end_time - start_time)
             
             ### Remove low-density bins
             
@@ -435,9 +435,9 @@ class FlowCleanOp(HasStrictTraits):
             density_probability = scipy.stats.norm.cdf(bin_density, loc = max_peak, scale = opt_sd)
             
             # remove low-probability bins
-            for bin, _ in self._tube_bins[tube]:
-                if density_probability[bin] < self.density_cutoff:
-                    self._bin_kept[tube][bin] = False
+            for binn, _ in self._tube_bins[tube]:
+                if density_probability[binn] < self.density_cutoff:
+                    self._bin_kept[tube][binn] = False
                     
             if self.dont_clean:
                 continue
@@ -448,8 +448,8 @@ class FlowCleanOp(HasStrictTraits):
             self._bin_means[tube] = {channel : np.zeros((num_segments)) for channel in self.channels}
             kept_bin_means = {}
             for channel in self.channels:
-                for bin, events in self._tube_bins[tube]:
-                    self._bin_means[tube][channel][bin] = events[channel].mean()
+                for binn, events in self._tube_bins[tube]:
+                    self._bin_means[tube][channel][binn] = events[channel].mean()
                 kept_bin_means[channel] = np.compress(self._bin_kept[tube], self._bin_means[tube][channel])
                 channel_stats.loc[channel, 'Bin Mean Range'] = np.ptp(kept_bin_means[channel])
                 channel_stats.loc[channel, 'Bin Mean SD'] = np.std(kept_bin_means[channel])
@@ -506,31 +506,31 @@ class FlowCleanOp(HasStrictTraits):
             ### Cleaning
             
             measure_sum = np.zeros((num_segments))
-            for bin, events in self._tube_bins[tube]:
+            for binn, events in self._tube_bins[tube]:
                 for channel in channels:
                     if '5th percentile' in self.measures:
-                        measure_sum[bin] += events[channel].quantile(0.05)
+                        measure_sum[binn] += events[channel].quantile(0.05)
                     
                     if '20th percentile' in self.measures:
-                        measure_sum[bin] += events[channel].quantile(0.20)
+                        measure_sum[binn] += events[channel].quantile(0.20)
                     
                     if '50th percentile' in self.measures:
-                        measure_sum[bin] += events[channel].quantile(0.50)
+                        measure_sum[binn] += events[channel].quantile(0.50)
                     
                     if '80th percentile' in self.measures:
-                        measure_sum[bin] += events[channel].quantile(0.80)
+                        measure_sum[binn] += events[channel].quantile(0.80)
                     
                     if '95th percentile' in self.measures:
-                        measure_sum[bin] += events[channel].quantile(0.95)
+                        measure_sum[binn] += events[channel].quantile(0.95)
                     
                     if 'mean' in self.measures:
-                        measure_sum[bin] += events[channel].mean()
+                        measure_sum[binn] += events[channel].mean()
                     
                     if 'variance' in self.measures:
-                        measure_sum[bin] += events[channel].var()
+                        measure_sum[binn] += events[channel].var()
                     
                     if 'skewness' in self.measures:
-                        measure_sum[bin] += events[channel].skew()
+                        measure_sum[binn] += events[channel].skew()
                         
             # estimate the densith with a gaussian kernel
             bandwidth = statsmodels.nonparametric.bandwidths.bw_scott(measure_sum, "gaussian")
@@ -563,9 +563,9 @@ class FlowCleanOp(HasStrictTraits):
             measures_cdf = scipy.stats.norm.cdf(measure_sum, loc = max_peak, scale = opt_sd)
             
             # remove low-probability bins
-            for bin, _ in self._tube_bins[tube]:
-                if min(measures_cdf[bin], 1 - measures_cdf[bin]) < self.segment_cutoff:
-                    self._bin_kept[tube][bin] = False
+            for binn, _ in self._tube_bins[tube]:
+                if min(measures_cdf[binn], 1 - measures_cdf[binn]) < self.segment_cutoff:
+                    self._bin_kept[tube][binn] = False
                     
             kept_bin_means = {}
             for channel in channels:
@@ -652,8 +652,8 @@ class FlowCleanOp(HasStrictTraits):
             
         event_assignments = pd.Series([True] * len(experiment), dtype = "bool")
         for tube, tube_bins in self._tube_bins.items():
-            for bin, events in tube_bins:
-                if not self._bin_kept[tube][bin]:
+            for binn, events in tube_bins:
+                if not self._bin_kept[tube][binn]:
                     event_assignments.loc[events.index] = False
                     
         new_experiment = experiment.clone(deep = False)
@@ -801,14 +801,14 @@ class FlowCleanDiagnostic(HasStrictTraits):
                                          self.op._channel_stats[tube].loc[channel, "Max Discontinuity Pre"])
                 plt.subplot(nrow, 2, idx + 1, title = title)
     
-                for bin, events in self.op._tube_bins[tube]:                
+                for binn, events in self.op._tube_bins[tube]:                
                     plt.scatter(x = events[self.op.time_channel],
                                 y = events[channel],
-                                c = 'tab:blue' if self.op._bin_kept[tube][bin] else 'tab:orange',
+                                c = 'tab:blue' if self.op._bin_kept[tube][binn] else 'tab:orange',
                                 **kwargs)   
                     
                     plt.plot([min(events[self.op.time_channel]), max(events[self.op.time_channel])],
-                             [self.op._bin_means[tube][channel][bin], self.op._bin_means[tube][channel][bin]],
+                             [self.op._bin_means[tube][channel][binn], self.op._bin_means[tube][channel][binn]],
                              "brown")
 
         plt.subplot(nrow, 2, num_channels + 1, title = "Bin Density Distribution")

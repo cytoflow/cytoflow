@@ -26,12 +26,12 @@ The `registration` module contains two classes:
 `RegistrationOp` -- warps channels to bring areas of high density into registration
 
 `RegistrationDiagnostic` -- a diagnostic view to make sure
-that `RegistrationOp` performed correctlyu
+that `RegistrationOp` performed correctly.
 """
 
 from traits.api import (HasStrictTraits, Str, Dict, Int, List, 
                         Float, Constant, provides, Instance, Union,
-                        Callable, Any, Enum, Tuple)
+                        Callable, Any, Enum)
 import numpy as np
 import pandas as pd
 import scipy.signal

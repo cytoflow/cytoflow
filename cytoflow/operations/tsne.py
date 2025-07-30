@@ -79,8 +79,8 @@ class tSNEOp(HasStrictTraits):
         combination of ``Time`` and ``Dox``.
         
     metric : Enum("euclidean", "cosine") (default = "euclidian")
-        How to compute "distance"? If using many channels, suggest change
-        to "cosine".
+        How to compute "distance"? If using many channels, try changing
+        to ``cosine``.
         
     perplexity : Float (default = 10)
         The balance between the local and global structure of the data. Larger 

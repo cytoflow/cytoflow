@@ -282,9 +282,8 @@ class KneeLocator(object):
         # placeholder for which threshold region i is located in.
         maxima_threshold_index = 0
         minima_threshold_index = 0
-        traversed_maxima = False
         # traverse the difference curve
-        for i, x in enumerate(self.x_difference):
+        for i, _ in enumerate(self.x_difference):
             # skip points on the curve before the the first local maxima
             if i < self.maxima_indices[0]:
                 continue

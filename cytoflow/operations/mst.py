@@ -36,21 +36,18 @@ polygon and/or interactively set the vertices on an MST.
 
 from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, List, Float, provides,
-                        Instance, Bool, observe, Any, Dict, 
-                        Constant, HasTraits)
+from traits.api import (Str, List, Float, provides, Instance, Bool, observe, 
+                        Any, Dict, Constant, HasTraits)
 
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.widgets import PolygonSelector
 import numpy as np
 
 import cytoflow.utility as util
-from cytoflow.views import ISelectionView, ScatterplotView, DensityView, MSTView
+from cytoflow.views import MSTView
 
 from .i_operation import IOperation
-from .base_op_views import Op2DView
 
 @provides(IOperation)
 class ConditionSelectionOp(HasTraits):
@@ -158,6 +155,9 @@ class MSTOp(ConditionSelectionOp):
     
     The only attribute is `name` -- everything else is set by the default view,
     which inherits `MSTView`.
+    
+    Attributes
+    ----------
     """
     
     id = Constant('cytoflow.operation.mst')
@@ -179,6 +179,8 @@ class MSTOp(ConditionSelectionOp):
         self._selection_view = MSTSelectionView(op = self)
         self._selection_view.trait_set(**kwargs)
         return self._selection_view
+    
+util.expand_class_attributes(MSTOp)
     
 class MSTSelectionView(MSTView):
     """
@@ -218,17 +220,6 @@ class MSTSelectionView(MSTView):
 
     @observe('_polygon', post_init = True)        
     def _draw_poly(self, _):
-        # if len(self._vertices) == 0:
-        #     return
-        #
-        # self.op.condition = self._loc_level
-        # in_poly = util.polygon_contains(self._vertices, self._polygon)
-        # cv = []
-        # for group, b in zip(self._groups, in_poly):
-        #     if b:
-        #         cv.append(group)
-        # self.op.condition_values = cv
-        
         if not self._polygon or len(self._polygon) < 3:
             return
                
@@ -254,20 +245,6 @@ class MSTSelectionView(MSTView):
 
         self._ax.add_patch(self._patch)
         plt.draw()
-        
-    # @observe('_vertices', post_init = True)        
-    # def _set_condition_values(self, _):
-    #     self.op.condition = self._loc_level
-    #     vertices = self._vertex_locations.keys()
-    #     self._v = vertices
-    #     groups = self._vertex_locations.values()
-    #     self._g = groups
-    #     in_poly = util.polygon_contains(vertices, self._vertices)
-    #     cv = []
-    #     for i, b in enumerate(in_poly):
-    #         if b:
-    #             cv.append(groups[i])
-    #     self.op.condition_values = cv 
 
     @observe('interactive', post_init = True)
     def _interactive(self, _):
@@ -283,113 +260,6 @@ class MSTSelectionView(MSTView):
     def _onselect(self, vertices):
         self._polygon = vertices
         self.interactive = False
-#
-#
-# @provides(ISelectionView)
-# class ScatterplotPolygonSelectionView(_PolygonSelection, ScatterplotView):
-#     """
-#     Plots, and lets the user interact with, a 2D polygon selection on a scatterplot.
-#
-#     Attributes
-#     ----------
-#     interactive : bool
-#         is this view interactive?  Ie, can the user set the polygon verticies
-#         with mouse clicks?
-#
-#     Examples
-#     --------
-#
-#     In a Jupyter notebook with ``%matplotlib notebook``
-#
-#     >>> s = flow.PolygonOp(xchannel = "V2-A",
-#     ...                    ychannel = "Y2-A")
-#     >>> poly = s.default_view()
-#     >>> poly.plot(ex2)
-#     >>> poly.interactive = True
-#     """
-#
-#     id = Constant('cytoflow.views.polygon')
-#     friendly_id = Constant("Polygon Selection")
-#
-#     def plot(self, experiment, **kwargs):
-#         """
-#         Plot the default view, and then draw the selection on top of it.
-#
-#         Parameters
-#         ----------
-#
-#         patch_props : Dict
-#            The properties of the `matplotlib.patches.Patch` that are drawn
-#            on top of the scatterplot or density view.  They're passed
-#            directly to the `matplotlib.patches.Patch` constructor.
-#            Default: ``{edgecolor : 'black', linewidth : 2, fill : False}``
-#
-#         """
-#         super().plot(experiment, **kwargs)
-#
-# util.expand_class_attributes(ScatterplotPolygonSelectionView)
-# util.expand_method_parameters(ScatterplotPolygonSelectionView, ScatterplotPolygonSelectionView.plot) 
-#
-# @provides(ISelectionView)
-# class DensityPolygonSelectionView(_PolygonSelection, DensityView):
-#     """
-#     Plots, and lets the user interact with, a 2D polygon selection on a density plot.
-#
-#     Attributes
-#     ----------
-#     interactive : bool
-#         is this view interactive?  Ie, can the user set the polygon verticies
-#         with mouse clicks?
-#
-#     Examples
-#     --------
-#
-#     In a Jupyter notebook with ``%matplotlib notebook``
-#
-#     >>> s = flow.PolygonOp(xchannel = "V2-A",
-#     ...                    ychannel = "Y2-A")
-#     >>> poly = s.default_view(density = True)
-#     >>> poly.plot(ex2)
-#     >>> poly.interactive = True
-#     """
-#
-#     id = Constant('cytoflow.views.polygon_density')
-#     friendly_id = Constant("Polygon Selection")
-#
-#     def plot(self, experiment, **kwargs):
-#         """
-#         Plot the default view, and then draw the selection on top of it.
-#
-#         Parameters
-#         ----------
-#
-#         patch_props : Dict
-#            The properties of the `matplotlib.patches.Patch` that are drawn
-#            on top of the scatterplot or density view.  They're passed
-#            directly to the `matplotlib.patches.Patch` constructor.
-#            Default: {edgecolor : 'black', linewidth : 2, fill : False}
-#
-#         """
-#         super().plot(experiment, **kwargs)
-#
-# util.expand_class_attributes(DensityPolygonSelectionView)
-# util.expand_method_parameters(ScatterplotPolygonSelectionView, ScatterplotPolygonSelectionView.plot) 
-#
-# if __name__ == '__main__':
-#     import cytoflow as flow
-#     tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-#                       conditions = {"Dox" : 10.0})
-#
-#     tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-#                       conditions = {"Dox" : 1.0})                      
-#
-#     ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
-#
-#     p = PolygonOp(xchannel = "V2-A",
-#                   ychannel = "Y2-A")
-#     v = p.default_view(xscale = "logicle", yscale = "logicle")
-#
-#     plt.ioff()
-#     v.plot(ex)
-#     v.interactive = True
-#     plt.show()
+        
+util.expand_class_attributes(MSTSelectionView)
+util.expand_method_parameters(MSTSelectionView, MSTSelectionView.plot)

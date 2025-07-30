@@ -130,9 +130,7 @@ class FlowPeaksOp(HasStrictTraits):
     This operation adds a statistic whose features are the channel names used in
     the clustering and whose values are the centroids of the clusters. Useful
     for hierarchical clustering, minimum spanning tree visualization, etc.
-    The index has levels from `by`, plus a new level called ``Cluster``.  The
-    new statistic also has a column named ``Proportion``, 
-    
+    The index has levels from `by`, plus a new level called ``Cluster``.  
     The new statistic also has a feature named ``Proportion``, which has the 
     proportion of events in each cluster.
         

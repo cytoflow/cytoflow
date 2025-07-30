@@ -27,12 +27,10 @@ cytoflow.views.table
 """
 
 from warnings import warn
-from traits.api import HasStrictTraits, Str, provides, Tuple, Constant
+from traits.api import HasStrictTraits, Str, provides, Constant
 import matplotlib.pyplot as plt
 
 from matplotlib.table import Table
-
-import pandas as pd
 import numpy as np
 
 from .i_view import IView

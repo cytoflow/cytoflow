@@ -31,8 +31,7 @@ from warnings import warn
 import pandas as pd
 import numpy as np
 
-from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Float)
+from traits.api import HasStrictTraits, Str, List, Constant, provides, Callable
 
 import cytoflow.utility as util
 

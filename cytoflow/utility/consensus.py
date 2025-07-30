@@ -326,7 +326,7 @@ class ConsensusClustering:
         connectivity_matrices = []
         identity_matrices = []
         for _ in range(self.n_resamples):
-            clustering_obj, resampled_indices, labels = cluster(
+            _, resampled_indices, labels = cluster(
                 x, self.resample_frac, k, self.clustering_obj, self.k_param
             )
             connectivity_matrices.append(compute_connectivity_matrix(labels))
@@ -417,7 +417,7 @@ class ConsensusClustering:
         float
             Area under the CDF
         """
-        ecdf, hist, bins = self.cdf(k)
+        ecdf, _, bins = self.cdf(k)
         return np.sum(ecdf * (bins[1:] - bins[:-1]))
 
     def change_in_area_under_cdf(self) -> np.ndarray:
@@ -567,7 +567,7 @@ class ConsensusClustering:
         """
         ax = ax if ax is not None else plt.subplots(figsize=(5, 5))[1]
         for k in self.cluster_range_:
-            ecdf, hist, bins = self.cdf(k)
+            ecdf, _, bins = self.cdf(k)
             ax.step(bins[:-1], ecdf, label=f"{k} clusters")
         ax.set_xlabel("Consensus index value")
         ax.set_ylabel("CDF")

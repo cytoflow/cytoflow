@@ -18,15 +18,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.views.matrix
----------------------
+cytoflow.views.mst
+------------------
+
+Plots a minimum spanning tree of a statistic. Particularly useful for
+visualizing the results of a clustering operations such as `KMeansOp`
+and `SOMOp`. 
+
+`MSTView` -- plots the minimum spanning tree.
 """
 
 import math
 from warnings import warn
 
 from traits.api import HasStrictTraits, provides, Enum, Str, Callable, Constant, \
-                       List, Dict, Tuple, Float, Any
+                       List, Float
 import seaborn as sns
 import pandas as pd
 import matplotlib as mpl
@@ -39,6 +45,7 @@ import cytoflow
 import cytoflow.utility as util
 
 from .i_view import IView
+
 
 @provides(IView)
 class MSTView(HasStrictTraits):
@@ -73,6 +80,11 @@ class MSTView(HasStrictTraits):
     Optionally, you can set `size_function` to scale the circles (or pies or petals)
     by a function computed on `Experiment.data`. (Often used to scale by the number
     of events in each cluster.)
+    
+    .. note::
+       If you'd like to *select* events based on this view (by drawing a 
+       polygon around the nodes of the tree), you can do that with
+       `SOMOp`.
     
     Attributes
     ----------
@@ -140,8 +152,8 @@ class MSTView(HasStrictTraits):
     Note
     ----
     `MSTView` is *not* a subclass of `BaseView` or any of its descendants.
-    It implements the `IView` but does it does not use `seaborn.FacetGrid` 
-    for laying out its plots.
+    It implements the `IView` interface but does it does not use 
+    `seaborn.FacetGrid` for laying out its plots.
     
 
     Examples

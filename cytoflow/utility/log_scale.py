@@ -26,8 +26,6 @@ A scale that transforms data using a base-10 log.
 `LogScale` -- implements `IScale`, the `cytoflow` interface for the scale.
 """
 
-import sys
-                       
 import numpy as np
 import pandas as pd
 import matplotlib.colors

@@ -31,7 +31,6 @@ import warnings
 from traits.api import Str, provides, Constant
 
 import numpy as np
-import matplotlib.pyplot as plt
 from seaborn import violinplot
 
 import cytoflow.utility as util

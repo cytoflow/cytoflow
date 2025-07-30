@@ -20,6 +20,11 @@
 """
 cytoflow.views.matrix
 ---------------------
+
+Plots a "matrix" view -- a 2D representation of a heat map, pie plots, or 
+petal plots.
+
+`MatrixView` -- plots the matrix view.
 """
 
 import math

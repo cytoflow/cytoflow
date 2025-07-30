@@ -48,7 +48,7 @@ class SOMOp(HasStrictTraits):
     """
     Use a self-organizing map to cluster events.  
     
-    Call `estimate` to create the map, often using a random subset of the
+    Calling `estimate` creates the map, often using a random subset of the
     events that will eventually be clustered.
       
     Calling `apply` creates a new categorical metadata variable 
@@ -83,30 +83,6 @@ class SOMOp(HasStrictTraits):
     consensus_cluster : Bool (default = True)
         Should we use consensus clustering to find the "natural" number of
         clusters? Defauls to ``True``.
-
-    width : Int (default = 10)
-        What is the width of the map? The number of clusters used is the product
-        of ``width`` and ``height``.
-        
-    height : Int (default = 10)
-        What is the height of the map? The number of clusters used is the product
-        of ``width`` and ``height``.
-        
-    distance : Enum (default = "euclidean")
-        The distance measure that activates the map. Defaults to "euclidean".
-        "cosine" is recommended for >3 channels. Possible values are "euclidean", 
-        "cosine", "manhattan", "chebyshev"
-        
-    learning_rate : Float (default = 0.5)
-        The initial step size for updating SOM weights. Changes as the map is
-        learned.
-        
-    sigma : Float (default = 1.0)
-        The magnitude of each update. Fixed over the course of the run -- 
-        higher values mean more aggressive updates.
-        
-    num_iterations : Int (default = 20)
-        How many times to update the neuron weights?
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -118,6 +94,47 @@ class SOMOp(HasStrictTraits):
     sample : Float (default = 0.01)
         What proportion of the data set to use for training? Defaults to 1%
         of the dataset to help with runtime.
+        
+    *SOM parameters*
+
+    width : Int (default = 10)
+        What is the width of the map? The number of clusters used is the product
+        of `width` and `height`.
+        
+    height : Int (default = 10)
+        What is the height of the map? The number of clusters used is the product
+        of `width` and `height`.
+        
+    distance : Enum (default = "euclidean")
+        The distance measure that activates the map. Defaults to ``euclidean``.
+        ``cosine`` is recommended for >3 channels. Possible values are "euclidean", 
+        ``cosine``, ``manhattan``, and ``chebyshev``
+        
+    learning_rate : Float (default = 0.5)
+        The initial step size for updating SOM weights. Changes as the map is
+        learned.
+        
+    sigma : Float (default = 1.0)
+        The magnitude of each update. Fixed over the course of the run -- 
+        higher values mean more aggressive updates.
+        
+    num_iterations : Int (default = 20)
+        How many times to update the neuron weights?
+        
+    *Consensus clustering parameters*
+    
+    min_clusters : Int (default = 2)
+        The minimum number of consensus clusters to form.
+        
+    max_clusters : Int (default = 20)
+        The maximum number of consensus clusters to form
+        
+    n_resamples : Int (default = 100)
+        The number of times to attempt making consensus clusters, sampling 
+        randomly a `resample_frac` proportion of the map nodes.
+        
+    resample_frac : Float (default = 0.8)
+        The fraction of points to resample.
         
     Statistics
     ----------
@@ -215,7 +232,7 @@ class SOMOp(HasStrictTraits):
     min_clusters = Int(2)
     max_clusters = Int(10)
     n_resamples = Int(100)
-    resample_frac = Int(0.8)
+    resample_frac = Float(0.8)
     
     _som = Dict(Any, Instance("cytoflow.utility.minisom.MiniSom"), transient = True)
     _cc = Dict(Any, Any)
