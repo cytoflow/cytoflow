@@ -53,7 +53,7 @@ class MSTView(HasStrictTraits):
     A view that creates a minimum spanning tree view of a statistic. 
     
     Set `statistic` to the name of the statistic to plot; set `feature` to the name
-    of that statistic's feature you'd like to analyze. Then, set `location` to
+    of that statistic's feature you'd like to analyze. Then, set `locations` to
     *another* statistic whose features are the locations (in any number of dimensions)
     of the nodes in the tree -- usually these are cluster centroids from `KMeansOp`
     or `SOMOp` (see the example below). The view computes a minimum-spanning tree 
@@ -98,15 +98,15 @@ class MSTView(HasStrictTraits):
         
     .. note:: If `style` is ``heat``, then the levels of `statistic` must be the
               same as the levels of `locations`. If `style` is ``pie`` or ``petal``,
-              the levels of `statistic` must be the levels of `location` plus `variable`.
+              the levels of `statistic` must be the levels of `locations` plus `variable`.
         
     locations_level : Str
         Which level in the `locations` statistic is different at each location? 
-        The values of the others must be specified in the `plot_name` parameter 
+        The values of the others must be specified in the ``plot_name`` parameter 
         of `plot`.  Optional if there is only one level in `locations`.
         
     locations_features : List(Str)
-        Which features in `location` to use. By default, use all of them. 
+        Which features in `locations` to use. By default, use all of them. 
         
     .. warning::
         The `KMeansOp` statistic is mostly locations, but also has the a 
@@ -125,16 +125,15 @@ class MSTView(HasStrictTraits):
         
     scale : {'linear', 'log', 'logicle'}
         For a heat map, how should the color of `feature` be scaled before 
-        plotting? If `style` is not ``heat``, `scale` *must* be `linear`.
+        plotting? If `style` is not ``heat``, `scale` *must* be ``linear``.
                 
     size_function : Callable (default: None)
-        If set, separate the `Experiment` into subsets by `xfacet` and `yfacet` 
-        (which should be conditions in the `Experiment`), compute a function on
-        them, and scale the size of each matrix cell by those values. The 
-        callable should take a single `pandas.DataFrame` argument and return a 
-        *positive* ``float`` or value that can be cast to ``float`` (such as 
-        ``int``).  Of particular use is ``len``, which will scale the cells 
-        by the number of events in each subset.
+        If set, separate the `Experiment` into subsets by levels of `locations`, 
+        compute a function on them, and scale the size of each tree node by 
+        those values. The callable should take a single `pandas.DataFrame` 
+        argument and return a *positive* ``float`` or value that can be cast to
+        ``float`` (such as ``int``).  Of particular use is ``len``, which will
+        scale the cells by the number of events in each subset.
         
     metric : Str (default: ``euclidean``)
         What metric should be used to compute distance in the tree? Must be one
@@ -178,12 +177,14 @@ class MSTView(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> ex2 = flow.KMeansOp(name = "KMeans",
-        ...                     channels = ["V2-A", "Y2-A", "B1-A"],
-        ...                     scale = {"V2-A" : "logicle",
-        ...                              "Y2-A" : "logicle",
-        ...                              "B1-A" : "logicle"},
-        ...                     num_clusters = 20)        
+        >>> km = flow.KMeansOp(name = "KMeans",
+        ...                    channels = ["V2-A", "Y2-A", "B1-A"],
+        ...                    scale = {"V2-A" : "logicle",
+        ...                             "Y2-A" : "logicle",
+        ...                             "B1-A" : "logicle"},
+        ...                    num_clusters = 20)       
+        >>> km.estimate(ex)
+        >>> ex2 = km.apply(ex)
         
     Add a statistic
     
@@ -192,15 +193,15 @@ class MSTView(HasStrictTraits):
 
         >>> ex3 = flow.ChannelStatisticOp(name = "ByDox",
         ...                               channel = "Y2-A",
-        ...                               by = ['KMeans_Cluster", "Dox"],
-        ...                               function = flow.geom_mean).apply(ex2) 
+        ...                               by = ["KMeans_Cluster", "Dox"],
+        ...                               function = len).apply(ex2) 
     
     Plot the minimum spanning tree
     
     .. plot::
         :context: close-figs
         
-        >>> flow.MSTView(statistic = "DoxLen", 
+        >>> flow.MSTView(statistic = "ByDox", 
         ...     locations = "KMeans", 
         ...     locations_features = ["V2-A", "Y2-A", "B1-A"],
         ...     feature = "Y2-A",
@@ -353,7 +354,7 @@ class MSTView(HasStrictTraits):
             
         if self.style != "heat" and (stat[self.feature] < 0.0).any():
             raise util.CytoflowViewError('feature',
-                                         "If `style` is not \"heat\", then every element of `feature` must be greater than"
+                                         "If `style` is not \"heat\", then every element of `feature` must be greater than "
                                          "or equal to 0")  
 
         for lf in self.locations_features:

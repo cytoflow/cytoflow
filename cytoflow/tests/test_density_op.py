@@ -59,8 +59,8 @@ class TestDensityGate(ImportedDataSmallTest):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertAlmostEqual(ex2.data.groupby("D").size().loc[True], 16218)
-        self.assertAlmostEqual(ex2.data.groupby("D").size().loc[False], 3782)
+        self.assertAlmostEqual(ex2.data.groupby("D", observed = True).size().loc[True], 16218)
+        self.assertAlmostEqual(ex2.data.groupby("D", observed = True).size().loc[False], 3782)
             
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
@@ -69,11 +69,11 @@ class TestDensityGate(ImportedDataSmallTest):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[1.0, False], 1866)
-        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[1.0, True], 8134)
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"], observed = True).size().loc[1.0, False], 1866)
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"], observed = True).size().loc[1.0, True], 8134)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[10.0, False], 1859)
-        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[10.0, True], 8141)
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"], observed = True).size().loc[10.0, False], 1859)
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"], observed = True).size().loc[10.0, True], 8141)
  
     
     def testPlot(self):

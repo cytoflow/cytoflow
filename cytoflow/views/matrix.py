@@ -103,7 +103,7 @@ class MatrixView(HasStrictTraits):
         
     scale : Enum(``linear``, ``log``, ``logicle``} (default = ``linear``)
         For a heat map, how should the color of `feature` be scaled before 
-        plotting? If `style` is not ``heat``, `scale` *must* be `linear`.
+        plotting? If `style` is not ``heat``, `scale` *must* be ``linear``.
         
     size_function : Callable
         If set, separate the `Experiment` into subsets by `xfacet` and `yfacet` 

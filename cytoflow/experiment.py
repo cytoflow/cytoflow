@@ -154,7 +154,7 @@ class Experiment(HasStrictTraits):
     >>> ex.data.shape
         (20000, 17)
         
-    >>> ex.data.groupby(['Dox']).size()
+    >>> ex.data.groupby(['Dox'], observed = True).size()
         Dox
         1      10000
         10     10000

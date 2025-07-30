@@ -41,7 +41,7 @@ class Test(ImportedDataSmallTest):
         ex2 = self.gate.apply(self.ex)
         
         # how many events ended up in the gate?
-        self.assertEqual(ex2.data.groupby("Range2D").size()[True], 4371)
+        self.assertEqual(ex2.data.groupby("Range2D", observed = True).size()[True], 4371)
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         

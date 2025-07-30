@@ -25,20 +25,20 @@ Plots a minimum spanning tree of a statistic.
 
     * The default behavior will produce a tree where each vertex is a circle 
       and the color of the circle is related to the intensity of the 
-      value of `Feature`. (In this scenario, `Variable` must be left empty.)
+      value of ``Feature``. (In this scenario, ``Variable`` must be left empty.)
       
-    * Setting `Style` to ``Pie plot`` will draw a pie plot at each vertex. The values 
+    * Setting ``Style`` to ``Pie plot`` will draw a pie plot at each vertex. The values 
       of `Variable` are used as the categories of the pie, and the arc length 
-      of each slice of pie is related to the intensity of the value of `Feature`.
+      of each slice of pie is related to the intensity of the value of ``Feature``.
       
-    * Setting `Style` to ``Petal plot`` will draw a "petal plot" at each vertex. The 
+    * Setting ``Style`` to ``Petal plot`` will draw a "petal plot" at each vertex. The 
       values of `Variable` are used as the categories, but unlike a pie plot, the 
       arc width of each slice is equal. Instead, the radius of the pie slice scales 
       with the square root of the intensity, so that the relationship between area and
       intensity remains the same.
       
       
-    Optionally, you can set `Scale by events` to scale the total size of each
+    Optionally, you can set ``Scale by events`` to scale the total size of each
     circle, pie or petal plot by the number of events that match the category.
 
 .. object:: Statistic
@@ -49,18 +49,18 @@ Plots a minimum spanning tree of a statistic.
 .. object:: Locations
 
     A second statistic whose features (columns) are the locations of the 
-    vertices. Usually produced by a clustering module such as as `KMeans` 
-    or `SOM`.
+    vertices. Usually produced by a clustering module such as as ``KMeans`` 
+    or ``SOM``.
     
 .. object:: Locations Level
 
-    If there are multiple index levels in the `Locations` statistic, which one
+    If there are multiple index levels in the ``Locations`` statistic, which one
     is different at each location? Optional if there is only one level in 
-    `Locations`.
+    ``Locations``.
         
 .. object:: Locations Features
 
-    Which features in `Locations` should be used as vertex positions? (By
+    Which features in ``Locations`` should be used as vertex positions? (By
     default, use all of them.)
     
 .. object:: Feature
@@ -98,26 +98,27 @@ Plots a minimum spanning tree of a statistic.
                                  conditions = {'Dox' : 1.0})]
     import_op.conditions = {'Dox' : 'float'}
     ex = import_op.apply()
-    
+        
     km = flow.KMeansOp(name = "KMeans",
                        channels = ["V2-A", "Y2-A", "B1-A"],
                        scale = {"V2-A" : "logicle",
-                                "Y2-A" : "logicle",
-                                "B1-A" : "logicle"},
-                       num_clusters = 10)
-    km.estimate(self.ex)
-        
+                               "Y2-A" : "logicle",
+                               "B1-A" : "logicle"},
+                       num_clusters = 20)       
+    km.estimate(ex)
+    ex2 = km.apply(ex)
+
     ex3 = flow.ChannelStatisticOp(name = "ByDox",
                                   channel = "Y2-A",
-                                  by = ['KMeans_Cluster', 'Dox'],
+                                  by = ["KMeans_Cluster", "Dox"],
                                   function = len).apply(ex2) 
-
-    flow.MSTView(statistic = "ByDox",
-                 locations = "KMeans",
-                 location_features = ["V2-A", "Y2-A", "B1-A"],
-                 variable = 'Dox',
-                 feature = 'Y2-A',
-                 style = 'pie').plot(ex3)
+                                  
+    flow.MSTView(statistic = "ByDox", 
+        locations = "KMeans", 
+        locations_features = ["V2-A", "Y2-A", "B1-A"],
+        feature = "Y2-A",
+        variable = "Dox",
+        style = "pie").plot(ex3)
         
 """
 

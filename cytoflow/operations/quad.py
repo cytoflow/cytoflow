@@ -135,7 +135,7 @@ class QuadOp(HasStrictTraits):
         :context: close-figs
         
         >>> ex2 = quad.apply(ex)
-        >>> ex2.data.groupby('Quad').size()   
+        >>> ex2.data.groupby('Quad', observed = True).size()   
         Quad
         Quad_1    1783
         Quad_2    2584

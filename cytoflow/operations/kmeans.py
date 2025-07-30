@@ -54,8 +54,8 @@ class KMeansOp(HasStrictTraits):
     Call `estimate` to compute the cluster centroids.
       
     Calling `apply` creates a new categorical metadata variable 
-    named `{name}_Cluster`, with possible values ``Cluster_1`` .... ``Cluster_n`` where 
-    ``n`` is the number of clusters, specified with `num_clusters`.
+    named ``{name}_Cluster``, with possible values ``Cluster_1`` .... ``Cluster_n`` 
+    where ``n`` is the number of clusters, specified with `num_clusters`.
 
     The same model may not be appropriate for different subsets of the data set.
     If this is the case, you can use the `by` attribute to specify 

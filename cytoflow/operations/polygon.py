@@ -143,7 +143,7 @@ class PolygonOp(HasStrictTraits):
         :context: close-figs
         
         >>> ex2 = p.apply(ex)
-        >>> ex2.data.groupby('Polygon').size()
+        >>> ex2.data.groupby('Polygon', observed = True).size()
         Polygon
         False    15875
         True      4125

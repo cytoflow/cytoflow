@@ -138,7 +138,7 @@ class Range2DOp(HasStrictTraits):
         :context: close-figs
         
         >>> ex2 = r.apply(ex)
-        >>> ex2.data.groupby('Range2D').size()
+        >>> ex2.data.groupby('Range2D', observed = True).size()
         Range2D
         False    16405
         True      3595

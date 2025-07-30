@@ -115,7 +115,7 @@ class RangeOp(HasStrictTraits):
         :context: close-figs
         
         >>> ex2 = range_op.apply(ex)
-        >>> ex2.data.groupby('Range').size()
+        >>> ex2.data.groupby('Range', observed = True).size()
         Range
         False    16042
         True      3958

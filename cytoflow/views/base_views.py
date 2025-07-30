@@ -47,7 +47,7 @@ the data before plotting, and determining axis limits and scales.
   
 `BaseStatisticsView` -- implements a view that plots a statistic from
 an `Experiment` (as opposed to the underlying data.)  These views
-have a "primary" `BaseStatisticsView.variable`, and can be subset
+have a "primary" `BaseStatisticsView.statistic`, and can be subset
 as well.
   
 `Base1DStatisticsView` -- implements a view that plots one dimension

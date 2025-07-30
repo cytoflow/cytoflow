@@ -21,11 +21,11 @@
 cytoflow.operations.registration
 ------------------------------------
 
-The `registration` module contains two classes:
+The `register` module contains two classes:
 
 `RegistrationOp` -- warps channels to bring areas of high density into registration
 
-`RegistrationDiagnostic` -- a diagnostic view to make sure
+`RegistrationDiagnosticView` -- a diagnostic view to make sure
 that `RegistrationOp` performed correctly.
 """
 

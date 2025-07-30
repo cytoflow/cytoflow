@@ -235,7 +235,7 @@ class LocalWorkflow(HasStrictTraits):
     """
     
     workflow = List(WorkflowItem, comparison_mode = ComparisonMode.identity)
-    """The list of `WorkflowItem`s"""
+    """The list of `WorkflowItem`"""
     
     selected = Instance(WorkflowItem)
     """The currently-selected `WorkflowItem`"""

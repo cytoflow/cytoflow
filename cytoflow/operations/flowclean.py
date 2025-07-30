@@ -379,7 +379,7 @@ class FlowCleanOp(HasStrictTraits):
             if len(tube_events) > len(labels):
                 labels = np.append(labels, [num_segments - 1] * (len(tube_events) - len(labels)))
 
-            self._tube_bins[tube] = tube_events.groupby(labels)
+            self._tube_bins[tube] = tube_events.groupby(labels, observed = True)
             self._bin_kept[tube] = np.full((num_segments), True)
             self._bin_measures[tube] = np.zeros((num_segments))
             self._channel_stats[tube] = pd.DataFrame(index = self.channels,

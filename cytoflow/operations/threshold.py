@@ -114,7 +114,7 @@ class ThresholdOp(HasStrictTraits):
         :context: close-figs
         
         >>> ex2 = thresh_op.apply(ex)
-        >>> ex2.data.groupby('Threshold').size()
+        >>> ex2.data.groupby('Threshold', observed = True).size()
         Threshold
         False    15786
         True      4214

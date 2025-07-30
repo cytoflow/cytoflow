@@ -223,7 +223,7 @@ class BinningOp(HasStrictTraits):
         if self.bin_count_name:
             # TODO - this is a HUGE memory hog?!
             # TODO - fix this, then turn it on by default
-            agg_count = new_experiment.data.groupby(self.name).count()
+            agg_count = new_experiment.data.groupby(self.name, observed = True).count()
             agg_count = agg_count[agg_count.columns[0]]
             
             # have to make the condition a float64, because if we're in log

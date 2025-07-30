@@ -99,7 +99,7 @@ def expand_class_attributes(cls):
 
     attr_section = []
     for attr_name, attr_value, attr_body in new_cls_attr:
-        attr_section.append("    " + attr_name + " : " + attr_value)
+        attr_section.append(attr_name + " : " + attr_value)
         attr_section.extend(attr_body)
         attr_section.append("")
             
@@ -165,14 +165,13 @@ def expand_method_parameters(cls, method):
 
     params_section = []
     for param_name, param_type, param_body in new_method_params:
-        params_section.append("        " + param_name + " : " + param_type)
+        params_section.append(param_name + " : " + param_type)
         params_section.extend(param_body)
         params_section.append("")
         
     lines[first_param_line:last_param_line + 1] = params_section
         
     method.__doc__ = "\n".join(lines)    
-
 
 def find_section(section, lines):
     """

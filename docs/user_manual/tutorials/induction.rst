@@ -51,7 +51,7 @@ Import the data
               table by following the instructions at :ref:`user_import`. 
               
             - You can select multiple cells in the table to edit at once by 
-            holding **Control**  or **Command** and clicking multiple cells.
+              holding **Control**  or **Command** and clicking multiple cells.
             
             - *Cytoflow* looks at the files' *metadata* and offers to let you
               use metadata that differs between tubes as experiment conditions.

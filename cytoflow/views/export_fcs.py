@@ -151,7 +151,7 @@ class ExportFCS(HasStrictTraits):
                 self._include_by = _include_by
                 
                 if by:
-                    self._iter = experiment.data.groupby(by).__iter__()
+                    self._iter = experiment.data.groupby(by, observed = True).__iter__()
                 
             def __iter__(self):
                 return self
@@ -260,7 +260,7 @@ class ExportFCS(HasStrictTraits):
                 common_metadata['$P{}V'.format(i + 1)] = experiment.metadata[channel]['voltage']
             
         
-        for group, data_subset in experiment.data.groupby(self.by):
+        for group, data_subset in experiment.data.groupby(self.by, observed = True):
             data_subset = data_subset[experiment.channels]
             
             parts = []
