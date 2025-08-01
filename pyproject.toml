@@ -11,7 +11,7 @@ authors = [{name = "Brian Teague", email = "bpteague@gmail.com"}]
 description = "Python tools for quantitative, reproducible flow cytometry analysis"
 readme = "README.md"
 license = "GPL-2.0-or-later"
-license-files = "LICENSE.txt"
+license-files = ["LICENSE.txt"]
 keywords = ["flow", "cytometry", "scipy"]
 
 dynamic = ["version"]
