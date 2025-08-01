@@ -22,13 +22,13 @@ on:
 jobs:     
   build-windows-conda-package:
     name: Build windows conda package
-    runs-on: windows-2022
+    runs-on: windows-2025
     defaults:
       run:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -48,7 +48,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -57,7 +57,7 @@ jobs:
                 
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build conda-verify
+        conda install --yes --quiet swig anaconda-client conda-build conda-verify
         
     - name: Build conda package
       run: |
@@ -102,13 +102,13 @@ jobs:
 
   build-windows-wheels:
     name: Build windows wheel, extension
-    runs-on: windows-2022
+    runs-on: windows-2025
     defaults:
       run:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -119,7 +119,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -128,7 +128,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2 pip
+        conda install --yes --quiet swig pip
     
     - name: Install packaging deps
       run: |
@@ -182,13 +182,13 @@ jobs:
         
   build-windows-oneclick:
     name: Build Windows one-click
-    runs-on: windows-2022
+    runs-on: windows-2025
     defaults:
       run:
         shell: bash -l {0}
     steps:        
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -211,7 +211,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -220,7 +220,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2
+        conda install --yes --quiet swig
             
     - name: Install package locally
       run: |
@@ -228,8 +228,8 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install --yes --quiet 'sphinx==7.3.7' pandoc
-        pip install "pyinstaller==6.12.0"
+        conda install --yes --quiet sphinx pandoc
+        pip install pyinstaller
         
     - name: Build embedded help docs
       run: |
