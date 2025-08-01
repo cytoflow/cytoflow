@@ -54,7 +54,6 @@ classifiers = [
     'Environment :: Win32 (MS Windows)',
     'Environment :: X11 Applications :: Qt',
     'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
     'Natural Language :: English',
     'Operating System :: MacOS',
     'Operating System :: Microsoft :: Windows',
