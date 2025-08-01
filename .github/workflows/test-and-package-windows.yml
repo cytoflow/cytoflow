@@ -36,7 +36,7 @@ jobs:
         
     - name: Remove link
       run: |
-        rm -f /usr/bin/link
+        rm -f /usr/bin/link.exe
         
     - name: Remove nomkl
       run: |
@@ -96,7 +96,7 @@ jobs:
         
     - name: Remove link
       run: |
-        rm -f /usr/bin/link
+        rm -f /usr/bin/link.exe
         
     - name: Remove nomkl
       run: |
@@ -171,7 +171,7 @@ jobs:
         
     - name: Remove link
       run: |
-        rm -f /usr/bin/link 
+        rm -f /usr/bin/link.exe
         
     - name: Remove nomkl
       run: |
@@ -236,7 +236,7 @@ jobs:
         
     - name: Remove link
       run: |
-        rm -f /usr/bin/link   
+        rm -f /usr/bin/link.exe
         
     - name: Show all the files
       run: find .
