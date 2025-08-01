@@ -239,7 +239,7 @@ jobs:
         rm -f /usr/bin/link.exe
         
     - name: Install NSIS
-      uses: repolevedavaj/install-nsis@v1.0.1
+      uses: repolevedavaj/install-nsis@v1
       with:
         nsis-version: '3.10'
         
@@ -290,7 +290,7 @@ jobs:
         
     - name: Build installer
       run: |
-        "C:\Program Files (x86)\NSIS\makensis.exe" //NOCD package/installer.nsis
+        makensis.exe //NOCD package/installer.nsis
         
     - name: Rename installer and remove remaining files
       run: |
