@@ -23,7 +23,7 @@ jobs:
     steps:
     
     - name: Check out repo
-      uses: actions/checkout   
+      uses: actions/checkout@v4   
       
     - name: Compare meta.yaml and environment.yml
       run: |
@@ -40,12 +40,12 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -91,13 +91,13 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -153,13 +153,13 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -209,7 +209,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         fetch-depth: 0
         submodules: true
@@ -224,7 +224,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         activate-environment: cytoflow
@@ -279,7 +279,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         fetch-depth: 0
         submodules: true

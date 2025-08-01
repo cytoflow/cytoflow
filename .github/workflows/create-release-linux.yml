@@ -28,7 +28,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4@v4
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -44,7 +44,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
        
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -103,14 +103,14 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4 
+      uses: actions/checkout@v4@v4 
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -190,7 +190,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -206,7 +206,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -271,7 +271,7 @@ jobs:
         echo "${{ github.event.client_payload.release_url }}"
 
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0

@@ -25,7 +25,7 @@ jobs:
         shell: bash -l {0}        
     steps:
     - name: Check out repo
-      uses: actions/checkout    
+      uses: actions/checkout@v4    
       with:
         submodules: true    
         
@@ -34,7 +34,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -75,7 +75,7 @@ jobs:
     needs: test-on-windows
     steps:
     - name: Check out repo
-      uses: actions/checkout
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         submodules: true
@@ -85,7 +85,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -141,7 +141,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         fetch-depth: 0
         submodules: true
@@ -151,7 +151,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -197,7 +197,7 @@ jobs:
         shell: bash -l {0}
     steps:        
     - name: Check out repo
-      uses: actions/checkout  
+      uses: actions/checkout@v4  
       with:
         fetch-depth: 0
         submodules: true
@@ -219,7 +219,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         channels: cytoflow
