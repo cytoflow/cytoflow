@@ -163,6 +163,14 @@ def run_gui():
     from pyface.ui.qt.application_window import ApplicationWindow
     ApplicationWindow._update_tool_bar_managers = _update_tool_bar_managers
     
+    # monkey patch pyface.image.image.ImageVolume to stop overwriting the
+    # standard image libraries, which breaks Mac code signing
+    
+    def empty_save(self):
+        pass
+    
+    from pyface.image.image import ImageVolume
+    ImageVolume.save = empty_save
     
     # define and install a message handler for Qt errors
     from traits.api import push_exception_handler
