@@ -34,6 +34,10 @@ jobs:
       with:
         arch: x64   
         
+    - name: Remove link
+      run: |
+        rm -f /usr/bin/link
+        
     - name: Remove nomkl
       run: |
         sed -i '/nomkl/d' environment.yml
@@ -89,6 +93,10 @@ jobs:
       uses: egor-tensin/vs-shell@v2
       with:
         arch: x64        
+        
+    - name: Remove link
+      run: |
+        rm -f /usr/bin/link
         
     - name: Remove nomkl
       run: |
@@ -159,7 +167,11 @@ jobs:
     - name: Set up Visual Studio shell
       uses: egor-tensin/vs-shell@v2
       with:
-        arch: x64   
+        arch: x64  
+        
+    - name: Remove link
+      run: |
+        rm -f /usr/bin/link 
         
     - name: Remove nomkl
       run: |
@@ -220,7 +232,11 @@ jobs:
     - name: Set up Visual Studio shell
       uses: egor-tensin/vs-shell@v2
       with:
-        arch: x64   
+        arch: x64
+        
+    - name: Remove link
+      run: |
+        rm -f /usr/bin/link   
         
     - name: Show all the files
       run: find .
