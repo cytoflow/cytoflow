@@ -19,7 +19,7 @@ on: [push]
 jobs:     
   test-on-windows:
     name: Run nose2 on Windows runner
-    runs-on: windows-2019
+    runs-on: windows-2025
     defaults:
       run:
         shell: bash -l {0}        
@@ -68,7 +68,7 @@ jobs:
     
   build-windows-conda-package:
     name: Build windows conda package
-    runs-on: windows-2019
+    runs-on: windows-2025
     defaults:
       run:
         shell: bash -l {0}
@@ -135,7 +135,7 @@ jobs:
   build-windows-wheels:
     name: Build source dist, linux wheels
     needs: test-on-windows
-    runs-on: windows-2019
+    runs-on: windows-2025
     defaults:
       run:
         shell: bash -l {0}
@@ -191,7 +191,7 @@ jobs:
   build-windows-oneclick:
     name: Build Windows one-click
     needs: test-on-windows
-    runs-on: windows-2019
+    runs-on: windows-2025
     defaults:
       run:
         shell: bash -l {0}
