@@ -22,7 +22,8 @@ dependencies:
     - envisage==7.0.3
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
-    - importlib_resources==6.4.0
+    - importlib_resources
+    - configobj
 
     - qt==5.15.*
     - pyqt==5.15.*

@@ -16,7 +16,8 @@ pyface==7.3.0
 envisage==6.0.1
 nbformat==5.10.4
 python-dateutil==2.9.0post0
-importlib_resources==6.4.0
+importlib_resources
+configobj
 
 # qt, pyqt are not in pip - install through your package manager
 pyopengl==3.1.1a1
