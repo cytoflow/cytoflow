@@ -28,7 +28,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4@v4
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -103,7 +103,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4@v4 
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
