@@ -37,7 +37,7 @@ dependencies = [
     'nbformat==5.10.4',
     'python-dateutil==2.9.0post0',
     'importlib_resources',
-    'configobj'
+    'configobj',
    
      # pyqt, qt are not in pip
      # need to install through your package manager
