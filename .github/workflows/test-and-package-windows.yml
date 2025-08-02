@@ -112,7 +112,7 @@ jobs:
                 
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig anaconda-client conda-build conda-verify
+        conda install --yes --quiet swig anaconda-client conda-build 
         
     - name: Build conda package
 #       continue-on-error: true
