@@ -25,12 +25,12 @@ jobs:
         shell: bash -l {0}        
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4    
+      uses: actions/checkout@v4.2.2    
       with:
         submodules: true    
         
     - name: Set up Visual Studio shell
-      uses: egor-tensin/vs-shell@v2
+      uses: egor-tensin/vs-shell@v2.1
       with:
         arch: x64   
         
@@ -43,7 +43,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -84,13 +84,13 @@ jobs:
     needs: test-on-windows
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
       with:
         fetch-depth: 0
         submodules: true
         
     - name: Set up Visual Studio shell
-      uses: egor-tensin/vs-shell@v2
+      uses: egor-tensin/vs-shell@v2.1
       with:
         arch: x64        
         
@@ -103,7 +103,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -159,13 +159,13 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4  
+      uses: actions/checkout@v4.2.2  
       with:
         fetch-depth: 0
         submodules: true
         
     - name: Set up Visual Studio shell
-      uses: egor-tensin/vs-shell@v2
+      uses: egor-tensin/vs-shell@v2.1
       with:
         arch: x64  
         
@@ -178,7 +178,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -224,13 +224,13 @@ jobs:
         shell: bash -l {0}
     steps:        
     - name: Check out repo
-      uses: actions/checkout@v4  
+      uses: actions/checkout@v4.2.2  
       with:
         fetch-depth: 0
         submodules: true
         
     - name: Set up Visual Studio shell
-      uses: egor-tensin/vs-shell@v2
+      uses: egor-tensin/vs-shell@v2.1
       with:
         arch: x64
         
@@ -260,7 +260,7 @@ jobs:
         sed -i '/nomkl/d' environment.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -290,7 +290,7 @@ jobs:
         
     - name: Build installer
       run: |
-        makensis.exe //NOCD package/installer.nsis
+        makensis.exe /NOCD package/installer.nsis
         
     - name: Rename installer and remove remaining files
       run: |

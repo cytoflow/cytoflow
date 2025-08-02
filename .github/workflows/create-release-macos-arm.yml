@@ -27,7 +27,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -43,7 +43,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -78,7 +78,7 @@ jobs:
         echo 'Output from get_filename: ${CONDA_PACKAGE}'
          
 #     - name: Upload the conda package to the GitHub release
-#       uses: actions/upload-release-asset@v1
+#       uses: actions/upload-release-asset@v1.0.2
 #       env:
 #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #       with:
@@ -102,14 +102,14 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4  
+      uses: actions/checkout@v4.2.2  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -148,7 +148,7 @@ jobs:
         echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload the MacOS extension to the GitHub release
-      uses: actions/upload-release-asset@v1
+      uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -158,7 +158,7 @@ jobs:
         asset_content_type: application/x-sharedlib
  
     - name: Upload the MacOS wheel to the GitHub release
-      uses: actions/upload-release-asset@v1
+      uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -176,7 +176,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4  
+      uses: actions/checkout@v4.2.2  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -192,7 +192,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -236,7 +236,7 @@ jobs:
       run: ls dist/
       
     - name: Upload the point-and-click tarball to the GitHub release
-      uses: actions/upload-release-asset@v1
+      uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
