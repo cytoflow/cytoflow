@@ -23,7 +23,7 @@ jobs:
     steps:
     
     - name: Check out repo
-      uses: actions/checkout@v4.1.7   
+      uses: actions/checkout@v4.2.2   
       
     - name: Compare meta.yaml and environment.yml
       run: |
@@ -40,12 +40,12 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout@v4.2.2  
       with:
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -54,7 +54,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2
+        conda install --yes --quiet swig==4.3.0
     
     - name: Install the package
       run: |
@@ -91,13 +91,13 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4.2.2
       with:
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -106,7 +106,7 @@ jobs:
         
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build conda-verify
+        conda install --yes --quiet swig==4.3.0 anaconda-client conda-build conda-verify
         
     - name: Build conda package
 #       continue-on-error: true
@@ -153,13 +153,13 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout@v4.2.2  
       with:
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -168,7 +168,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2 pip
+        conda install --yes --quiet swig==4.3.0 pip
         
     - name: Install packaging deps
       run: |
@@ -209,7 +209,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout@v4.2.2  
       with:
         fetch-depth: 0
         submodules: true
@@ -224,7 +224,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         activate-environment: cytoflow
@@ -232,7 +232,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2
+        conda install --yes --quiet swig==4.3.0
         
     - name: Install package locally
       run: |
@@ -240,8 +240,8 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install --yes --quiet 'sphinx==7.3.7' pandoc
-        pip install "pyinstaller==6.12.0"
+        conda install --yes --quiet sphinx pandoc
+        pip install pyinstaller
         
     - name: Build embedded help docs
       run: |
@@ -279,7 +279,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout@v4.2.2  
       with:
         fetch-depth: 0
         submodules: true

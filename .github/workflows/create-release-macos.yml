@@ -27,7 +27,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4.2.2
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -43,7 +43,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -52,7 +52,7 @@ jobs:
 
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build conda-verify
+        conda install --yes --quiet swig==4.3.0 anaconda-client conda-build conda-verify
         
     - name: Build conda package
       run: |
@@ -78,7 +78,7 @@ jobs:
         echo 'Output from get_filename: ${CONDA_PACKAGE}'
          
 #     - name: Upload the conda package to the GitHub release
-#       uses: actions/upload-release-asset@v1
+#       uses: actions/upload-release-asset@v1.0.2
 #       env:
 #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #       with:
@@ -89,6 +89,7 @@ jobs:
          
     - name: Upload the conda package to anaconda.org
       run: |
+        anaconda logout
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
         anaconda upload --user cytoflow dist/$CONDA_PACKAGE
         anaconda logout
@@ -101,14 +102,14 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout@v4.2.2  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -117,7 +118,7 @@ jobs:
         
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2 pip
+        conda install --yes --quiet swig==4.3.0 pip
         
     - name: Install packaging deps
       run: |
@@ -147,7 +148,7 @@ jobs:
         echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload the MacOS extension to the GitHub release
-      uses: actions/upload-release-asset@v1
+      uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -157,7 +158,7 @@ jobs:
         asset_content_type: application/x-sharedlib
  
     - name: Upload the MacOS wheel to the GitHub release
-      uses: actions/upload-release-asset@v1
+      uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -175,7 +176,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.1.7  
+      uses: actions/checkout@v4.2.2  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -191,7 +192,7 @@ jobs:
         echo "Output from Find Tag: ${GIT_TAG}"
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.1.0
+      uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         channels: cytoflow
@@ -200,7 +201,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.0.2
+        conda install --yes --quiet swig==4.3.0
             
     - name: Install package locally
       run: |
@@ -208,8 +209,8 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install --yes --quiet 'sphinx==7.3.7' pandoc
-        pip install "pyinstaller==6.12.0"
+        conda install --yes --quiet sphinx pandoc
+        pip install pyinstaller
         
     - name: Build embedded help docs
       run: |
@@ -235,7 +236,7 @@ jobs:
       run: ls dist/
       
     - name: Upload the point-and-click tarball to the GitHub release
-      uses: actions/upload-release-asset@v1
+      uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
