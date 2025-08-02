@@ -56,7 +56,7 @@ requirements:
     - nomkl # [not win]
 
     # build deps
-    - sphinx==7.3.7
+    - sphinx
     - bleach
     - pip
 
@@ -96,9 +96,6 @@ requirements:
     # gets installed, along with matplotlib widgets
     - ipympl
     - notebook
-
-    # only install mkl libraries on windows, where they're required
-    - nomkl # [not win]
 
 test:
   # Python imports
