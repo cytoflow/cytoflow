@@ -109,7 +109,10 @@ class TestExperiment(ImportedDataTest):
         
         pandas.testing.assert_frame_equal(self.ex.data, ex2.data)
         self.assertDictEqual(self.ex.metadata, ex2.metadata)
-        self.assertDictEqual(self.ex.statistics, ex2.statistics)
+        # self.assertDictEqual(self.ex.statistics, ex2.statistics)
+        for s in self.ex.statistics:
+            pandas.testing.assert_frame_equal(self.ex.statistics[s],
+                                              ex2.statistics[s])
         self.assertListEqual([x.id for x in self.ex.history], 
                              [x.id for x in ex2.history])
 
