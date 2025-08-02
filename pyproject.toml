@@ -9,7 +9,8 @@ name = "cytoflow"
 authors = [{name = "Brian Teague", email = "bpteague@gmail.com"}]
 description = "Python tools for quantitative, reproducible flow cytometry analysis"
 readme = "README.md"
-license = {file = "LICENSE.txt"}
+license = "GPL-2.0-or-later"
+license-files = ["LICENSE.txt"]
 keywords = ["flow", "cytometry", "scipy"]
 
 dynamic = ["version"]
@@ -39,7 +40,7 @@ dependencies = [
     'nbformat==5.10.4',
     'python-dateutil==2.9.0post0',
     'importlib_resources==6.4.0',
-   
+       
      # pyqt, qt are not in pip
      # need to install through your package manager
 
@@ -54,7 +55,6 @@ classifiers = [
     'Environment :: Win32 (MS Windows)',
     'Environment :: X11 Applications :: Qt',
     'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
     'Natural Language :: English',
     'Operating System :: MacOS',
     'Operating System :: Microsoft :: Windows',
