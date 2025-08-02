@@ -37,8 +37,6 @@ dependencies:
     - ipympl
     - notebook
     
-    - nomkl # [not win]
-
     - pip
     - swig
     - anaconda-client

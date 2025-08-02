@@ -37,4 +37,3 @@ dependencies:
     - ipympl
     - notebook
     
-    - nomkl # [not win]
