@@ -64,7 +64,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
-    'sphinxext.plot_directive',
+    'sphinxext.plot_directive'
 ]
 
 # Generate the API documentation when building
@@ -182,14 +182,25 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# html_theme = 'alabaster'
+html_theme = 'pydata_sphinx_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {'show_powered_by' : False}
+html_theme_options = {"secondary_sidebar_items": {
+                        "**" : ["page-toc"],
+                        "index" : []},
+                      "navbar_align": "right",
+                      "github_url" : "https://github.com/cytoflow/cytoflow"}
+# html_theme_options = {'show_prev_next' : False,
+#                       "show_nav_level": 2,
+#                       'github_url' : "https://github.com/cytoflow/cytoflow"}
 
-html_sidebars = { '**': ['about.html', 'globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'], }
+html_sidebars = {
+     "**": ["sidebar-nav-bs", "sidebar-ethical-ads"],
+     "index" : []
+}
+#html_sidebars = { '**': ['about.html', 'globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'], }
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -230,7 +241,9 @@ html_sidebars = { '**': ['about.html', 'globaltoc.html', 'relations.html', 'sour
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+# html_sidebars = {
+#     "**": ["sidebar-nav-bs", "sidebar-ethical-ads"]
+# }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -263,7 +276,7 @@ html_sidebars = { '**': ['about.html', 'globaltoc.html', 'relations.html', 'sour
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'cytoflow'
+# htmlhelp_basename = 'cytoflow'
 
 
 # -- Options for LaTeX output ---------------------------------------------
