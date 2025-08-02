@@ -49,11 +49,7 @@ jobs:
         auto-update-conda: true
         channels: cytoflow
         activate-environment: cytoflow
-        environment-file: environment.yml
-         
-    - name: Configure conda
-      run: |
-        conda install --yes --quiet swig anaconda-client conda-build 
+        environment-file: environment-ci.yml
          
     - name: Build conda package
       run: |
@@ -115,11 +111,7 @@ jobs:
         auto-update-conda: true
         channels: cytoflow
         activate-environment: cytoflow
-        environment-file: environment.yml
-        
-    - name: Configure conda
-      run: |
-        conda install --yes --quiet swig pip
+        environment-file: environment-ci.yml
     
     - name: Install package locally
       run: |
@@ -211,11 +203,7 @@ jobs:
         auto-update-conda: true
         channels: cytoflow
         activate-environment: cytoflow
-        environment-file: environment.yml
-        
-    - name: Configure conda
-      run: |
-        conda install --yes --quiet swig
+        environment-file: environment-ci.yml
     
     - name: Install package locally
       run: |
