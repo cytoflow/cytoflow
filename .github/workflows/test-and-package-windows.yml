@@ -52,7 +52,7 @@ jobs:
               
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.3.0
+        conda install --yes --quiet swig
     
     - name: Install package locally
       run: |
@@ -112,7 +112,7 @@ jobs:
                 
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.3.0 anaconda-client conda-build conda-verify
+        conda install --yes --quiet swig anaconda-client conda-build conda-verify
         
     - name: Build conda package
 #       continue-on-error: true
@@ -187,7 +187,7 @@ jobs:
     
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.3.0 pip
+        conda install --yes --quiet swig pip
     
     - name: Install package locally
       run: |
@@ -269,7 +269,7 @@ jobs:
                       
     - name: Configure conda
       run: |
-        conda install --yes --quiet swig==4.3.0
+        conda install --yes --quiet swig
             
     - name: Install package locally
       run: |
