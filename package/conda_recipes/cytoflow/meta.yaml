@@ -76,8 +76,8 @@ requirements:
     - natsort==7.1.1
     - numba==0.61.2
     - opentsne==1.0.2
-    - conda-forge::python-igraph==0.11.9
-    - conda-forge::scikit-fda==0.10.1
+    - python-igraph==0.11.9
+    - scikit-fda==0.10.1
 
     - traits==7.0.2
     - traitsui==8.0.0
