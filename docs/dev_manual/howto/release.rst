@@ -45,7 +45,7 @@ Test the packaging
   	  
 - Build the conda package locally::
 	
-      conda install conda-build conda-verify  # only necessary once
+      conda install conda-build # only necessary once
       conda build package/conda_recipes/cytoflow
       
 - Install the local package in a new environment::
@@ -61,7 +61,7 @@ Test the packaging
 - Make sure that the :mod:`pyinstaller` distribution will build and run on your local 
   machine (back in your development environment).  ::
 
-  	  pip install pyinstaller==6.12.0
+  	  pip install pyinstaller==6.15.0
   	  pyinstaller package/pyinstaller.spec 
   	  dist/cytoflow/cytoflow
   
