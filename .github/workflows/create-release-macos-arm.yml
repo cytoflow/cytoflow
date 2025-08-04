@@ -48,7 +48,7 @@ jobs:
         auto-update-conda: true
         channels: cytoflow
         activate-environment: cytoflow
-        environment-file: environment-ci.yml
+        environment-file: package/environment-build.yml
         
     - name: Build conda package
       run: |
@@ -110,7 +110,7 @@ jobs:
         auto-update-conda: true
         channels: cytoflow
         activate-environment: cytoflow
-        environment-file: environment-ci.yml
+        environment-file: package/environment-build.yml
         
     - name: Install packaging deps
       run: |
@@ -189,7 +189,7 @@ jobs:
         auto-update-conda: true
         channels: cytoflow
         activate-environment: cytoflow
-        environment-file: environment-ci.yml
+        environment-file: package/environment-build.yml
             
     - name: Install package locally
       run: |

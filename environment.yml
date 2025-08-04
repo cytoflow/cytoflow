@@ -1,6 +1,8 @@
 name: cytoflow
 channels:
  - defaults
+ - cytoflow
+ - conda-forge
  
 dependencies:
     - python==3.13.5
@@ -16,13 +18,14 @@ dependencies:
     - natsort==7.1.1
     - numba==0.61.2
     - opentsne==1.0.2
-    - conda-forge::python-igraph==0.11.9
-    - conda-forge::scikit-fda==0.10.1
+    - python-igraph==0.11.9
+    - scikit-fda==0.10.1
 
     - traits==7.0.2
     - traitsui==8.0.0
     - pyface==8.0.0
     - conda-forge::envisage==7.0.4
+    - conda-forge::apptools==5.3.1
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0

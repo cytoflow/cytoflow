@@ -48,9 +48,10 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
-        channels: cytoflow
+        channels: defaults, cytoflow, conda-forge
+        channel-priority: flexible
         activate-environment: cytoflow
-        environment-file: environment-ci.yml
+        environment-file: package/environment-build.yml
     
     - name: Install the package
       run: |
@@ -96,12 +97,12 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
-        channels: cytoflow
+        channels: defaults, cytoflow, conda-forge
+        channel-priority: flexible
         activate-environment: cytoflow
-        environment-file: environment-ci.yml
+        environment-file: package/environment-build.yml
         
     - name: Build conda package
-#       continue-on-error: true
       run: |
         conda render package/conda_recipes/cytoflow
         conda build --quiet package/conda_recipes/cytoflow
@@ -154,9 +155,10 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
-        channels: cytoflow
+        channels: defaults, cytoflow, conda-forge
+        channel-priority: flexible
         activate-environment: cytoflow
-        environment-file: environment-ci.yml
+        environment-file: package/environment-build.yml
         
     - name: Install packaging deps
       run: |
@@ -215,17 +217,18 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
+        channels: defaults, cytoflow, conda-forge
+        channel-priority: flexible
         activate-environment: cytoflow
-        environment-file: environment-ci.yml
+        environment-file: package/environment-build.yml
         
     - name: Install package locally
       run: |
         pip install --editable .
         
-    - name: Install packaging deps
+    - name: Install pyinstaller
       run: |
-        conda install --yes --quiet sphinx pandoc
-        pip install pyinstaller
+        pip install pyinstaller==6.15.0
         
     - name: Build embedded help docs
       run: |
