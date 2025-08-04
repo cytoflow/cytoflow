@@ -9,9 +9,9 @@ source:
 
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
-  string: {{ "py311" }}
+  string: {{ "py313" }}
   script:
-    - python setup.py build_ext --inplace 2>&1
+    - pip install --editable . 2>&1
     - sphinx-build docs/user_manual/reference cytoflowgui/help 2>&1
     - pip install -v -v . 2>&1
   entry_points:
@@ -34,16 +34,17 @@ requirements:
     - natsort==7.1.1
     - numba==0.61.2
     - opentsne==1.0.2
-    - conda-forge::python-igraph==0.11.9
-    - conda-forge::scikit-fda==0.10.1
+    - python-igraph==0.11.9
+    - scikit-fda==0.10.1
 
     - traits==7.0.2
     - traitsui==8.0.0
     - pyface==8.0.0
-    - conda-forge::envisage==7.0.4
+    - envisage==7.0.4
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
+    - configobj==5.0.9
 
     - qt==5.15.*
     - pyqt==5.15.*
@@ -56,7 +57,8 @@ requirements:
     - nomkl # [not win]
 
     # build deps
-    - sphinx
+    - setuptools==78.1.1
+    - sphinx==8.2.3
     - bleach
     - pip
 
@@ -80,10 +82,11 @@ requirements:
     - traits==7.0.2
     - traitsui==8.0.0
     - pyface==8.0.0
-    - conda-forge::envisage==7.0.4
+    - envisage==7.0.4
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
+    - configobj==5.0.9
 
     - qt==5.15.*
     - pyqt==5.15.*
@@ -130,6 +133,3 @@ app:
     icon: icon.png
     summary: "Flow cytometry analysis"
 
-# See
-# https://conda.io/docs/building/build.html for
-# more information about meta.yaml

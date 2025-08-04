@@ -85,9 +85,6 @@ a.datas = list(set(a.datas) - set(remove_datas))
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
-# get rid of the leftover version file once it's compiled
-#os.unlink(version_file)
-
 exe = EXE(pyz,
           a.scripts,
           [],

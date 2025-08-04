@@ -24,11 +24,11 @@ dependencies:
     - traits==7.0.2
     - traitsui==8.0.0
     - pyface==8.0.0
-    - conda-forge::envisage==7.0.4
-    - conda-forge::apptools==5.3.1
+    - envisage==7.0.4
     - nbformat==5.10.4
     - python-dateutil==2.9.0post0
     - importlib_resources==6.4.0
+    - configobj==5.0.9
 
     - qt==5.15.*
     - pyqt==5.15.*
