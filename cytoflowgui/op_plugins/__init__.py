@@ -56,6 +56,7 @@ from .kmeans import KMeansPlugin
 from .pca import PCAPlugin
 from .flowclean import FlowCleanPlugin
 from .tsne import tSNEPlugin
+from .som import SOMPlugin
 from .mst import MSTPlugin
 from .register import RegistrationPlugin
 

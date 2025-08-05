@@ -52,8 +52,9 @@ class SOMOp(HasStrictTraits):
     events that will eventually be clustered.
       
     Calling `apply` creates a new categorical metadata variable 
-    named `name`, with possible values ``{name}_1`` .... ``name_n`` where 
-    ``n`` is the product of the height and width of the map.
+    named `name_Cluster`, with possible values ``Cluster_1`` .... ``Cluster_n`` where 
+    ``n`` is the product of the height and width of the map (or the number of consensus
+    clusters, if consensus clustering is used).
 
     The same model may not be appropriate for different subsets of the data set.
     If this is the case, you can use the `by` attribute to specify 
@@ -460,7 +461,7 @@ class SOMOp(HasStrictTraits):
         clusters = [x + 1 for x in range(num_clusters)]
           
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
-                                         names = list(self.by) + ["Cluster"])
+                                         names = list(self.by) + ["{}_Cluster".format(self.name)])
         centers_stat = pd.DataFrame(index = idx,
                                     columns = list(self.channels), 
                                     dtype = 'float').sort_index()
@@ -472,7 +473,7 @@ class SOMOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
-        event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
+        event_assignments = pd.Series(["Cluster_None"] * len(experiment), dtype = "object")
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -519,8 +520,8 @@ class SOMOp(HasStrictTraits):
                  
             predicted_str = pd.Series(["(none)"] * len(predicted))
             for c in np.unique(predicted):
-                predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
-            predicted_str[predicted == -1] = "{0}_None".format(self.name)
+                predicted_str[predicted == c] = "Cluster_{}".format(c + 1)
+            predicted_str[predicted == -1] = "Cluster_None"
             predicted_str.index = group_idx
       
             event_assignments.iloc[group_idx] = predicted_str
@@ -531,13 +532,12 @@ class SOMOp(HasStrictTraits):
                     scale = self._scale[channel]
                     for cluster in range(cc.cluster_centers_.shape[0]):
                         if len(self.by) == 0:
-                            g = tuple([cluster + 1])
+                            g = tuple(["Cluster_{}".format(cluster + 1)])
                         elif not util.is_list_like(group):
-                            g = tuple(list([group]) + [cluster + 1])
+                            g = tuple(list([group]) + ["Cluster_{}".format(cluster + 1)])
                         else:
-                            g = tuple(list(group) + [cluster + 1])
+                            g = tuple(list(group) + ["Cluster_{}".format(cluster + 1)])
 
-                            
                         centers_stat.at[g, channel] = scale.inverse(cc.cluster_centers_[cluster][ci])
                     
             else:            
@@ -552,7 +552,7 @@ class SOMOp(HasStrictTraits):
                         centers_stat.at[g, channel] = scale.inverse(centers[cluster][ci])
          
         new_experiment = experiment.clone(deep = False)          
-        new_experiment.add_condition(self.name, "category", event_assignments)
+        new_experiment.add_condition("{}_Cluster".format(self.name), "category", event_assignments)
         new_experiment.statistics[self.name] = centers_stat.dropna() 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
@@ -646,7 +646,7 @@ class SOM1DView(By1DView, AnnotatingView, HistogramView):
             scale = util.scale_factory(self.scale, experiment, channel = self.channel)
     
         super(SOM1DView, view).plot(experiment,
-                                    annotation_facet = self.op.name,
+                                    annotation_facet = "{}_Cluster".format(self.op.name),
                                     annotation_trait = trait_name,
                                     annotations = self.op._som,
                                     scale = scale,
@@ -721,7 +721,7 @@ class SOM2DView(By2DView, AnnotatingView, ScatterplotView):
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
     
         super(SOM2DView, view).plot(experiment,
-                                    annotation_facet = self.op.name,
+                                    annotation_facet = "{}_Cluster".format(self.op.name),
                                     annotation_trait = trait_name,
                                     annotations = self.op._som,
                                     xscale = xscale,

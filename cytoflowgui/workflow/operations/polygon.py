@@ -73,19 +73,6 @@ class ScatterplotPolygonSelectionWorkflowView(_PolygonSelectionWorkflowView, Sca
 class DensityPolygonSelectionWorkflowView(_PolygonSelectionWorkflowView, DensityPolygonSelectionView):
     pass
 
-class Range2DPlotParams(WorkflowView, Op2DView):
-    density = Bool(False)
-    
-    # density-specific
-    gridsize = util.PositiveCInt(50, allow_zero = False)
-    smoothed = Bool(False)
-    smoothed_sigma = util.PositiveCFloat(1.0, allow_zero = False)
-
-    # scatterplot-specific
-    alpha = util.PositiveCFloat(0.25)
-    s = util.PositiveCFloat(2)
-    marker = Enum(SCATTERPLOT_MARKERS)
-
 @provides(IWorkflowView)
 class PolygonSelectionView(WorkflowView, Op2DView):
     id = Constant('cytoflowgui.workflow.operations.polygonview')

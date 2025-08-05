@@ -46,6 +46,7 @@ from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
 from .pca import PCAWorkflowOp, Channel as PCAChannel
 from .flowclean import FlowCleanWorkflowOp, Channel as FlowCleanChannel, FlowCleanWorkflowView
 from .tsne import tSNEWorkflowOp, Channel as tSNEChannel
+from .som import SOMWorkflowOp, SOMWorkflowView, Channel as SOMChannel
 from .mst import MSTWorkflowOp, MSTWorkflowSelectionView
 from .register import RegistrationWorkflowOp, Channel as RegistrationChannel, RegistrationDiagnosticWorkflowView
 

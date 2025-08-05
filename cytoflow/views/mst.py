@@ -425,10 +425,7 @@ class MSTView(HasStrictTraits):
             data_norm = data_scale.norm()
         else:
             data_norm = kwargs.pop('norm')
-            
-            
-        # groupby = data.groupby(locs_names, observed = True)
-        
+                    
         # find the locations for the groups
         # MST logic: https://github.com/saeyslab/FlowSOM_Python/blob/d8cb6a5934b1ca9c82f4bba27a1f3cd9862a0596/src/flowsom/main.py#L255
         
