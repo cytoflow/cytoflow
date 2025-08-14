@@ -202,11 +202,11 @@ class MSTView(HasStrictTraits):
         :context: close-figs
         
         >>> flow.MSTView(statistic = "ByDox", 
-        ...     locations = "KMeans", 
-        ...     locations_features = ["V2-A", "Y2-A", "B1-A"],
-        ...     feature = "Y2-A",
-        ...     variable = "Dox",
-        ...     style = "pie").plot(ex3)
+        ...              locations = "KMeans", 
+        ...              locations_features = ["V2-A", "Y2-A", "B1-A"],
+        ...              feature = "Y2-A",
+        ...              variable = "Dox",
+        ...              style = "pie").plot(ex3)
     
     """
     
@@ -289,6 +289,10 @@ class MSTView(HasStrictTraits):
         locs = self._subset_data(self.locations, locs)
         experiment_data = experiment.data
         
+        if not self.feature:
+            raise util.CytoflowViewError('feature',
+                                         "Must set `feature` to a feature in `statistic`")
+        
         # the indices of `stat` and `locs` may have the same levels, or the index 
         # of `stat` may have one more -- if so, it must be `self.variable`. to get
         # things compatible, we'll re-order the index levels of stats.
@@ -306,6 +310,11 @@ class MSTView(HasStrictTraits):
         new_stat_idx = stat.index.reorder_levels(stat_names)
         stat = stat.copy()
         stat.index = new_stat_idx
+        
+        # gotta remove rows of stat that aren't in locs
+        # (because some clustering add a "{Cluster}_None" value
+        stat_idx = stat.index.droplevel(self.variable) if self.variable else stat.index
+        stat = stat[[v in locs.index for v in stat_idx]]
         
         # do we have to get a plot_name?
         if len(locs_names) > 1 and not self.locations_level:
