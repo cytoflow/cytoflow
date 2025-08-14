@@ -128,13 +128,13 @@ effectively, check out https://rubikscode.net/2018/08/20/introduction-to-self-or
 '''
 from natsort import natsorted
 
-from traits.api import provides, Event, Property, List, Str
-from traitsui.api import (View, Item, EnumEditor, HGroup, VGroup, TextEditor, 
+from traits.api import provides, Event, Property, List, Str, Bool
+from traitsui.api import (View, Item, Group, EnumEditor, HGroup, VGroup, TextEditor, 
                           CheckListEditor, ButtonEditor, Controller, TupleEditor)
 from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
-from ..editors import SubsetListEditor, InstanceHandlerEditor, VerticalListEditor
+from ..editors import SubsetListEditor, InstanceHandlerEditor, VerticalListEditor, ToggleButtonEditor
 from ..workflow.operations import SOMWorkflowOp, SOMWorkflowView, SOMChannel
 from ..view_plugins.view_plugin_base import DataPlotParamsView
 from ..subset_controllers import subset_handler_factory
@@ -153,6 +153,7 @@ class SOMHandler(OpHandler):
     
     add_channel = Event
     remove_channel = Event
+    show_advanced = Bool(False)
     channels = Property(List(Str), observe = 'context.channels')
     
     operation_traits_view = \
@@ -183,6 +184,9 @@ class SOMHandler(OpHandler):
                                                   name = 'context_handler.previous_conditions_names'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
+                    Item('handler.show_advanced',
+                         editor = ToggleButtonEditor(label = "Advanced parameters..."),
+                         show_label = False),
                     label = "Estimate parameters"),
              VGroup(Item('width',
                          editor = TextEditor(auto_set = False,
@@ -226,7 +230,8 @@ class SOMHandler(OpHandler):
                          editor = TextEditor(auto_set = False,
                                              evaluate = float,
                                              format_func = lambda x: "" if x is None else str(x))),
-                    label = "Advanced Parameters"),
+                    label = "Advanced Parameters",
+                    visible_when = "handler.show_advanced"),
              VGroup(Item('subset_list',
                          show_label = False,
                          editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
@@ -257,9 +262,8 @@ class SOMHandler(OpHandler):
         
 class SOMViewParamsHandler(Controller):
     view_params_view = \
-        View(
+        View(VGroup(
         # histogram-specific
-        # TODO - figure out conditional view
         VGroup(Item('orientation'),
                Item('lim',
                     label = "Data\nLimits",
@@ -284,9 +288,9 @@ class SOMViewParamsHandler(Controller):
                                         placeholder = "None",
                                         format_func = lambda x: "" if x is None else str(x))),
                Item('alpha',
-                    editor = TextEditor(auto_set = False))),
+                    editor = TextEditor(auto_set = False)),
+               label = "Histogram Parameters"),
         # scatterplot-specific
-        # TODO - figure out conditional view
         VGroup(Item('xlim',
                     label = "X Limits",
                     editor = TupleEditor(editors = [TextEditor(auto_set = False,
@@ -316,8 +320,11 @@ class SOMViewParamsHandler(Controller):
                Item('s',
                     editor = TextEditor(auto_set = False),
                     label = "Size"),
-               Item('marker')),
-             DataPlotParamsView.content)
+               Item('marker'),
+               label = "Scatterplot Parameters"),
+        Group(DataPlotParamsView.content,
+              label = "Common Parameters")))
+
         
 class SOMViewHandler(ViewHandler):
     view_traits_view = \

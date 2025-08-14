@@ -88,7 +88,7 @@ class SOMWorkflowView(WorkflowByView, OpView):
             
             v = SOM1DView(op = self.op)
             v.trait_set(channel = self.op.channels[0], 
-                        scale = self.scale[self.op.channels[0]])
+                        scale = self.op.scale[self.op.channels[0]])
             v.plot(experiment, **kwargs)
             
         elif len(self.op.channels) == 2:
