@@ -78,7 +78,7 @@ class ViewDockPane(TraitsDockPane):
                 
         self.toolbar = ToolBarManager(orientation = 'vertical',
                                       show_tool_names = False,
-                                      image_size = (32, 32))
+                                      image_size = (40, 40))
         
         self._default_action = TaskAction(name = "Setup View",
                                           on_perform = lambda: self.handler.activate_view('default'),
