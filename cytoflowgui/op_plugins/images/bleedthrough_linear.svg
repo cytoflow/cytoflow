@@ -2,22 +2,22 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="500"
    height="500"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
    inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/bleedthrough_linear.png"
    inkscape:export-xdpi="5.8299999"
    inkscape:export-ydpi="5.8299999"
-   sodipodi:docname="bleedthrough_linear.svg">
+   sodipodi:docname="bleedthrough_linear.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs4">
     <linearGradient
@@ -66,18 +66,21 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="101.05735"
-     inkscape:cy="317.29387"
+     inkscape:cx="101.52033"
+     inkscape:cy="317.69298"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1128"
-     inkscape:window-height="816"
-     inkscape:window-x="53"
-     inkscape:window-y="24"
-     inkscape:window-maximized="0"
+     inkscape:window-width="1854"
+     inkscape:window-height="1131"
+     inkscape:window-x="66"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
      showguides="true"
-     inkscape:guide-bbox="true" />
+     inkscape:guide-bbox="true"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -86,7 +89,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -383,12 +386,16 @@
        width="15.647999"
        id="use4127"
        style="opacity:0.4;fill:#a600ff;fill-opacity:1;stroke:none" />
-    <path
-       style="fill:none;stroke:#000000;stroke-width:60;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       d="M 80.812204,972.48702 418.20316,641.4073"
-       id="path4131"
-       inkscape:connector-curvature="0"
-       inkscape:export-xdpi="5.8299999"
-       inkscape:export-ydpi="5.8299999" />
+    <text
+       xml:space="preserve"
+       style="font-weight:900;font-size:171.033px;font-family:Lato;-inkscape-font-specification:'Lato Heavy';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;stroke-width:0.867;stroke-linecap:round"
+       x="-3.2010434"
+       y="866.03662"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         x="-3.2010434"
+         y="866.03662"
+         style="font-style:normal;font-variant:normal;font-weight:800;font-stretch:normal;font-family:'Ubuntu Sans';-inkscape-font-specification:'Ubuntu Sans Ultra-Bold';stroke-width:0.867">COMP</tspan></text>
   </g>
 </svg>
