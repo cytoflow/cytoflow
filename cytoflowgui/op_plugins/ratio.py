@@ -68,8 +68,8 @@ class RatioPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operations.ratio'
     view_id = None
 
-    name = "Ratio"
-    menu_group = "Data"
+    short_name = name = "Ratio"
+    menu_group = "Preprocessing"
     
     def get_operation(self):
         return RatioWorkflowOp()

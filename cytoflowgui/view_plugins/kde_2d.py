@@ -174,6 +174,7 @@ class Kde2DPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.kde2d'
     view_id = 'cytoflow.view.kde2d'
     name = "2D Kernel Density Estimate"
+    short_name = "2D KDE"
     
     def get_view(self):
         return Kde2DWorkflowView()

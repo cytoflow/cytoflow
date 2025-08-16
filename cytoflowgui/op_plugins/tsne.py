@@ -192,7 +192,8 @@ class tSNEPlugin(Plugin, PluginHelpMixin):
     view_id = None
 
     name = "t-Stochastic Neighbor Embedding"
-    menu_group = "Calibration"
+    short_name = "tSNE"
+    menu_group = "Computational Flow"
     
     def get_operation(self):
         return tSNEWorkflowOp()

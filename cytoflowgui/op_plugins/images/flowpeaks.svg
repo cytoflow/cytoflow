@@ -6,7 +6,7 @@
    height="320"
    width="320"
    sodipodi:docname="flowpeaks.svg"
-   inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,13 +23,13 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1854"
-     inkscape:window-height="1131"
+     inkscape:window-width="2494"
+     inkscape:window-height="1371"
      id="namedview2332"
      showgrid="false"
      inkscape:zoom="1.6819304"
-     inkscape:cx="145.0714"
-     inkscape:cy="170.93454"
+     inkscape:cx="146.55779"
+     inkscape:cy="172.71821"
      inkscape:window-x="66"
      inkscape:window-y="32"
      inkscape:window-maximized="1"
@@ -12478,15 +12478,26 @@
       </g>
       <text
          xml:space="preserve"
-         style="font-weight:800;font-size:43.4029px;font-family:'Ubuntu Sans';-inkscape-font-specification:'Ubuntu Sans Ultra-Bold';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;stroke-width:0.229393;stroke-linecap:round"
-         x="18.428019"
-         y="269.91318"
-         id="text1"><tspan
+         style="font-weight:bold;font-size:47.9715px;font-family:'Nimbus Sans';-inkscape-font-specification:'Nimbus Sans Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:round"
+         x="56.391087"
+         y="248.51192"
+         id="text50365"><tspan
            sodipodi:role="line"
-           id="tspan1"
-           style="fill:#ffffff;fill-opacity:1;stroke-width:0.229393"
-           x="18.428019"
-           y="269.91318">FP</tspan></text>
+           id="tspan50363"
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4"
+           x="56.391087"
+           y="248.51192">+</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-weight:bold;font-size:47.9715px;font-family:'Nimbus Sans';-inkscape-font-specification:'Nimbus Sans Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:round"
+         x="40.548546"
+         y="286.32889"
+         id="text51405"><tspan
+           sodipodi:role="line"
+           id="tspan51403"
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4"
+           x="40.548546"
+           y="286.32889">+</tspan></text>
     </g>
   </g>
 </svg>

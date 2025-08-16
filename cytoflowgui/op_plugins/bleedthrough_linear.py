@@ -236,7 +236,8 @@ class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflow.view.linearbleedthroughdiagnostic'
 
     name = "Linear Compensation"
-    menu_group = "Gates"
+    short_name = "Bleedthru\nCorrect"
+    menu_group = "Preprocessing"
     
     def get_operation(self):
         return BleedthroughLinearWorkflowOp()

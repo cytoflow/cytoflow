@@ -197,6 +197,7 @@ class PolygonPlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflowgui.workflow.operations.polygonview'
 
     name = "Polygon Gate"
+    short_name = "Polygon"
     menu_group = "Gates"
     
     def get_operation(self):

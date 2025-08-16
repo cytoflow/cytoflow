@@ -166,8 +166,9 @@ class KMeansPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operations.kmeans'
     view_id = 'cytoflowgui.op_plugins.kmeans'
 
-    name = "KMeans"
-    menu_group = "Gates"
+    name = "KMeans Clustering"
+    short_name = "KMeans"
+    menu_group = "Clustering"
     
     def get_operation(self):
         return KMeansWorkflowOp()

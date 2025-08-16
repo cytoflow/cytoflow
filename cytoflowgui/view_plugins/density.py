@@ -160,6 +160,7 @@ class DensityPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.density'
     view_id = 'cytoflow.view.density'
     name = "Density Plot"
+    short_name = "Density"
 
     def get_view(self):
         return DensityWorkflowView()

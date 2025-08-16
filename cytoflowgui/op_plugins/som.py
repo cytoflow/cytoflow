@@ -348,6 +348,7 @@ class SOMPlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflowgui.workflow.operations.somworkflowview'
 
     name = "Self-Organizing Map"
+    short_name = "SOM"
     menu_group = "Clustering"
     
     def get_operation(self):

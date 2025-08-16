@@ -163,7 +163,8 @@ class TransformStatisticPlugin(Plugin, PluginHelpMixin):
     view_id = None
 
     name = "Transform Statistic"
-    menu_group = "Gates"
+    short_name = "Xform\nStatistic"
+    menu_group = "Statistics"
     
     def get_operation(self):
         return TransformStatisticWorkflowOp()

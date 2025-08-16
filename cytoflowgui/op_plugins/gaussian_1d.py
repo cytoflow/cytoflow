@@ -202,8 +202,9 @@ class GaussianMixture1DPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflowgui.operations.gaussian_1d'
     view_id = 'cytoflow.view.gaussianmixture1dview'
 
-    name = "1D Mixture Model"
-    menu_group = "Gates"
+    name = "1D Gaussian Mixture Model"
+    short_name = "1D\nGaussian"
+    menu_group = "Clustering"
     
     def get_operation(self):
         return GaussianMixture1DWorkflowOp()

@@ -6,7 +6,7 @@
    height="360"
    id="svg2"
    version="1.1"
-   inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    sodipodi:docname="pca.svg"
    inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/pca.png"
    inkscape:export-xdpi="8.5299997"
@@ -138,13 +138,13 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.92320294"
-     inkscape:cx="-90.987579"
-     inkscape:cy="194.43179"
+     inkscape:cx="-90.445986"
+     inkscape:cy="196.59816"
      inkscape:document-units="px"
      inkscape:current-layer="g3050"
      showgrid="false"
-     inkscape:window-width="1854"
-     inkscape:window-height="1131"
+     inkscape:window-width="2494"
+     inkscape:window-height="1371"
      inkscape:window-x="66"
      inkscape:window-y="32"
      inkscape:window-maximized="1"
@@ -210,16 +210,6 @@
            inkscape:connector-curvature="0"
            sodipodi:nodetypes="ccccccccc" />
       </g>
-      <text
-         xml:space="preserve"
-         style="font-weight:800;font-size:133.333px;font-family:'Ubuntu Sans';-inkscape-font-specification:'Ubuntu Sans Ultra-Bold';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke-width:0.867;stroke-linecap:round"
-         x="70.935005"
-         y="590.36176"
-         id="text1"><tspan
-           sodipodi:role="line"
-           id="tspan1"
-           x="70.935005"
-           y="590.36176">PCA</tspan></text>
     </g>
   </g>
 </svg>

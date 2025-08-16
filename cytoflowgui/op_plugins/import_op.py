@@ -197,6 +197,7 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     view_id = None
 
     name = "Import data"
+    short_name = "Import"
     menu_group = "TOP"
     
     def get_operation(self):

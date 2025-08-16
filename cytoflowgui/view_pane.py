@@ -76,46 +76,47 @@ class ViewDockPane(TraitsDockPane):
         Create and return the toolkit-specific contents of the dock pane.
         """
                 
-        self.toolbar = ToolBarManager(orientation = 'vertical',
-                                      show_tool_names = False,
-                                      image_size = (40, 40))
+        self._toolbar_mgr = ToolBarManager(orientation = 'vertical',
+                                           show_tool_names = self.task.application.preferences_helper.show_toolbar_names,
+                                           image_size = (40, 40))
         
-        self._default_action = TaskAction(name = "Setup View",
+        self._default_action = TaskAction(name = "Setup",
                                           on_perform = lambda: self.handler.activate_view('default'),
                                           image = ImageResource('setup'),
                                           style = 'toggle',
                                           visible = False)
-        self.toolbar.append(self._default_action)
+        self._toolbar_mgr.append(self._default_action)
         
         for plugin in self.plugins:
-            task_action = TaskAction(name = plugin.name,
+            task_action = TaskAction(name = plugin.short_name,
                                      on_perform = lambda view_id=plugin.view_id: self.handler.activate_view(view_id),
                                      image = plugin.get_icon(),
                                      style = 'toggle')
             self._actions[plugin.view_id] = task_action
-            self.toolbar.append(task_action)
+            self._toolbar_mgr.append(task_action)
             
         # see the comments in cytoflowgui.util for an explanation of this
         # HintedMainWindow business.
         
-        self._window = window = HintedMainWindow()
-        window.addToolBar(QtCore.Qt.RightToolBarArea, 
-                          self.toolbar.create_tool_bar(window))
+        self._window = HintedMainWindow()
+        self._toolbar = self._toolbar_mgr.create_tool_bar(self._window)
+        self._window.addToolBar(QtCore.Qt.RightToolBarArea, 
+                                self._toolbar)
         
         self.ui = self.handler.edit_traits(view = 'selected_view_traits_view',
                                            context = self.model,
                                            kind = 'subpanel', 
-                                           parent = window)
+                                           parent = self._window)
         
-        window.setCentralWidget(self.ui.control)
+        self._window.setCentralWidget(self.ui.control)
         
-        window.setParent(parent)
-        parent.setWidget(window)
+        self._window.setParent(parent)
+        parent.setWidget(self._window)
         
-        window.setEnabled(False)
+        self._window.setEnabled(False)
         self.ui.control.setEnabled(False)
         
-        return window
+        return self._window
         
     @observe('model.selected.status')
     def _selected_status_changed(self, event):
@@ -146,6 +147,15 @@ class ViewDockPane(TraitsDockPane):
                 self._default_action.checked = True
             else:
                 self._actions[view_id].checked = True
+                
+    @observe('task.application.preferences_helper.show_toolbar_names', post_init = True)
+    def show_toolbar_names(self, _):
+        self._window.removeToolBar(self._toolbar)
+        self._toolbar.deleteLater()
+        self._toolbar_mgr.show_tool_names = self.task.application.preferences_helper.show_toolbar_names
+        self._toolbar = self._toolbar_mgr.create_tool_bar(self._window)
+        self._window.addToolBar(QtCore.Qt.RightToolBarArea,    # @UndefinedVariable
+                                self._toolbar)
 
             
 class PlotParamsPane(TraitsDockPane):

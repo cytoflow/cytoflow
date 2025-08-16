@@ -151,7 +151,7 @@ class ThresholdPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operations.threshold'
     view_id = 'cytoflow.views.threshold'
 
-    name = "Threshold"
+    short_name = name = "Threshold"
     menu_group = "Gates"
     
     def get_operation(self):

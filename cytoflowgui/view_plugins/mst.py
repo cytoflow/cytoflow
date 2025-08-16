@@ -315,6 +315,7 @@ class MSTPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.mst'
     view_id = 'cytoflow.view.mst'
     name = "Minimum Spanning Tree"
+    short_name = "MST"
     
     def get_view(self):
         return MSTWorkflowView()

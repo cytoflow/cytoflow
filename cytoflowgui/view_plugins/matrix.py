@@ -279,7 +279,8 @@ class MatrixPlugin(Plugin, PluginHelpMixin):
 
     id = 'cytoflowgui.view.matrix'
     view_id = 'cytoflow.view.matrix'
-    name = "Matrix"
+    name = "Matrix View"
+    short_name = "Matrix"
     
     def get_view(self):
         return MatrixWorkflowView()

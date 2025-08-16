@@ -328,7 +328,8 @@ class TasbePlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflowgui.workflow.operations.tasbeview'
 
     name = "TASBE Calibration"
-    menu_group = "Gates"
+    short_name = "TASBE"
+    menu_group = "Preprocessing"
     
     def get_operation(self):
         return TasbeWorkflowOp()

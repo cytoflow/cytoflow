@@ -202,8 +202,9 @@ class FlowPeaksPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operations.flowpeaks'
     view_id = 'cytoflowgui.op_plugins.flowpeaks'
 
-    name = "Flow Peaks"
-    menu_group = "Gates"
+    name = "Flow Peaks Clustering"
+    short_name = "Peaks"
+    menu_group = "Clustering"
     
     def get_operation(self):
         return FlowPeaksWorkflowOp()

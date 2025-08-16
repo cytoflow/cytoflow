@@ -165,6 +165,7 @@ class Kde1DPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.kde1d'
     view_id = 'cytoflow.view.kde1d'
     name = "1D Kernel Density"
+    short_name = "1D KDE"
     
     def get_view(self):
         return Kde1DWorkflowView()

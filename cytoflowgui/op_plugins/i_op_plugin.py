@@ -40,11 +40,15 @@ class IOperationPlugin(Interface):
         Same as the ``id`` attribute of the IOperation this plugin wraps.
         
     name : Constant
-        The operation's ``short`` name - for menus and toolbar tool tips
+        The operation's name - for menus and toolbar tool tips
+        
+    short_name : Constant
+        The operation's short name - 8 characters or less - for toolbars
     """
 
     operation_id = Constant
     name = Constant
+    short_name = Constant
 
     def get_operation(self):
         """

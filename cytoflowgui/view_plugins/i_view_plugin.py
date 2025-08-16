@@ -42,7 +42,10 @@ class IViewPlugin(Interface):
         Prefix: cytoflowgui.view
         
     name : Str
-        The view's "short" name - for menus, toolbar tips, etc.
+        The view's name - for menus, toolbar tips, etc.
+        
+    short_name : Str
+        The view's "short" name - for under the tool on the toolbar. Max 8 characters.
     """
     
     

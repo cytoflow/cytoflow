@@ -168,6 +168,7 @@ class HistogramPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.histogram'
     view_id = 'cytoflow.view.histogram'
     name = "Histogram"
+    short_name = "Histogram"
     
     def get_view(self):
         return HistogramWorkflowView()

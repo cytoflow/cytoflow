@@ -254,6 +254,7 @@ class BarChartPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.barchart'
     view_id = 'cytoflow.view.barchart'
     name = "Bar Chart"
+    short_name = "Bar"
     
     def get_view(self):
         return BarChartWorkflowView()

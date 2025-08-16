@@ -37,15 +37,17 @@ class CytoflowPreferences(PreferencesHelper):
 
     #### 'PreferencesHelper' interface ########################################
 
-    preferences_path = 'cytoflow.preferences'
+    preferences_path = 'cytoflowgui'
     """The path to the preference node that contains the preferences."""
-
 
     #### Preferences ##########################################################
 
     # See TasksApplication for more information.
     always_use_default_layout = Bool
     """Whether to always apply the default application layout."""
+    
+    # Should the UI show the toolbar names?
+    show_toolbar_names = Bool
 
 
 class CytoflowPreferencesPane(PreferencesPane):
@@ -58,11 +60,15 @@ class CytoflowPreferencesPane(PreferencesPane):
     model_factory = CytoflowPreferences
     """The factory to use for creating the preferences model object."""
 
-    view = View(
+    view = View(VGroup(
         VGroup(HGroup(Item('always_use_default_layout'),
                       Label('Always use the default layout on startup?'),
                       show_labels = False),
                label='Application startup'),
+        VGroup(HGroup(Item('show_toolbar_names'),
+                      Label('Show toolbar labels?'),
+                      show_labels = False),
+               label = "User Interface")),
         resizable=True)
     """The view for the preferences dialog box"""
 

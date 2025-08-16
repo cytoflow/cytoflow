@@ -126,6 +126,7 @@ class ExportFCSPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.exportfcs'
     view_id = 'cytoflow.view.exportfcs'
     name = "Export FCS"
+    short_name = "Export"
     
     def get_view(self):
         return ExportFCSWorkflowView()

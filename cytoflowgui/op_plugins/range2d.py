@@ -235,7 +235,7 @@ class Range2DPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operations.range2d'
     view_id = 'cytoflowgui.workflow.operations.range2dview'
 
-    name = "Range 2D"
+    short_name = name = "2D Range"
     menu_group = "Gates"
     
     def get_operation(self):

@@ -159,6 +159,7 @@ class LongTablePlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.long_table'
     view_id = 'cytoflow.view.long_table'
     name = "Long Table View"
+    short_name = "Long\nTable"
     
     def get_view(self):
         return LongTableWorkflowView()

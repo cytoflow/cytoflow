@@ -121,6 +121,7 @@ class AutofluorescencePlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflow.view.autofluorescencediagnosticview'
 
     name = "Autofluorescence correction"
+    short_name = "Autofluor\nCorrect"
     menu_group = "Calibration"
     
     def get_operation(self):

@@ -195,6 +195,7 @@ class ParallelCoordinatesPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.parallel_coords'
     view_id = 'cytoflow.view.parallel_coords'
     name = "Parallel Coordinates Plot"
+    short_name = "ParCoord"
 
     def get_view(self):
         return ParallelCoordinatesWorkflowView()

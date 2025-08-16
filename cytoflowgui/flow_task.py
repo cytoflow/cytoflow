@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.8
 # coding: latin-1
+from traits.observation._trait_change_event import TraitChangeEvent
 
 # (c) Massachusetts Institute of Technology 2015-2018
 # (c) Brian Teague 2018-2022
@@ -41,7 +42,7 @@ from textwrap import dedent
 import nbformat as nbf
 from yapf.yapflib.yapf_api import FormatCode
 
-from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo
+from traits.api import Instance, Str, List, on_trait_change, provides, DelegatesTo, observe
 from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter  # @UnresolvedImport
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup, SGroup
 # from pyface.tasks.action.dock_pane_toggle_group import DockPaneToggleGroup, DockPaneToggleAction, ActionItem
@@ -54,6 +55,7 @@ from envisage.ui.tasks.api import TaskFactory
 from envisage.ui.tasks.action.preferences_action import PreferencesAction
 from envisage.api import Plugin
 
+from .cytoflow_application import CytoflowApplication
 from .workflow_pane import WorkflowDockPane
 from .view_pane import ViewDockPane, PlotParamsPane
 from .help_pane import HelpDockPane
@@ -72,7 +74,7 @@ class FlowTaskPane(TaskPane):
     data views.
     """
     
-    id = 'cytoflow.flow_task_pane'
+    id = 'cytoflowgui.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
     model = Instance(LocalWorkflow)
@@ -134,6 +136,9 @@ class FlowTask(Task):
     # the handler that connects it to various views
     handler = Instance(WorkflowController)
     """The shared `WorkflowController` controller"""
+    
+    # the application
+    application = Instance(CytoflowApplication)
         
     # side panes
     workflow_pane = Instance(WorkflowDockPane)
@@ -291,7 +296,8 @@ class FlowTask(Task):
         # place control passes back to user code before the toolbar
         # is created.
     
-        self.tool_bars[0].image_size = (32, 32)
+        self.tool_bars[0].image_size = (40, 40)
+        self.tool_bars[0].show_tool_names = self.application.preferences_helper.show_toolbar_names
     
         return FlowTaskPane(canvas = self.application.canvas,
                             model = self.application.model, 
@@ -744,6 +750,14 @@ class FlowTask(Task):
                 
         with open(path, 'w') as f:
             nbf.write(nb, f)
+            
+    @observe('application.preferences_helper.show_toolbar_names', post_init = True)
+    def show_toolbar_names(self, _):
+        self.window.tool_bar_managers[0].show_tool_names = self.application.preferences_helper.show_toolbar_names
+        self.window._update_tool_bar_managers(TraitChangeEvent(object = None,
+                                                               name = None,
+                                                               old = None,
+                                                               new = True))
 
         
 class FlowTaskPlugin(Plugin):

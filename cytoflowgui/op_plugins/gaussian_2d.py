@@ -209,7 +209,8 @@ class GaussianMixture2DPlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflow.view.gaussianmixture2dview'
 
     name = "2D Mixture Model"
-    menu_group = "Gates"
+    short_name = "2D\nGaussian"
+    menu_group = "Clustering"
     
     def get_operation(self):
         return GaussianMixture2DWorkflowOp()

@@ -281,8 +281,8 @@ class FlowCleanPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operations.flowclean'
     view_id = 'cytoflow.view.flowcleandiagnostic'
 
-    name = "FlowClean"
-    menu_group = "Calibration"
+    short_name = name = "FlowClean"
+    menu_group = "Preprocessing"
     
     def get_operation(self):
         return FlowCleanWorkflowOp()

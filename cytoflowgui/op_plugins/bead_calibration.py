@@ -212,7 +212,8 @@ class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflow.view.beadcalibrationdiagnosticview'
 
     name = "Bead Calibration"
-    menu_group = "Calibration"
+    short_name = "Bead\nCalib"
+    menu_group = "Preprocessing"
     
     def get_operation(self):
         return BeadCalibrationWorkflowOp()

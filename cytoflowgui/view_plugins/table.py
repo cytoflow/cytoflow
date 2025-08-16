@@ -235,6 +235,7 @@ class TablePlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.table'
     view_id = 'cytoflow.view.table'
     name = "Table View"
+    short_name = "Table"
     
     def get_view(self):
         return TableWorkflowView()

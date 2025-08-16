@@ -153,7 +153,8 @@ class PCAPlugin(Plugin, PluginHelpMixin):
     view_id = None
 
     name = "Principal Component Analysis"
-    menu_group = "Calibration"
+    short_name = "PCA"
+    menu_group = "Computational Flow"
     
     def get_operation(self):
         return PCAWorkflowOp()

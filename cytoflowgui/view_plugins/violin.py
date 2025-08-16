@@ -171,6 +171,7 @@ class ViolinPlotPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view_plugins.violin'
     view_id = 'cytoflow.view.violin'
     name = "Violin Plot"
+    short_name = "Violin"
 
     def get_view(self):
         return ViolinPlotWorkflowView()

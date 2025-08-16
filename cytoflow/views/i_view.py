@@ -37,7 +37,7 @@ class IView(Interface):
     Attributes
     ----------
     id : Constant
-        A unique id for this view.  Prefix: "edu.mit.cytoflow.views"
+        A unique id for this view.  Prefix: "cytoflow.view"
 
     friendly_id : Constant
         The human-readable id of this view: eg, "Histogram"

@@ -197,6 +197,7 @@ class RadvizPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.radviz'
     view_id = 'cytoflow.view.radviz'
     name = "Radviz Plot"
+    short_name = "Radviz"
 
     def get_view(self):
         return RadvizWorkflowView()

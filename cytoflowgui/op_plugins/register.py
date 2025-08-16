@@ -195,8 +195,9 @@ class RegistrationPlugin(Plugin, PluginHelpMixin):
     operation_id = 'cytoflow.operations.register'
     view_id = 'cytoflow.views.registrationdiagnosticview'
 
-    name = "Registration"
-    menu_group = "Quantitative"
+    name = "Peak Registration"
+    short_name = "Peak\nRegister"
+    menu_group = "Preprocessing"
     
     def get_operation(self):
         return RegistrationWorkflowOp()

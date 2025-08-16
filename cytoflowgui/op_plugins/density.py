@@ -184,6 +184,7 @@ class DensityGatePlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflow.view.densitygateview'
 
     name = "Density Gate"
+    short_name = "Density"
     menu_group = "Gates"
     
     def get_operation(self):

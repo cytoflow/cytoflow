@@ -169,6 +169,7 @@ class ScatterplotPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.scatterplot'
     view_id = 'cytoflow.view.scatterplot'
     name = "Scatter Plot"
+    short_name = "Scatter"
     
     def get_view(self):
         return ScatterplotWorkflowView()

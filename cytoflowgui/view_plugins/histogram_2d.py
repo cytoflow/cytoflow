@@ -174,6 +174,7 @@ class Histogram2DPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.histogram2d'
     view_id = 'cytoflow.view.histogram2d'
     name = "2D Histogram"
+    short_name = "Hist2D"
 
     def get_view(self):
         return Histogram2DWorkflowView()

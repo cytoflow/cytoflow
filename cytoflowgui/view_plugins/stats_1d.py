@@ -294,6 +294,7 @@ class Stats1DPlugin(Plugin, PluginHelpMixin):
     id = 'cytoflowgui.view.stats1d'
     view_id = 'cytoflow.view.stats1d'
     name = "1D Statistics View"
+    short_name = "Stats 1D"
     
     def get_view(self):
         return Stats1DWorkflowView()

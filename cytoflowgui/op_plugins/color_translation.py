@@ -170,7 +170,8 @@ class ColorTranslationPlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflow.view.colortranslationdiagnostic'
 
     name = "Color Translation"
-    menu_group = "Gates"
+    short_name = "Color\nTranslate"
+    menu_group = "Preprocessing"
     
     def get_operation(self):
         return ColorTranslationWorkflowOp()
