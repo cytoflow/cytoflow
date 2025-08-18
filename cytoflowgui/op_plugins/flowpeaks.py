@@ -203,7 +203,7 @@ class FlowPeaksPlugin(Plugin, PluginHelpMixin):
     view_id = 'cytoflowgui.op_plugins.flowpeaks'
 
     name = "Flow Peaks Clustering"
-    short_name = "Peaks"
+    short_name = "Flow\nPeaks"
     menu_group = "Clustering"
     
     def get_operation(self):
