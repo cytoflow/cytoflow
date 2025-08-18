@@ -91,6 +91,8 @@ from .operations.xform_stat import TransformStatisticOp
 # misc
 from .operations.binning import BinningOp
 from .operations.flowclean import FlowCleanOp
+from .operations.hierarchy import HierarchyOp
+from .operations.binary import BinaryOp
 
 # views
 from .views.histogram import HistogramView
