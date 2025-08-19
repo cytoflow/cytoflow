@@ -26,7 +26,7 @@ Convert a hierarchical gating strategy into a categorical condition.
 categorical variable with values set by gate membership. 
 """
 
-from traits.api import HasStrictTraits, Str, provides, Any, List, Tuple
+from traits.api import HasStrictTraits, Str, provides, Any, List, Tuple, Constant
 
 import pandas as pd
 from pandas.api.types import CategoricalDtype
@@ -81,7 +81,7 @@ class HierarchyOp(HasStrictTraits):
         * ``Any`` - the *value* that the gate has to have to indicate membership
           in this class.
           
-        * ``Str`` - the name to put in the new condition.
+        * ``Str`` - the name of this class's category, to put in the new condition.
         
     default : Str (default = "Unknown")
         The name that unclassified events will have in the new categorical
@@ -91,9 +91,56 @@ class HierarchyOp(HasStrictTraits):
     Examples
     --------
 
-    TODO
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/RFP_Well_A6.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create two threshold gates, simulating a hierarchical gating scheme.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = flow.ThresholdOp(name = 'B1_high',
+        ...                        channel = 'B1-A',
+        ...                        threshold = 500).apply(ex)
+        
+        >>> ex3 = flow.ThresholdOp(name = 'Y2_high',
+        ...                        channel = 'Y2-A',
+        ...                        threshold = 300).apply(ex2)
+        
+    Define the hierarchical gating scheme.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex4 = flow.HierarchyOp(name = "Cell_Type",
+        ...                        gates = [("B1_high", True, "B1_high_cells"),
+        ...                                 ("Y2_high", True, "Y2_high_cells")]).apply(ex3)
+        
+    Plot the new categories.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.ScatterplotView(xchannel = "B1-A",
+        ...                      xscale = "log",
+        ...                      ychannel = "Y2-A",
+        ...                      yscale = "log",
+        ...                      huefacet = "Cell_Type").plot(ex4)
         
     """
+    id = Constant('cytoflow.operations.hierarchy')
+    friendly_id = Constant("Hierarchical Gating")
     
     name = Str
     gates = List(Tuple(Str, Any, Str))

@@ -27,7 +27,6 @@ import cytoflow as flow
 import pandas as pd
 from .test_base import ImportedDataSmallTest
 
-
 class Test(ImportedDataSmallTest):
     def setUp(self):
         super().setUp()

@@ -38,6 +38,7 @@ from .range import RangePlugin
 from .range2d import Range2DPlugin
 from .polygon import PolygonPlugin
 from .quad import QuadPlugin
+from .hierarchy import HierarchyPlugin
 
 # statistics and transformations
 from .channel_stat import ChannelStatisticPlugin

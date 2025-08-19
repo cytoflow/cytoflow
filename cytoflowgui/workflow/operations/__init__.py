@@ -55,3 +55,5 @@ from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflow
 from .bleedthrough_linear import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, Channel as BleedthroughChannel, Spillover as BleedthroughSpillover
 from .color_translation import ColorTranslationWorkflowOp, ColorTranslationWorkflowView, Control as ColorTranslationControl
 from .tasbe import TasbeWorkflowOp, TasbeWorkflowView
+
+from .hierarchy import HierarchyWorkflowOp, HierarchyGate

@@ -26,7 +26,7 @@ Convert a binary gating strategy into a categorical condition.
 categorical variable with values set by gate membership. 
 """
 
-from traits.api import (HasStrictTraits, Str, provides, Dict)
+from traits.api import HasStrictTraits, Str, provides, Dict, Constant
 
 import pandas as pd
 from pandas.api.types import CategoricalDtype
@@ -76,10 +76,57 @@ class BinaryOp(HasStrictTraits):
         
     Examples
     --------
-
-    TODO
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/RFP_Well_A6.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create two threshold gates, simulating a hierarchical gating scheme.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = flow.ThresholdOp(name = 'Y2_really_high',
+        ...                        channel = 'Y2-A',
+        ...                        threshold = 30000).apply(ex)
+        
+        >>> ex3 = flow.ThresholdOp(name = 'Y2_high',
+        ...                        channel = 'Y2-A',
+        ...                        threshold = 300).apply(ex2)
+        
+    Define the hierarchical gating scheme.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex4 = flow.BinaryOp(name = "BO",
+        ...                     subsets = {"Y2_high == False" : "Low",
+        ...                                "Y2_really_high == True" : "High"},
+        ...                     default = "Medium").apply(ex3)
+        
+    Plot the new categories.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.ScatterplotView(xchannel = "B1-A",
+        ...                      xscale = "log",
+        ...                      ychannel = "Y2-A",
+        ...                      yscale = "log",
+        ...                      huefacet = "BO").plot(ex4)
         
     """
+    id = Constant('cytoflow.operations.binary')
+    friendly_id = Constant("Binary Gating")
     
     name = Str
     subsets = Dict(Str, Str)
@@ -146,7 +193,6 @@ class BinaryOp(HasStrictTraits):
         
         for query, category in self.subsets.items():
             which = experiment.data.query(query).index
-            print(len(which))
             if (categories.loc[which] != self.default).any():
                 overlap_index = (categories.loc[which] != self.default).index
                 overlap_categories = list(categories.loc[overlap_index].unique())
