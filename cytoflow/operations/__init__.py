@@ -63,5 +63,5 @@ from .color_translation import ColorTranslationOp
 from .binning import BinningOp
 from .flowclean import FlowCleanOp
 from .hierarchy import HierarchyOp
-from .binary import BinaryOp
+from .category import CategoryOp
 

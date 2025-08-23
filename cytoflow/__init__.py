@@ -92,7 +92,7 @@ from .operations.xform_stat import TransformStatisticOp
 from .operations.binning import BinningOp
 from .operations.flowclean import FlowCleanOp
 from .operations.hierarchy import HierarchyOp
-from .operations.binary import BinaryOp
+from .operations.category import CategoryOp
 
 # views
 from .views.histogram import HistogramView

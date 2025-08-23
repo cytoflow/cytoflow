@@ -23,7 +23,7 @@ import cytoflow as flow
 import cytoflow.utility as util
 from .test_base import ImportedDataSmallTest
 
-class TestBinary(ImportedDataSmallTest):
+class TestCategory(ImportedDataSmallTest):
     def setUp(self):
         super().setUp()
         self.ex = flow.ThresholdOp(name = "Y2_high",
@@ -35,7 +35,7 @@ class TestBinary(ImportedDataSmallTest):
 
         
     def testEvents(self):
-        ex = flow.BinaryOp(name = "BO",
+        ex = flow.CategoryOp(name = "BO",
                            subsets = {"Y2_high == False" : "Low",
                                       "Y2_really_high == True" : "High"},
                            default = "Medium").apply(self.ex)
@@ -45,7 +45,7 @@ class TestBinary(ImportedDataSmallTest):
         self.assertEqual(ex.data.groupby("BO", observed = True).size()['High'], 1)        
         
     def testOverlappingSubsets(self):
-        op = flow.BinaryOp(name = "BO",
+        op = flow.CategoryOp(name = "BO",
                            subsets = {"Y2_high == True" : "Low",
                                       "Y2_really_high == True" : "High"},
                            default = "Medium")

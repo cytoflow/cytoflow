@@ -18,11 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.operations.hierarchy
+cytoflow.operations.category
 
 Convert a binary gating strategy into a categorical condition.
 
-`BinaryOp` -- Given an ordered list of gate names and their values, create a
+`CategoryOp` -- Given an ordered list of gate names and their values, create a
 categorical variable with values set by gate membership. 
 """
 
@@ -36,7 +36,7 @@ from .i_operation import IOperation
 
 
 @provides(IOperation)
-class BinaryOp(HasStrictTraits):
+class CategoryOp(HasStrictTraits):
     """
     Convert a binary gating strategy into a categorical condition.
     
@@ -47,14 +47,14 @@ class BinaryOp(HasStrictTraits):
     gate memberships, for example making a categorical variable with the
     values ``B_Cell`` and ``Macrophage``.
     
-    If the gating strategy is hierarchical, then you can use `HierarchyOp` to
-    accomplish this easily. For more complicated situations, there is 
-    `BinaryOp`. `BinaryOp` is configured with a `dict` that maps query strings
-    to categories. `pandas.DataFrame.query` is called on each query string in 
-    turn; the rows from `Experiment.data` that are returned are assigned the 
-    corresponding category in the new categorical condition that is created. 
-    These subsets must be mutually exclusive, a requirement which is enforced 
-    by the operation. 
+    If the gating strategy is strictly hierarchical, then you can use 
+    `HierarchyOp` to accomplish this easily. For more complicated situations, 
+    there is `CategoryOp`. `CategoryOp` is configured with a `dict` that maps 
+    query strings to categories. `pandas.DataFrame.query` is called on each 
+    query string in turn; the rows from `Experiment.data` that are returned 
+    are assigned the corresponding category in the new categorical condition 
+    that is created. **These subsets must be mutually exclusive,** a 
+    requirement which is enforced by the operation. 
     
     Any event that is in none of the subsets is set to a default value, which
     defaults to `Unknown`. 
@@ -108,7 +108,7 @@ class BinaryOp(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> ex4 = flow.BinaryOp(name = "BO",
+        >>> ex4 = flow.CategoryOp(name = "BO",
         ...                     subsets = {"Y2_high == False" : "Low",
         ...                                "Y2_really_high == True" : "High"},
         ...                     default = "Medium").apply(ex3)
@@ -125,8 +125,8 @@ class BinaryOp(HasStrictTraits):
         ...                      huefacet = "BO").plot(ex4)
         
     """
-    id = Constant('cytoflow.operations.binary')
-    friendly_id = Constant("Binary Gating")
+    id = Constant('cytoflow.operations.category')
+    friendly_id = Constant("Category Gating")
     
     name = Str
     subsets = Dict(Str, Str)
