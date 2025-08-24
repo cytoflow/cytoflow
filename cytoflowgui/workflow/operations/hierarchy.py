@@ -76,7 +76,17 @@ def _dump(op):
                 default = op.default)
     
 @camel_registry.loader('hierarchy', version = 1)
-def _load(data, version):
+def _load(data, _):
     return HierarchyWorkflowOp(**data)
+
+@camel_registry.dumper(HierarchyGate, 'hierarchy-gate', version = 1)
+def _dump_gate(gate):
+    return dict(gate = gate.gate,
+                value = gate.value,
+                category = gate.category)
+    
+@camel_registry.loader('hierarchy-gate', version = 1)
+def _load_gate(data, _):
+    return HierarchyGate(**data)
 
 

@@ -57,3 +57,4 @@ from .color_translation import ColorTranslationWorkflowOp, ColorTranslationWorkf
 from .tasbe import TasbeWorkflowOp, TasbeWorkflowView
 
 from .hierarchy import HierarchyWorkflowOp, HierarchyGate
+from .category import CategoryWorkflowOp, CategoryOpSubset

@@ -164,18 +164,20 @@ class CategoryOp(HasStrictTraits):
             
         if not self.name:
             raise util.CytoflowOpError('name',
-                                       "You have to set the Polygon gate's name "
+                                       "You have to set the operation's name "
                                        "before applying it!")
 
         if self.name in experiment.data.columns:
             raise util.CytoflowOpError('name',
-                                       "{} is in the experiment already!"
-                                       .format(self.name))
+                                       f"{self.name} is in the experiment already!")
             
         if self.name != util.sanitize_identifier(self.name):
             raise util.CytoflowOpError('name',
-                                       "Name can only contain letters, numbers and underscores."
-                                       .format(self.name)) 
+                                       f"Name {self.name} can only contain letters, numbers and underscores.") 
+            
+        if not self.subsets:
+            raise util.CytoflowOpError('subsets',
+                                       "Must specify some subsets")
             
         if len(self.subsets.values()) != len(set(self.subsets.values())):
             raise util.CytoflowOpError('subsets',
@@ -192,6 +194,9 @@ class CategoryOp(HasStrictTraits):
                                                         ordered = False))
         
         for query, category in self.subsets.items():
+            if not query:
+                raise util.CytoflowOpError('subsets',
+                                           'Subset string cant be empty!')
             which = experiment.data.query(query).index
             if (categories.loc[which] != self.default).any():
                 overlap_index = (categories.loc[which] != self.default).index
@@ -199,6 +204,10 @@ class CategoryOp(HasStrictTraits):
                 raise util.CytoflowOpError('subsets',
                                            f"Data from subets(s) {overlap_categories} overlaps with {category}. \n"
                                            f"Subsets must be non-overlapping!")
+                
+            if not category:
+                raise util.CytoflowOpError('subsets',
+                                           'Category string cant be empty!')
             categories.loc[which] = category
             
         new_experiment = experiment.clone(deep = False)        

@@ -32,12 +32,12 @@ states are mutually exclusive, a reasonable question is "how much of each are th
 concept of nested gates, plotting and analyzing this gating strategy can be
 challenging.
 
-The ``Hierarchy`` operation converts a list of gates into a categorical variable to
-enable straightforward analysis. For example, monocytes stained with CD64, 
+The ``Hierarchical Gating`` operation converts a list of gates into a categorical 
+variable to enable straightforward analysis. For example, monocytes stained with CD64, 
 CD3 and CD19 can differentiate between macrophages and B cells. A user
 defines a threshold gate to separate CD64+ cells (macrophages) from the
 rest of the events, then they use a polygon gate to distinguish the CD19+/CD3-
-cells (B cells) from everything else. The ``Hierarchy`` operation can take these two gates
+cells (B cells) from everything else. The ``Hierarchical Gating`` operation can take these two gates
 and create a categorical condition with the values ``Macrophages``, ``B_Cells``,
 and ``Unknown``.
 
@@ -75,7 +75,7 @@ it receives the category listed in the ``Default`` attribute.
 from natsort import natsorted
 
 from traits.api import provides, List, Str, Property, Event
-from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller, HGroup, ButtonEditor
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller, ButtonEditor
 from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 

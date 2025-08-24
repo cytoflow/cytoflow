@@ -39,7 +39,6 @@ from .operation_base import IWorkflowOperation, WorkflowOperation
 
 GaussianMixtureOp.__repr__ = cytoflow_class_repr
 
-
 @provides(IWorkflowOperation)    
 class GaussianMixture1DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
     # override id so we can differentiate the 1D and 2D ops

@@ -178,18 +178,20 @@ class HierarchyOp(HasStrictTraits):
             
         if not self.name:
             raise util.CytoflowOpError('name',
-                                       "You have to set the Polygon gate's name "
+                                       "You have to set the operation's name "
                                        "before applying it!")
 
         if self.name in experiment.data.columns:
             raise util.CytoflowOpError('name',
-                                       "{} is in the experiment already!"
-                                       .format(self.name))
+                                       f"{self.name} is in the experiment already!")
             
         if self.name != util.sanitize_identifier(self.name):
             raise util.CytoflowOpError('name',
-                                       "Name can only contain letters, numbers and underscores."
-                                       .format(self.name)) 
+                                       f"Name {self.name} can only contain letters, numbers and underscores.")
+            
+        if not self.gates:
+            raise util.CytoflowOpError('gates',
+                                       "Must specify some gates!") 
     
         for gate_name, gate_val, category in self.gates:
             if gate_name not in experiment.data.columns:
