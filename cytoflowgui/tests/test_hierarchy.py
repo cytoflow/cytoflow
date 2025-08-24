@@ -30,82 +30,64 @@ from cytoflow import geom_mean, geom_sd  # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
-from cytoflowgui.workflow.operations import ThresholdWorkflowOp, ThresholdSelectionView
-from cytoflowgui.workflow.views import HistogramPlotParams
+from cytoflowgui.workflow.operations import ThresholdWorkflowOp, HierarchyWorkflowOp, HierarchyGate
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
-from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 
 
-class TestThreshold(ImportedDataTest):
+class TestHierarchy(ImportedDataTest):
 
     def setUp(self):
         super().setUp()
 
-        self.addTypeEqualityFunc(ThresholdWorkflowOp, 'assertHasTraitsEqual')
-        self.addTypeEqualityFunc(ThresholdSelectionView, 'assertHasTraitsEqual')
-        self.addTypeEqualityFunc(HistogramPlotParams, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(HierarchyWorkflowOp, 'assertHasTraitsEqual')
+        self.addTypeEqualityFunc(HierarchyGate, 'assertHasTraitsEqual')
 
-        self.op = op = ThresholdWorkflowOp()
-        op.name = "Thresh"
+        op = ThresholdWorkflowOp()
+        op.name = "Y2_high"
         op.channel = "Y2-A"
-        op.threshold = 1000
+        op.threshold = 300
 
-        self.wi = wi = WorkflowItem(operation = op,
-                                    status = 'waiting',
-                                    view_error = "Not yet plotted")
-
-        self.view = view = wi.default_view
-        view.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
-
-        wi.view_error = "Not yet plotted"
-        wi.views.append(self.wi.default_view)
-        self.wi.current_view = self.wi.default_view
+        wi = WorkflowItem(operation = op,
+                          status = 'waiting',
+                          view_error = "Not yet plotted")
         
         self.workflow.workflow.append(wi)
-        self.workflow.selected = wi
+        self.workflow.selected = wi        
+        self.workflow.wi_waitfor(wi, 'status', "valid")
         
-        self.workflow.wi_waitfor(wi, 'view_error', "")
+        op = ThresholdWorkflowOp()
+        op.name = "B1_high"
+        op.channel = "B1-A"
+        op.threshold = 400
+
+        wi = WorkflowItem(operation = op,
+                          status = 'waiting',
+                          view_error = "Not yet plotted")
+        
+        self.workflow.workflow.append(wi)
+        self.workflow.selected = wi        
+        self.workflow.wi_waitfor(wi, 'status', "valid")
+        
+        self.op = op = HierarchyWorkflowOp()
+        op.name = "Cell_Type"
+        op.gates_list = [HierarchyGate(gate = "Y2_high", value = True, category = "Y2_high"),
+                         HierarchyGate(gate = "B1_high", value = True, category = "B1_high")]
+        
+        self.wi = wi = WorkflowItem(operation = op,
+                               status = 'waiting',
+                               view_error = "Not yet plotted")
+        
+        self.workflow.workflow.append(wi)
+        self.workflow.selected = wi        
         self.workflow.wi_waitfor(wi, 'status', "valid")
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
         
-        
-    def testChangeThreshold(self):
-        self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.threshold = 0
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
-   
-    def testChangeChannels(self):
-        self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.channel = "B1-A"
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
-
-    def testChangeScale(self):
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.scale = "log"
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
- 
-    def testChangeName(self):
-        self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.name = "Dange"
-        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
-        
-    def testHueFacet(self):
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.huefacet = "Dox"
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
-
-        
-    def testSubset(self):
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.subset_list.append(CategorySubset(name = "Well",
-                                                    values = ['A', 'B']))
-        self.view.subset_list.append(RangeSubset(name = "Dox",
-                                                 values = [0.0, 10.0, 100.0]))
-
-        self.view.subset_list[0].selected = ["A"]
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')   
+    def testEvents(self):
+        self.assertEqual(self.workflow.remote_eval("self.workflow[-1].result.data.groupby('Cell_Type', observed = True).size()['Y2_high']"), 4909)
+        self.assertEqual(self.workflow.remote_eval("self.workflow[-1].result.data.groupby('Cell_Type', observed = True).size()['B1_high']"), 11987)
+        self.assertEqual(self.workflow.remote_eval("self.workflow[-1].result.data.groupby('Cell_Type', observed = True).size()['Unknown']"), 43104)  
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -141,14 +123,11 @@ class TestThreshold(ImportedDataTest):
         code = "import cytoflow as flow\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
-            
-            for view in wi.views:
-                code = code + view.get_notebook_code(i)
          
         code_locals = {}
         exec(code, locals = code_locals)
             
-        nb_data = code_locals['ex_3'].data
+        nb_data = code_locals['ex_5'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)

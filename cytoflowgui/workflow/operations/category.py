@@ -91,7 +91,7 @@ class CategoryWorkflowOp(WorkflowOperation, CategoryOp):
 @camel_registry.dumper(CategoryWorkflowOp, 'category', version = 1)
 def _dump(op):
     return dict(name = op.name,
-                gates_list = op.gates_list,
+                subsets_list = op.subsets_list,
                 default = op.default)
     
 @camel_registry.loader('category', version = 1)
@@ -100,7 +100,7 @@ def _load(data, version):
 
 @camel_registry.dumper(CategoryOpSubset, 'categoryop-subset', version = 1)
 def _dump_subset(subset):
-    return dict(subset = subset.subset,
+    return dict(subset_list = subset.subset_list,
                 category = subset.category)
     
 @camel_registry.loader('categoryop-subset', version = 1)
