@@ -30,7 +30,7 @@ in a `Experiment` using single-color controls
 that `BleedthroughLinearOp` correctly estimated its parameters.
 """
 
-import os, math
+import os, math, itertools
 from natsort import natsorted
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Instance,
@@ -45,7 +45,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_tube
+from .import_op import Tube, ImportOp, check_tube, parse_tube
 
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
@@ -157,7 +157,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     
     # traits
     id = Constant('cytoflow.operations.bleedthrough_linear')
-    friendly_id = Constant("Linear Bleedthrough Correction")
+    friendly_id = Constant("Linear Bleedthrough Compensation")
     
     name = Constant("Bleedthrough")
 
@@ -269,6 +269,34 @@ class BleedthroughLinearOp(HasStrictTraits):
                 
         # set this atomically - to support GUI
         self.spillover = spillover
+        
+    def set_from_fcs(self, filename):
+        metadata = parse_tube(filename)
+        if "SPILL" in metadata[0]:
+            spill = metadata[0]["SPILL"]
+        elif "SPILLOVER" in metadata[0]:
+            spill = metadata[0]["SPILLOVER"]
+        else:
+            raise util.CytoflowError(f"Can't find SPILL or SPILLOVER metadata in {filename}")
+
+        # split the metadata by the delimiter
+        spill = spill.split(',')
+        
+        # the number of channels is the first item in the list
+        num_channels = int(spill.pop(0))
+        
+        # the channel names are the next num_channels items
+        channels = spill[0:num_channels]
+        
+        # the rest is the n*n matrix of spillover coefficients. value i,j is the
+        # cpillover from parameter i to parameter j.
+        spill = spill[num_channels:]
+        
+        spillover_matrix = {(channels[i], channels[j]) : float(spill[j * num_channels + i])
+                            for i, j in itertools.product(range(num_channels), range(num_channels))}
+
+        self.spillover = spillover_matrix
+        
                 
     def apply(self, experiment):
         """
