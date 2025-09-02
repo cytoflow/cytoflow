@@ -160,9 +160,6 @@ class ExportFCS(HasStrictTraits):
                 if self._iter:
                     values = next(self._iter)[0]
                     
-                    if len(self.by) == 1:
-                        values = [values]
-                    
                     parts = []
                     for i, name in enumerate(self.by):
                         if self._include_by:
@@ -171,7 +168,7 @@ class ExportFCS(HasStrictTraits):
                             parts.append(str(values[i]))
                         
                     if self.base:
-                        return self.base + '_' + '_'.join(parts) + '.fcs'
+                        return self.base + '_'.join(parts) + '.fcs'
                     else:
                         return '_'.join(parts) + '.fcs'
                         
@@ -277,7 +274,7 @@ class ExportFCS(HasStrictTraits):
                 kws["CF_" + name] = str(group[i])
                 
             if self.base:
-                filename = self.base + '_' + '_'.join(parts) + '.fcs'
+                filename = self.base + '_'.join(parts) + '.fcs'
             else:
                 filename = '_'.join(parts) + '.fcs'
                 
