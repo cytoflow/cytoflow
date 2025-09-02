@@ -308,6 +308,7 @@ class _PolygonSelection(Op2DView):
     _widget = Instance(PolygonSelector, transient = True)
     _patch = Instance(mpl.patches.PathPatch, transient = True)
     _patch_props = Dict()
+    _selector_props = Dict()
         
     def plot(self, experiment, **kwargs):
         
@@ -319,6 +320,12 @@ class _PolygonSelection(Op2DView):
                                         {'edgecolor' : 'black',
                                          'linewidth' : 2,
                                          'fill' : False})
+        
+        self._selector_props = kwargs.pop('selector_props',
+                                          {'color' : 'black',
+                                           'linestyle' : '-',
+                                           'linewidth' : 2,
+                                           'alpha' : 0.5})
         
         super(_PolygonSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
@@ -351,6 +358,7 @@ class _PolygonSelection(Op2DView):
         if self._ax and self.interactive:
             self._widget = PolygonSelector(self._ax,
                                            self._onselect,
+                                           props = self._selector_props,
                                            useblit = True,
                                            grab_range = 20)
         elif self._widget:
@@ -396,9 +404,15 @@ class ScatterplotPolygonSelectionView(_PolygonSelection, ScatterplotView):
         
         patch_props : Dict
            The properties of the `matplotlib.patches.Patch` that are drawn
-           on top of the scatterplot or density view.  They're passed
+           on top of the scatterplot.  They're passed
            directly to the `matplotlib.patches.Patch` constructor.
            Default: ``{edgecolor : 'black', linewidth : 2, fill : False}``
+           
+        selector_props : Dict
+           The properties of the `matplotlib.lines.Line2D` that are drawn
+           on top of the scatterplot.  They're passed
+           directly to the `matplotlib.patches.Patch` constructor.
+           Default: ``{color : 'black', linestyle : '-', linewidth : 2, alpha = 0.5}``
         
         """
         super().plot(experiment, **kwargs)
@@ -443,10 +457,28 @@ class DensityPolygonSelectionView(_PolygonSelection, DensityView):
            The properties of the `matplotlib.patches.Patch` that are drawn
            on top of the scatterplot or density view.  They're passed
            directly to the `matplotlib.patches.Patch` constructor.
-           Default: {edgecolor : 'black', linewidth : 2, fill : False}
+           Default: {edgecolor : 'white', linewidth : 2, fill : False}
+
+        selector_props : Dict
+           The properties of the `matplotlib.lines.Line2D` that are drawn
+           on top of the scatterplot.  They're passed
+           directly to the `matplotlib.patches.Patch` constructor.
+           Default: ``{color : 'white', linestyle : '-', linewidth : 2, alpha = 0.5}``
         
         """
-        super().plot(experiment, **kwargs)
+        
+        patch_props = kwargs.pop('patch_props',
+                                 {'edgecolor' : 'white',
+                                  'linewidth' : 2,
+                                  'fill' : False})
+        
+        selector_props = kwargs.pop('selector_props',
+                                    {'color' : 'white',
+                                     'linestyle' : '-',
+                                     'linewidth' : 2,
+                                     'alpha' : 0.5})
+        
+        super().plot(experiment, patch_props = patch_props, selector_props = selector_props, **kwargs)
 
 util.expand_class_attributes(DensityPolygonSelectionView)
 util.expand_method_parameters(ScatterplotPolygonSelectionView, ScatterplotPolygonSelectionView.plot) 
