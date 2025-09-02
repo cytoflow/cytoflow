@@ -457,11 +457,15 @@ class MSTView(HasStrictTraits):
                                                kkconst = max([mst_graph.vcount(), 1]))
         layout.fit_into((0.05, 0.05, 0.95, 0.95))
 
+        # make the new figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
         # plot the edges connecting nodes
         segments = [[layout.coords[edge[0]], layout.coords[edge[1]]] for edge in mst_graph.get_edgelist()]
         segments = mpl.collections.LineCollection(segments, zorder = 1)
         segments.set_edgecolor("black")
-        plt.gca().add_collection(segments)
+        ax.add_collection(segments)
         
         # save the locations for MSTOp
         self._groups = list(data.groupby([loc_level], observed = True).groups.keys())
@@ -499,11 +503,11 @@ class MSTView(HasStrictTraits):
                     
                 patches.append(patch)
 
-            plt.gca().add_collection(mpl.collections.PatchCollection(patches, match_original = True))
+            ax.add_collection(mpl.collections.PatchCollection(patches, match_original = True))
                                 
             if legend:
                 plt.colorbar(mpl.cm.ScalarMappable(norm = data_norm, cmap = cmap),
-                             ax = plt.gca(),
+                             ax = ax,
                              label = legendlabel)
 
         elif self.style == "pie":
@@ -537,11 +541,11 @@ class MSTView(HasStrictTraits):
                         
                     w.set(**kwargs)
                         
-                    plt.gca().add_artist(w)
+                    ax.add_artist(w)
                     theta1 = theta2
                             
             if(legend):
-                plt.gca().legend(title = legendlabel)
+                ax.legend(title = legendlabel)
                 
         elif self.style == "petal":
             num_wedges = len(data[self.variable].unique())
@@ -576,15 +580,15 @@ class MSTView(HasStrictTraits):
                         
                     w.set(**kwargs)
                         
-                    plt.gca().add_artist(w)
+                    ax.add_artist(w)
                     theta1 = theta2
                             
             if(legend):
-                plt.gca().legend(title = legendlabel)    
+                ax.legend(title = legendlabel)    
         
         # make axes equal (spacing)
-        plt.gca().axis('equal')
-        plt.gca().set_axis_off()
+        ax.axis('equal')
+        ax.set_axis_off()
         
         if title:
             plt.suptitle(title, y = 1.02)

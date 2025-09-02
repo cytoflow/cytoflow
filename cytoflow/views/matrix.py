@@ -365,6 +365,9 @@ class MatrixView(HasStrictTraits):
                 
             
             group_scale = {k : v / s_max for k, v in group_scale.items()}
+            
+        # make a new figure. This usually happens in seaborn.FacetGrid
+        fig = plt.figure()
         
         if self.style == "heat":
             cmap_name = kwargs.pop('palette', 'viridis')
@@ -373,7 +376,7 @@ class MatrixView(HasStrictTraits):
                 raise util.CytoflowViewError('palette',
                                              "{} is a qualitative (discrete) palette. Choose a continuous one such as 'rocket', 'mako' or 'viridis'")
             
-            grid = ImageGrid(fig = plt.gcf(), 
+            grid = ImageGrid(fig = fig, 
                              rect = 111, 
                              nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
                                             len(cols) if len(cols) > 0 else 1),
@@ -419,7 +422,7 @@ class MatrixView(HasStrictTraits):
             # the context manager goes here because the color cycler is a
             # property of the axes 
             with sns.color_palette(palette_name):
-                grid = ImageGrid(fig = plt.gcf(), 
+                grid = ImageGrid(fig = fig, 
                                  rect = 111, 
                                  nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
                                                 len(cols) if len(cols) > 0 else 1),
@@ -468,7 +471,7 @@ class MatrixView(HasStrictTraits):
             # the context manager goes here because the color cycler is a
             # property of the axes 
             with sns.color_palette(palette_name):
-                grid = ImageGrid(fig = plt.gcf(), 
+                grid = ImageGrid(fig = fig, 
                                  rect = 111, 
                                  nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
                                                 len(cols) if len(cols) > 0 else 1),
