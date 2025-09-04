@@ -462,7 +462,7 @@ class ImportOp(HasStrictTraits):
             idx = pd.MultiIndex.from_tuples([tuple([i[1] for i in sorted(t.conditions.items())]) for t in self.tubes],
                                             names = sorted(self.conditions))
             cols = [x for x in experiment.conditions
-                      if np.issubdtype(experiment.conditions[x].dtype, np.number)]
+                      if pd.api.types.is_numeric_dtype(experiment.conditions[x].dtype)]
             df = pd.DataFrame(index = idx, columns = cols)
             for tube in self.tubes:
                 tube_idx = tuple([i[1] for i in sorted(tube.conditions.items())])
