@@ -406,12 +406,13 @@ class Experiment(HasStrictTraits):
         
         if self.data[name].dtype.kind == 'b':
             self.metadata[name]['values_type'] = 'boolean'
+            self.metadata[name]['values'] = [True, False]
         elif self.data[name].dtype.kind in "ifu":
             self.metadata[name]['values_type'] = 'numeric'
+            self.metadata[name]['values'] = natsorted(self.data[name].unique())
         elif self.data[name].dtype.kind in "OSU":
             self.metadata[name]['values_type'] = 'categorical'
-            
-        self.metadata[name]['values'] = natsorted(self.data[name].unique())
+            self.metadata[name]['values'] = natsorted(self.data[name].unique())
     
             
     def add_channel(self, name, data = None):
