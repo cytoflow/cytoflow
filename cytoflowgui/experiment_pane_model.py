@@ -24,7 +24,7 @@ cytoflowgui.experiment_pane_model
 The classes that provide the model for the `ExperimentBrowserDockPane`.
 """
 
-from traits.api import Instance, Str, Tuple
+from traits.api import Instance, Str
 from traitsui.api import TreeEditor, TreeNodeObject, ObjectTreeNode
 
 from .workflow import WorkflowItem
@@ -239,7 +239,7 @@ class StatisticNode(TreeNodeObject):
             ret.append(StringNode(name = 'Facet Name',
                                   value = str(statistic.index.names[0])))
             ret.append(StringNode(name = 'Facet Levels',
-                                  value = ", ".join([str(x) for x in statistic.index.values])))
+                                  value = ", ".join([str(x[0]) for x in statistic.index.values])))
         else:
             for i, name in enumerate(statistic.index.names):
                 ret.append(StringNode(name = 'Facet ' + str(i),
