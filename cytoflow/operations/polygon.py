@@ -34,7 +34,7 @@ polygon and/or interactively set the vertices on a scatterplot.
 """
 
 from traits.api import (HasStrictTraits, Str, List, Float, provides,
-                        Instance, Bool, observe, Any, Dict, 
+                        Instance, Bool, observe, Any, Dict, Tuple,
                         Constant)
 
 import matplotlib as mpl
@@ -169,7 +169,7 @@ class PolygonOp(HasStrictTraits):
     name = Str
     xchannel = Str
     ychannel = Str
-    vertices = List((Float, Float))
+    vertices = List(Tuple(Float, Float))
     
     xscale = util.ScaleEnum()
     yscale = util.ScaleEnum()

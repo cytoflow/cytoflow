@@ -23,7 +23,7 @@ cytoflowgui.workflow.operations.polygon
 
 """
 
-from traits.api import provides, Instance, Str, observe, List, Float, Bool, Enum, Constant, DelegatesTo
+from traits.api import provides, Instance, Str, observe, List, Float, Bool, Enum, Constant, Tuple, DelegatesTo
 
 from cytoflow.operations.polygon import PolygonOp, ScatterplotPolygonSelectionView, DensityPolygonSelectionView, Op2DView, _PolygonSelection
 import cytoflow.utility as util
@@ -173,7 +173,7 @@ class PolygonWorkflowOp(WorkflowOperation, PolygonOp):
     xchannel = Str(apply = True)
     ychannel = Str(apply = True)
     
-    vertices = List((Float, Float), apply = True)
+    vertices = List(Tuple(Float, Float), apply = True)
     
     # there's a bit of a subtlety here: if the vertices were 
     # selected on a plot with scaled axes, we need to apply that 
