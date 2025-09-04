@@ -25,7 +25,6 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 import pandas as pd
-import cytoflow.utility as util
 
 # needed for testing lambdas
 from cytoflow import geom_mean, geom_sd  # @UnusedImport

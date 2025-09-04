@@ -120,6 +120,23 @@ class TestAutofluorescence(TasbeTest):
         self.maxDiff = None
         
         self.assertEqual(self.wi, new_wi)
+        
+        
+    def testSerializeEmptyOp(self):
+        fh, filename = tempfile.mkstemp()
+        op = AutofluorescenceWorkflowOp()
+        try:
+            os.close(fh)
+             
+            save_yaml(op, filename)
+            new_op = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+                      
+        self.assertEqual(op, new_op,)
            
     def testNotebook(self):
         code = "import cytoflow as flow"

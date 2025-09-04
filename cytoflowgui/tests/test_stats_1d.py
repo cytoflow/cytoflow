@@ -24,14 +24,12 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
-import pandas as pd
-import cytoflow.utility as util
 
 # needed for testing lambdas
 from cytoflow import geom_mean, geom_sd  # @UnusedImport
+import pandas as pd # @UnusedImport
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest
-from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.views.stats_1d import Stats1DWorkflowView, Stats1DPlotParams, LINE_STYLES
 from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml

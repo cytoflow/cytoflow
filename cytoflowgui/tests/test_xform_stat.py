@@ -25,7 +25,6 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 import pandas as pd
-import cytoflow.utility as util
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
@@ -107,6 +106,22 @@ class TestXformStat(ImportedDataTest):
         self.maxDiff = None
                       
         self.assertEqual(self.op, new_op)
+        
+    def testSerializeEmptyOp(self):
+        fh, filename = tempfile.mkstemp()
+        op = TransformStatisticWorkflowOp()
+        try:
+            os.close(fh)
+             
+            save_yaml(op, filename)
+            new_op = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+                      
+        self.assertEqual(op, new_op,)
                       
     def testSerializeWorkflowItem(self):
         fh, filename = tempfile.mkstemp()

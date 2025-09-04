@@ -25,12 +25,10 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 import pandas as pd
-import cytoflow.utility as util
 
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.workflow.operations import ChannelStatisticWorkflowOp, MergeStatisticsWorkflowOp
-from cytoflowgui.workflow.operations.xform_stat import transform_functions
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 # we need these to exec() code in testNotebook
@@ -97,6 +95,22 @@ class TestMergeStat(ImportedDataTest):
         self.maxDiff = None
                       
         self.assertEqual(self.op, new_op)
+        
+    def testSerializeEmptyOp(self):
+        fh, filename = tempfile.mkstemp()
+        op = MergeStatisticsWorkflowOp()
+        try:
+            os.close(fh)
+             
+            save_yaml(op, filename)
+            new_op = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+                      
+        self.assertEqual(op, new_op,)
                       
     def testSerializeWorkflowItem(self):
         fh, filename = tempfile.mkstemp()

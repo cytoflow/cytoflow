@@ -188,7 +188,7 @@ class TestPolygon(ImportedDataTest):
              
         self.maxDiff = None
                       
-        self.assertEqual(self.op, new_op,)
+        self.assertEqual(op, new_op,)
 
                                      
     def testNotebook(self):

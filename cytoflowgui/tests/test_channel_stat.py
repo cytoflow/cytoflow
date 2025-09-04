@@ -27,12 +27,12 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow.operations.channel_stat import summary_functions
+from cytoflowgui.workflow.operations.channel_stat import ChannelStatisticWorkflowOp, summary_functions
 from cytoflowgui.workflow.serialization import load_yaml, save_yaml
-import cytoflow.utility as util
 
 # to access these names in a lambda in exec() in testNotebook(), we need them in
 # the global namespace
+import pandas as pd # @UnusedImport
 from cytoflow import ci, geom_mean, geom_sd, geom_sem  # @UnusedImport
 from numpy import mean, median, std  # @UnusedImport
 from scipy.stats import sem  # @UnusedImport
@@ -92,6 +92,24 @@ class TestChannelStat(ImportedDataTest):
         self.maxDiff = None
                       
         self.assertEqual(self.op, new_op)
+        
+        
+    def testSerializeEmptyOp(self):
+        fh, filename = tempfile.mkstemp()
+        op = ChannelStatisticWorkflowOp()
+        try:
+            os.close(fh)
+             
+            save_yaml(op, filename)
+            new_op = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+                      
+        self.assertEqual(op, new_op,)
+        
                       
     def testSerializeWorkflowItem(self):
         fh, filename = tempfile.mkstemp()

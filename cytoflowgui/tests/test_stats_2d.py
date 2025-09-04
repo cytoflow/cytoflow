@@ -24,7 +24,6 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
-import cytoflow.utility as util
 
 # needed for testing lambdas
 import pandas as pd  # @UnusedImport

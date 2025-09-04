@@ -134,6 +134,22 @@ class TestColorTranslation(TasbeTest):
         self.maxDiff = None
 
         self.assertEqual(self.op, new_op)
+        
+    def testSerializeEmptyOp(self):
+        fh, filename = tempfile.mkstemp()
+        op = ColorTranslationWorkflowOp()
+        try:
+            os.close(fh)
+             
+            save_yaml(op, filename)
+            new_op = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+                      
+        self.assertEqual(op, new_op,)
                       
     def testSerializeWorkflowItem(self):
         fh, filename = tempfile.mkstemp()

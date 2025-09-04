@@ -24,7 +24,6 @@ Created on Jan 4, 2018
 '''
 import os, unittest, tempfile
 import pandas as pd
-import cytoflow.utility as util
 
 # needed for testing lambdas
 from cytoflow import geom_mean, geom_sd  # @UnusedImport
@@ -151,6 +150,22 @@ class TestRange2D(ImportedDataTest):
         self.maxDiff = None
                       
         self.assertEqual(self.op, new_op)
+        
+    def testSerializeEmptyOp(self):
+        fh, filename = tempfile.mkstemp()
+        op = Range2DWorkflowOp()
+        try:
+            os.close(fh)
+             
+            save_yaml(op, filename)
+            new_op = load_yaml(filename)
+             
+        finally:
+            os.unlink(filename)
+             
+        self.maxDiff = None
+                      
+        self.assertEqual(op, new_op,)
                       
     def testSerializeWorkflowItem(self):
         fh, filename = tempfile.mkstemp()
