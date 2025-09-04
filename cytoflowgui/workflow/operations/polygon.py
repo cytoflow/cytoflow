@@ -23,7 +23,7 @@ cytoflowgui.workflow.operations.polygon
 
 """
 
-from traits.api import provides, Instance, Str, observe, List, Float, Bool, Enum, Constant
+from traits.api import provides, Instance, Str, observe, List, Float, Bool, Enum, Constant, DelegatesTo
 
 from cytoflow.operations.polygon import PolygonOp, ScatterplotPolygonSelectionView, DensityPolygonSelectionView, Op2DView, _PolygonSelection
 import cytoflow.utility as util
@@ -52,6 +52,7 @@ class PolygonPlotParams(Data2DPlotParams):
 
 class _PolygonSelectionWorkflowView(_PolygonSelection):
     parent = Instance(IWorkflowView)
+    subset = DelegatesTo('parent')
 
     _vertices = List((Float, Float), status = True)
     
