@@ -305,6 +305,10 @@ class LogicleScale(HasStrictTraits):
                          .format(self.channel),
                          CytoflowWarning)
                     return 0.5
+                elif W > 0.5 * self.M:
+                    warn("Channel {0} W is too large -- setting to 0.5 * M. This probably means there's a bug somewhere!",
+                         CytoflowWarning)
+                    return 0.49 * self.M
                 else:
                     return W
             else:
