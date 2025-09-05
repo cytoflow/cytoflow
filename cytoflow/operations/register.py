@@ -492,10 +492,10 @@ class RegistrationOp(HasStrictTraits):
                 new_experiment.data.loc[group_data.index, channel] = \
                     scale.inverse(warping(scale(group_data[channel])))[group_idx]
                 
-        if 'range' in new_experiment.metadata[channel]:
-            new_experiment.metadata[channel]['range'] = max(warping(new_experiment.metadata[channel]['range']))
-        if 'voltage' in new_experiment.metadata[channel]:
-            del new_experiment.metadata[channel]['voltage']
+            if 'range' in new_experiment.metadata[channel]:
+                new_experiment.metadata[channel]['range'] = max(scale.inverse(warping(scale(experiment.metadata[channel]['range']))))[0][0]
+            if 'voltage' in new_experiment.metadata[channel]:
+                del new_experiment.metadata[channel]['voltage']
                 
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment    
