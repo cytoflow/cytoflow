@@ -347,7 +347,9 @@ class RegistrationOp(HasStrictTraits):
                 self._kde[channel][group] = density
                 
                 # find the peaks
-                peaks = scipy.signal.find_peaks(density)[0].tolist()
+                density_max = np.max(density)
+                peaks = scipy.signal.find_peaks(density,
+                                                prominence = 0.1 * density_max)[0].tolist()
                 peaks = [support[p] for p in peaks]
                 self._peaks[channel][group] = [self._scale[channel].inverse(p) for p in peaks]
 
