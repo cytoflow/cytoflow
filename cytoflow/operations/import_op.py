@@ -368,9 +368,9 @@ class ImportOp(HasStrictTraits):
     
                 if self.events:
                     if self.events <= len(tube_data):
-                        tube_data = tube_data.loc[np.random.choice(tube_data.index,
-                                                                   self.events,
-                                                                   replace = False)]
+                        tube_data = tube_data.loc[np.sort(np.random.choice(tube_data.index,
+                                                                           self.events,
+                                                                           replace = False))]
                     else:
                         warnings.warn("Only {0} events in tube {1}"
                                       .format(len(tube_data), tube.file),
