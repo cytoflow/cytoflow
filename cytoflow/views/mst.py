@@ -30,6 +30,7 @@ and `SOMOp`.
 
 import math
 from warnings import warn
+from natsort import natsorted
 
 from traits.api import HasStrictTraits, provides, Enum, Str, Callable, Constant, \
                        List, Float
@@ -511,11 +512,13 @@ class MSTView(HasStrictTraits):
                              label = legendlabel)
 
         elif self.style == "pie":
-            num_wedges = len(data[self.variable].unique())
+            variable_values = data[self.variable].unique()
             palette_name = kwargs.pop('palette', 'deep')
-            palette = sns.color_palette(palette_name, n_colors = num_wedges)
+            palette = sns.color_palette(palette_name, n_colors = len(variable_values))
+            colors = {var: palette[vi] for vi, var in enumerate(variable_values)}
             
             groups = data.groupby([loc_level], observed = True)
+            legend_artists = {}
         
             for idx, (_, group) in enumerate(groups):
                 loc = layout.coords[idx]
@@ -525,16 +528,19 @@ class MSTView(HasStrictTraits):
                 theta1 = 0
                 for frac_idx, frac in enumerate(group_data):
                     theta2 = theta1 + frac
+                    label = group.iloc[frac_idx][self.variable]
+                    color = colors[label]
                     w = mpl.patches.Wedge(center = loc, 
                                           r = radius, 
                                           theta1 = 360 * theta1, 
                                           theta2 = 360 * theta2, 
-                                          facecolor = palette[frac_idx],
+                                          facecolor = color,
                                           edgecolor = 'white',
+                                          label = label,
                                           clip_on = False)
-                    
-                    if idx == 0:
-                        w.set(label = group[self.variable].iloc[frac_idx])
+                    #
+                    # if idx == 0:
+                    #     w.set(label = group[self.variable].iloc[frac_idx])
                         
                     if self.size_function:
                         w.set_radius(w.r * group_scale[locs.index.to_flat_index()[idx]])
@@ -542,49 +548,64 @@ class MSTView(HasStrictTraits):
                     w.set(**kwargs)
                         
                     ax.add_artist(w)
+                    if label not in legend_artists:
+                        legend_artists[label] = w
                     theta1 = theta2
                             
             if(legend):
-                ax.legend(title = legendlabel)
+                legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
+                ax.legend(handles = legend_artists.values(), 
+                          title = legendlabel)
                 
         elif self.style == "petal":
-            num_wedges = len(data[self.variable].unique())
+            variable_values = data[self.variable].unique()
+            num_wedges = len(variable_values)
             palette_name = kwargs.pop('palette', 'deep')
-            palette = sns.color_palette(palette_name, n_colors = num_wedges)
+            palette = sns.color_palette(palette_name, n_colors = len(variable_values))
+            colors = {var: palette[vi] for vi, var in enumerate(variable_values)}
             wedge_theta = 360 / num_wedges
             
             groups = data.groupby([loc_level], observed = True)
+            legend_artists = {}
         
             for idx, (_, group) in enumerate(groups):
                 loc = layout.coords[idx]
                 group_data = group[self.feature]
-                group_data = group_data / group_data.sum()
+                group_data = group_data / group_data.max()
                 
                 theta1 = 0
-                for frac_idx, frac in enumerate(group_data):
+                for label in variable_values:
                     theta2 = theta1 + wedge_theta
+                    if label in group[self.variable].values:
+                        frac = group_data[group[self.variable] == label].iloc[0]
+                    else:
+                        frac = 0
+                        
                     r = radius * math.sqrt(frac)
+                    color = colors[label]
                     w = mpl.patches.Wedge(center = loc, 
                                           r = r, 
                                           theta1 = theta1, 
                                           theta2 = theta2, 
-                                          facecolor = palette[frac_idx],
+                                          label = label,
+                                          facecolor = color,
                                           edgecolor = 'white',
                                           clip_on = False)
                     
-                    if idx == 0:
-                        w.set(label = group[self.variable].iloc[frac_idx])
-                        
                     if self.size_function:
                         w.set_radius(w.r * group_scale[locs.index.to_flat_index()[idx]])
                         
                     w.set(**kwargs)
                         
                     ax.add_artist(w)
+                    if label not in legend_artists:
+                        legend_artists[label] = w
                     theta1 = theta2
                             
             if(legend):
-                ax.legend(title = legendlabel)    
+                legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
+                ax.legend(handles = legend_artists.values(),
+                          title = legendlabel)    
         
         # make axes equal (spacing)
         ax.axis('equal')

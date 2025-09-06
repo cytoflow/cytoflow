@@ -29,6 +29,7 @@ petal plots.
 
 import math
 from warnings import warn
+from natsort import natsorted
 
 from traits.api import HasStrictTraits, provides, Enum, Str, Constant, Callable
 import seaborn as sns
@@ -340,7 +341,7 @@ class MatrixView(HasStrictTraits):
         group_keys = []
         group_keys += [self.xfacet] if self.xfacet else []
         group_keys += [self.yfacet] if self.yfacet else []
-        
+    
         groups = data.groupby(by = group_keys, observed = True)
         
         if self.size_function:
@@ -417,18 +418,20 @@ class MatrixView(HasStrictTraits):
                     ax.set_frame_on(False)
 
         elif self.style == "pie":
+
+            grid = ImageGrid(fig = fig, 
+                             rect = 111, 
+                             nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+                                            len(cols) if len(cols) > 0 else 1),
+                             label_mode = "keep",
+                             axes_pad = 0.0,
+                             cbar_mode = None)
+                
+            variable_values = list(data.index.get_level_values(self.variable).unique())
             palette_name = kwargs.pop('palette', 'deep')
-                       
-            # the context manager goes here because the color cycler is a
-            # property of the axes 
-            with sns.color_palette(palette_name):
-                grid = ImageGrid(fig = fig, 
-                                 rect = 111, 
-                                 nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
-                                                len(cols) if len(cols) > 0 else 1),
-                                 label_mode = "keep",
-                                 axes_pad = 0.0,
-                                 cbar_mode = None)
+            palette = sns.color_palette(palette_name, n_colors = len(variable_values))
+            colors = {var : palette[vi] for vi, var in enumerate(variable_values)}
+            legend_artists = {}
             
             for group_name, group in groups:
                 if not self.xfacet:
@@ -444,18 +447,22 @@ class MatrixView(HasStrictTraits):
                     col_idx = cols.index(group_name[1])
                     
                 plt.sca(grid.axes_row[row_idx][col_idx])
-                patches, _ = plt.pie(group[self.feature], wedgeprops = kwargs)
+                patches, _ = plt.pie(group[self.feature], 
+                                     counterclock = False,
+                                     startangle = 90,
+                                     wedgeprops = kwargs)
                 
-                legend_artists = {}
                 for pi, patch in enumerate(patches):
                     label = group.reset_index().at[pi, self.variable]
-                    patch.set_label(label)
+                    color = colors[label]
+                    patch.set(label = label, facecolor = color)
                     if label not in legend_artists:
                         legend_artists[label] = patch
                     if self.size_function:
                         patch.set_radius(patch.r * group_scale[group_name])
                 
             if(legend):
+                legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
                 grid.axes_row[0][-1].legend(handles = legend_artists.values(),
                                             bbox_to_anchor = (1, 1), 
                                             loc = "upper left",
@@ -466,20 +473,25 @@ class MatrixView(HasStrictTraits):
                     ax.set_frame_on(False)
             
         elif self.style == "petal":
-            palette_name = kwargs.pop('palette', 'deep')
-                       
-            # the context manager goes here because the color cycler is a
-            # property of the axes 
-            with sns.color_palette(palette_name):
-                grid = ImageGrid(fig = fig, 
-                                 rect = 111, 
-                                 nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
-                                                len(cols) if len(cols) > 0 else 1),
-                                 label_mode = "keep",
-                                 axes_pad = 0.0,
-                                 cbar_mode = None)
             
+            grid = ImageGrid(fig = fig, 
+                             rect = 111, 
+                             nrows_ncols = (len(rows) if len(rows) > 0 else 1, 
+                                            len(cols) if len(cols) > 0 else 1),
+                             label_mode = "keep",
+                             axes_pad = 0.0,
+                             cbar_mode = None)
+                
+            variable_values = list(data.index.get_level_values(self.variable).unique())
+            palette_name = kwargs.pop('palette', 'deep')
+            palette = sns.color_palette(palette_name, n_colors = len(variable_values))
+            
+            legend_artists = {}
+
             for group_name, group in groups:
+                feature_max = group[self.feature].max()
+                group = group.set_index(group.index.droplevel(group_keys))
+
                 if not self.xfacet:
                     # only yfacet -- ie, one row
                     row_idx = 0
@@ -493,19 +505,30 @@ class MatrixView(HasStrictTraits):
                     col_idx = cols.index(group_name[1])
                     
                 plt.sca(grid.axes_row[row_idx][col_idx])
-                patches, _ = plt.pie([1.0 / len(group[self.feature])] * len(group[self.feature]), wedgeprops = kwargs)
+                patches, _ = plt.pie([1.0 / len(variable_values)] * len(variable_values), 
+                                     counterclock = False,
+                                     startangle = 90,
+                                     wedgeprops = kwargs)
                 
-                legend_artists = {}
                 for pi, patch in enumerate(patches):
-                    label = group.reset_index().at[pi, self.variable]
-                    patch.set_label(label)
+                    label = variable_values[pi]
+                    color = palette[pi]
+                    
+                    if label not in group.index:
+                        value = 0
+                    else:
+                        value = group.loc[label, self.feature]
+                    radius = math.sqrt(value / feature_max)
+                    if self.size_function:
+                        radius *= group_scale[group_name]
+                        
+                    patch.set(label = label, radius = radius, facecolor = color)
+
                     if label not in legend_artists:
                         legend_artists[label] = patch
-                    patch.set(radius = math.sqrt(group.reset_index().at[pi, self.feature] / group.reset_index()[self.feature].max()))
-                    if self.size_function:
-                        patch.set_radius(patch.r * group_scale[group_name])
-                    
+
             if(legend):
+                legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
                 grid.axes_row[0][-1].legend(handles = legend_artists.values(),
                                             bbox_to_anchor = (1, 1), 
                                             loc = "upper left",
