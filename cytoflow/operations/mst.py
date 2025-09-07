@@ -37,7 +37,7 @@ polygon and/or interactively set the vertices on an MST.
 from warnings import warn
 
 from traits.api import (Str, List, Float, provides, Instance, Bool, observe, 
-                        Any, Dict, Constant, HasTraits)
+                        Any, Dict, Constant, HasTraits, Int)
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -65,8 +65,7 @@ class ConditionSelectionOp(HasTraits):
     condition : Str
         The condition to apply the gate to.
         
-        
-    condition_values : List(Str)
+    condition_values : List(Any)
         The values for which to set the new `name` condition to ``True``.
         
     Notes
@@ -79,7 +78,7 @@ class ConditionSelectionOp(HasTraits):
     
     name = Str
     condition = Str
-    condition_values = List(Str)
+    condition_values = List(Any)
         
     def apply(self, experiment):
         """Applies the gate to an experiment.
@@ -111,7 +110,7 @@ class ConditionSelectionOp(HasTraits):
         # make sure name got set!
         if not self.name:
             raise util.CytoflowOpError('name',
-                                       "You have to set the Polygon gate's name "
+                                       "You have to set the gate's name "
                                        "before applying it!")
 
         if self.name in experiment.data.columns:
@@ -131,11 +130,6 @@ class ConditionSelectionOp(HasTraits):
         if self.condition not in experiment.conditions:
             raise util.CytoflowOpError('condition',
                                        "'condition' must be a condition in the experiment.")
-        
-        if experiment.metadata[self.condition]['values_type'] != 'categorical':
-            raise util.CytoflowOpError('condition',
-                                       "'condition' must be categorical, not {}"
-                                       .format(experiment.metadata[self.condition]['values_type']))
         
         in_selection = experiment[self.condition].apply(lambda x: x in self.condition_values)
         if not in_selection.any():

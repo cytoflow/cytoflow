@@ -46,6 +46,18 @@ Plots a minimum spanning tree of a statistic.
     Which statistic to plot. This is usually the name of the operation that 
     added the statistic. 
     
+.. object:: Style
+
+    Which style view to plot?
+    
+.. object:: Feature
+
+    Which column in the statistic should be plotted?
+    
+.. object:: Variable
+
+    The statistic variable to classify segments in ``pie`` or ``petal`` plots.
+    
 .. object:: Locations
 
     A second statistic whose features (columns) are the locations of the 
@@ -62,18 +74,6 @@ Plots a minimum spanning tree of a statistic.
 
     Which features in ``Locations`` should be used as vertex positions? (By
     default, use all of them.)
-    
-.. object:: Feature
-
-    Which column in the statistic should be plotted?
-    
-.. object:: Variable
-
-    The statistic variable to classify segments in ``pie`` or ``petal`` plots.
-    
-.. object:: Style
-
-    Which style view to plot?
     
 .. object:: Scale
 
@@ -175,9 +175,18 @@ class MSTHandler(ViewHandler):
              VGroup(Item('statistic',
                          editor=EnumEditor(name='context_handler.statistics_names'),
                          label = "Statistic"),
+                    Item('style',
+                         editor = EnumEditor(values = {'heat' : "Heat Map",
+                                                       'pie' : "Pie Plot",
+                                                       'petal' : "Petal Plot"}),
+                         label = "Style"),
                     Item('feature',
                          editor = EnumEditor(name = 'handler.features'),
                          label = "Feature"),
+                    Item('variable',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label = "Variable"),
                     Item('locations',
                          editor = EnumEditor(name = 'context_handler.statistics_names'),
                          label = "Locations"),
@@ -189,15 +198,6 @@ class MSTHandler(ViewHandler):
                          editor = CheckListEditor(name = 'handler.locations_features'),
                          label = "Locations\nFeatures",
                          style = 'custom'),
-                    Item('variable',
-                         editor=ExtendableEnumEditor(name='handler.indices',
-                                                     extra_items = {"None" : ""}),
-                         label = "Variable"),
-                    Item('style',
-                         editor = EnumEditor(values = {'heat' : "Heat Map",
-                                                       'pie' : "Pie Plot",
-                                                       'petal' : "Petal Plot"}),
-                         label = "Style"),
                     Item('scale', label = "Scale"),
                     Item('scale_by_events', label = "Scale by events"),
                     Item('metric',

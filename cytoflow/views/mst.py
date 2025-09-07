@@ -279,6 +279,10 @@ class MSTView(HasStrictTraits):
             raise util.CytoflowViewError("variable",
                                          "If `style` is \"heat\", `variable` must be empty!")
             
+        if self.style != "heat" and self.variable == "":
+            raise util.CytoflowViewError("variable",
+                                         "If `style` is not \"heat\", then you must set `variable`!")
+            
         if self.style != "heat" and self.scale != "linear":
             raise util.CytoflowViewError('scale',
                                          "If `style` is not \"heat\", `scale` must be \"linear\"!")
@@ -313,7 +317,7 @@ class MSTView(HasStrictTraits):
         stat.index = new_stat_idx
         
         # gotta remove rows of stat that aren't in locs
-        # (because some clustering add a "{Cluster}_None" value
+        # (because some clustering add a -1 value
         stat_idx = stat.index.droplevel(self.variable) if self.variable else stat.index
         stat = stat[[v in locs.index for v in stat_idx]]
         
@@ -406,7 +410,7 @@ class MSTView(HasStrictTraits):
         if self.size_function:
             group_scale = {}
             s_max = 0.0
-            for group_name, group in experiment_data.groupby(by = list(locs_names), observed = True):
+            for group_name, group in experiment_data.groupby(by = list(locs.index.names), observed = True):
                 if group_name not in locs.index:
                     continue
                 
@@ -660,18 +664,17 @@ class MSTView(HasStrictTraits):
         stat.index = new_stat_idx
         
         # do we have to get a plot_name?
-        if len(locs_names) > 1 and not self.by:
-            raise util.CytoflowViewError('by',
-                                         'If `locations` has more than one index level, you must set `by`.')
+        if len(locs_names) > 1 and not self.locations_level:
+            raise util.CytoflowViewError('location_level',
+                                         'If `locations` has more than one index level, you must set `location_level`.')
         
-        if self.by and self.by not in locs_names:
-            raise util.CytoflowViewError('by',
-                                         '`by` value {} is not in {}'
-                                         .format(self.by, self.ocations))
+        if self.locations_level and self.locations_level not in locs_names:
+            raise util.CytoflowViewError('location_level',
+                                         '`location_level` value {} is not in {}'
+                                         .format(self.locations_level, self.ocations))
             
-        by = self.by if self.by else list(locs_names)[0]
-            
-        unused_names = list(set(locs_names) - set([by]))
+        loc_level = self.locations_level if self.locations_level else list(locs_names)[0]            
+        unused_names = list(set(locs_names) - set([loc_level]))
 
         if unused_names:
             stat_groupby = stat.groupby(unused_names, observed = True)

@@ -87,6 +87,7 @@ def _dump(view):
                 locations_features = view.locations_features,
                 feature = view.feature,     
                 variable = view.variable,   
+                style = view.style,
                 scale = view.scale,     
                 metric = view.metric,       
                 subset_list = view.subset_list,   

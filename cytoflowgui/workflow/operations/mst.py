@@ -23,7 +23,7 @@ cytoflowgui.workflow.operations.polygon
 
 """
 
-from traits.api import provides, Instance, Str, List, Float, Bool, Callable
+from traits.api import provides, Instance, Str, List, Float, Bool, Callable, Int
 
 from cytoflow.operations.mst import MSTOp, MSTSelectionView
 
@@ -86,7 +86,7 @@ class MSTWorkflowOp(WorkflowOperation, MSTOp):
     name = Str(apply = True)
     
     condition = Str(apply = True)
-    condition_values = List(Str, apply = True)
+    condition_values = List(Int, apply = True)
     
     def default_view(self, **kwargs):
         return MSTWorkflowSelectionView(op = self, **kwargs)
