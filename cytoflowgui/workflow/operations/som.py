@@ -25,14 +25,13 @@ cytoflowgui.workflow.operations.som
 
 from traits.api import (HasTraits, provides, Str, Property, observe, 
                         List, Dict, Any, Enum, Int, Float, Bool, Instance,
-                        Constant, Tuple)
+                        Constant)
 
-from cytoflow.operations.som import SOMOp, SOM1DView, SOM2DView
-from cytoflow.operations.base_op_views import OpView
+from cytoflow.operations.som import SOMOp, SOMDiagnosticView
 import cytoflow.utility as util
 
+from .. import Changed
 from ..views import IWorkflowView, WorkflowByView
-from ..views.view_base import DataPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
 
 from ..serialization import camel_registry, cytoflow_class_repr, traits_repr, dedent, traits_str
 from ..subset import ISubset
@@ -48,97 +47,29 @@ class Channel(HasTraits):
     def __repr__(self):
         return traits_repr(self)
     
-class SOMPlotParams(DataPlotParams):
-    # Data1DPlotParams
-    lim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
-    orientation = Enum('vertical', 'horizontal')
-    
-    # HistogramPlotParams
-    num_bins = util.PositiveCInt(None, allow_none = True)
-    histtype = Enum(['stepfilled', 'step', 'bar'])
-    linestyle = Enum(LINE_STYLES)
-    linewidth = util.PositiveCFloat(None, allow_none = True, allow_zero = True)
-    
-    # Data2DPlotParams
-    xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
-    ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-    
-    # ScatterplotPlotParams
-    s = util.PositiveCFloat(2)
-    marker = Enum(SCATTERPLOT_MARKERS)
-    
-    # shared
-    alpha = util.PositiveCFloat(0.5)
-
-    
 @provides(IWorkflowView)
-class SOMWorkflowView(WorkflowByView, OpView):
+class SOMWorkflowView(WorkflowByView, SOMDiagnosticView):
     id = Constant('cytoflowgui.workflow.operations.somworkflowview')
 
     op = Instance(IWorkflowOperation, fixed = True)
-    plot_params = Instance(SOMPlotParams, ()) 
-    
-    def plot(self, experiment, **kwargs):
-        if len(self.op.channels) == 1:
-            
-            kwargs.pop('xlim', None)
-            kwargs.pop('ylim', None)
-            kwargs.pop('s', None)
-            kwargs.pop('marker', None)
-            
-            v = SOM1DView(op = self.op)
-            v.trait_set(channel = self.op.channels[0], 
-                        scale = self.op.scale[self.op.channels[0]])
-            v.plot(experiment, **kwargs)
-            
-        elif len(self.op.channels) == 2:
-            
-            kwargs.pop('lim', None)
-            kwargs.pop('orientation', None)
-            kwargs.pop('num_bins', None)
-            kwargs.pop('histtype', None)
-            kwargs.pop('linestyle', None)
-            kwargs.pop('linewidth', None)
-            
-            v = SOM2DView(op = self.op)
-            v.trait_set(xchannel = self.op.channels[0], 
-                        ychannel = self.op.channels[1],
-                        xscale = self.op.scale[self.op.channels[0]],
-                        yscale = self.op.scale[self.op.channels[1]])
-            v.plot(experiment, **kwargs)
-            
+    plot_params = Instance(HasTraits, ())
+     
+    def should_plot(self, changed, _):
+        if changed == Changed.ESTIMATE_RESULT:
+            return True
         else:
-            raise util.CytoflowViewError(None, "Can only plot a diagnostic if there are 1 or 2 channels!")
-    
+            return False
+            
     def get_notebook_code(self, idx):
-        if len(self.op.channels) == 1:
-            view = SOM1DView()
-            plot_params = self.plot_params.clone_traits(copy = "deep")
-            # reset the scatterplot traits
-            plot_params.reset_traits(traits = ['xlim', 'ylim', 'alpha', 's', 
-                                               'marker'])
-        elif len(self.op.channels) == 2:
-            view = SOM2DView()
-            plot_params = self.plot_params.clone_traits(copy = "deep")
-            # reset histogram traits
-            plot_params.reset_traits(traits = ['lim', 'orientation', 'num_bins',
-                                               'histtype', 'linestyle', 'linewidth',
-                                               'density', 'alpha'])
-        else:
-            return ""
-        
+        view = SOMDiagnosticView()
         view.copy_traits(self, view.copyable_trait_names())
-        view.subset = self.subset
-        plot_params_str = traits_str(plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx}{plot}{plot_params})
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
         """
         .format(traits = traits_str(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
-                plot_params = ", " + plot_params_str if plot_params_str else ""))
-    
+                prev_idx = idx - 1))
     
 @provides(IWorkflowOperation)    
 class SOMWorkflowOp(WorkflowOperation, SOMOp):
@@ -153,13 +84,16 @@ class SOMWorkflowOp(WorkflowOperation, SOMOp):
     name = Str(apply = True)
     by = List(Str, estimate = True)
     # SOM parameters
-    width = Int(10, estimate = True)
-    height = Int(10, estimate = True)
+    width = Int(7, estimate = True)
+    height = Int(7, estimate = True)
     distance = Enum("euclidean", "cosine", "chebyshev", "manhattan", estimate = True)
     learning_rate = Float(0.5, estimate = True)
+    learning_decay_function = Enum('asymptotic_decay', 'inverse_decay_to_zero', 'linear_decay_to_zero', estimate = True)
     sigma = Float(1.0, estimate = True)
-    num_iterations = Int(20, estimate = True)
-    sample = util.UnitFloat(0.1, estimate = True)
+    sigma_decay_function = Enum('asymptotic_decay', 'inverse_decay_to_zero', 'linear_decay_to_zero', estimate = True)
+    neighborhood_function = Enum('gaussian', 'mexican_hat', 'bubble', 'triangle', estimate = True)
+    num_iterations = Int(50, estimate = True)
+    sample = util.UnitFloat(0.05, estimate = True)
     
     # consensus clustering parameters
     consensus_cluster = Bool(True, estimate = True)
@@ -178,7 +112,7 @@ class SOMWorkflowOp(WorkflowOperation, SOMOp):
     
     # bits for channels
     @observe('[channels_list:items,channels_list:items.channel,channels_list:items.scale]')
-    def _channels_updated(self, event):
+    def _channels_updated(self, _):
         self.changed = 'channels_list'
         
     def _get_channels(self):
@@ -213,6 +147,8 @@ class SOMWorkflowOp(WorkflowOperation, SOMOp):
             
     def clear_estimate(self):
         self._som = {}
+        self._cc = {}
+        self._centers = {}
         
     def default_view(self, **kwargs):
         """
@@ -254,7 +190,10 @@ def _dump(op):
                 height = op.height,
                 distance = op.distance,
                 learning_rate = op.learning_rate,
+                learning_decay_function = op.learning_decay_function,
                 sigma = op.sigma,
+                sigma_decay_function = op.sigma_decay_function,
+                neighborhood_function = op.neighborhood_function,
                 num_iterations = op.num_iterations,
                 sample = op.sample,
                 consensus_cluster = op.consensus_cluster,
@@ -266,19 +205,17 @@ def _dump(op):
                 subset_list = op.subset_list)
     
 @camel_registry.loader('som', version = 1)
-def _load(data, version):
+def _load(data, _):
     return SOMWorkflowOp(**data)
 
 @camel_registry.dumper(SOMWorkflowView, 'som-view', version = 1)
 def _dump_view(view):
     return dict(op = view.op,
-                plot_params = view.plot_params,
                 current_plot = view.current_plot)
 
 @camel_registry.loader('som-view', version = any)
-def _load_view(data, ver):
+def _load_view(data, _):
     return SOMWorkflowView(**data)
-
 
 @camel_registry.dumper(Channel, 'som-channel', version = 1)
 def _dump_channel(channel):
@@ -286,54 +223,6 @@ def _dump_channel(channel):
                 scale = channel.scale)
     
 @camel_registry.loader('som-channel', version = 1)
-def _load_channel(data, version):
+def _load_channel(data, _):
     return Channel(**data)
 
-@camel_registry.dumper(SOMPlotParams, 'som-view-params', version = 1)
-def _dump_params(params):
-    return dict(# BasePlotParams
-                title = params.title,
-                xlabel = params.xlabel,
-                ylabel = params.ylabel,
-                huelabel = params.huelabel,
-                col_wrap = params.col_wrap,
-                sns_style = params.sns_style,
-                sns_context = params.sns_context,
-                legend = params.legend,
-                sharex = params.sharex,
-                sharey = params.sharey,
-                despine = params.despine,
-
-                # DataplotParams
-                min_quantile = params.min_quantile,
-                max_quantile = params.max_quantile,
-                
-                # Data1DPlotParams
-                lim = params.lim,
-                orientation = params.data_orintation,
-                
-                # HistogramPlotParams
-                num_bins = params.num_bins,
-                histtype = params.histtype,
-                linestyle = params.linestyle,
-                linewidth = params.linewidth,
-                
-                # Data2DPlotParams
-                xlim = params.xlim,
-                ylim = params.ylim,
-                
-                # Scatterplot params
-                s = params.s,
-                marker = params.marker,
-                
-                # Density plot params
-                gridsize = params.gridsize,
-                smoothed = params.smoothed,
-                smoothed_sigma = params.smoothed_sigma,
-    
-                # shared
-                alpha = params.alpha)
-    
-@camel_registry.loader('som-view-params', version = any)
-def _load_params(data, version):
-    return SOMPlotParams(**data)

@@ -41,11 +41,14 @@ spanning tree to visualize clusters.
     Should we use consensus clustering to find the "natural" number of
     clusters? Defaults to ``True``.
     
-    
 .. object:: Sample
 
-    What proportion of the data set to use for training? Defaults to 1% of the
+    What proportion of the data set to use for training? Defaults to 5% of the
     dataset to help with runtime.
+
+.. object:: Iterations
+
+    How many times to update neuron weights? Defaults to ``50``.
     
 .. object:: By
 
@@ -72,14 +75,23 @@ spanning tree to visualize clusters.
     The initial step size for updating the self-organizing map weights. Changes
     as the map is learned.
     
+.. object:: Learning Rate Decay Function
+
+    How fast does the learning rate decay?
+
 .. object:: Sigma
 
     The magnitude of each update. Fixed over the course of the run -- 
     higher values mean more aggressive updates.
     
-.. object:: Iterations
+.. object:: Sigma Decay Function
 
-    How many times to update neuron weights.
+    How fast does sigma decay?
+    
+    
+.. object:: Neighborhood Function
+
+    What function should be used to determine how nearby neurons are updated?
     
 .. object: Min clusters
 
@@ -100,6 +112,8 @@ spanning tree to visualize clusters.
     
 If you'd like to learn more about self-organizing maps and how to use them
 effectively, check out https://rubikscode.net/2018/08/20/introduction-to-self-organizing-maps/
+and https://www.datacamp.com/tutorial/self-organizing-maps. The "Tuning the 
+SOM Model" section in that second link is particularly helpful!
     
 .. plot::
    :include-source: False
@@ -129,14 +143,13 @@ effectively, check out https://rubikscode.net/2018/08/20/introduction-to-self-or
 from natsort import natsorted
 
 from traits.api import provides, Event, Property, List, Str, Bool
-from traitsui.api import (View, Item, Group, EnumEditor, HGroup, VGroup, TextEditor, 
-                          CheckListEditor, ButtonEditor, Controller, TupleEditor)
+from traitsui.api import (View, Item, EnumEditor, HGroup, VGroup, TextEditor, 
+                          CheckListEditor, ButtonEditor, Controller)
 from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
-from ..editors import SubsetListEditor, InstanceHandlerEditor, VerticalListEditor, ToggleButtonEditor
+from ..editors import SubsetListEditor, InstanceHandlerEditor, VerticalListEditor, ToggleButtonEditor, ColorTextEditor
 from ..workflow.operations import SOMWorkflowOp, SOMWorkflowView, SOMChannel
-from ..view_plugins.view_plugin_base import DataPlotParamsView
 from ..subset_controllers import subset_handler_factory
 from ..view_plugins import ViewHandler
 
@@ -179,6 +192,11 @@ class SOMHandler(OpHandler):
                                              evaluate = float,
                                              format_func = lambda x: "" if x is None else str(x)),
                          label = "Sample"),
+                    Item('num_iterations',
+                         label = "Iterations",
+                         editor = TextEditor(auto_set = False,
+                                             evaluate = int,
+                                             format_func = lambda x: "" if x is None else str(x))),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
                                                   name = 'context_handler.previous_conditions_names'),
@@ -196,20 +214,27 @@ class SOMHandler(OpHandler):
                          editor = TextEditor(auto_set = False,
                                              evaluate = int,
                                              format_func = lambda x: "" if x is None else str(x))),
+                    Item('distance', 
+                         label = "Distance\nFunction",
+                         editor = EnumEditor(values = ["euclidean", "cosine", "chebyshev", "manhattan"])),
                     Item('learning_rate',
                          label = "Learning\nRate",
                          editor = TextEditor(auto_set = False,
                                              evaluate = float,
                                              format_func = lambda x: "" if x is None else str(x))),
+                    Item('learning_decay_function', 
+                         label = "Learning Decay\nFunction",
+                         editor = EnumEditor(values = ['asymptotic_decay', 'inverse_decay_to_zero', 'linear_decay_to_zero'])),
                     Item('sigma',
                          editor = TextEditor(auto_set = False,
                                              evaluate = float,
                                              format_func = lambda x: "" if x is None else str(x))),
-                    Item('num_iterations',
-                         label = "Iterations",
-                         editor = TextEditor(auto_set = False,
-                                             evaluate = int,
-                                             format_func = lambda x: "" if x is None else str(x))),
+                    Item('sigma_decay_function', 
+                         label = "Sigma Decay\nFunction",
+                         editor = EnumEditor(values = ['asymptotic_decay', 'inverse_decay_to_zero', 'linear_decay_to_zero'])),
+                    Item('neighborhood_function', 
+                         label = "Neighborhood\nFunction",
+                         editor = EnumEditor(values = ['gaussian', 'mexican_hat', 'bubble', 'triangle'])),
                     Item('min_clusters',
                          label = "Min Clusters",
                          editor = TextEditor(auto_set = False,
@@ -260,84 +285,22 @@ class SOMHandler(OpHandler):
         else:
             return []
         
-class SOMViewParamsHandler(Controller):
-    view_params_view = \
-        View(VGroup(
-        # histogram-specific
-        VGroup(Item('orientation'),
-               Item('lim',
-                    label = "Data\nLimits",
-                    editor = TupleEditor(editors = [TextEditor(auto_set = False,
-                                                               evaluate = float,
-                                                               placeholder = "None",
-                                                               format_func = lambda x: "" if x is None else str(x)),
-                                                    TextEditor(auto_set = False,
-                                                               evaluate = float,
-                                                               placeholder = "None",
-                                                               format_func = lambda x: "" if x is None else str(x))],
-                                         labels = ["Min", "Max"],
-                                         cols = 1)),
-               Item('num_bins',
-                    editor = TextEditor(auto_set = False,
-                                        placeholder = "None",
-                                        format_func = lambda x: "" if x is None else str(x))),
-               Item('histtype'),
-               Item('linestyle'),
-               Item('linewidth',
-                    editor = TextEditor(auto_set = False,
-                                        placeholder = "None",
-                                        format_func = lambda x: "" if x is None else str(x))),
-               Item('alpha',
-                    editor = TextEditor(auto_set = False)),
-               label = "Histogram Parameters"),
-        # scatterplot-specific
-        VGroup(Item('xlim',
-                    label = "X Limits",
-                    editor = TupleEditor(editors = [TextEditor(auto_set = False,
-                                                               evaluate = float,
-                                                               placeholder = "None",
-                                                               format_func = lambda x: "" if x is None else str(x)),
-                                                    TextEditor(auto_set = False,
-                                                               evaluate = float,
-                                                               placeholder = "None",
-                                                               format_func = lambda x: "" if x is None else str(x))],
-                                         labels = ["Min", "Max"],
-                                         cols = 1)),
-               Item('ylim',
-                    label = "Y Limits",
-                    editor = TupleEditor(editors = [TextEditor(auto_set = False,
-                                                               evaluate = float,
-                                                               placeholder = "None",
-                                                               format_func = lambda x: "" if x is None else str(x)),
-                                                    TextEditor(auto_set = False,
-                                                               evaluate = float,
-                                                               placeholder = "None",
-                                                               format_func = lambda x: "" if x is None else str(x))],
-                                         labels = ["Min", "Max"],
-                                         cols = 1)),
-               Item('alpha',
-                    editor = TextEditor(auto_set = False)),
-               Item('s',
-                    editor = TextEditor(auto_set = False),
-                    label = "Size"),
-               Item('marker'),
-               label = "Scatterplot Parameters"),
-        Group(DataPlotParamsView.content,
-              label = "Common Parameters")))
 
         
 class SOMViewHandler(ViewHandler):
     view_traits_view = \
-        View()
-        # TODO - figure this out!
-        # TODO - make sure this works with an MST view!!
+        View(Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191")))
         
-    view_params_view = \
-        View(Item('plot_params',
-                  editor = InstanceHandlerEditor(view = 'view_params_view',
-                                                 handler_factory = SOMViewParamsHandler),
-                  style = 'custom',
-                  show_label = False))
+    view_params_view = View()
 
 
 @provides(IOperationPlugin)

@@ -474,7 +474,8 @@ class MiniSom(object):
 
     def train(self, data, num_iteration,
               random_order=False, verbose=False,
-              use_epochs=False, fixed_points=None):
+              use_epochs=False, fixed_points=None,
+              save_quant_history=False):
         """Trains the SOM.
 
         Parameters
@@ -508,6 +509,7 @@ class MiniSom(object):
         """
         self._check_iteration_number(num_iteration)
         self._check_input_len(data)
+        self._quant_history = []
         random_generator = None
         if random_order:
             random_generator = self._random_generator
@@ -526,12 +528,16 @@ class MiniSom(object):
         else:
             fixed_points = {}
 
+        save_interval = int(len(iterations) / num_iteration)
         for t, iteration in enumerate(iterations):
             decay_rate = get_decay_rate(t, len(data))
             self.update(data[iteration],
                         fixed_points.get(iteration,
                                          self.winner(data[iteration])),
                         decay_rate, num_iteration)
+            if save_quant_history and t % save_interval == 0:
+                self._quant_history.append(self.quantization_error(data))
+                                           
         if verbose:
             print('\n quantization error:', self.quantization_error(data))
 
@@ -643,6 +649,9 @@ class MiniSom(object):
         distance between each input sample and its best matching unit."""
         self._check_input_len(data)
         return norm(data-self.quantization(data), axis=1).mean()
+    
+    def quantization_history(self):
+        return self._quant_history
 
     def distortion_measure(self, data):
         """Returns the distortion measure computed as
