@@ -306,7 +306,7 @@ class MatrixView(HasStrictTraits):
         ylabel = kwargs.pop("ylabel", self.xfacet)
 
         legend = kwargs.pop('legend', True)
-        legendlabel = kwargs.pop('legendlabel', self.feature)
+        legendlabel = kwargs.pop('legendlabel', self.variable)
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -466,7 +466,7 @@ class MatrixView(HasStrictTraits):
                 grid.axes_row[0][-1].legend(handles = legend_artists.values(),
                                             bbox_to_anchor = (1, 1), 
                                             loc = "upper left",
-                                            title = self.variable)
+                                            title = legendlabel)
                 
             for ax in grid:
                 if not ax.has_data():
@@ -532,7 +532,7 @@ class MatrixView(HasStrictTraits):
                 grid.axes_row[0][-1].legend(handles = legend_artists.values(),
                                             bbox_to_anchor = (1, 1), 
                                             loc = "upper left",
-                                            title = self.variable)
+                                            title = legendlabel)
                 
             for ax in grid:
                 if not ax.has_data():
