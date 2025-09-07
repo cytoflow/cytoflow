@@ -54,7 +54,7 @@ class KMeansOp(HasStrictTraits):
     Call `estimate` to compute the cluster centroids.
       
     Calling `apply` creates a new categorical metadata variable 
-    named ``{name}_Cluster``, with possible values ``Cluster_1`` .... ``Cluster_n`` 
+    named ``{name}``, with possible values ``0`` .... ``n - 1`` 
     where ``n`` is the number of clusters, specified with `num_clusters`.
 
     The same model may not be appropriate for different subsets of the data set.
@@ -346,9 +346,9 @@ class KMeansOp(HasStrictTraits):
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
                 
-        if "{}_Clusters".format(self.name) in self.by:
+        if self.name in self.by:
             raise util.CytoflowOpError('by',
-                                       "'{}_Clusters' is going to be added as an "
+                                       "'{}' is going to be added as an "
                                        "index level to the new statistic, so you "
                                        "can't use it to aggregate events."
                                        .format(self.name))
@@ -367,7 +367,7 @@ class KMeansOp(HasStrictTraits):
         clusters = ["Cluster_{}".format(x + 1) for x in range(self.num_clusters)]
           
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
-                                         names = list(self.by) + ["{}_Cluster".format(self.name)])
+                                         names = list(self.by) + [self.name])
 
         new_stat = pd.DataFrame(index = idx,
                                 columns = list(self.channels) + ["Proportion"], 
@@ -419,12 +419,12 @@ class KMeansOp(HasStrictTraits):
                     g = group + tuple(["Cluster_{}".format(c + 1)])
                                     
                 for cidx1, channel1 in enumerate(self.channels):
-                    new_stat.loc[g, channel1] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
+                    new_stat.loc[g, channel1] = kmeans.cluster_centers_[c, cidx1]
                 
                 new_stat.loc[g, "Proportion"] = sum(predicted == c) / len(predicted)
          
         new_experiment = experiment.clone(deep = False)          
-        new_experiment.add_condition("{}_Cluster".format(self.name), "category", event_assignments)
+        new_experiment.add_condition(self.name, "category", event_assignments)
         
         new_experiment.statistics[self.name] = new_stat
  

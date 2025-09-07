@@ -51,10 +51,11 @@ class SOMOp(HasStrictTraits):
     Calling `estimate` creates the map, often using a random subset of the
     events that will eventually be clustered.
       
-    Calling `apply` creates a new categorical metadata variable 
-    named `name_Cluster`, with possible values ``Cluster_1`` .... ``Cluster_n`` where 
+    Calling `apply` creates a new integer metadata variable 
+    named ``{name}`, with possible values ``0`` .... ``n-1`` where 
     ``n`` is the product of the height and width of the map (or the number of consensus
-    clusters, if consensus clustering is used).
+    clusters, if consensus clustering is used). Events with ``NA`` as a channel
+    value are assigned the flag value ``-1``.
 
     The same model may not be appropriate for different subsets of the data set.
     If this is the case, you can use the `by` attribute to specify 
@@ -65,7 +66,8 @@ class SOMOp(HasStrictTraits):
     Attributes
     ----------
     name : Str
-        The operation name; determines the name of the new metadata column
+        The operation name; determines the name of the new metadata column and
+        the new locations statistic.
         
     channels : List(Str)
         The channels to apply the clustering algorithm to.
@@ -109,7 +111,7 @@ class SOMOp(HasStrictTraits):
     distance : Enum (default = "euclidean")
         The distance measure that activates the map. Defaults to ``euclidean``.
         ``cosine`` is recommended for >3 channels. Possible values are "euclidean", 
-        ``cosine``, ``manhattan``, and ``chebyshev``
+        ``cosine``, and ``manhattan``
         
     learning_rate : Float (default = 0.5)
         The initial step size for updating SOM weights. Changes as the map is
@@ -222,7 +224,7 @@ class SOMOp(HasStrictTraits):
     # SOM parameters
     width = Int(10)
     height = Int(10)
-    distance = Enum("euclidean", "cosine", "chebyshev", "manhattan")
+    distance = Enum("euclidean", "cosine", "manhattan")
     learning_rate = Float(0.5)
     sigma = Float(1.0)
     num_iterations = Int(20)
@@ -372,14 +374,14 @@ class SOMOp(HasStrictTraits):
             
             if self.consensus_cluster:
                 centers = soms[group].get_weights().reshape(self.width * self.height, len(self.channels))
-                cc = util.ConsensusClustering(sklearn.cluster.KMeans(),
+                cc = util.ConsensusClustering(sklearn.cluster.AgglomerativeClustering(linkage = "average", metric = self.distance),
                                               min_clusters = self.min_clusters,
                                               max_clusters = self.max_clusters,
                                               n_resamples = self.n_resamples,
                                               resample_frac = self.resample_frac)       
                 cc.fit(centers, n_jobs = 8)
                 best_k = cc.best_k()
-                self._cc[group] = sklearn.cluster.KMeans(n_clusters = best_k)
+                self._cc[group] = sklearn.cluster.AgglomerativeClustering(n_clusters = best_k, linkage = "average", metric = self.distance)
                 self._cc[group].fit(centers)
                 
             
@@ -461,7 +463,7 @@ class SOMOp(HasStrictTraits):
         clusters = [x + 1 for x in range(num_clusters)]
           
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
-                                         names = list(self.by) + ["{}_Cluster".format(self.name)])
+                                         names = list(self.by) + [self.name])
         centers_stat = pd.DataFrame(index = idx,
                                     columns = list(self.channels), 
                                     dtype = 'float').sort_index()
@@ -473,7 +475,7 @@ class SOMOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
-        event_assignments = pd.Series(["Cluster_None"] * len(experiment), dtype = "object")
+        event_assignments = pd.Series([-1] * len(experiment))
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -510,49 +512,42 @@ class SOMOp(HasStrictTraits):
                 cc = self._cc[group]
                 def winner_idx(x, cc = cc):
                     w = som.winner(x)
-                    return cc.predict(centers[[w[0] * self.width + w[1]]])[0]
+                    return cc.labels_[w[0] * self.width + w[1]]
             else:
                 def winner_idx(x):
                     w = som.winner(x)
                     return w[0] * self.width + w[1]
 
-            predicted[~x_na] = np.apply_along_axis(winner_idx, 1, x[~x_na])
-                 
-            predicted_str = pd.Series(["(none)"] * len(predicted))
-            for c in np.unique(predicted):
-                predicted_str[predicted == c] = "Cluster_{}".format(c + 1)
-            predicted_str[predicted == -1] = "Cluster_None"
-            predicted_str.index = group_idx
-      
-            event_assignments.iloc[group_idx] = predicted_str
+            predicted[~x_na] = np.apply_along_axis(winner_idx, 1, x[~x_na])    
+            event_assignments.iloc[group_idx] = predicted
 
             if self.consensus_cluster:
                 cc = self._cc[group]
                 for ci, channel in enumerate(self.channels):
                     scale = self._scale[channel]
-                    for cluster in range(cc.cluster_centers_.shape[0]):
+                    for cluster in range(cc.n_clusters_):
                         if len(self.by) == 0:
-                            g = tuple(["Cluster_{}".format(cluster + 1)])
+                            g = tuple([cluster])
                         elif not util.is_list_like(group):
-                            g = tuple(list([group]) + ["Cluster_{}".format(cluster + 1)])
+                            g = tuple(list([group]) + [cluster])
                         else:
-                            g = tuple(list(group) + ["Cluster_{}".format(cluster + 1)])
-
-                        centers_stat.at[g, channel] = scale.inverse(cc.cluster_centers_[cluster][ci])
+                            g = tuple(list(group) + [cluster])
+                
+                        centers_stat.at[g, channel] = scale(data_subset[event_assignments == cluster][channel].median())
                     
             else:            
                 for ci, channel in enumerate(self.channels):
                     scale = self._scale[channel]
                     for cluster in range(num_clusters):
                         if len(self.by) == 0:
-                            g = tuple([cluster + 1])
+                            g = tuple([cluster])
                         else:
-                            g = tuple(list([group]) + [cluster + 1])
+                            g = tuple(list([group]) + [cluster])
                             
-                        centers_stat.at[g, channel] = scale.inverse(centers[cluster][ci])
+                        centers_stat.at[g, channel] = centers[cluster][ci]
          
         new_experiment = experiment.clone(deep = False)          
-        new_experiment.add_condition("{}_Cluster".format(self.name), "category", event_assignments)
+        new_experiment.add_condition(self.name, "int", event_assignments)
         new_experiment.statistics[self.name] = centers_stat.dropna() 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
@@ -646,7 +641,7 @@ class SOM1DView(By1DView, AnnotatingView, HistogramView):
             scale = util.scale_factory(self.scale, experiment, channel = self.channel)
     
         super(SOM1DView, view).plot(experiment,
-                                    annotation_facet = "{}_Cluster".format(self.op.name),
+                                    annotation_facet = self.op.name,
                                     annotation_trait = trait_name,
                                     annotations = self.op._som,
                                     scale = scale,
@@ -721,7 +716,7 @@ class SOM2DView(By2DView, AnnotatingView, ScatterplotView):
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
     
         super(SOM2DView, view).plot(experiment,
-                                    annotation_facet = "{}_Cluster".format(self.op.name),
+                                    annotation_facet = self.op.name,
                                     annotation_trait = trait_name,
                                     annotations = self.op._som,
                                     xscale = xscale,

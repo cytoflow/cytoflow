@@ -33,7 +33,7 @@ from warnings import warn
 from natsort import natsorted
 
 from traits.api import HasStrictTraits, provides, Enum, Str, Callable, Constant, \
-                       List, Float
+                       List, Float, Int
 import seaborn as sns
 import pandas as pd
 import matplotlib as mpl
@@ -230,7 +230,7 @@ class MSTView(HasStrictTraits):
     # bits to support the interactive selector for MSTOp
     _loc_level = Str
     _vertices = List(List(Float))
-    _groups = List(Str)
+    _groups = List(Int)
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """
@@ -317,6 +317,10 @@ class MSTView(HasStrictTraits):
         stat_idx = stat.index.droplevel(self.variable) if self.variable else stat.index
         stat = stat[[v in locs.index for v in stat_idx]]
         
+        if stat.empty:
+            raise util.CytoflowViewError('locations',
+                                         f'{self.statistic} and {self.locations} dont share any rows!')
+        
         # do we have to get a plot_name?
         if len(locs_names) > 1 and not self.locations_level:
             raise util.CytoflowViewError('location_level',
@@ -327,8 +331,7 @@ class MSTView(HasStrictTraits):
                                          '`location_level` value {} is not in {}'
                                          .format(self.locations_level, self.ocations))
             
-        self._loc_level = loc_level = self.locations_level if self.locations_level else list(locs_names)[0]
-            
+        self._loc_level = loc_level = self.locations_level if self.locations_level else list(locs_names)[0]            
         unused_names = list(set(locs_names) - set([loc_level]))
 
         if plot_name is not None and not unused_names:
@@ -380,7 +383,7 @@ class MSTView(HasStrictTraits):
 
         title = kwargs.pop("title", None)
         legend = kwargs.pop('legend', True)
-        legendlabel = kwargs.pop('legendlabel', self.feature)
+        legendlabel = kwargs.pop('legendlabel', self.variable)
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -446,6 +449,9 @@ class MSTView(HasStrictTraits):
         # create a fully-connected graph
         full_graph = igraph.Graph.Weighted_Adjacency(adjacency_graph, mode = "undirected", loops = False)
         
+        # normalize the edge weights (necessary??)
+        # mst_graph.es["weight"] = mst_graph.es["weight"] / np.mean(mst_graph.es["weight"]) 
+        
         # create the spanning tree
         mst_graph = igraph.Graph.spanning_tree(full_graph, weights = full_graph.es["weight"])
         
@@ -479,7 +485,7 @@ class MSTView(HasStrictTraits):
         edge_len = scipy.spatial.distance.euclidean(layout.coords[mst_graph.get_edgelist()[0][0]],
                                                     layout.coords[mst_graph.get_edgelist()[0][1]])
         
-        radius = kwargs.pop('radius', edge_len * 0.3)
+        radius = kwargs.pop('radius', edge_len * 0.4)
         if radius < 0 or radius > 1:
             raise util.CytoflowViewError('radius',
                                          'Radius must be between 0 and 1.')
@@ -519,7 +525,7 @@ class MSTView(HasStrictTraits):
             
             groups = data.groupby([loc_level], observed = True)
             legend_artists = {}
-        
+
             for idx, (_, group) in enumerate(groups):
                 loc = layout.coords[idx]
                 group_data = group[self.feature]
@@ -538,9 +544,6 @@ class MSTView(HasStrictTraits):
                                           edgecolor = 'white',
                                           label = label,
                                           clip_on = False)
-                    #
-                    # if idx == 0:
-                    #     w.set(label = group[self.variable].iloc[frac_idx])
                         
                     if self.size_function:
                         w.set_radius(w.r * group_scale[locs.index.to_flat_index()[idx]])
