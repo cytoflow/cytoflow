@@ -56,25 +56,35 @@ class MatrixView(HasStrictTraits):
     There are three different ways of plotting the values of the matrix view 
     (the "cells" in the matrix), controlled by the `type` parameter:
     
-    * Setting `style` to ``heat`` (the default) will produce a "traditional" heat map, 
-      where each "cell" is a circle and the color of the circle is related to the 
-      intensity of the value of `feature`. (In this scenario, `variable` must be left empty.).
+    * Setting `style` to ``heat`` (the default) will produce a "traditional" 
+      heat map, where each "cell" is a circle and the color of the circle is 
+      related to the intensity of the value of `feature`. (In this scenario, 
+      `variable` is ignored.)
       
-    * Setting `style` to ``pie`` will draw a pie plot in each cell. The values of `variable`
-      are used as the categories of the pie, and the arc length of each slice of pie is related 
-      to the intensity of the value of `feature`.
+    * Setting `style` to ``pie`` will draw a pie plot in each cell. If `variable`
+      is set, then the values of `variable` are used as the categories of the 
+      pie, and the arc length of each slice of pie is related to the intensity 
+      of the value of `feature`. If `variable` is not set, however, `feature`
+      is ignored and the *features* of the statistic become the categories. In
+      this case, *all* of the statistic index levels must be either used in
+      the view facets or specified in `plot_name`.
       
-    * Setting `style` to ``petal`` will draw a "petal plot" in each cell. The values of `variable` 
-      are used as the categories, but unlike a pie plot, the arc width of each slice
-      is equal. Instead, the radius of the pie slice scales with the square root of
-      the intensity, so that the relationship between area and intensity remains the same.
+    * Setting `style` to ``petal`` will draw a "petal plot" in each cell. If 
+      `variable` is set, then the values of `variable` are used as the categories, 
+      but unlike a pie plot, the arc width of each slice is equal. Instead, the 
+      radius of the pie slice scales with the square root of the intensity, so 
+      that the relationship between area and intensity remains the same.
+      If `variable` is not set, however, `feature` is ignored and the *features*
+      of the statistic become the categories. In this case, *all* of the statistic
+      index levels must be either used in the view facets or set on `plot_name`.
       
     .. warning::
-        If `style` is ``pie`` or ``petal``, then all of the data being plotted must be >0!
-
+        If `style` is ``pie`` or ``petal``, then negative data will be clipped
+        to 0! 
+        
     Optionally, you can set `size_function` to scale the circles (or pies or petals)
-    by a function computed on `Experiment.data`. (Often used to scale by the number
-    of events in each subset.)
+    by a function computed on `Experiment.data`. (Often set to ``len`` to scale 
+    by the number of events in each subset.)
     
     Attributes
     ----------
@@ -93,11 +103,12 @@ class MatrixView(HasStrictTraits):
         of that index level.
     
     variable : Str
-        The variable used for plotting pie and petal plots. Must be left empty
-        for a heatmap.
+        The variable (index level) used for plotting pie and petal plots. Ignored 
+        for a heatmap. If unset, use the statistic features as categories. 
         
     feature : Str
-        The column in the statistic to plot (often a channel name.)
+        The column in the statistic to plot (often a channel name.) Ignored if
+        `variable` is left unset.
         
     style : Enum(``heat``, ``pie``, ``petal``) (default = ``heat``)
         What kind of matrix plot to make?
@@ -241,22 +252,10 @@ class MatrixView(HasStrictTraits):
             raise util.CytoflowViewError('statistic',
                                          "Must set a statistic to plot")
             
-        if not self.feature:
-            raise util.CytoflowViewError('feature',
-                                         "Must set a feature to plot")
-            
         if not self.xfacet and not self.yfacet:
             raise util.CytoflowViewError('xfacet',
                                          "At least one of 'xfacet' and 'yfacet' must be set.")
-
-        if self.style == "heat" and self.variable != "":
-            raise util.CytoflowViewError("variable",
-                                         "If `style` is \"heat\", `variable` must be empty!")
-            
-        if self.style != "heat" and self.scale != "linear":
-            raise util.CytoflowViewError('scale',
-                                         "If `style` is not \"heat\", `scale` must be \"linear\"!")
-                        
+ 
         stat = self._get_stat(experiment)
         data = self._subset_data(stat)
         facets = self._get_facets(data)
@@ -267,7 +266,7 @@ class MatrixView(HasStrictTraits):
         if plot_name is not None and not unused_names:
             raise util.CytoflowViewError('plot_name',
                                          "You specified a plot name, but all "
-                                         "the facets are already used")
+                                         "the statistic's levels are already used")
         
         if unused_names:
             groupby = data.groupby(unused_names, observed = True)
@@ -289,17 +288,25 @@ class MatrixView(HasStrictTraits):
             if self.size_function:
                 experiment_data = experiment.data.groupby(unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
-            
-        if self.style != "heat" and self.variable not in stat.index.names:
-            raise util.CytoflowViewError('variable',
-                                         "Can't find variable '{}' in the statistic index."
-                                         .format(self.variable))
-            
-        if self.style != "heat" and (data[self.feature] < 0.0).any():
+        if self.style == "heat" and not self.feature:
             raise util.CytoflowViewError('feature',
-                                         "If `style` is not \"heat\", then every element of `feature` must be greater than 0")     
-
-        # data = data.reset_index()
+                                         "For style 'heat', you must set 'feature'!")
+            
+        if self.style != "heat":
+            if self.variable and self.variable not in stat.index.names:
+                raise util.CytoflowViewError('variable',
+                                             "Can't find variable '{}' in the statistic index."
+                                             .format(self.variable))
+            
+            if self.variable and not self.feature:
+                raise util.CytoflowViewError('feature',
+                                             "For styles 'pie' and 'petal', if you set 'variable', you must set 'feature'!"
+                                             .format(self.variable))
+                
+            if self.variable and self.feature not in data.columns:
+                raise util.CytoflowViewError('feature',
+                                             "Can't find feature '{}' in the statistic columns."
+                                             .format(self.feature))
         
         title = kwargs.pop("title", None)
         xlabel = kwargs.pop("xlabel", self.yfacet)       
@@ -328,16 +335,18 @@ class MatrixView(HasStrictTraits):
         rows = kwargs.pop("row_order", (index.levels[index.names.index(self.xfacet)].to_list() if self.xfacet else []))
         cols = kwargs.pop("col_order", (index.levels[index.names.index(self.yfacet)].to_list() if self.yfacet else []))
 
-        # set up the range of the color map
+        # set up the data normalizer
         if 'norm' not in kwargs:
             data_scale = util.scale_factory(scale = self.scale,
                                             experiment = experiment,
                                             statistic = self.statistic,
-                                            features = [self.feature])
+                                            features = [self.feature] 
+                                                       if self.feature 
+                                                       else list(data.columns))
             data_norm = data_scale.norm()
         else:
             data_norm = kwargs.pop('norm')
-        
+                    
         group_keys = []
         group_keys += [self.xfacet] if self.xfacet else []
         group_keys += [self.yfacet] if self.yfacet else []
@@ -427,13 +436,16 @@ class MatrixView(HasStrictTraits):
                              axes_pad = 0.0,
                              cbar_mode = None)
                 
-            variable_values = list(data.index.get_level_values(self.variable).unique())
+            if self.variable:
+                variable_values = list(data.index.get_level_values(self.variable).unique())
+            else:
+                variable_values = list(data.columns)
             palette_name = kwargs.pop('palette', 'deep')
             palette = sns.color_palette(palette_name, n_colors = len(variable_values))
             colors = {var : palette[vi] for vi, var in enumerate(variable_values)}
             legend_artists = {}
             
-            for group_name, group in groups:
+            for group_name, group_data in groups:
                 if not self.xfacet:
                     # only yfacet -- ie, one row
                     row_idx = 0
@@ -446,14 +458,24 @@ class MatrixView(HasStrictTraits):
                     row_idx = rows.index(group_name[0])
                     col_idx = cols.index(group_name[1])
                     
+                if self.variable:
+                    pie_data = group_data[self.feature]
+                else:
+                    assert(len(group_data) == 1)
+                    pie_data = group_data.iloc[0]
+                normed_data = data_norm(pie_data)
+                
                 plt.sca(grid.axes_row[row_idx][col_idx])
-                patches, _ = plt.pie(group[self.feature], 
+                patches, _ = plt.pie(normed_data, 
                                      counterclock = False,
                                      startangle = 90,
                                      wedgeprops = kwargs)
                 
                 for pi, patch in enumerate(patches):
-                    label = group.reset_index().at[pi, self.variable]
+                    if self.variable:
+                        label = group_data.reset_index().at[pi, self.variable]
+                    else:
+                        label = pie_data.index.values[pi]
                     color = colors[label]
                     patch.set(label = label, facecolor = color)
                     if label not in legend_artists:
@@ -482,16 +504,17 @@ class MatrixView(HasStrictTraits):
                              axes_pad = 0.0,
                              cbar_mode = None)
                 
-            variable_values = list(data.index.get_level_values(self.variable).unique())
+            if self.variable:
+                variable_values = list(data.index.get_level_values(self.variable).unique())
+            else:
+                variable_values = list(data.columns)
+                
             palette_name = kwargs.pop('palette', 'deep')
             palette = sns.color_palette(palette_name, n_colors = len(variable_values))
             
             legend_artists = {}
 
             for group_name, group in groups:
-                feature_max = group[self.feature].max()
-                group = group.set_index(group.index.droplevel(group_keys))
-
                 if not self.xfacet:
                     # only yfacet -- ie, one row
                     row_idx = 0
@@ -510,15 +533,26 @@ class MatrixView(HasStrictTraits):
                                      startangle = 90,
                                      wedgeprops = kwargs)
                 
+                if self.variable:
+                    group = group.set_index(group.index.droplevel(group_keys))
+                else:
+                    assert(len(group) == 1)
+                    group = group.iloc[0]
+                    
                 for pi, patch in enumerate(patches):
                     label = variable_values[pi]
                     color = palette[pi]
                     
                     if label not in group.index:
                         value = 0
-                    else:
+                    elif self.variable:
                         value = group.loc[label, self.feature]
-                    radius = math.sqrt(value / feature_max)
+                        value = data_norm(value)
+                    else:
+                        value = group.loc[label]
+                        value = data_norm(value)
+                    
+                    radius = math.sqrt(value)
                     if self.size_function:
                         radius *= group_scale[group_name]
                         
@@ -634,13 +668,7 @@ class MatrixView(HasStrictTraits):
                                          .format(self.statistic))
             
         stat = experiment.statistics[self.statistic]
-        
-        if self.feature not in stat:
-            raise util.CytoflowViewError('feature',
-                                         "Can't find feature {} in statistic {}. "
-                                         "Possible features: {}"
-                                         .format(self.feature, self.statistic, stat.columns.to_list()))
-                
+
         return stat
     
     def _get_facets(self, data):
