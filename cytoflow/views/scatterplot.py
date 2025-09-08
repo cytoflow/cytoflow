@@ -126,7 +126,7 @@ class ScatterplotView(Base2DView):
     
     def _update_legend(self, legend):
         for lh in legend.legend_handles:
-            lh.set_alpha(0.5)
+            lh.set_alpha(0.8)
             lh.set_sizes([10.0])
     
 util.expand_class_attributes(ScatterplotView)
