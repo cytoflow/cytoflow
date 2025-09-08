@@ -62,8 +62,8 @@ class ChannelStatisticOp(HasStrictTraits):
         The operation name.  Becomes the name of the new statistic.
     
     channel : Str
-        The channel to apply the function to. The channels become the column 
-        (feature) name in the new statistic.
+        The channel to apply the function to. By default, the channel name 
+        becomes the column (feature) name in the new statistic.
         
     function : Callable
         The function used to compute the statistic.  `function` must take 
