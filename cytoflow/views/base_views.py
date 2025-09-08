@@ -335,6 +335,7 @@ class BaseView(HasStrictTraits):
         
         if legend:
             if norm:
+                # we got a normalizer from the subclass
                 plot_ax = plt.gca()
                 cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
                 mpl.colorbar.ColorbarBase(cax, 
@@ -343,7 +344,9 @@ class BaseView(HasStrictTraits):
                 plt.sca(plot_ax)
             elif self.huefacet:
                 cmap = sns.color_palette(palette, as_cmap = True)
-                if util.is_numeric(data[self.huefacet]) and isinstance(cmap, mpl.colors.ListedColormap) and len(g.hue_names) > 10:               
+                if util.is_numeric(data[self.huefacet]) and isinstance(cmap, mpl.colors.ListedColormap) and len(g.hue_names) > 10:
+                    # if we've got a lot of colors, make a color bar!
+                                   
                     hue_scale = util.scale_factory(self.huescale, 
                                                    experiment,
                                                    data = data[self.huefacet].values)
@@ -358,7 +361,12 @@ class BaseView(HasStrictTraits):
                                               label = huelabel)
                     plt.sca(plot_ax)
                 else:
-                    g.add_legend(title = huelabel, legend_data = legend_data)
+                    # a discrete number of items to put in a legend.
+                    g.add_legend(title = huelabel, 
+                                 legend_data = legend_data,
+                                 frameon = True,
+                                 fancybox = True)
+                    self._update_legend(g._legend)
                         
         if title:
             plt.suptitle(title, y = 1.02)
