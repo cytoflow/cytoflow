@@ -419,7 +419,7 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
                 logicle_min = self.logicle.inverse(0.0)
                 logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
                 if isinstance(values, pd.Series):    
-                    if values.empty():
+                    if values.empty:
                         return values        
                     values = values.clip(logicle_min, logicle_max)
                     return values.apply(self.logicle.scale)
