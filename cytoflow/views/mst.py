@@ -64,23 +64,30 @@ class MSTView(HasStrictTraits):
     
     * Setting `style` to ``heat`` (the default) will produce an MST with a circle 
       at each vertex and the color of the circle is related to the intensity of 
-      the value of `feature`. (In this scenario, `variable` must be left empty.).
+      the value of `feature`. (In this scenario, `variable` is ignored.)
       
-    * Setting `style` to ``pie`` will draw a pie plot at each location. The values of `variable`
-      are used as the categories of the pie, and the arc length of each slice of pie is related 
-      to the intensity of the value of `feature`.
+    * Setting `style` to ``pie`` will draw a pie plot at each location. If 
+      `variable` is set, then the values of `variable` are used as the categories
+      of the pie, and the arc length of each slice of pie is related 
+      to the intensity of the value of `feature`. If `variable` is unset, then
+      `feature` is ignored and the *features* of the statistic are used as the
+      categories.
       
-    * Setting `style` to ``petal`` will draw a "petal plot" in each cell. The values of `variable` 
-      are used as the categories, but unlike a pie plot, the arc width of each slice
-      is equal. Instead, the radius of the pie slice scales with the square root of
-      the intensity, so that the relationship between area and intensity remains the same.
+    * Setting `style` to ``petal`` will draw a "petal plot" in each cell. If 
+      `variable` is set, then the values of `variable` are used as the categories, 
+      but unlike a pie plot, the arc width of each slice is equal. Instead, the 
+      radius of the pie slice scales with the square root of the intensity, so 
+      that the relationship between area and intensity remains the same. If 
+      `variable` is unset, then `feature` is ignored and the *features* of the
+      statistic are used as the categories.
       
     .. warning::
-        If `style` is ``pie`` or ``petal``, then all of the data being plotted must be >0!
+        If `style` is ``pie`` or ``petal``, then negative data will be clipped
+        to 0! 
       
     Optionally, you can set `size_function` to scale the circles (or pies or petals)
-    by a function computed on `Experiment.data`. (Often used to scale by the number
-    of events in each cluster.)
+    by a function computed on `Experiment.data`. (Often set to ``len`` to scale 
+    by the number of events in each cluster.)
     
     .. note::
        If you'd like to *select* events based on this view (by drawing a 
@@ -126,7 +133,8 @@ class MSTView(HasStrictTraits):
         
     scale : {'linear', 'log', 'logicle'}
         For a heat map, how should the color of `feature` be scaled before 
-        plotting? If `style` is not ``heat``, `scale` *must* be ``linear``.
+        plotting? For pie and petal maps, how should the input data be normalized
+        to [0,1] before plotting?
                 
     size_function : Callable (default: None)
         If set, separate the `Experiment` into subsets by levels of `locations`, 
@@ -274,41 +282,125 @@ class MSTView(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
-
+        
         if self.style == "heat" and self.variable != "":
             raise util.CytoflowViewError("variable",
                                          "If `style` is \"heat\", `variable` must be empty!")
-            
-        if self.style != "heat" and self.variable == "":
-            raise util.CytoflowViewError("variable",
-                                         "If `style` is not \"heat\", then you must set `variable`!")
-            
-        if self.style != "heat" and self.scale != "linear":
-            raise util.CytoflowViewError('scale',
-                                         "If `style` is not \"heat\", `scale` must be \"linear\"!")
-                        
+        
         stat = self._get_stat(experiment)
         locs = self._get_locs(experiment)
-                
+        
         stat = self._subset_data(self.statistic, stat)
         locs = self._subset_data(self.locations, locs)
         experiment_data = experiment.data
         
-        if not self.feature:
-            raise util.CytoflowViewError('feature',
-                                         "Must set `feature` to a feature in `statistic`")
+        # if not self.feature:
+        #     raise util.CytoflowViewError('feature',
+        #                                  "Must set `feature` to a feature in `statistic`")
+        #
+        # # the indices of `stat` and `locs` may have the same levels, or the index 
+        # # of `stat` may have one more -- if so, it must be `self.variable`. to get
+        # # things compatible, we'll re-order the index levels of stats.
+        # locs_names = set(stat.index.names) - set([self.variable]) if self.variable else set(stat.index.names)
+        # if locs_names != set(locs.index.names):
+        #     if self.style == "heat":
+        #         raise util.CytoflowViewError('locations',
+        #                                      "If `style` is \"heat\", the levels of 'locations' must be the same as levels of 'statistic'")
+        #     else:
+        #         raise util.CytoflowViewError('locations',
+        #                                      "If `style` is not \"heat\", then the levels of 'locations' must be the same as the levels of 'statistic' without 'variable'.")
+        #
+        # # need to re-index stat to be compatible with locs
+        # stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
+        # new_stat_idx = stat.index.reorder_levels(stat_names)
+        # stat = stat.copy()
+        # stat.index = new_stat_idx
+        #
+        # # gotta remove rows of stat that aren't in locs
+        # # (because some clustering add a -1 value
+        # stat_idx = stat.index.droplevel(self.variable) if self.variable else stat.index
+        # stat = stat[[v in locs.index for v in stat_idx]]
+        #
+        # if stat.empty:
+        #     raise util.CytoflowViewError('locations',
+        #                                  f'{self.statistic} and {self.locations} dont share any rows!')
+        #
+        # # do we have to get a plot_name?
+        # if len(locs_names) > 1 and not self.locations_level:
+        #     raise util.CytoflowViewError('location_level',
+        #                                  'If `locations` has more than one index level, you must set `location_level`.')
+        #
+        # if self.locations_level and self.locations_level not in locs_names:
+        #     raise util.CytoflowViewError('location_level',
+        #                                  '`location_level` value {} is not in {}'
+        #                                  .format(self.locations_level, self.ocations))
+        #
+        # self._loc_level = loc_level = self.locations_level if self.locations_level else list(locs_names)[0]            
+        # unused_names = list(set(locs_names) - set([loc_level]))
         
-        # the indices of `stat` and `locs` may have the same levels, or the index 
-        # of `stat` may have one more -- if so, it must be `self.variable`. to get
-        # things compatible, we'll re-order the index levels of stats.
-        locs_names = set(stat.index.names) - set([self.variable]) if self.variable else set(stat.index.names)
-        if locs_names != set(locs.index.names):
-            if self.style == "heat":
+        if locs.index.nlevels > 1:
+            if not self.locations_level:
+                raise util.CytoflowViewError('locations_level',
+                                             "If 'locations' has more than one level, "
+                                             "'locations_level' must be set!")
+
+            if self.locations_level not in locs.index.names:
+                raise util.CytoflowViewError('locations_level',
+                                             "'locations_level' must be a level in 'locations'")
+                
+            if self.locations_level not in stat.index.names:
+                raise util.CytoflowViewError('locations_level',
+                                             "'locations_level' must be a level in 'statistic'")
+            
+            locations_level = self.locations_level
+        else:
+            locations_level = locs.index.names[0]
+            
+            if locations_level not in stat.index.names:
+                raise util.CytoflowViewError(f"{locations_level} is the only level in 'locations', but it's not in 'statistic'")
+            
+        self._loc_level = locations_level
+        unused_locs_levels = set(locs.index.names) - set([locations_level])
+        unused_stat_levels = set(stat.index.names) - set([locations_level])
+        
+        if self.style == "heat":
+            if not self.feature:
+                raise util.CytoflowViewError('feature',
+                                             "For style 'heat', you must set 'feature'!")
+            
+            if self.feature not in stat.columns:
+                raise util.CytoflowViewError('feature',
+                                             "Can't find feature '{}' in the statistic columns."
+                                             .format(self.feature))
+
+            
+        if self.style != "heat":
+            if self.variable:
+                if self.variable not in stat.index.names:
+                    raise util.CytoflowViewError('variable',
+                                                 "Can't find variable '{}' in the statistic index."
+                                                 .format(self.variable))
+            
+                if not self.feature:
+                    raise util.CytoflowViewError('feature',
+                                                 "For styles 'pie' and 'petal', if you set 'variable', you must set 'feature'!"
+                                                 .format(self.variable))
+                
+                if self.feature not in stat.columns:
+                    raise util.CytoflowViewError('feature',
+                                                 "Can't find feature '{}' in the statistic columns."
+                                                 .format(self.feature))
+            
+                unused_stat_levels -= set([self.variable])
+                
+        if unused_locs_levels != unused_stat_levels:
+            if self.style != "heat" and self.variable:
                 raise util.CytoflowViewError('locations',
-                                             "If `style` is \"heat\", the levels of 'locations' must be the same as levels of 'statistic'")
+                                             f"After removing 'variable' {self.variable}, unused levels in 'statistic' are {unused_stat_levels}; unused levels in 'locations' are {unused_locs_levels}. They should be the same!")
             else:
                 raise util.CytoflowViewError('locations',
-                                             "If `style` is not \"heat\", then the levels of 'locations' must be the same as the levels of 'statistic' without 'variable'.")
+                                             f"Unused levels in 'statistic' are {unused_stat_levels}; unused levels in 'locations' are {unused_locs_levels}. They should be the same!")
+
             
         # need to re-index stat to be compatible with locs
         stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
@@ -320,38 +412,21 @@ class MSTView(HasStrictTraits):
         # (because some clustering add a -1 value
         stat_idx = stat.index.droplevel(self.variable) if self.variable else stat.index
         stat = stat[[v in locs.index for v in stat_idx]]
-        
-        if stat.empty:
-            raise util.CytoflowViewError('locations',
-                                         f'{self.statistic} and {self.locations} dont share any rows!')
-        
-        # do we have to get a plot_name?
-        if len(locs_names) > 1 and not self.locations_level:
-            raise util.CytoflowViewError('location_level',
-                                         'If `locations` has more than one index level, you must set `location_level`.')
-        
-        if self.locations_level and self.locations_level not in locs_names:
-            raise util.CytoflowViewError('location_level',
-                                         '`location_level` value {} is not in {}'
-                                         .format(self.locations_level, self.ocations))
-            
-        self._loc_level = loc_level = self.locations_level if self.locations_level else list(locs_names)[0]            
-        unused_names = list(set(locs_names) - set([loc_level]))
 
-        if plot_name is not None and not unused_names:
+        if plot_name is not None and not unused_stat_levels:
             raise util.CytoflowViewError('plot_name',
                                          "You specified a plot name, but all "
                                          "the index levels of `locations` are already used")
         
-        if unused_names:
-            stat_groupby = stat.groupby(unused_names, observed = True)
-            locs_groupby = locs.groupby(unused_names, observed = True)
+        if unused_stat_levels:
+            stat_groupby = stat.groupby(list(unused_stat_levels), observed = True)
+            locs_groupby = locs.groupby(list(unused_stat_levels), observed = True)
 
             if plot_name is None:
                 raise util.CytoflowViewError('plot_name',
                                              "You must use names {} in the plot name. "
                                              "Possible plot names: {}"
-                                             .format(unused_names, list(stat_groupby.groups.keys())))
+                                             .format(unused_stat_levels, list(stat_groupby.groups.keys())))
 
             if plot_name not in set(stat_groupby.groups.keys()):
                 raise util.CytoflowViewError('plot_name',
@@ -361,30 +436,8 @@ class MSTView(HasStrictTraits):
             stat = stat_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
             locs = locs_groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
             if self.size_function:
-                experiment_data = experiment.data.groupby(unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+                experiment_data = experiment.data.groupby(unused_stat_levels, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
-                        
-        if self.style != "heat" and self.variable not in stat.index.names:
-            raise util.CytoflowViewError('variable',
-                                         "Can't find variable '{}' in the statistic index."
-                                         .format(self.variable))
-            
-        if self.style != "heat" and (stat[self.feature] < 0.0).any():
-            raise util.CytoflowViewError('feature',
-                                         "If `style` is not \"heat\", then every element of `feature` must be greater than "
-                                         "or equal to 0")  
-
-        for lf in self.locations_features:
-            if lf not in locs:
-                raise util.CytoflowViewError('location_features',
-                                             "Feature {} not found in location statistic {}"
-                                             .format(lf, self.locations))
-
-        if self.style != "heat" and self.variable not in stat.index.names:
-            raise util.CytoflowViewError('variable',
-                                         "Can't find variable '{}' in the statistic index."
-                                         .format(self.variable))
-
         title = kwargs.pop("title", None)
         legend = kwargs.pop('legend', True)
         legendlabel = kwargs.pop('legendlabel', self.variable)
@@ -404,17 +457,15 @@ class MSTView(HasStrictTraits):
                 kwargs.pop('sns_context')
                 warn("'sns_context' is ignored when not running in the GUI. Feel free to change the seaborn global settings.",
                      util.CytoflowViewWarning)
-        
-        data = stat.reset_index()
-        
+                
         if self.size_function:
             group_scale = {}
             s_max = 0.0
-            for group_name, group in experiment_data.groupby(by = list(locs.index.names), observed = True):
+            for group_name, group_data in experiment_data.groupby(by = list(locs.index.names), observed = True):
                 if group_name not in locs.index:
                     continue
                 
-                s = self.size_function(group)
+                s = self.size_function(group_data)
                 try:
                     s = float(s)
                 except Exception as e:
@@ -430,15 +481,16 @@ class MSTView(HasStrictTraits):
                     s_max = s
                 group_scale[group_name] = s
                 
-            
             group_scale = {k : v / s_max for k, v in group_scale.items()}
         
-        data_scale = util.scale_factory(scale = self.scale,
-                                        experiment = experiment,
-                                        statistic = self.statistic,
-                                        features = [self.feature])
-        # set up the range of the color map
+        # set up the data normalizer
         if 'norm' not in kwargs:
+            data_scale = util.scale_factory(scale = self.scale,
+                                            experiment = experiment,
+                                            statistic = self.statistic,
+                                            features = [self.feature] 
+                                                       if self.feature 
+                                                       else list(stat.columns))
             data_norm = data_scale.norm()
         else:
             data_norm = kwargs.pop('norm')
@@ -479,7 +531,7 @@ class MSTView(HasStrictTraits):
         ax.add_collection(segments)
         
         # save the locations for MSTOp
-        self._groups = list(data.groupby([loc_level], observed = True).groups.keys())
+        self._groups = list(stat.groupby(locations_level, observed = True).groups.keys())
         self._vertices = layout.coords
         
         # now, plot the patches
@@ -502,7 +554,7 @@ class MSTView(HasStrictTraits):
                                              "{} is a qualitative (discrete) palette. Choose a continuous one such as 'rocket', 'mako' or 'viridis'")
                   
             patches = []  
-            for idx, x in enumerate(data[self.feature]):
+            for idx, x in enumerate(stat[self.feature]):
                 patch = mpl.patches.Circle(xy = layout.coords[idx], 
                                            radius = radius, 
                                            facecolor = cmap(data_norm(x)),
@@ -522,23 +574,38 @@ class MSTView(HasStrictTraits):
                              label = legendlabel)
 
         elif self.style == "pie":
-            variable_values = data[self.variable].unique()
+            if self.variable:
+                variable_values = list(stat.index.get_level_values(self.variable).unique())
+            else:
+                variable_values = list(stat.columns)
+                
             palette_name = kwargs.pop('palette', 'deep')
             palette = sns.color_palette(palette_name, n_colors = len(variable_values))
             colors = {var: palette[vi] for vi, var in enumerate(variable_values)}
             
-            groups = data.groupby([loc_level], observed = True)
+            groups = stat.groupby(locations_level, observed = True)
             legend_artists = {}
 
-            for idx, (_, group) in enumerate(groups):
+            for idx, group in groups:
                 loc = layout.coords[idx]
-                group_data = group[self.feature]
-                group_data = group_data / group_data.sum()
+                if self.variable:
+                    group_data = group[self.feature]
+                else:
+                    assert(len(group) == 1)
+                    group_data = group.iloc[0]
+                    
+                normed_data = group_data.apply(data_norm)
+                normed_data /= normed_data.sum()
                 
                 theta1 = 0
-                for frac_idx, frac in enumerate(group_data):
+                for frac_idx, frac in enumerate(normed_data):
                     theta2 = theta1 + frac
-                    label = group.iloc[frac_idx][self.variable]
+                    
+                    if self.variable:
+                        label = group.index.get_level_values(self.variable).values[frac_idx]
+                    else:
+                        label = group_data.index[frac_idx]
+                        
                     color = colors[label]
                     w = mpl.patches.Wedge(center = loc, 
                                           r = radius, 
@@ -565,29 +632,43 @@ class MSTView(HasStrictTraits):
                           title = legendlabel)
                 
         elif self.style == "petal":
-            variable_values = data[self.variable].unique()
+            if self.variable:
+                variable_values = list(stat.index.get_level_values(self.variable).unique())
+            else:
+                variable_values = list(stat.columns)
+                
             num_wedges = len(variable_values)
             palette_name = kwargs.pop('palette', 'deep')
             palette = sns.color_palette(palette_name, n_colors = len(variable_values))
             colors = {var: palette[vi] for vi, var in enumerate(variable_values)}
             wedge_theta = 360 / num_wedges
-            
-            groups = data.groupby([loc_level], observed = True)
+        
+            groups = stat.groupby(locations_level, observed = True)
             legend_artists = {}
         
-            for idx, (_, group) in enumerate(groups):
+            for idx, group in groups:
                 loc = layout.coords[idx]
-                group_data = group[self.feature]
-                group_data = group_data / group_data.max()
-                
+                if self.variable:
+                    group_data = group[self.feature]
+                else:
+                    assert(len(group) == 1)
+                    group_data = group.iloc[0]
+                    
+                normed_data = group_data.apply(data_norm)
+                normed_data /= normed_data.max()
+        
                 theta1 = 0
                 for label in variable_values:
                     theta2 = theta1 + wedge_theta
-                    if label in group[self.variable].values:
-                        frac = group_data[group[self.variable] == label].iloc[0]
+                    
+                    if self.variable:
+                        if label in group.index.get_level_values(self.variable):
+                            frac = normed_data.xs(level = self.variable, key = label).iloc[0]
+                        else:
+                            frac = 0
                     else:
-                        frac = 0
-                        
+                        frac = normed_data.loc[label]
+        
                     r = radius * math.sqrt(frac)
                     color = colors[label]
                     w = mpl.patches.Wedge(center = loc, 
@@ -598,17 +679,17 @@ class MSTView(HasStrictTraits):
                                           facecolor = color,
                                           edgecolor = 'white',
                                           clip_on = False)
-                    
+        
                     if self.size_function:
                         w.set_radius(w.r * group_scale[locs.index.to_flat_index()[idx]])
-                        
+        
                     w.set(**kwargs)
-                        
+        
                     ax.add_artist(w)
                     if label not in legend_artists:
                         legend_artists[label] = w
                     theta1 = theta2
-                            
+        
             if(legend):
                 legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
                 ax.legend(handles = legend_artists.values(),
@@ -635,53 +716,80 @@ class MSTView(HasStrictTraits):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
 
-        if self.style == "heat" and self.variable != "":
-            raise util.CytoflowViewError("variable",
-                                         "If `style` is \"heat\", `variable` must be empty!")
-                        
         stat = self._get_stat(experiment)
         locs = self._get_locs(experiment)
                 
         stat = self._subset_data(self.statistic, stat)
         locs = self._subset_data(self.locations, locs)
         
-        # the indices of `stat` and `locs` may have the same levels, or the index 
-        # of `stat` may have one more -- if so, it must be `self.variable`. to get
-        # things compatible, we'll re-order the index levels of stats.
-        locs_names = set(stat.index.names) - set([self.variable]) if self.variable else set(stat.index.names)
-        if locs_names != set(locs.index.names):
-            if self.style == "heat":
+        if locs.index.nlevels > 1:
+            if not self.locations_level:
+                raise util.CytoflowViewError('locations_level',
+                                             "If 'locations' has more than one level, "
+                                             "'locations_level' must be set!")
+
+            if self.locations_level not in locs.index.names:
+                raise util.CytoflowViewError('locations_level',
+                                             "'locations_level' must be a level in 'locations'")
+                
+            if self.locations_level not in stat.index.names:
+                raise util.CytoflowViewError('locations_level',
+                                             "'locations_level' must be a level in 'statistic'")
+            
+            locations_level = self.locations_level
+        else:
+            locations_level = locs.index.names[0]
+            
+            if locations_level not in stat.index.names:
+                raise util.CytoflowViewError(f"{locations_level} is the only level in 'locations', but it's not in 'statistic'")
+            
+        unused_locs_levels = set(locs.index.names) - set([locations_level])
+        unused_stat_levels = set(stat.index.names) - set([locations_level])
+        
+        if self.style == "heat":
+            if not self.feature:
+                raise util.CytoflowViewError('feature',
+                                             "For style 'heat', you must set 'feature'!")
+            
+            if self.feature not in stat.columns:
+                raise util.CytoflowViewError('feature',
+                                             "Can't find feature '{}' in the statistic columns."
+                                             .format(self.feature))
+
+            
+        if self.style != "heat":
+            if self.variable:
+                if self.variable not in stat.index.names:
+                    raise util.CytoflowViewError('variable',
+                                                 "Can't find variable '{}' in the statistic index."
+                                                 .format(self.variable))
+            
+                if not self.feature:
+                    raise util.CytoflowViewError('feature',
+                                                 "For styles 'pie' and 'petal', if you set 'variable', you must set 'feature'!"
+                                                 .format(self.variable))
+                
+                if self.feature not in stat.columns:
+                    raise util.CytoflowViewError('feature',
+                                                 "Can't find feature '{}' in the statistic columns."
+                                                 .format(self.feature))
+            
+                unused_stat_levels -= set([self.variable])
+                
+        if unused_locs_levels != unused_stat_levels:
+            if self.style != "heat" and self.variable:
                 raise util.CytoflowViewError('locations',
-                                             "If `style` is \"heat\", the levels of 'locations' the same as levels of 'statistic'")
+                                             f"After removing 'variable' {self.variable}, unused levels in 'statistic' are {unused_stat_levels}; unused levels in 'locations' are {unused_locs_levels}. They should be the same!")
             else:
                 raise util.CytoflowViewError('locations',
-                                             "If `style` is not \"heat\", then the levels of 'locations' must be the same as the levels of 'statistic' without 'variable'.")
-            
-        # need to re-index stat to be compatible with locs
-        stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
-        new_stat_idx = stat.index.reorder_levels(stat_names)
-        stat = stat.copy()
-        stat.index = new_stat_idx
-        
-        # do we have to get a plot_name?
-        if len(locs_names) > 1 and not self.locations_level:
-            raise util.CytoflowViewError('location_level',
-                                         'If `locations` has more than one index level, you must set `location_level`.')
-        
-        if self.locations_level and self.locations_level not in locs_names:
-            raise util.CytoflowViewError('location_level',
-                                         '`location_level` value {} is not in {}'
-                                         .format(self.locations_level, self.ocations))
-            
-        loc_level = self.locations_level if self.locations_level else list(locs_names)[0]            
-        unused_names = list(set(locs_names) - set([loc_level]))
+                                             f"Unused levels in 'statistic' are {unused_stat_levels}; unused levels in 'locations' are {unused_locs_levels}. They should be the same!")
 
-        if unused_names:
-            stat_groupby = stat.groupby(unused_names, observed = True)
-            return util.IterByWrapper(iter(stat_groupby.groups), unused_names)
+        if unused_stat_levels:
+            stat_names = [x for x in stat.index.names if x in unused_stat_levels]
+            stat_groupby = stat.groupby(stat_names, observed = True)
+            return util.IterByWrapper(iter(stat_groupby.groups), stat_names)
         else:
-            return util.IterByWrapper(iter([]), [])
-    
+            return util.IterByWrapper(iter([]), [])    
         
     def _get_stat(self, experiment):
         if experiment is None:
@@ -696,12 +804,6 @@ class MSTView(HasStrictTraits):
                                          .format(self.statistic))
             
         stat = experiment.statistics[self.statistic]
-        
-        if self.feature not in stat:
-            raise util.CytoflowViewError('feature',
-                                         "Can't find feature {} in statistic {}. "
-                                         "Possible features: {}"
-                                         .format(self.feature, self.statistic, stat.columns.to_list()))
                 
         return stat
     
