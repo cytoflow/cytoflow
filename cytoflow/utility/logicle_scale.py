@@ -256,6 +256,9 @@ class LogicleScale(HasStrictTraits):
                 ret = self._scale.get_transform().transform_non_affine(data)
                 return np.ma.masked_array(ret)
             
+            def inverse(self, value):
+                return self._scale.get_transform().inverted().transform_non_affine(value)
+            
         return LogicleNormalize(scale = MatplotlibLogicleScale(None, logicle = self._logicle), vmin = vmin, vmax = vmax)
         
     
