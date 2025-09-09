@@ -340,7 +340,8 @@ class BaseView(HasStrictTraits):
                 cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
                 mpl.colorbar.ColorbarBase(cax, 
                                           cmap = cmap, 
-                                          norm = norm)
+                                          norm = norm,
+                                          label = huelabel)
                 plt.sca(plot_ax)
             elif self.huefacet:
                 cmap = sns.color_palette(palette, as_cmap = True)
