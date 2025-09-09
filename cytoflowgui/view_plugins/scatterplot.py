@@ -31,6 +31,11 @@ Plot a scatterplot.
 
     How to scale the X and Y axes of the plot.
     
+.. object:: Color Channel
+    
+    If set, color each point by the value of a channel. Cannot set both
+    **Color Channel** and **Color Facet**. 
+    
 .. object:: Horizonal Facet
 
     Make multiple plots.  Each column has a unique value of this variable.
@@ -42,11 +47,12 @@ Plot a scatterplot.
 .. object:: Color Facet
 
     Plot with multiple colors.  Each color has a unique value of this variable.
+    Cannot set both **Color Channel** and **Color Facet**. 
     
 .. object:: Color Scale
 
-    If **Color Facet** is a numeric variable, use this scale for the color
-    bar.
+    If **Color Channel** is set or **Color Facet** is a numeric variable, use 
+    this scale for the color bar.
     
 .. object:: Tab Facet
 
@@ -115,6 +121,12 @@ class ScatterplotHandler(ViewHandler):
                          label = "Y Channel"),
                     Item('yscale',
                          label = "Y Scale"),
+                    Item('huechannel',
+                         editor=ExtendableEnumEditor(name='context_handler.channels',
+                                                     extra_items = {"None" : ""}),
+                         label = "Color Channel"),
+                    Item('huescale',
+                         label = "Color\nScale"),
                     Item('xfacet',
                          editor=ExtendableEnumEditor(name='context_handler.conditions_names',
                                                      extra_items = {"None" : ""}),
@@ -127,8 +139,6 @@ class ScatterplotHandler(ViewHandler):
                          editor=ExtendableEnumEditor(name='context_handler.conditions_names',
                                                      extra_items = {"None" : ""}),
                          label="Color\nFacet"),
-                    Item('huescale',
-                         label = "Color\nScale"),
                     Item('plotfacet',
                          editor=ExtendableEnumEditor(name='context_handler.conditions_names',
                                                      extra_items = {"None" : ""}),

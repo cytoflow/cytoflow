@@ -26,9 +26,11 @@ A 2-d scatterplot.
 `ScatterplotView` -- the `IView` class that makes the plot.
 """
 
-from traits.api import provides, Constant
-
 import matplotlib.pyplot as plt
+import seaborn as sns
+from warnings import warn
+
+from traits.api import provides, Constant, Str
 
 import cytoflow.utility as util
 
@@ -42,6 +44,11 @@ class ScatterplotView(Base2DView):
     
     Attributes
     ----------
+    
+    huechannel : Str
+        If set, color the points using a normed color scale. The norm function
+        is set by `huescale`, and the color palette can be changed by passing
+        the `palette` parameter to `plot`.  
     
     Examples
     --------
@@ -75,6 +82,7 @@ class ScatterplotView(Base2DView):
     
     id = Constant('cytoflow.view.scatterplot')
     friend_id = Constant("Scatter Plot")
+    huechannel = Str
     
     def plot(self, experiment, **kwargs):
         """
@@ -100,6 +108,18 @@ class ScatterplotView(Base2DView):
 
         """
         
+        if self.huechannel:
+            if self.huefacet:
+                raise util.CytoflowViewError('huefacet',
+                                             "Can't set both 'huefacet' and 'huechannel'!")
+        
+            if self.huechannel not in experiment.channels:
+                raise util.CytoflowViewError('huechannel',
+                                             f"Can't find channel {self.huechannel} in the experiment.")
+                            
+            kwargs.setdefault('palette', 'viridis_r')
+            kwargs.setdefault('huelabel', self.huechannel)
+            
         super().plot(experiment, **kwargs)
         
     def _grid_plot(self, experiment, grid, cmap, **kwargs):
@@ -117,17 +137,36 @@ class ScatterplotView(Base2DView):
         xscale = scale[self.xchannel]
         yscale = scale[self.ychannel]
 
-        grid.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)   
+        if self.huechannel:
+            if isinstance(cmap, list):
+                raise util.CytoflowViewError('palette',
+                                             "Must use a continuous palette with huechannel set!")
+            kwargs['cmap'] = cmap
+            hue_scale = util.scale_factory(self.huescale,
+                                           experiment,
+                                           channel = self.huechannel)
+            norm = hue_scale.norm()
+            kwargs['norm'] = norm   
+            grid.map(_scatterplot, self.xchannel, self.ychannel, self.huechannel, **kwargs)
+        else:
+            norm = None
+            grid.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)   
         
         return dict(xlim = xlim,
                     xscale = xscale,
                     ylim = ylim,
-                    yscale = yscale)
+                    yscale = yscale, 
+                    norm = norm)
     
     def _update_legend(self, legend):
         for lh in legend.legend_handles:
             lh.set_alpha(0.8)
             lh.set_sizes([10.0])
+            
+    
+def _scatterplot(x, y, c, **kwargs):
+    del kwargs['color']
+    plt.scatter(x, y, c = c, **kwargs),
     
 util.expand_class_attributes(ScatterplotView)
 util.expand_method_parameters(ScatterplotView, ScatterplotView.plot)

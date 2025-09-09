@@ -60,6 +60,21 @@ class ScatterplotWorkflowView(WorkflowFacetView, ScatterplotView):
         
         
 ### Serialization
+@camel_registry.dumper(ScatterplotWorkflowView, 'scatterplot', version = 3)
+def _dump_v3(view):
+    return dict(xchannel = view.xchannel,
+                xscale = view.xscale,
+                ychannel = view.ychannel,
+                yscale = view.yscale,
+                huechannel = view.huechannel,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                plotfacet = view.plotfacet,
+                subset_list = view.subset_list,
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
 
 @camel_registry.dumper(ScatterplotWorkflowView, 'scatterplot', version = 2)
 def _dump_v2(view):
@@ -88,6 +103,10 @@ def _dump_v1(view):
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
                 subset_list = view.subset_list)
+
+@camel_registry.loader('scatterplot', version = any)
+def _load(data, version):
+    return ScatterplotWorkflowView(**data)
     
 @camel_registry.dumper(ScatterplotPlotParams, 'scatterplot-params', version = 2)
 def _dump_params_v2(params):
@@ -147,10 +166,6 @@ def _dump_params_v1(params):
                 alpha = params.alpha,
                 s = params.s,
                 marker = params.marker )
-    
-@camel_registry.loader('scatterplot', version = any)
-def _load(data, version):
-    return ScatterplotWorkflowView(**data)
 
 @camel_registry.loader('scatterplot-params', version = any)
 def _load_params(data, version):

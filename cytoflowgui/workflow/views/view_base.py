@@ -55,7 +55,14 @@ COLORMAPS = {'deep' : "a:deep (Qual)",
              'crest' : "m:crest (Cont)",
              'plasma' : "n:plasma (Cont)",
              'inferno' : "o:inferno (Cont)",
-             'cividis' : "p:cividis (Cont)"}
+             'cividis' : "p:cividis (Cont)",
+             'viridis_r' : "q:viridis_r (Cont)",
+             'Purples' : "r:Purples (Cont)",
+             'Blues' : "s:Blues (Cont)",
+             'Greens' : "t:Greens (Cont)",
+             'Oranges' : "u:Oranges (Cont)",
+             'Reds' : "v:Reds (Cont)"
+             }
 
 class IWorkflowView(IView):
     """
