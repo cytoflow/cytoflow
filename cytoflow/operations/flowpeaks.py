@@ -830,7 +830,7 @@ class FlowPeaksOp(HasStrictTraits):
         new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
-        new_experiment.add_statistic(self.name, new_stat)
+        new_experiment.statistics[self.name] = new_stat
 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment

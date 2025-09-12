@@ -179,6 +179,6 @@ class FrameStatisticOp(HasStrictTraits):
                                            .format(group)) from e    
 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
-        new_experiment.add_statistic(self.name, stat)
+        new_experiment.statistics[self.name] = stat
 
         return new_experiment

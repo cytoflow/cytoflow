@@ -59,10 +59,6 @@ class TransformStatisticOp(HasStrictTraits):
         If `function` returns a `pandas.Series`, it must have an index with only
         one level -- no hierarchical indexing, please!
     
-    .. note::
-        If `function` returns a `pandas.Series`, each one must have the same
-        index!
-    
     Finally, if `by` is left empty, then `function` must be a transformation.
     `function` must take a `pandas.Series` as an argument and return a `pandas.Series`
     with exactly the same index. The new statistic will contain that `pandas.Series`
@@ -237,49 +233,54 @@ class TransformStatisticOp(HasStrictTraits):
         new_stat = None
                     
         if self.by: 
+            idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
+                                             names = self.by)
             for group in data[self.by].itertuples(index = False, name = None):         
                 s = stat.xs(group, level = self.by, drop_level = True)[self.feature]
                                     
                 if len(s) == 0:
                     continue
-                  
+                        
                 try:
                     v = self.function(s)
                 except Exception as e:
                     raise util.CytoflowOpError('function',
                                                "Your function threw an error in group {}".format(group)) from e
-                                                                      
-                if isinstance(v, pd.Series):
-                    if isinstance(v, pd.Series) and v.dtype.kind != 'f':    
-                        raise util.CytoflowOpError('function',
-                                                   "Your function returned a pandas.Series with dtype {}. "
-                                                   "If it returns a Series, the data must be floating point."
-                                                   .format(v.dtype))
-                else:
-                    try:
-                        v = float(v)
-                    except (TypeError, ValueError) as e:
+                                               
+                try:
+                    v = float(v)
+                except (TypeError, ValueError) as e:
+                    if not isinstance(v, pd.Series):
                         raise util.CytoflowOpError('function',
                                                    "Your function returned a {}. It must return "
                                                    "a float, a value that can be cast to float, "
                                                    "or a pandas.Series (with type float)"
                                                    .format(type(v))) from e        
                                                
+                if isinstance(v, pd.Series) and v.dtype.kind != 'f':
+                    raise util.CytoflowOpError('function',
+                                               "Your function returned a pandas.Series with dtype {}. "
+                                               "If it returns a Series, the data must be floating point."
+                                               .format(v.dtype))
+                #
+                # if isinstance(v, pd.Series) and v.index.inferred_type != 'string':
+                #     raise util.CytoflowOpError('function',
+                #                                "Your function returned a pandas.Series with an index "
+                #                                "of type '{}'. It must have an index of type 'string'."
+                #                                .format(v.index.inferred_type))
+                    
                 if new_stat is None:
                     if isinstance(v, float):
-                        new_stat = pd.DataFrame(columns = [self.feature],
-                                                dtype = 'float' ).sort_index()
+                        new_stat = pd.DataFrame(data = np.full((len(idx), 1), np.nan),
+                                    index = idx,
+                                    columns = [self.feature],
+                                    dtype = 'float' ).sort_index()
                     else:
                         assert(v.index.nlevels == 1)
-                        new_stat = pd.DataFrame(columns = v.index.tolist(),
+                        new_stat = pd.DataFrame(data = np.full((len(idx), len(v)), np.nan),
+                                                index = idx,
+                                                columns = v.index.tolist(),
                                                 dtype = 'float').sort_index()
-                elif isinstance(v, pd.Series):
-                    if len(v.index) != len(new_stat.columns) or v.index.tolist() != new_stat.columns.tolist():
-                        raise util.CytoflowOpError('function',
-                                                   "The first call to 'function' returned rows {}, "
-                                                   "but calling it on group {} returned rows {}. The "
-                                                   "returned rows must be consistent!"
-                                                   .format(new_stat.columns.tolist(), group, v.index.tolist()))
 
                 new_stat.loc[group] = v
                                         
@@ -312,6 +313,6 @@ class TransformStatisticOp(HasStrictTraits):
         
         new_experiment = experiment.clone(deep = False)
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-        new_experiment.add_statistic(self.name, new_stat)
+        new_experiment.statistics[self.name] = new_stat
 
         return new_experiment

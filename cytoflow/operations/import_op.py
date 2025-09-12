@@ -470,7 +470,7 @@ class ImportOp(HasStrictTraits):
                     df.loc[tube_idx, col] = tube.conditions[col]
             
             assert(not df.isnull().values.any())
-            experiment.add_statistic("Conditions", df)
+            experiment.statistics["Conditions"] = df
 
         experiment.history.append(self.clone_traits(transient = lambda _: True))
         return experiment

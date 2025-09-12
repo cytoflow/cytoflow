@@ -100,10 +100,7 @@ class Experiment(HasStrictTraits):
         `pandas.DataFrame`: each level of the index is a facet, and each 
         combination of indices is a subset for which the statistic was computed.
         Columns of the `pandas.DataFrame` have names and values that depend on the
-        operation that added them -- they must have a ``float`` data type, and if
-        they have a multi-level (hierarchical) index, they must be "complete" --
-        each combination of labels must have a row in the table. `add_statistic`
-        enforces this.
+        operation that added them -- they must have a ``float`` data type.
     
     channels : List(String)
         The channels that this experiment tracks (read-only).
@@ -325,29 +322,6 @@ class Experiment(HasStrictTraits):
         new_exp.data = self.data.copy(deep = deep)
 
         return new_exp
-    
-    def add_statistic(self, name, statistic):
-        """
-        Add a statistic to this `Experiment`. Checks for consistency -- in
-        particular, if the index has multiple levels, are there entries for
-        EVERY combination of possible levels?
-        
-        Parameters
-        ----------
-        name : String
-            The name of the new statistic
-            
-        statistic : pd.DataFrame
-            The `pandas.DataFrame` to add to the experiment.
-        """
-        
-        full_index = pd.MultiIndex.from_product(statistic.index.levels)
-        if not full_index.sort_values().equals(statistic.index.sort_values()):
-            raise util.CytoflowError("Tried to add statistic {}, but index wasn't complete! "
-                                     "Every combination of index values must have a row!"
-                                     .format(name))
-        
-        self.statistics[name] = statistic
             
     def add_condition(self, name, dtype, data = None):
         """

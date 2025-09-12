@@ -626,7 +626,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 post_name = "{}_{}_posterior".format(self.name, c + 1)
                 new_experiment.add_condition(post_name, "double", event_posteriors[c])
                 
-        new_experiment.add_statistic(self.name, stat)
+        new_experiment.statistics[self.name] = stat
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
 
