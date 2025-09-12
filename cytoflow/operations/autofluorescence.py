@@ -368,4 +368,3 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
             plt.bar(bin_edges[:-1], hist, width = bin_edges[2] - bin_edges[1], linewidth = 0)
             plt.axvline(self.op._af_median[channel], color = 'r')
             
-        plt.tight_layout(pad = 0.8)

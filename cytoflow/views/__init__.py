@@ -35,6 +35,9 @@ import seaborn as sns
 sns.set(context = "paper", style = "whitegrid", 
         rc = {"xtick.bottom": True, "ytick.left": True})
 
+# make sure that non-seaborn plots use tight layout
+plt.rcParams['figure.autolayout'] = True
+
 from .i_view import IView
 from .i_selectionview import ISelectionView
 

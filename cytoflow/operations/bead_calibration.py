@@ -1168,5 +1168,3 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
                          self.op._calibration_functions[channel](x), 
                          color = 'r', linestyle = ':')
             
-        plt.tight_layout(pad = 0.8)
-            

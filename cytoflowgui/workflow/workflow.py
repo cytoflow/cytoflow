@@ -615,12 +615,11 @@ class RemoteWorkflow(HasStrictTraits):
         if parent_mpl_conn:
             plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, plot_lock = self.plot_lock, *args, **kwargs: \
                                         cytoflowgui.matplotlib_backend_remote.new_figure_manager(num, 
-                                                                                          parent_conn = parent_conn, 
-                                                                                          process_events = process_events,
-                                                                                          plot_lock = plot_lock, 
-                                                                                          layout = 'constrained',
-                                                                                          *args, 
-                                                                                          **kwargs)
+                                                                                                 parent_conn = parent_conn, 
+                                                                                                 process_events = process_events,
+                                                                                                 plot_lock = plot_lock, 
+                                                                                                 *args, 
+                                                                                                 **kwargs)
          
         # start threads
         self.recv_thread = threading.Thread(target = self.recv_main, 

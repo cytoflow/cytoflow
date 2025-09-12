@@ -667,7 +667,6 @@ class RegistrationDiagnosticView(HasStrictTraits):
         if title:
             plt.suptitle(title)
         
-        # clean up layout issues
-        # fig.tight_layout()         
+      
         
             

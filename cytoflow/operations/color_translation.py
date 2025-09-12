@@ -497,5 +497,3 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             
             
             plt_idx = plt_idx + 1
-        
-        plt.tight_layout(pad = 0.8)

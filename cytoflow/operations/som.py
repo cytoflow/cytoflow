@@ -691,6 +691,4 @@ class SOMDiagnosticView(HasStrictTraits):
                  som.quantization_history())
         plt.ylabel("Quantization Error")
         plt.xlabel("Iteration")
-        
-        plt.tight_layout()
 
