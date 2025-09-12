@@ -67,10 +67,24 @@ class FlowCleanOp(HasStrictTraits):
     ``CLEANED`` (clean after the gated events are dropped), or ``UNCLEAN`` (still unclean 
     after the gated events are dropped.)
     
-    This operation is applied to every tube independently -- that is, to every
+    This estimation is applied to every tube independently -- that is, to every
     subset of events with a unique combination of experimental metadata 
     (as determined by the experiment's `Experiment.metadata`). Thus, there
     is no ``by`` attribute, as with many other data-driven gating operations.
+    
+    When the `apply` function is called, a new boolean condition is created.
+    Its name is the same as the `name` of the operation; it is ``True`` if the
+    event remains after the tube is cleaned, and ``False`` if it was in a
+    dropped slice.
+    
+    ..caution:: 
+    
+    For some data sets, the default parameters can make this
+    algorithm *really* zealous. Please check the diagnostic plots and the 
+    `tube_statistics` tables to make sure this operation is performing like
+    you expect it to, and adjust the parameters accordingly! Doing so will
+    probably require an understanding of exactly what the algorithm is doing
+    -- see the **Notes** section below for details.
     
     Attributes
     ----------
@@ -267,6 +281,7 @@ class FlowCleanOp(HasStrictTraits):
     dont_clean = Bool(False)
     
     tube_status = Dict(Str, Str)
+    tube_statistics = Dict(Str, Instance(pd.DataFrame), transient = True)
 
     _tube_status = Dict(Tube, Str)
     _tube_bins = Dict(Tube, pd.api.typing.DataFrameGroupBy, transient = True)
@@ -274,7 +289,7 @@ class FlowCleanOp(HasStrictTraits):
     _bin_kept = Dict(Tube, Instance(np.ndarray), transient = True)
     _bin_measures = Dict(Tube, Instance(np.ndarray), transient = True)
     _tube_channels = Dict(Tube, List(Str), transient = True)
-    _channel_stats = Dict(Tube, Instance(pd.DataFrame), transient = True)
+    _tube_stats = Dict(Tube, Instance(pd.DataFrame), transient = True)
     
     _bin_means = Dict(Tube, Any, transient = True)    
     _density_kde = Dict(Tube, Any, transient = True)
@@ -374,6 +389,10 @@ class FlowCleanOp(HasStrictTraits):
             for c in self.channels:
                 tube_events.loc[:, c] = self._scale[c](tube_events[c])
             num_segments = int(len(tube_events) / self.segment_size)
+            if num_segments < 10:
+                warn(f"Need at least {10 * self.segment_size} events to clean; tube {tube.file} only has {len(tube_events)}. Skipping.")
+                continue
+            
             segment_size = int(len(tube_events) / num_segments)
             labels = np.repeat(range(0, num_segments), segment_size)
             if len(tube_events) > len(labels):
@@ -382,14 +401,16 @@ class FlowCleanOp(HasStrictTraits):
             self._tube_bins[tube] = tube_events.groupby(labels, observed = True)
             self._bin_kept[tube] = np.full((num_segments), True)
             self._bin_measures[tube] = np.zeros((num_segments))
-            self._channel_stats[tube] = pd.DataFrame(index = self.channels,
-                                                     columns = ['Bin Mean Range', 
-                                                                'Bin Mean SD',
-                                                                'Drift Pre',
-                                                                'Drift Post',
-                                                                'Max Discontinuity Pre',
-                                                                'Max Discontinuity Post'])   
-            channel_stats = self._channel_stats[tube]
+            self._tube_stats[tube] = pd.DataFrame(index = self.channels,
+                                                      columns = ['Bin Mean Range', 
+                                                                 'Bin Mean SD',
+                                                                 'Drift Pre',
+                                                                 'Drift Post',
+                                                                 'Max Discontinuity Pre',
+                                                                 'Max Discontinuity Post',
+                                                                 'Worst Channel (Range)',
+                                                                 'Worst Channel (SD)'])   
+            tube_stats = self._tube_stats[tube]
 
             self._tube_status[tube] = "CLEAN"
 
@@ -415,7 +436,8 @@ class FlowCleanOp(HasStrictTraits):
             self._density_kde[tube] = (support, density)
 
             # find peaks in the kde
-            peaks, peak_props = scipy.signal.find_peaks(density, prominence = 0)
+            density_max = np.max(density)
+            peaks, peak_props = scipy.signal.find_peaks(density, prominence = 0.1 * density_max)
             peaks = [support[x] for x in peaks]
             self._density_peaks[tube] = peaks
             
@@ -451,17 +473,21 @@ class FlowCleanOp(HasStrictTraits):
                 for binn, events in self._tube_bins[tube]:
                     self._bin_means[tube][channel][binn] = events[channel].mean()
                 kept_bin_means[channel] = np.compress(self._bin_kept[tube], self._bin_means[tube][channel])
-                channel_stats.loc[channel, 'Bin Mean Range'] = np.ptp(kept_bin_means[channel])
-                channel_stats.loc[channel, 'Bin Mean SD'] = np.std(kept_bin_means[channel])
+                tube_stats.loc[channel, 'Bin Mean Range'] = np.ptp(kept_bin_means[channel])
+                tube_stats.loc[channel, 'Bin Mean SD'] = np.std(kept_bin_means[channel])
             
             # find the "worst" channels
             worst_channels_range = []
             if self.detect_worst_channels_range:
-                worst_channels_range = list(channel_stats.sort_values(by = 'Bin Mean Range').index[-1 * self.detect_worst_channels_range :])
+                worst_channels_range = list(tube_stats.sort_values(by = 'Bin Mean Range').index[-1 * self.detect_worst_channels_range :])
+                for channel in worst_channels_range:
+                    tube_stats.loc[channel, 'Worst Channel (Range)'] = "*"
                 
             worst_channels_sd = []
             if self.detect_worst_channels_sd:
-                worst_channels_sd = list(channel_stats.sort_values(by = 'Bin Mean SD').index[-1 * self.detect_worst_channels_sd :])
+                worst_channels_sd = list(tube_stats.sort_values(by = 'Bin Mean SD').index[-1 * self.detect_worst_channels_sd :])
+                for channel in worst_channels_sd:
+                    tube_stats.loc[channel, 'Worst Channel (SD)'] = "*"
                 
             if worst_channels_range and not worst_channels_sd:
                 channels = worst_channels_range
@@ -478,13 +504,13 @@ class FlowCleanOp(HasStrictTraits):
             # the tube needs cleaning
             for channel in channels:
                 drift = (np.max(kept_bin_means[channel]) - np.min(kept_bin_means[channel])) / (tube_events[channel].quantile(0.98) - tube_events[channel].quantile(0.02))
-                channel_stats.loc[channel, "Drift Pre"] = drift
+                tube_stats.loc[channel, "Drift Pre"] = drift
                 if drift > self.max_drift:
                     self._tube_status[tube] = "UNCLEAN"
 
             # compute the mean of the means and see whether it's in spec, or
             # the tube needs to be cleaned
-            mean_drift = channel_stats.loc[:, "Drift Pre"].mean(skipna = True)
+            mean_drift = tube_stats.loc[:, "Drift Pre"].mean(skipna = True)
             if mean_drift > self.max_mean_drift:
                 self._tube_status[tube] = "UNCLEAN"
             
@@ -495,7 +521,7 @@ class FlowCleanOp(HasStrictTraits):
                     d = abs(kept_bin_means[channel][i] - kept_bin_means[channel][i-1]) / kept_bin_means[channel][i-1]
                     if d > max_discontinuity:
                         max_discontinuity = d
-                channel_stats.loc[channel, "Max Discontinuity Pre"] = max_discontinuity
+                tube_stats.loc[channel, "Max Discontinuity Pre"] = max_discontinuity
                     
                 if max_discontinuity > self.max_discontinuity:
                     self._tube_status[tube] = "UNCLEAN"
@@ -579,13 +605,13 @@ class FlowCleanOp(HasStrictTraits):
             # the tube needs cleaning
             for channel in channels:
                 drift = (np.max(kept_bin_means[channel]) - np.min(kept_bin_means[channel])) / (tube_events[channel].quantile(0.98) - tube_events[channel].quantile(0.02))
-                channel_stats.loc[channel, "Drift Post"] = drift
+                tube_stats.loc[channel, "Drift Post"] = drift
                 if drift > self.max_drift:
                     self._tube_status[tube] = "UNCLEAN"
 
             # compute the mean of the means and see whether it's in spec, or
             # the tube needs to be cleaned
-            mean_drift = channel_stats.loc[:, "Drift Post"].mean(skipna = True)
+            mean_drift = tube_stats.loc[:, "Drift Post"].mean(skipna = True)
             if mean_drift > self.max_mean_drift:
                 self._tube_status[tube] = "UNCLEAN"
             
@@ -596,11 +622,12 @@ class FlowCleanOp(HasStrictTraits):
                     d = abs(kept_bin_means[channel][i] - kept_bin_means[channel][i-1]) / kept_bin_means[channel][i-1]
                     if d > max_discontinuity:
                         max_discontinuity = d
-                channel_stats.loc[channel, "Max Discontinuity Post"] = max_discontinuity
+                tube_stats.loc[channel, "Max Discontinuity Post"] = max_discontinuity
                     
                 if max_discontinuity > self.max_discontinuity:
                     self._tube_status[tube] = "UNCLEAN"
                     
+        self.tube_statistics = {k.file : v for k, v in self._tube_stats.items()}
         self.tube_status = {k.file : v for k, v in self._tube_status.items()} # set atomically to trigger UI update
                     
     def apply(self, experiment):
@@ -644,11 +671,6 @@ class FlowCleanOp(HasStrictTraits):
             raise util.CytoflowOpError(None,
                                        "No tubes were analyzed. Did you forget to "
                                        "call estimate()?")
-            
-        if set(self._tube_bins.keys()) != set(experiment.history[0].tubes):
-            raise util.CytoflowOpError(None,
-                                       "estimate() seems to have been called on "
-                                       "a different Experiment than apply() is?")
             
         event_assignments = pd.Series([True] * len(experiment), dtype = "bool")
         for tube, tube_bins in self._tube_bins.items():
@@ -790,15 +812,15 @@ class FlowCleanDiagnostic(HasStrictTraits):
                 if self.op._tube_status[tube] == "CLEANED" or self.op._tube_status[tube] == "UNCLEAN":
                     title = "{} : {:.3f} - {:.3f} / {:.3f} - {:.3f}" \
                                  .format(channel, 
-                                         self.op._channel_stats[tube].loc[channel, "Drift Pre"],
-                                         self.op._channel_stats[tube].loc[channel, "Drift Post"],
-                                         self.op._channel_stats[tube].loc[channel, "Max Discontinuity Pre"],
-                                         self.op._channel_stats[tube].loc[channel, "Max Discontinuity Post"])
+                                         self.op._tube_stats[tube].loc[channel, "Drift Pre"],
+                                         self.op._tube_stats[tube].loc[channel, "Drift Post"],
+                                         self.op._tube_stats[tube].loc[channel, "Max Discontinuity Pre"],
+                                         self.op._tube_stats[tube].loc[channel, "Max Discontinuity Post"])
                 else:
                     title = "{} : {:.3f} / {:.3f}" \
                                  .format(channel, 
-                                         self.op._channel_stats[tube].loc[channel, "Drift Pre"],
-                                         self.op._channel_stats[tube].loc[channel, "Max Discontinuity Pre"])
+                                         self.op._tube_stats[tube].loc[channel, "Drift Pre"],
+                                         self.op._tube_stats[tube].loc[channel, "Max Discontinuity Pre"])
                 plt.subplot(nrow, 2, idx + 1, title = title)
     
                 for binn, events in self.op._tube_bins[tube]:                
@@ -839,16 +861,3 @@ class FlowCleanDiagnostic(HasStrictTraits):
                          linestyle = 'dotted')
 
         plt.suptitle("{} ({})".format(plot_name, self.op._tube_status[tube]))
-        plt.tight_layout(pad = 0.8)
-
-
-        
-            
-        
-         
-            
-            
-        
-        
-    
-    
