@@ -613,7 +613,7 @@ class SOMOp(HasStrictTraits):
          
         new_experiment = experiment.clone(deep = False)          
         new_experiment.add_condition(self.name, "int", event_assignments)
-        new_experiment.statistics[self.name] = centers_stat.dropna() 
+        new_experiment.add_statistic(self.name, centers_stat.dropna()) 
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     

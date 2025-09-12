@@ -207,14 +207,17 @@ class ChannelStatisticOp(HasStrictTraits):
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
         groupby = experiment.data.groupby(self.by, observed = True)  
-        keys = [x if isinstance(x, tuple)
-                  else (x,)
-                  for x in groupby.groups.keys()]
-        idx = pd.MultiIndex.from_tuples(keys, names = self.by)
+
+        idx = pd.MultiIndex.from_product([experiment.data[b].unique() for b in self.by], names = self.by)
                       
         stat = None
         
-        for group, data_subset in groupby:
+        for group in idx:
+            if group in groupby.groups:
+                data_subset = groupby.get_group(group)
+            else:
+                data_subset = experiment.data.iloc[:0,:].copy() # an empty DataFrame with the same structure
+                
             try:
                 v = self.function(data_subset[self.channel])
                 
@@ -266,16 +269,8 @@ class ChannelStatisticOp(HasStrictTraits):
                 raise util.CytoflowOpError(None,
                                            "Calling function on category {} returned {} "
                                            "which contains NaN".format(group, stat.loc[group]))
-        #
-        # if stat.isna().any().any():
-        #     raise util.CytoflowOpError(None,
-        #                                "The statistic has at least one NaN in it, which probably means "
-        #                                "one of the groups did not have any events AND you forgot to set "
-        #                                "'fill' to something other than NaN.".format(group, stat.loc[group]))
-        #
 
-        
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
-        new_experiment.statistics[self.name] = stat
+        new_experiment.add_statistic(self.name, stat)
         
         return new_experiment
