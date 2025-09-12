@@ -42,11 +42,17 @@ warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
 warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
 warnings.filterwarnings('ignore', 'X has feature names, but NearestNeighbors was fitted without feature names')
 
+# suppress spurious error triggered by openTSNE
+import multiprocessing.resource_tracker
+def empty_del(self):
+    pass
+
+multiprocessing.resource_tracker.ResourceTracker.__del__ = empty_del
+
 # and matplotlib 3.1.1 -- there's some weird interaction with seaborn here.
 import matplotlib.text
 import logging
 
-        
 from cytoflow.utility.logging_ext import MplFilter
 matplotlib.text._log.addFilter(MplFilter())  # @UndefinedVariable
 
