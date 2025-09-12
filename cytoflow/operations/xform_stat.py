@@ -30,7 +30,7 @@ import pandas as pd
 import numpy as np 
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides,
-                        Callable)
+                        Callable, Bool)
 
 import cytoflow.utility as util
 
@@ -42,10 +42,10 @@ class TransformStatisticOp(HasStrictTraits):
     Apply a function to a feature of a statistic, creating a new statistic.  
     
     If you set `by`, then calling `apply` will group the input statistic by 
-    unique combinations of the conditions in `by`, then call `function` on each 
-    column in each group. The `function` should take a `pandas.Series` and it
-    can return a ``float``, a value that can be cast to a ``float``, or 
-    `pandas.Series` whose `dtype` is a floating-point. 
+    unique combinations of the conditions in `by`, then call `function` on the
+    column specified by `feature` in each group. The `function` should take a 
+    `pandas.Series` and it can return a ``float``, a value that can be cast to 
+    a ``float``, or `pandas.Series` whose `dtype` is a floating-point. 
     
     If `function` returns a ``float``, then the resulting statistic
     will have one column with the name set to `feature` and levels that are the
@@ -58,6 +58,10 @@ class TransformStatisticOp(HasStrictTraits):
     .. note::
         If `function` returns a `pandas.Series`, it must have an index with only
         one level -- no hierarchical indexing, please!
+    
+    .. note::
+        If `function` returns a `pandas.Series`, it must return a series with the
+        same index each time! 
     
     Finally, if `by` is left empty, then `function` must be a transformation.
     `function` must take a `pandas.Series` as an argument and return a `pandas.Series`
@@ -87,6 +91,12 @@ class TransformStatisticOp(HasStrictTraits):
         ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will apply 
         `function` separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
+        
+    ignore_incomplete_groups : Bool (default = False)
+        Sometimes, a statistic doesn't have a row for every possible group of
+        labels. If this flag is true, groups that don't have all possible
+        labels of the non-grouped levels won't have `function` called -- this
+        can make writing `function` easier, at the cost of losing some data.
 
     Examples
     --------
@@ -159,6 +169,7 @@ class TransformStatisticOp(HasStrictTraits):
     feature = Str
     function = Callable
     by = List(Str)    
+    ignore_incomplete_groups = Bool(False)
 
     def apply(self, experiment):
         """
@@ -233,69 +244,102 @@ class TransformStatisticOp(HasStrictTraits):
         new_stat = None
                     
         if self.by: 
-            idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
-                                             names = self.by)
-            for group in data[self.by].itertuples(index = False, name = None):         
+            for group in data[self.by].itertuples(index = False, name = None):  
                 s = stat.xs(group, level = self.by, drop_level = True)[self.feature]
-                                    
+
                 if len(s) == 0:
                     continue
-                        
+                
+                if isinstance(s.index, pd.MultiIndex):
+                    idx = s.index.remove_unused_levels()
+                    idx_incomplete = [set(idx.levels[li]) != set(data[level].unique())
+                                     for li, level in enumerate(idx.names)]
+                    if any(idx_incomplete) and self.ignore_incomplete_groups:
+                        continue 
+                else:
+                    idx = s.index
+                    if set(idx.values) != set(data[idx.name].unique()) and self.ignore_incomplete_groups:
+                        continue
+
                 try:
                     v = self.function(s)
                 except Exception as e:
                     raise util.CytoflowOpError('function',
                                                "Your function threw an error in group {}".format(group)) from e
-                                               
-                try:
-                    v = float(v)
-                except (TypeError, ValueError) as e:
-                    if not isinstance(v, pd.Series):
+                           
+                if isinstance(v, pd.Series):
+                    if v.dtype.kind != 'f':
                         raise util.CytoflowOpError('function',
-                                                   "Your function returned a {}. It must return "
-                                                   "a float, a value that can be cast to float, "
-                                                   "or a pandas.Series (with type float)"
-                                                   .format(type(v))) from e        
-                                               
-                if isinstance(v, pd.Series) and v.dtype.kind != 'f':
-                    raise util.CytoflowOpError('function',
-                                               "Your function returned a pandas.Series with dtype {}. "
-                                               "If it returns a Series, the data must be floating point."
-                                               .format(v.dtype))
-                #
-                # if isinstance(v, pd.Series) and v.index.inferred_type != 'string':
-                #     raise util.CytoflowOpError('function',
-                #                                "Your function returned a pandas.Series with an index "
-                #                                "of type '{}'. It must have an index of type 'string'."
-                #                                .format(v.index.inferred_type))
+                                                   "Your function returned a pandas.Series with dtype {}. "
+                                                   "If it returns a Series, the data must be floating point."
+                                                   .format(v.dtype))
+                        
+                    # check for, and warn about, NaNs.
+                    if np.any(np.isnan(v)):
+                        raise util.CytoflowOpError('function',
+                                                   "Category {} returned {}, which had NaNs that aren't allowed"
+                                                   .format(group, v))
+                        
+                    # check for, and warn about, NaNs.
+                    if np.any(np.isinf(v)):
+                        raise util.CytoflowOpError('function',
+                                                   "Category {} returned {}, which had infs that aren't allowed"
+                                                   .format(group, v))
+                else:
+                    try:
+                        v = float(v)
+                    except (TypeError, ValueError) as e:
+                        if not isinstance(v, pd.Series):
+                            raise util.CytoflowOpError('function',
+                                                       "Your function returned a {}. It must return "
+                                                       "a float, a value that can be cast to float, "
+                                                       "or a pandas.Series (with type float)"
+                                                       .format(type(v))) from e
+                                                       
+                    if np.isnan(v):
+                        raise util.CytoflowOpError('function',
+                                                   "Category {} returned {} and NaNs aren't allowed"
+                                                   .format(group, v))
+                        
+                    if np.isinf(v):
+                        raise util.CytoflowOpError('function',
+                                                   "Category {} returned {} and infs aren't allowed"
+                                                   .format(group, v))
                     
                 if new_stat is None:
                     if isinstance(v, float):
-                        new_stat = pd.DataFrame(data = np.full((len(idx), 1), np.nan),
-                                    index = idx,
-                                    columns = [self.feature],
-                                    dtype = 'float' ).sort_index()
+                        new_stat = pd.DataFrame(index = pd.MultiIndex.from_tuples([], names = self.by),
+                                                columns = [self.feature],
+                                                dtype = 'float' ).sort_index()
                     else:
-                        assert(v.index.nlevels == 1)
-                        new_stat = pd.DataFrame(data = np.full((len(idx), len(v)), np.nan),
-                                                index = idx,
+                        if v.index.nlevels > 1:
+                            raise util.CytoflowOpError('function',
+                                                       "Your function returned a Series with a multi-level index!")
+                            
+                        new_stat = pd.DataFrame(index = pd.MultiIndex.from_tuples([], names = self.by),
                                                 columns = v.index.tolist(),
                                                 dtype = 'float').sort_index()
-
+                        first_v = v
+                elif isinstance(v, pd.Series):
+                    if not v.index.equals(first_v.index):
+                        raise util.CytoflowOpError('function',
+                                                   "The first call of 'function' returned series with index of {}, "
+                                                   "but the call on group {} returned a series with index {}. "
+                                                   "All returned series must have the same index!"
+                                                   .format(first_v.index, group, v.index))
                 new_stat.loc[group] = v
                                         
-                # check for, and warn about, NaNs.
-                if np.any(np.isnan(new_stat.loc[group])):
-                    raise util.CytoflowOpError('function',
-                                               "Category {} returned {}, which had NaNs that aren't allowed"
-                                               .format(group, new_stat.loc[group]))
+                # # check for, and warn about, NaNs.
+                # if np.any(np.isnan(new_stat.loc[group])):
+                #     raise util.CytoflowOpError('function',
+                #                                "Category {} returned {}, which had NaNs that aren't allowed"
+                #                                .format(group, new_stat.loc[group]))
                 
         else:
             idx = stat.index.copy()
-            new_stat = pd.DataFrame(data = np.full((len(idx), 1), np.nan),
-                                   columns = [self.feature],
-                                   index = idx, 
-                                   dtype = 'float').sort_index()
+            new_stat = pd.DataFrame(columns = [self.feature],
+                                    index = idx, 
+                                    dtype = 'float').sort_index()
 
             v = self.function(stat[self.feature])
             
