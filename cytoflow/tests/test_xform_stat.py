@@ -28,10 +28,10 @@ import pandas as pd
 
 import cytoflow as flow
 import cytoflow.utility as util
-from .test_base import ImportedDataSmallTest
+from .test_base import ImportedDataTest
 
 
-class Test(ImportedDataSmallTest):
+class Test(ImportedDataTest):
 
     def setUp(self):
         super().setUp()
@@ -59,6 +59,13 @@ class Test(ImportedDataSmallTest):
         self.assertNotIn("T", stat.index.names)
         
         self.assertIsInstance(ex.data.index, pd.RangeIndex)
+        
+    def testSameColAndIndexName(self):
+        flow.TransformStatisticOp(name = "Test",
+                                  statistic = "Conditions",
+                                  feature = "Dox",
+                                  by = ["Well"],
+                                  function = lambda x: x.sum()).apply(self.ex)
 
     def testBadFunction(self):
          

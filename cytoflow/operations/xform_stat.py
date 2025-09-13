@@ -240,11 +240,10 @@ class TransformStatisticOp(HasStrictTraits):
                                            " must be one of {}"
                                            .format(b, stat.index.names))
                 
-        data = stat.reset_index()    
         new_stat = None
                     
         if self.by: 
-            for group in data[self.by].itertuples(index = False, name = None):  
+            for group in stat.index.to_frame()[self.by].itertuples(index = False, name = None):  
                 s = stat.xs(group, level = self.by, drop_level = True)[self.feature]
 
                 if len(s) == 0:
@@ -252,13 +251,13 @@ class TransformStatisticOp(HasStrictTraits):
                 
                 if isinstance(s.index, pd.MultiIndex):
                     idx = s.index.remove_unused_levels()
-                    idx_incomplete = [set(idx.levels[li]) != set(data[level].unique())
+                    idx_incomplete = [set(idx.levels[li]) != set(stat.index.to_frame()[level].unique())
                                      for li, level in enumerate(idx.names)]
                     if any(idx_incomplete) and self.ignore_incomplete_groups:
                         continue 
                 else:
                     idx = s.index
-                    if set(idx.values) != set(data[idx.name].unique()) and self.ignore_incomplete_groups:
+                    if set(idx.values) != set(stat.index.to_frame()[idx.name].unique()) and self.ignore_incomplete_groups:
                         continue
 
                 try:
