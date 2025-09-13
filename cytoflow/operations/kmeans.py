@@ -361,12 +361,10 @@ class KMeansOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda _: True, observed = False)
                  
-        event_assignments = pd.Series(["Cluster_None".format(self.name)] * len(experiment), dtype = "object")
+        event_assignments = pd.Series([-1] * len(experiment), dtype = "int")
          
-        # make the statistics       
-        clusters = ["Cluster_{}".format(x + 1) for x in range(self.num_clusters)]
-          
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters], 
+        # make the statistics                 
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [list(range(self.num_clusters))], 
                                          names = list(self.by) + [self.name])
 
         new_stat = pd.DataFrame(index = idx,
@@ -400,23 +398,18 @@ class KMeansOp(HasStrictTraits):
             group_idx = data_subset.index
             
             kmeans = self._kmeans[group]
-  
-            predicted = np.full(len(x), -1, "int")
+            
+            predicted = pd.Series([-1] * len(x))
             predicted[~x_na] = kmeans.predict(x[~x_na])
-                 
-            predicted_str = pd.Series(["(none)"] * len(predicted))
-            for c in range(0, self.num_clusters):
-                predicted_str[predicted == c] = "Cluster_{}".format(c + 1)
-            predicted_str[predicted == -1] = "Cluster_None"
-            predicted_str.index = group_idx
+            predicted.index = group_idx
       
-            event_assignments.iloc[group_idx] = predicted_str
+            event_assignments.iloc[group_idx] = predicted
             
             for c in range(self.num_clusters):
                 if len(self.by) == 0:
-                    g = tuple(["Cluster_{}".format(c + 1)])
+                    g = tuple([c])
                 else:
-                    g = group + tuple(["Cluster_{}".format(c + 1)])
+                    g = group + tuple([c])
                                     
                 for cidx1, channel1 in enumerate(self.channels):
                     new_stat.loc[g, channel1] = kmeans.cluster_centers_[c, cidx1]
