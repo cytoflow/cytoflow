@@ -65,14 +65,8 @@ class MatrixWorkflowView(WorkflowByView, MatrixView):
             self.size_function = len
         else:
             self.size_function = lambda _: 1.0
-            
-        # gets rid of the "bad gridspec" error from the layout engine
-        le = plt.gcf().get_layout_engine()
-        plt.gcf().set_layout_engine('none')
         
         super().plot(experiment, **kwargs)
-        
-        plt.gcf().set_layout_engine(le)
     
     def get_notebook_code(self, idx):
         view = MatrixView()
