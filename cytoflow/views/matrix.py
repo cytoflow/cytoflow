@@ -288,11 +288,17 @@ class MatrixView(HasStrictTraits):
             if self.size_function:
                 experiment_data = experiment.data.groupby(by = unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
-        if self.style == "heat" and not self.feature:
-            raise util.CytoflowViewError('feature',
+        if self.style == "heat":
+            if not self.feature:
+                raise util.CytoflowViewError('feature',
                                          "For style 'heat', you must set 'feature'!")
             
-        if self.style != "heat":
+            if self.feature not in data.columns:
+                raise util.CytoflowViewError('feature',
+                                             "Can't find feature '{}' in the statistic columns."
+                                             .format(self.feature))
+            
+        else:
             if self.variable and self.variable not in stat.index.names:
                 raise util.CytoflowViewError('variable',
                                              "Can't find variable '{}' in the statistic index."
@@ -341,7 +347,7 @@ class MatrixView(HasStrictTraits):
                                             experiment = experiment,
                                             statistic = self.statistic,
                                             features = [self.feature] 
-                                                       if self.feature 
+                                                       if self.variable 
                                                        else list(data.columns))
             data_norm = data_scale.norm()
         else:
