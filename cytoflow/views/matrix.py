@@ -269,7 +269,7 @@ class MatrixView(HasStrictTraits):
                                          "the statistic's levels are already used")
         
         if unused_names:
-            groupby = data.groupby(unused_names, observed = True)
+            groupby = data.groupby(level = unused_names, observed = True)
 
             if plot_name is None:
                 raise util.CytoflowViewError('plot_name',
@@ -286,7 +286,7 @@ class MatrixView(HasStrictTraits):
             data = groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
             
             if self.size_function:
-                experiment_data = experiment.data.groupby(unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+                experiment_data = experiment.data.groupby(level = unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
         if self.style == "heat" and not self.feature:
             raise util.CytoflowViewError('feature',
@@ -350,13 +350,18 @@ class MatrixView(HasStrictTraits):
         group_keys = []
         group_keys += [self.xfacet] if self.xfacet else []
         group_keys += [self.yfacet] if self.yfacet else []
+        if len(group_keys) == 1:
+            group_keys = group_keys[0]
+        else:
+            # gotta sort the group keys to be the same as the index levels
+            group_keys = sorted(group_keys, key = lambda k: data.index.names.index(k))
     
-        groups = data.groupby(by = group_keys, observed = True)
+        groups = data.groupby(level = group_keys, observed = True)
         
         if self.size_function:
             group_scale = {}
             s_max = 0.0
-            for group_name, group in experiment_data.groupby(by = group_keys, observed = True):
+            for group_name, group in experiment_data.groupby(level = group_keys, observed = True):
                 s = self.size_function(group)
                 try:
                     s = float(s)
@@ -400,18 +405,21 @@ class MatrixView(HasStrictTraits):
                 if not self.xfacet:
                     # only yfacet -- ie, one row
                     row_idx = 0
-                    col_idx = cols.index(group_name[0])
+                    col_idx = cols.index(group_name)
                 elif not self.yfacet:
                     # only xfacet -- ie, one column
-                    row_idx = rows.index(group_name[0])
+                    row_idx = rows.index(group_name)
                     col_idx = 0
                 else:
-                    row_idx = rows.index(group_name[0])
-                    col_idx = cols.index(group_name[1])
+                    # can't depend on the order of row, column
+                    row_name = next(filter(lambda x: x in rows, group_name))
+                    row_idx = rows.index(row_name)
+                    col_name = next(filter(lambda x: x in cols, group_name))
+                    col_idx = cols.index(col_name)
                     
                 plt.sca(grid.axes_row[row_idx][col_idx])
                 patches, _ = plt.pie([1], wedgeprops = kwargs)
-                patches[0].set_facecolor(cmap(data_norm(group.reset_index().at[0, self.feature])))
+                patches[0].set_facecolor(cmap(data_norm(group.iloc[0][self.feature])))
                 
                 if self.size_function:
                     patches[0].set_radius(patches[0].r * group_scale[group_name])
@@ -449,14 +457,17 @@ class MatrixView(HasStrictTraits):
                 if not self.xfacet:
                     # only yfacet -- ie, one row
                     row_idx = 0
-                    col_idx = cols.index(group_name[0])
+                    col_idx = cols.index(group_name)
                 elif not self.yfacet:
                     # only xfacet -- ie, one column
-                    row_idx = rows.index(group_name[0])
+                    row_idx = rows.index(group_name)
                     col_idx = 0
                 else:
-                    row_idx = rows.index(group_name[0])
-                    col_idx = cols.index(group_name[1])
+                    # can't depend on the order of row, column
+                    row_name = next(filter(lambda x: x in rows, group_name))
+                    row_idx = rows.index(row_name)
+                    col_name = next(filter(lambda x: x in cols, group_name))
+                    col_idx = cols.index(col_name)
                     
                 if self.variable:
                     pie_data = group_data[self.feature]
@@ -473,7 +484,7 @@ class MatrixView(HasStrictTraits):
                 
                 for pi, patch in enumerate(patches):
                     if self.variable:
-                        label = group_data.reset_index().at[pi, self.variable]
+                        label = group_data.index.get_level_values(self.variable)[pi]
                     else:
                         label = pie_data.index.values[pi]
                     color = colors[label]
@@ -518,14 +529,17 @@ class MatrixView(HasStrictTraits):
                 if not self.xfacet:
                     # only yfacet -- ie, one row
                     row_idx = 0
-                    col_idx = cols.index(group_name[0])
+                    col_idx = cols.index(group_name)
                 elif not self.yfacet:
                     # only xfacet -- ie, one column
-                    row_idx = rows.index(group_name[0])
+                    row_idx = rows.index(group_name)
                     col_idx = 0
                 else:
-                    row_idx = rows.index(group_name[0])
-                    col_idx = cols.index(group_name[1])
+                    # can't depend on the order of row, column
+                    row_name = next(filter(lambda x: x in rows, group_name))
+                    row_idx = rows.index(row_name)
+                    col_name = next(filter(lambda x: x in cols, group_name))
+                    col_idx = cols.index(col_name)
                     
                 plt.sca(grid.axes_row[row_idx][col_idx])
                 patches, _ = plt.pie([1.0 / len(variable_values)] * len(variable_values), 
@@ -638,7 +652,7 @@ class MatrixView(HasStrictTraits):
                 self._returned = False
                 
                 if by:
-                    self._iter = data.groupby(by, observed = True).groups.keys().__iter__()
+                    self._iter = data.groupby(level = by, observed = True).groups.keys().__iter__()
                 
             def __iter__(self):
                 return self
@@ -653,7 +667,7 @@ class MatrixView(HasStrictTraits):
                         self._returned = True
                         return None
             
-        return plot_iter(data.reset_index(), unused_names)
+        return plot_iter(data, unused_names)
 
     def _get_stat(self, experiment):
         if experiment is None:

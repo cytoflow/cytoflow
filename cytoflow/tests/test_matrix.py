@@ -29,11 +29,36 @@ class TestMatrix(ImportedDataTest):
 
     def setUp(self):
         super().setUp()
+
+        self.ex = flow.ThresholdOp(name = "Threshold",
+                                   channel = "Y2-A",
+                                   threshold = 500).apply(self.ex)
                    
         self.ex = flow.ChannelStatisticOp(name = "ByDox",
                                           channel = "Y2-A",
                                           by = ['Well', 'Dox'],
                                           function = lambda x: pd.Series({'Mean' : x.mean(), 
+                                                                          'SD' : x.std(),
+                                                                          'MeanLo' : x.mean() - x.mean() * 0.2,
+                                                                          'MeanHi' : x.mean() + x.mean() * 0.2,
+                                                                          'SDLo' : x.std() - x.std() * 0.2,
+                                                                          'SDHi' : x.std() + x.std() * 0.2})).apply(self.ex)
+                                                                          
+        self.ex = flow.ChannelStatisticOp(name = "ByDoxRev",
+                                          channel = "Y2-A",
+                                          by = ['Dox', 'Well'],
+                                          function = lambda x: pd.Series({'Mean' : x.mean(), 
+                                                                          'SD' : x.std(),
+                                                                          'MeanLo' : x.mean() - x.mean() * 0.2,
+                                                                          'MeanHi' : x.mean() + x.mean() * 0.2,
+                                                                          'SDLo' : x.std() - x.std() * 0.2,
+                                                                          'SDHi' : x.std() + x.std() * 0.2})).apply(self.ex)
+                                                                          
+        self.ex = flow.ChannelStatisticOp(name = "ByDoxThreshold",
+                                          channel = "Y2-A",
+                                          by = ['Well', 'Dox', 'Threshold'],
+                                          function = lambda x: pd.Series({'Len' : len(x),
+                                                                          'Mean' : x.mean(), 
                                                                           'SD' : x.std(),
                                                                           'MeanLo' : x.mean() - x.mean() * 0.2,
                                                                           'MeanHi' : x.mean() + x.mean() * 0.2,
@@ -50,7 +75,44 @@ class TestMatrix(ImportedDataTest):
         self.view.style = "heat"
         self.view.plot(self.ex)
         
+    def testHeatRev(self):
+        self.view.style = "heat"
+        self.view.statistic = "ByDoxRev"
+        self.view.plot(self.ex)
+        
+    def testHeatJustX(self):
+        self.view.yfacet = ""
+        self.view.plot(self.ex, plot_name = "C")
+        
+    def testHeatJustY(self):
+        self.view.xfacet = ""
+        self.view.plot(self.ex, plot_name = 0.0)
+        
     def testPie(self):
+        self.view.style = "pie"
+        self.view.statistic = "ByDoxThreshold"
+        self.view.variable = "Threshold"
+        self.view.feature = "Len"
+        self.view.plot(self.ex)
+        
+    def testPieJustX(self):
+        self.view.style = "pie"
+        self.view.statistic = "ByDoxThreshold"
+        self.view.variable = "Threshold"
+        self.view.feature = "Len"
+        self.view.yfacet = ""
+        self.view.plot(self.ex, plot_name = "C")
+        
+    def testPieJustY(self):
+        self.view.style = "pie"
+        self.view.statistic = "ByDoxThreshold"
+        self.view.variable = "Threshold"
+        self.view.feature = "Len"
+        self.view.xfacet = ""
+        self.view.plot(self.ex, plot_name = 0.0)
+        
+    def testPieRev(self):
+        self.view.statistic = "ByDoxRev"
         self.view.style = "pie"
         self.view.xfacet = ""
         self.view.variable = "Dox"
@@ -58,17 +120,35 @@ class TestMatrix(ImportedDataTest):
         
     def testPetal(self):
         self.view.style = "petal"
+        self.view.statistic = "ByDoxThreshold"
+        self.view.variable = "Threshold"
+        self.view.feature = "Len"
+        self.view.plot(self.ex)
+        
+    def testPetalJustX(self):
+        self.view.style = "petal"
+        self.view.statistic = "ByDoxThreshold"
+        self.view.variable = "Threshold"
+        self.view.feature = "Len"
+        self.view.yfacet = ""
+        self.view.plot(self.ex, plot_name = "C")
+        
+    def testPetalJustY(self):
+        self.view.style = "petal"
+        self.view.statistic = "ByDoxThreshold"
+        self.view.variable = "Threshold"
+        self.view.feature = "Len"
+        self.view.xfacet = ""
+        self.view.plot(self.ex, plot_name = 0.0)
+        
+    def testPetalRev(self):
+        self.view.statistic = "ByDoxRev"
+        self.view.style = "petal"
         self.view.xfacet = ""
         self.view.variable = "Dox"
         self.view.plot(self.ex)
         
-    def testJustXfacet(self):
-        self.view.yfacet = ""
-        self.view.plot(self.ex, plot_name = "C")
-        
-    def testJustYfacet(self):
-        self.view.xfacet = ""
-        self.view.plot(self.ex, plot_name = 0.0)
+
 
     def testLog(self):
         self.view.scale = "log"
@@ -83,6 +163,16 @@ class TestMatrix(ImportedDataTest):
         self.view.yfacet = ""
         with self.assertWarns(util.CytoflowViewWarning):
             self.view.plot(self.ex)
+            
+    def testBothIndexAndColumnEnum(self):
+        self.view.statistic = "Conditions"
+        self.view.feature = "Dox"
+        self.view.enum_plots(self.ex)
+        
+    def testBothIndexAndColumn(self):
+        self.view.statistic = "Conditions"
+        self.view.feature = "Dox"
+        self.view.plot(self.ex)
         
     # Base plot params
     
