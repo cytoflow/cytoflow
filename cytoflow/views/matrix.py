@@ -313,7 +313,7 @@ class MatrixView(HasStrictTraits):
         ylabel = kwargs.pop("ylabel", self.xfacet)
 
         legend = kwargs.pop('legend', True)
-        legendlabel = kwargs.pop('legendlabel', self.variable)
+        legendlabel = kwargs.pop('legendlabel', self.feature)
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -377,7 +377,7 @@ class MatrixView(HasStrictTraits):
             group_scale = {k : v / s_max for k, v in group_scale.items()}
             
         # make a new figure. This usually happens in seaborn.FacetGrid
-        fig = plt.figure()
+        fig = plt.figure(layout = 'none')
         
         if self.style == "heat":
             cmap_name = kwargs.pop('palette', 'viridis')
@@ -596,7 +596,7 @@ class MatrixView(HasStrictTraits):
             bbox = plt.gcf().transFigure.inverted().transform_bbox(bbox)
             if bbox.y1 > max_y:
                 max_y = bbox.y1
-                
+        
         plt.gcf().supxlabel(xlabel, y = max_y + 0.01)
         
         min_x = 1.0
@@ -605,7 +605,7 @@ class MatrixView(HasStrictTraits):
             bbox = plt.gcf().transFigure.inverted().transform_bbox(bbox)
             if bbox.x0 < min_x:
                 min_x = bbox.x0
-
+        
         plt.gcf().supylabel(ylabel, x = min_x - 0.04)
         
         if title:
