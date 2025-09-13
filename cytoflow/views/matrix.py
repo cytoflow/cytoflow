@@ -286,7 +286,7 @@ class MatrixView(HasStrictTraits):
             data = groupby.get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
             
             if self.size_function:
-                experiment_data = experiment.data.groupby(level = unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
+                experiment_data = experiment.data.groupby(by = unused_names, observed = True).get_group(plot_name if util.is_list_like(plot_name) else (plot_name,))
         
         if self.style == "heat" and not self.feature:
             raise util.CytoflowViewError('feature',
@@ -361,7 +361,7 @@ class MatrixView(HasStrictTraits):
         if self.size_function:
             group_scale = {}
             s_max = 0.0
-            for group_name, group in experiment_data.groupby(level = group_keys, observed = True):
+            for group_name, group in experiment_data.groupby(by = group_keys, observed = True):
                 s = self.size_function(group)
                 try:
                     s = float(s)
