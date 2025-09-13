@@ -377,19 +377,21 @@ class tSNEOp(HasStrictTraits):
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
                  
-            # # which values are missing?
-            #
-            # x_na = pd.Series([False] * len(x))
-            # for c in self.channels:
-            #     x_na[np.isnan(x[c]).values] = True
-            # x_na = x_na.values
-            # x[x_na] = 0
+            # which values are missing (say, negative with a log transform?)
+            # we will set them to 0 because we aren't estimating the embedding;
+            # and set them back to NaN after.
+            
+            x_na = pd.Series([False] * len(x))
+            for c in self.channels:
+                x_na[np.isnan(x[c]).values] = True
+            x_na = x_na.values
+            x[x_na] = 0
             
             group_idx = data_subset.index
             
             tsne = self._tsne[group]
             x_tf = tsne.transform(x.values)
-            # x_tf[x_na] = np.nan
+            x_tf[x_na] = np.nan
             
             for ci, c in enumerate(new_channels):
                 new_experiment.data.loc[group_idx, c] = x_tf[:, ci]
