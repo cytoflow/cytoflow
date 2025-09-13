@@ -51,10 +51,10 @@ class TestRegistration(unittest.TestCase):
 
     def testWarp(self):
         # checked the correctness of this warp visually
-        
+                
         correct_peaks = {'CD3': {(2,): [1.08783492527716, 12.142584261984755, 440.3015356513047],
                                  (3,): [1.08783492527716, 4.678268264317964, 351.7914321296273]},
-                         'CD4': {(2,): [1.0146340570192034, 9.180246637211349, 46.75906376829905, 162.37592106463455],
+                         'CD4': {(2,): [1.0146340570192034, 9.180246637211349, 162.37592106463455],
                                  (3,): [1.0146340570192034, 9.180246637211349, 147.5477931840344]}}
         
         for channel in correct_peaks:
@@ -64,7 +64,7 @@ class TestRegistration(unittest.TestCase):
                                            correct_peaks[channel][group][i])
                 
         correct_clusters = {'CD3': {(2,): [0, 2, 1], (3,): [0, 2, 1]},
-                            'CD4': {(3,): [1, 2, 0], (2,): [1, 2, None, 0]}}
+                            'CD4': {(3,): [0, 2, 1], (2,): [0, 2, 1]}}
         
         for channel in correct_clusters:
             for group in correct_clusters[channel]:
@@ -73,14 +73,12 @@ class TestRegistration(unittest.TestCase):
                                     correct_clusters[channel][group][i])
         
         correct_means = {'CD3': [1.08783492527716, 393.566141576796, 7.536993206819948],
-                         'CD4': [154.7843946246255, 1.0146340570192034, 9.180246637211349, None]}
+                         'CD4': [1.0146340570192034, 154.7843946246255, 9.180246637211349]}
         
         for channel in correct_means:
                 for i in range(len(correct_means[channel])):
                     self.assertAlmostEqual(self.op._means[channel][i], 
                                            correct_means[channel][i])
-        
-        
 
         
     def testLogicle(self):

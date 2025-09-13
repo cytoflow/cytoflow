@@ -49,7 +49,7 @@ class TestMST(ImportedDataTest):
     def testHeat(self):
         self.ex = flow.ChannelStatisticOp(name = "DoxLen",
                                           channel = "Y2-A",
-                                          by = ["KMeans_Cluster"],
+                                          by = ["KMeans"],
                                           function = len).apply(self.ex)
         self.view.style = "heat"
         self.view.plot(self.ex)
@@ -57,7 +57,7 @@ class TestMST(ImportedDataTest):
     def testPie(self):
         self.ex = flow.ChannelStatisticOp(name = "DoxLen",
                                           channel = "Y2-A",
-                                          by = ["KMeans_Cluster", "Dox"],
+                                          by = ["KMeans", "Dox"],
                                           function = len).apply(self.ex)
         self.view.style = "pie"
         self.view.variable = "Dox"
@@ -66,7 +66,7 @@ class TestMST(ImportedDataTest):
     def testPetal(self):
         self.ex = flow.ChannelStatisticOp(name = "DoxLen",
                                           channel = "Y2-A",
-                                          by = ["KMeans_Cluster", "Dox"],
+                                          by = ["KMeans", "Dox"],
                                           function = len).apply(self.ex)
         self.view.style = "petal"
         self.view.variable = "Dox"
@@ -85,7 +85,7 @@ class TestMST(ImportedDataTest):
         self.ex = km.apply(self.ex)
         self.ex = flow.ChannelStatisticOp(name = "DoxLen",
                                           channel = "Y2-A",
-                                          by = ["KMeans2_Cluster", "Dox"],
+                                          by = ["KMeans2", "Dox"],
                                           function = len).apply(self.ex)
         self.view.style = "heat"
         self.view.locations = "KMeans2"
@@ -99,7 +99,7 @@ class TestMST(ImportedDataTest):
     def testTitle(self):
         self.ex = flow.ChannelStatisticOp(name = "DoxLen",
                                           channel = "Y2-A",
-                                          by = ["KMeans_Cluster"],
+                                          by = ["KMeans"],
                                           function = len).apply(self.ex)
         self.view.style = "heat"
         self.view.plot(self.ex, title = "Title")
@@ -107,7 +107,7 @@ class TestMST(ImportedDataTest):
     def testLegendLabel(self):
         self.ex = flow.ChannelStatisticOp(name = "DoxLen",
                                           channel = "Y2-A",
-                                          by = ["KMeans_Cluster"],
+                                          by = ["KMeans"],
                                           function = len).apply(self.ex)
         self.view.style = "heat"
         self.view.plot(self.ex, legendlabel = "hue lab")      

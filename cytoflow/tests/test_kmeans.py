@@ -41,7 +41,7 @@ class TestKMeans(ImportedDataTest):
     def testEstimate(self):
         self.op.estimate(self.ex)
         ex2 = self.op.apply(self.ex)
-        self.assertEqual(len(ex2['KM_Cluster'].unique()), 2)
+        self.assertEqual(len(ex2['KM'].unique()), 2)
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
@@ -50,7 +50,7 @@ class TestKMeans(ImportedDataTest):
         self.op.scale = {"V2-A" : "logicle"}
         self.op.estimate(self.ex)
         ex2 = self.op.apply(self.ex)
-        self.assertEqual(len(ex2['KM_Cluster'].unique()), 2)
+        self.assertEqual(len(ex2['KM'].unique()), 2)
         
         self.assertIsInstance(ex2.data.index, pd.RangeIndex)
         
@@ -59,14 +59,14 @@ class TestKMeans(ImportedDataTest):
         self.op.estimate(self.ex)
         
         ex2 = self.op.apply(self.ex)
-        self.assertEqual(len(ex2['KM_Cluster'].unique()), 2)
+        self.assertEqual(len(ex2['KM'].unique()), 2)
 
     def testEstimateBy2(self):
         self.op.by = ["Well", "Dox"]
         self.op.estimate(self.ex)
         
         ex2 = self.op.apply(self.ex)
-        self.assertEqual(len(ex2['KM_Cluster'].unique()), 2)
+        self.assertEqual(len(ex2['KM'].unique()), 2)
         
     def testPlot(self):
         self.op.estimate(self.ex)
