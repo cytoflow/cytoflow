@@ -20,26 +20,26 @@
 
 """
 Multi-channel statistic
------------------
+-----------------------
 
-Apply a function to subsets of a data set, and add it as a statistic
-to the experiment.
+Apply a function to multiple channels in subsets of a data set, and add it as 
+a statistic to the experiment.
 
 First, the module groups the data by the unique values of the variables
-in **By**, then applies **Function** to the **Channel** in each group.
+in **By**, then applies **Function** to the **Channels** in each group.
 Multiple channels and functions can be specified
     
 .. object:: Name
 
     The operation name.  Becomes the new statistic's name.
     
-.. object:: Channel
+.. object:: Channels
 
-    The channel to apply the function to.
+    For each channel, you must specify:
     
-.. object:: Function
-
-    The function to compute on each group.
+    * The channel to summarize
+    * The function to apply to it
+    * The name of the resulting feature
         
 .. object:: Subset
 
@@ -69,7 +69,8 @@ class FunctionHandler(Controller):
                                      editor = EnumEditor(name = 'context_handler.channels')),
                                 Item('function',
                                      editor = EnumEditor(values = sorted(summary_functions.keys()))),
-                                Item('feature')))
+                                Item('feature'),
+                                Item(name = '_')))
 
 
 class MultiChannelStatisticHandler(OpHandler):
