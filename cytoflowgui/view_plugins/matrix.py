@@ -28,11 +28,11 @@ Plots a "matrix" chart. This can be a heat map, or a matrix of pie or petal plot
       value of ``Feature``. (In this scenario, ``Variable`` must be left empty.)
       
     * Setting ``Style`` to ``Pie plot`` will draw a pie plot in each cell. The values 
-      of `Variable` are used as the categories of the pie, and the arc length 
+      of ``Variable`` are used as the categories of the pie, and the arc length 
       of each slice of pie is related to the intensity of the value of ``Feature``.
       
     * Setting ``Style`` to ``Petal plot`` will draw a "petal plot" in each cell. The 
-      values of `Variable` are used as the categories, but unlike a pie plot, the 
+      values of ``Variable`` are used as the categories, but unlike a pie plot, the 
       arc width of each slice is equal. Instead, the radius of the pie slice scales 
       with the square root of the intensity, so that the relationship between area and
       intensity remains the same.

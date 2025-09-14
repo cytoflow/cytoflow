@@ -15,7 +15,7 @@ more advanced analyses.
    
    quickstart
    dose_response
-   hierarchical_gating
+   hierarchical
    machine_learning
    
    

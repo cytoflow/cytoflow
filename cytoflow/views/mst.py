@@ -202,7 +202,7 @@ class MSTView(HasStrictTraits):
 
         >>> ex3 = flow.ChannelStatisticOp(name = "ByDox",
         ...                               channel = "Y2-A",
-        ...                               by = ["KMeans_Cluster", "Dox"],
+        ...                               by = ["KMeans", "Dox"],
         ...                               function = len).apply(ex2) 
     
     Plot the minimum spanning tree

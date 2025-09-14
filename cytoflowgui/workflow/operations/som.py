@@ -156,7 +156,7 @@ class SOMWorkflowOp(WorkflowOperation, SOMOp):
          
         Returns
         -------
-            IView : an IView, call `SOMWorkflowView.plot` to see the diagnostic plot.
+            IView : an IView, call ``SOMWorkflowView.plot`` to see the diagnostic plot.
         """
             
         return SOMWorkflowView(op = self, **kwargs)

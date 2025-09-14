@@ -77,14 +77,13 @@ class FlowCleanOp(HasStrictTraits):
     event remains after the tube is cleaned, and ``False`` if it was in a
     dropped slice.
     
-    ..caution:: 
-    
-    For some data sets, the default parameters can make this
-    algorithm *really* zealous. Please check the diagnostic plots and the 
-    `tube_statistics` tables to make sure this operation is performing like
-    you expect it to, and adjust the parameters accordingly! Doing so will
-    probably require an understanding of exactly what the algorithm is doing
-    -- see the **Notes** section below for details.
+    .. caution::
+      For some data sets, the default parameters can make this
+      algorithm *really* zealous. Please check the diagnostic plots and the 
+      `tube_statistics` tables to make sure this operation is performing like
+      you expect it to, and adjust the parameters accordingly! Doing so will
+      probably require an understanding of exactly what the algorithm is doing
+      -- see the **Notes** section below for details.
     
     Attributes
     ----------
@@ -154,6 +153,9 @@ class FlowCleanOp(HasStrictTraits):
         need cleaning, it's set to **CLEAN**. If the tube was cleaned
         and then passed the drift and max discontinuity tests, it's set to
         **CLEANED**. Otherwise, the tube status is set to **UNCLEAN**.
+        
+    tube_statistics : Dict(Str : pd.DataFrame)
+        Set by `estimate`, has statistics about the drift of each tube.
             
     Notes
     -----

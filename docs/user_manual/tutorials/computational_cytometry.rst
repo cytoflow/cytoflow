@@ -18,7 +18,7 @@ pipelines are generally broken into three major pieces:
    
    .. attention:: 
       Often, pre-processing also involves scaling data with a logarithmic or 
-      biexponential transformation. However, `Cytoflow` maintains the underlying
+      biexponential transformation. However, *Cytoflow* maintains the underlying
       data in its unscaled form, and scales it as needed for processing or 
       visualization.
       
@@ -41,7 +41,7 @@ and t-distributed stochastic neighbor embedding (t-SNE) using data from
 *16:449-462 (2016).* The workflow below reproduces many of the figures from that
 paper. (It's a great paper -- go read it!)
 
-The example data files are taken from the `Hierarchical gating example <_user_hierarchical>`_, 
+The example data files are taken from :ref:`the hierarchical gating tutorial <user_hierarchical>`, 
 which applied manual gating to identify NK, NK T, T and B cells; neutrophils, DCs, 
 basophils, and macrophages. After running the operations in that workflow, I 
 used the *Export FCS* operation to export each different cell type in a 
@@ -64,7 +64,7 @@ Import the data
 
 Open the experiment setup panel and set it up as in the image below. We will
 include just one piece of per-tube metadata, the cell type from the 
-`Hierarchical gating example. <_user_hierarchical>`_ 
+:ref:`hierarchical gating example. <user_hierarchical>`
 
 .. image:: images/computational01.png
 
@@ -81,14 +81,14 @@ Gate for single, live cells
 ---------------------------
 
 The exported FCS files were not pre-gated to remove debris and clumps. Instead 
-of using a manual gate, let's use a *Density Gate* gate on `FSC_H` and `FSC_W`
+of using a manual gate, let's use a *Density Gate* gate on ``FSC_H`` and ``FSC_W``
 to select 80% of the events in the densest clusters. It's more reproducible and 
 less biased than manual gating!
 
 .. image:: images/computational02.png
 
 Of course, I say that, then turn around to draw a manual *Range Gate* on the
-`Live_Dead` channel. This one is pretty obvious, though. Remember, the **live**
+``Live_Dead`` channel. This one is pretty obvious, though. Remember, the **live**
 cells are the ones that **don't** stain.
 
 .. image:: images/computational03.png
@@ -101,8 +101,8 @@ high-dimensional inputs. For a reasonable panel like the 9-marker panel we're
 using, the default settings seem to be fine, but there are a lot of other 
 parameters that can be tweaked. See the **Self Organizing Map** module 
 documentation for details. I also highly suggest reading 
-`https://rubikscode.net/2018/08/20/introduction-to-self-organizing-maps/`_ and 
-`https://www.datacamp.com/tutorial/self-organizing-maps`_ -- the *Tuning the* 
+`this introduction <https://rubikscode.net/2018/08/20/introduction-to-self-organizing-maps/>`_ and 
+`this tutorial <https://www.datacamp.com/tutorial/self-organizing-maps>`_ -- the *Tuning the* 
 *SOM Model* section in that second link is particularly helpful!
 
 We use *Self-Organizing Map* operation just like any other data-driven 
@@ -250,11 +250,11 @@ updates as it runs so you won't think it's crashed.
 
 Also, the tSNE algorithm can also peform better or worse using different ways 
 of measuring "distance" in the original high-dimensional space. For two or three
-channels, `euclidean` is fine, but for higher numbers of channels `cosine` seems 
+channels, ``euclidean`` is fine, but for higher numbers of channels ``cosine`` seems 
 to work better. Finally, this performs *much* better on scaled data, so we're 
-using `logicle` for all of the channels. Just as with self-organizing maps, there
-are a number of parameters that can change the performance of the algorithm. 
-Read the operation documentation for details.
+using ``logicle`` scale for all of the channels. Just as with self-organizing
+maps, there are a number of parameters that can change the performance of the 
+algorithm. Read the operation documentation for details.
 
 As with self-organizing maps, we add a *tSNE* operation and tell it what channels
 and scales to use.

@@ -41,7 +41,7 @@ whose categories are the names and each of which is applied to events
 in the category's subset.
 
 Any event that is in none of the subsets is set to a default value, which
-defaults to `Unknown`. 
+defaults to ``Unknown``. 
     
 .. object:: Name
 

@@ -67,7 +67,7 @@ class MatrixView(HasStrictTraits):
       of the value of `feature`. If `variable` is not set, however, `feature`
       is ignored and the *features* of the statistic become the categories. In
       this case, *all* of the statistic index levels must be either used in
-      the view facets or specified in `plot_name`.
+      the view facets or specified in the ``plot_name`` parameter of `plot`.
       
     * Setting `style` to ``petal`` will draw a "petal plot" in each cell. If 
       `variable` is set, then the values of `variable` are used as the categories, 
@@ -76,7 +76,8 @@ class MatrixView(HasStrictTraits):
       that the relationship between area and intensity remains the same.
       If `variable` is not set, however, `feature` is ignored and the *features*
       of the statistic become the categories. In this case, *all* of the statistic
-      index levels must be either used in the view facets or set on `plot_name`.
+      index levels must be either used in the view facets or set in the ``plot_name`` 
+      parameter of `plot`
       
     .. warning::
         If `style` is ``pie`` or ``petal``, then negative data will be clipped

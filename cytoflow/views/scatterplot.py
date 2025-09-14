@@ -48,7 +48,7 @@ class ScatterplotView(Base2DView):
     huechannel : Str
         If set, color the points using a normed color scale. The norm function
         is set by `huescale`, and the color palette can be changed by passing
-        the `palette` parameter to `plot`.  
+        the ``palette`` parameter to `plot`.  
     
     Examples
     --------

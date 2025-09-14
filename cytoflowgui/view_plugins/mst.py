@@ -28,11 +28,11 @@ Plots a minimum spanning tree of a statistic.
       value of ``Feature``. (In this scenario, ``Variable`` must be left empty.)
       
     * Setting ``Style`` to ``Pie plot`` will draw a pie plot at each vertex. The values 
-      of `Variable` are used as the categories of the pie, and the arc length 
+      of ``Variable`` are used as the categories of the pie, and the arc length 
       of each slice of pie is related to the intensity of the value of ``Feature``.
       
     * Setting ``Style`` to ``Petal plot`` will draw a "petal plot" at each vertex. The 
-      values of `Variable` are used as the categories, but unlike a pie plot, the 
+      values of ``Variable`` are used as the categories, but unlike a pie plot, the 
       arc width of each slice is equal. Instead, the radius of the pie slice scales 
       with the square root of the intensity, so that the relationship between area and
       intensity remains the same.
@@ -110,7 +110,7 @@ Plots a minimum spanning tree of a statistic.
 
     ex3 = flow.ChannelStatisticOp(name = "ByDox",
                                   channel = "Y2-A",
-                                  by = ["KMeans_Cluster", "Dox"],
+                                  by = ["KMeans", "Dox"],
                                   function = len).apply(ex2) 
                                   
     flow.MSTView(statistic = "ByDox", 

@@ -57,7 +57,7 @@ class CategoryOp(HasStrictTraits):
     requirement which is enforced by the operation. 
     
     Any event that is in none of the subsets is set to a default value, which
-    defaults to `Unknown`. 
+    defaults to ``Unknown``. 
     
     
     Attributes
