@@ -370,7 +370,7 @@ class BaseView(HasStrictTraits):
                     self._update_legend(g._legend)
                         
         if title:
-            plt.suptitle(title, y = 1.02)
+            plt.suptitle(title)
             
         g.set_axis_labels(xlabel, ylabel)
       
