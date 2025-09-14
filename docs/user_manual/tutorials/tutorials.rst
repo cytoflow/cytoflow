@@ -27,6 +27,7 @@ more advanced analyses.
    induction
    kiani
    repressor
+   computational_cytometry
    
 ..
   Basic
