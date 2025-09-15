@@ -29,6 +29,12 @@ Tests
 Documentation
 -------------
   
+- Install the documentation requirements::
+
+	  conda install sphinx pandoc
+	  conda install pydata-sphinx-theme sphinx-design --channel conda-forge
+	  
+  
 - Build the user manual and check it for completeness::
 
       conda install sphinx pandoc  # only necessary once

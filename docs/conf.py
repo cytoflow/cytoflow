@@ -64,7 +64,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
-    'sphinxext.plot_directive'
+    'sphinxext.plot_directive',
+    'sphinx_design'
 ]
 
 # Generate the API documentation when building

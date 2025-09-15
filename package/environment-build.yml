@@ -48,4 +48,5 @@ dependencies:
     - sphinx==8.2.3
     - pandoc
     - pydata-sphinx-theme
+    - sphinx-design
     
