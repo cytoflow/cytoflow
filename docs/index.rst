@@ -1,29 +1,79 @@
 Cytoflow: Better quantitative flow cytometry.
 =============================================
 
-.. image:: hero.png
+.. image:: _static/hero.png
    :align: center
-
+   
 .. grid:: 1 2 2 2
+	:gutter: 2
 
 	.. grid-item-card:: Tutorials
+		:img-top: _static/rocket_launch.svg
+		:class-card: intro-card
 	
-		New to *Cytoflow?* Start here!
+		New to **Cytoflow?** Start here!
+		
+		+++
+				
+		.. button-ref:: user_tutorials
+			:ref-type: ref
+			:click-parent:
+			:color: secondary
+			:expand:
+			
+			Take me to the tutorials!
 		
 	.. grid-item-card:: User Manual
+		:img-top: _static/menu_book.svg
+		:class-card: intro-card
 	
 		The user guide has HOWTOs and reference guides to help you use 
-		*Cytoflow* effectively.
+		**Cytoflow** effectively.
+		
+		+++
+		
+		.. button-ref:: user_manual
+			:ref-type: ref
+			:click-parent:
+			:color: secondary
+			:expand:
+			
+			Take me to the user manual!
 		
 	.. grid-item-card:: Operation and View Gallery
+		:img-top: _static/photo_library.svg
+		:class-card: intro-card
 	
-		*Cytoflow* can do a lot! This is a gallery of the operations that 
-		*Cytoflow* can apply to cytometry data and the ways it can be viewed.
+		**Cytoflow** can do a lot! This is a gallery of the operations that 
+		**Cytoflow** can apply to cytometry data and the ways it can be viewed.
+		
+		+++
+		
+		.. button-ref:: user_reference
+			:ref-type: ref
+			:click-parent:
+			:color: secondary
+			:expand:
+			
+			Show me what Cytoflow can do!
+		
 		
 	.. grid-item-card:: Developer Guide
+		:img-top: _static/code_blocks.svg
+		:class-card: intro-card
 	
 		Do you want to analyze flow data using *Python* and *Jupyter Lab*? Do
-		you want to contribute to *Cytoflow*'s development? Click here!
+		you want to contribute to *Cytoflow*'s development?
+
+		+++
+		
+		.. button-ref:: dev_manual
+			:ref-type: ref
+			:click-parent:
+			:color: secondary
+			:expand:
+			
+			Take me to the developer's guide!
 
 What is Cytoflow?
 -----------------
