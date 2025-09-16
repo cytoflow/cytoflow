@@ -10,90 +10,226 @@ you to the corresponding manual page.
 Operations
 ==========
 
+Gates
+-----
+
+.. grid:: 2 3 3 3 
+	
+	.. grid-item-card:: Threshold Gate
+		:img-top: /operations/threshold-1.png
+		:link: operations/threshold
+		:link-type: doc
+	
+	.. grid-item-card:: Range Gate
+		:img-top: /operations/range-1.png
+		:link: operations/range
+		:link-type: doc
+	
+	.. grid-item-card:: Quad Gate
+		:img-top: /operations/quad-1.png
+		:link: operations/quad
+		:link-type: doc
+	
+	.. grid-item-card:: Rectangle Gate
+		:img-top: /operations/range2d-1.png
+		:link: operations/range2d
+		:link-type: doc
+	
+	.. grid-item-card:: Polygon Gate
+		:img-top: /operations/polygon-1.png
+		:link: operations/polygon
+		:link-type: doc
+	
+	.. grid-item-card:: Gate Hierarchy
+	
+	.. grid-item-card:: Gate Categories
+	
+
+Statistics and Transforms
+-------------------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Channel Statistic
+	
+	.. grid-item-card:: Multi-Channel Statistic
+	
+	.. grid-item-card:: Transform Statistic
+	
+	.. grid-item-card:: Ratio
+	
+	
+Preprocessing
+-------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Linear Bleedthrough Compensation
+		:img-top: /operations/bleedthrough_linear-1.png
+		:link: operations/bleedthrough_linear
+		:link-type: doc
+	
+	.. grid-item-card:: FlowClean
+		:img-top: /operations/flowclean-1.png
+		:link: operations/flowclean
+		:link-type: doc
+	
+	.. grid-item-card:: Peak Registration
+	
+	.. grid-item-card:: Autofluorescence Correction
+		:img-top: /operations/autofluorescence-1.png
+		:link: operations/autofluorescence
+		:link-type: doc
+	
+	.. grid-item-card:: Bead Calibration
+		:img-top: /operations/bead_calibration-1.png
+		:link: operations/bead_calibration
+		:link-type: doc
+	
+	.. grid-item-card:: Color Translation
+		:img-top: /operations/color_translation-1.png
+		:link: operations/color_translation
+		:link-type: doc
+	
+	.. grid-item-card:: TASBE
+		:img-top: /operations/tasbe-4.png
+		:link: operations/tasbe
+		:link-type: doc
+	
+	
+Clustering
+----------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Binning
+		:img-top: /operations/binning-1.png
+		:link: operations/binning
+		:link-type: doc
+	
+	.. grid-item-card:: Density Gate
+		:img-top: /operations/density-1.png
+		:link: operations/density
+		:link-type: doc
+	
+	.. grid-item-card:: One Dimensional Gaussian Mixtures
+		:img-top: /operations/gaussian_1d-1.png
+		:link: operations/gaussian_1d
+		:link-type: doc
+	
+	.. grid-item-card:: Two Dimensional Gaussian Mixtures
+		:img-top: /operations/gaussian_2d-1.png
+		:link: operations/gaussian_2d
+		:link-type: doc
+	
+	.. grid-item-card:: K-Means Clustering
+		:img-top: /operations/kmeans-1.png
+		:link: operations/kmeans
+		:link-type: doc
+	
+	.. grid-item-card:: FlowPeaks
+		:img-top: /operations/flowpeaks-1_01.png
+		:link: operations/threshold
+		:link-type: doc
+	
+	.. grid-item-card:: Self-organizing maps (SOM)
+	
+	.. grid-item-card:: Minimum Spanning Tree
+	
+
+Dimensionality Reduction
+------------------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Principal Components Analysis (PCA)
+	
+	.. grid-item-card:: t-Distributed Stochastic Neighborhood Embedding (tSNE)
+		:img-top: /operations/tsne-1.png
+		:link: operations/tsne
+		:link-type: doc
+	
+	
+Views
+=====
+
+One Dimensional
+---------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Histogram
+		
+	.. grid-item-card:: One-dimensional KDE
+	
+	.. grid-item-card:: Violin Plot
+	
+Two Dimensional
+---------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Scatterplot
+	
+	.. grid-item-card:: Density Plot
+	
+	.. grid-item-card:: Two-dimensional histogram
+	
+	.. grid-item-card:: Two-dimensional KDE
+	
+
+Multi-Dimensional
+-----------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Parallel Coordinates Plot
+	
+	.. grid-item-card:: Radviz
+	
+
+Statistics
+----------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Bar Chart
+	
+	.. grid-item-card:: 1D Statistics Plot
+	
+	.. grid-item-card:: 2D Statistics Plot
+	
+	.. grid-item-card:: Matrix View
+	
+	.. grid-item-card:: Minimum Spanning Tree
+	
+	
+Miscellaneous
+-------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Table View
+	
+	.. grid-item-card:: Long Table View
+	
+	.. grid-item-card:: FCS Export
+	
+	
+
+
 .. list-table::
 
-   * - :doc:`Autofluorescence correction <operations/autofluorescence>`
-   
-       .. figure:: /operations/autofluorescence-1.png
        
-     - :doc:`Bead calibration <operations/bead_calibration>`
-   
-       .. figure:: /operations/bead_calibration-1.png
-       
-     - :doc:`Binning <operations/binning>`
-   
-       .. figure:: /operations/binning-1.png
-       
-     - :doc:`Bleedthrough correction <operations/bleedthrough_linear>`
-   
-       .. figure:: /operations/bleedthrough_linear-1.png
        
    * - :doc:`Channel Statistics <operations/channel_stat>`
-          
-     - :doc:`Color translation <operations/color_translation>`
-   
-       .. figure:: /operations/color_translation-1.png
-       
-     - :doc:`Density gate <operations/density>`
-   
-       .. figure:: /operations/density-1.png
-       
-     - :doc:`FlowPeaks <operations/flowpeaks>`
-   
-       .. figure:: /operations/flowpeaks-1_01.png
-       
-   * - :doc:`1D Gaussian <operations/gaussian_1d>`
-   
-       .. figure:: /operations/gaussian_1d-1.png
-          
-     - :doc:`2D Gaussian <operations/gaussian_2d>`
-   
-       .. figure:: /operations/gaussian_2d-1.png
-       
-     - :doc:`KMeans Clustering <operations/kmeans>`
-   
-       .. figure:: /operations/kmeans-1.png
        
      - :doc:`Principle Component Analysis <operations/pca>`
-     
-   * - :doc:`Polygon Gate <operations/polygon>`
-   
-       .. figure:: /operations/polygon-1.png
-       
-     - :doc:`Quad Gate <operations/quad>`
-  
-       .. figure:: /operations/quad-1.png
-       
-     - :doc:`Range Gate <operations/range>`
-   
-       .. figure:: /operations/range-1.png
-       
-     - :doc:`Rectangle Gate <operations/range2d>`
-   
-       .. figure:: /operations/range2d-1.png
        
    * - :doc:`Ratio <operations/ratio>`
-          
-     - :doc:`TASBE Calibration <operations/tasbe>`
-  
-       .. figure:: /operations/tasbe-4.png
-       
-     - :doc:`Threshold Gate <operations/threshold>`
-   
-       .. figure:: /operations/threshold-1.png
        
      - :doc:`Transform Statistic <operations/xform_stat>`
-     
-   * - :doc:`FlowClean <operations/flowclean>`
-  
-       .. figure:: /operations/flowclean-1.png
 
-     - :doc:`t-Stochastic Neighbor Embedding <operations/tsne>`
-     
-       .. figure:: /operations/tsne-1.png
-     -
-     
-     -
    
 Views
 =====
