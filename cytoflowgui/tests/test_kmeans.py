@@ -72,7 +72,7 @@ class TestKMeans(ImportedDataTest):
 
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
-        self.assertEqual(self.workflow.remote_eval("len(self.workflow[-1].result['KM_Cluster'].unique())"), 2)
+        self.assertEqual(self.workflow.remote_eval("len(self.workflow[-1].result['KM'].unique())"), 2)
    
     def testChangeChannels(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')

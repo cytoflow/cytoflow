@@ -68,7 +68,7 @@ class TestMST(ImportedDataTest):
         stats_op_1.name = "CountByKM"
         stats_op_1.channel = "Y2-A"
         stats_op_1.function_name = "Count"
-        stats_op_1.by = ['KM_Cluster']
+        stats_op_1.by = ['KM']
         stats_op_1.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))
         stats_op_1.subset_list.append(RangeSubset(name = "Dox",
@@ -86,7 +86,7 @@ class TestMST(ImportedDataTest):
         stats_op_2.name = "CountByKMDox"
         stats_op_2.channel = "Y2-A"
         stats_op_2.function_name = "Count"
-        stats_op_2.by = ['KM_Cluster', 'Dox']
+        stats_op_2.by = ['KM', 'Dox']
         stats_op_2.subset_list.append(CategorySubset(name = "Well",
                                                      values = ['A', 'B']))
         stats_op_2.subset_list.append(RangeSubset(name = "Dox",
