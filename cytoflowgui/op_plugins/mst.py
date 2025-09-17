@@ -17,7 +17,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Minimum Spanning Tree Gate
+--------------------------
 
+Apply a gate to a polygon drawn around a minimum spanning tree.
+To add vertices, use a single-click; to close the polygon, click the first 
+vertex a second time.
+
+.. object:: Name
+
+    The operation name.  Used to name the new metadata field that's created by 
+    this module.
+    
+"""
 
 from traits.api import provides, List
 from traitsui.api import View, Item, TextEditor

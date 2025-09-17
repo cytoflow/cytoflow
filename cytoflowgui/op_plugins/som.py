@@ -134,10 +134,6 @@ SOM Model" section in that second link is particularly helpful!
                                 
     som_op.estimate(ex)
     som_op.default_view().plot(ex)
-    
-    ex2 = som_op.apply(ex)
-    
-    som_op.default_view().plot(ex2)
 
 '''
 from natsort import natsorted

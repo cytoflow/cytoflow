@@ -41,23 +41,15 @@ Gates
 		:link-type: doc
 	
 	.. grid-item-card:: Gate Hierarchy
+		:img-top: operations/images/hierarchy.png
+		:link: operations/hierarchy
+		:link-type: doc
 	
 	.. grid-item-card:: Gate Categories
-	
+		:img-top: operations/images/category.png
+		:link: operations/category
+		:link-type: doc
 
-Statistics and Transforms
--------------------------
-
-.. grid:: 2 3 3 3 
-
-	.. grid-item-card:: Channel Statistic
-	
-	.. grid-item-card:: Multi-Channel Statistic
-	
-	.. grid-item-card:: Transform Statistic
-	
-	.. grid-item-card:: Ratio
-	
 	
 Preprocessing
 -------------
@@ -75,6 +67,9 @@ Preprocessing
 		:link-type: doc
 	
 	.. grid-item-card:: Peak Registration
+		:img-top: /operations/register-1.png
+		:link: operations/register
+		:link-type: doc
 	
 	.. grid-item-card:: Autofluorescence Correction
 		:img-top: /operations/autofluorescence-1.png
@@ -129,12 +124,18 @@ Clustering
 	
 	.. grid-item-card:: FlowPeaks
 		:img-top: /operations/flowpeaks-1_01.png
-		:link: operations/threshold
+		:link: operations/flowpeaks
 		:link-type: doc
 	
 	.. grid-item-card:: Self-organizing maps (SOM)
+		:img-top: /operations/som-1.png
+		:link: operations/som
+		:link-type: doc
 	
 	.. grid-item-card:: Minimum Spanning Tree
+		:img-top: /views/mst-1.png
+		:link: operations/mst
+		:link-type: doc
 	
 
 Dimensionality Reduction
@@ -143,11 +144,45 @@ Dimensionality Reduction
 .. grid:: 2 3 3 3 
 
 	.. grid-item-card:: Principal Components Analysis (PCA)
+		:img-top: operations/images/pca.png
+		:link: operations/pca
+		:link-type: doc
 	
 	.. grid-item-card:: t-Distributed Stochastic Neighborhood Embedding (tSNE)
 		:img-top: /operations/tsne-1.png
 		:link: operations/tsne
 		:link-type: doc
+		
+
+Statistics and Transforms
+-------------------------
+
+.. grid:: 2 3 3 3 
+
+	.. grid-item-card:: Channel Statistic
+		:class-card: gallery-card
+		:img-top: operations/images/channel_stat.svg
+		:link: operations/channel_stat
+		:link-type: doc
+	
+	.. grid-item-card:: Multi-Channel Statistic
+		:class-card: gallery-card
+		:img-top: operations/images/multi_channel_stat.svg
+		:link: operations/multi_channel_stat
+		:link-type: doc
+	
+	.. grid-item-card:: Transform Statistic
+		:class-card: gallery-card
+		:img-top: operations/images/xform_stat.svg
+		:link: operations/xform_stat
+		:link-type: doc
+
+	.. grid-item-card:: Ratio
+		:class-card: gallery-card
+		:img-top: operations/images/ratio.svg
+		:link: operations/ratio
+		:link-type: doc
+	
 	
 	
 Views
@@ -159,10 +194,19 @@ One Dimensional
 .. grid:: 2 3 3 3 
 
 	.. grid-item-card:: Histogram
+		:img-top: /views/histogram-1.png
+		:link: views/histogram
+		:link-type: doc
 		
 	.. grid-item-card:: One-dimensional KDE
+		:img-top: /views/kde_1d-1.png
+		:link: views/kde_1d
+		:link-type: doc
 	
 	.. grid-item-card:: Violin Plot
+		:img-top: /views/violin-1.png
+		:link: views/violin
+		:link-type: doc
 	
 Two Dimensional
 ---------------
@@ -170,12 +214,24 @@ Two Dimensional
 .. grid:: 2 3 3 3 
 
 	.. grid-item-card:: Scatterplot
+		:img-top: /views/scatterplot-1.png
+		:link: views/scatterplot
+		:link-type: doc
 	
 	.. grid-item-card:: Density Plot
+		:img-top: /views/density-1.png
+		:link: views/density
+		:link-type: doc
 	
 	.. grid-item-card:: Two-dimensional histogram
+		:img-top: /views/histogram_2d-1.png
+		:link: views/histogram_2d
+		:link-type: doc
 	
 	.. grid-item-card:: Two-dimensional KDE
+		:img-top: /views/kde_2d-1.png
+		:link: views/kde_2d
+		:link-type: doc
 	
 
 Multi-Dimensional
@@ -184,8 +240,14 @@ Multi-Dimensional
 .. grid:: 2 3 3 3 
 
 	.. grid-item-card:: Parallel Coordinates Plot
+		:img-top: /views/parallel_coords-1.png
+		:link: views/parallel_coords
+		:link-type: doc
 	
 	.. grid-item-card:: Radviz
+		:img-top: /views/radviz-1.png
+		:link: views/radviz
+		:link-type: doc
 	
 
 Statistics
@@ -194,14 +256,29 @@ Statistics
 .. grid:: 2 3 3 3 
 
 	.. grid-item-card:: Bar Chart
+		:img-top: /views/bar_chart-1.png
+		:link: views/bar_chart
+		:link-type: doc
 	
 	.. grid-item-card:: 1D Statistics Plot
+		:img-top: /views/stats_1d-1.png
+		:link: views/stats_1d
+		:link-type: doc
 	
 	.. grid-item-card:: 2D Statistics Plot
+		:img-top: /views/stats_2d-1.png
+		:link: views/stats_2d
+		:link-type: doc
 	
 	.. grid-item-card:: Matrix View
+		:img-top: /views/matrix-1.png
+		:link: views/matrix
+		:link-type: doc
 	
 	.. grid-item-card:: Minimum Spanning Tree
+		:img-top: /views/mst-1.png
+		:link: views/mst
+		:link-type: doc
 	
 	
 Miscellaneous
@@ -210,107 +287,26 @@ Miscellaneous
 .. grid:: 2 3 3 3 
 
 	.. grid-item-card:: Table View
+		:img-top: /views/table-1.png
+		:link: views/table
+		:link-type: doc
 	
 	.. grid-item-card:: Long Table View
+		:img-top: /views/long_table-1.png
+		:link: views/long_table
+		:link-type: doc
 	
 	.. grid-item-card:: FCS Export
-	
-	
+		:link: views/export_fcs
+		:link-type: doc
 
-
-.. list-table::
-
-       
-       
-   * - :doc:`Channel Statistics <operations/channel_stat>`
-       
-     - :doc:`Principle Component Analysis <operations/pca>`
-       
-   * - :doc:`Ratio <operations/ratio>`
-       
-     - :doc:`Transform Statistic <operations/xform_stat>`
-
-   
-Views
-=====
-   
-.. list-table::
-
-   * - :doc:`Bar Chart <views/bar_chart>`
-   
-       .. figure:: /views/bar_chart-1.png
-       
-     - :doc:`Density Map <views/density>`
-   
-       .. figure:: /views/density-1.png
-       
-     - :doc:`Export FCS <views/export_fcs>`
-          
-     - :doc:`Histogram <views/histogram>`
-   
-       .. figure:: /views/histogram-1.png
-       
-   * - :doc:`2D Histogram <views/histogram_2d>`
-   
-       .. figure:: /views/histogram_2d-1.png
-          
-     - :doc:`Kernel Density Estimate <views/kde_1d>`
-   
-       .. figure:: /views/kde_1d-1.png
-       
-     - :doc:`2D Kernel Density Estimate <views/kde_2d>`
-   
-       .. figure:: /views/kde_2d-1.png
-       
-     - :doc:`Parallel Coordinates Plot <views/parallel_coords>`
-   
-       .. figure:: /views/parallel_coords-1.png
-       
-   * - :doc:`RadViz Plot <views/radviz>`
-   
-       .. figure:: /views/radviz-1.png
-          
-     - :doc:`Scatterplot <views/scatterplot>`
-   
-       .. figure:: /views/scatterplot-1.png
-       
-     - :doc:`1D Statistics Plot <views/stats_1d>`
-   
-       .. figure:: /views/stats_1d-1.png
-       
-     - :doc:`2D Statistics Plot <views/stats_2d>`
-   
-       .. figure:: /views/stats_2d-1.png
-   
-   * - :doc:`Table View <views/table>`
-   
-       .. figure:: /views/table-1.png
-       
-     - :doc:`Long Table View <views/long_table>`
-     
-       .. figure:: /views/long_table-1.png
-          
-     - :doc:`Violin Plot <views/violin>`
-   
-       .. figure:: /views/violin-1.png
-       
-     -
-
-  
-Operations
-----------
 
 .. toctree::
+   :hidden:
    :glob:
 
    operations/*
-   
-   
-Views
------
-   
-.. toctree::
-   :glob:
-   
    views/*
+  
+	
    
