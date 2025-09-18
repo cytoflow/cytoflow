@@ -61,6 +61,8 @@ requirements:
     - sphinx==8.2.3
     - bleach
     - pip
+    - pydata-sphinx-theme
+    - sphinx-design
 
   run:
     - python==3.13.5
