@@ -27,6 +27,10 @@ On Windows, you can use a graphical to install Cytoflow.
    
    .. image:: images/install11.png
    
+   Note that signing this application costs me about $150 a year. 
+   Help me defray some of those costs by tossing me a few bucks
+   at `<https://ko-fi.com/bteague>`_?
+   
 #. Follow the instructions in the installer.  Once you've completed the
    installation, you should be able to find ``Cytoflow`` in your Start
    menu.
@@ -57,25 +61,11 @@ so they may not work on an A1 mac.
    
    This will extract the application from the archive.
    
-#. Double-click the new application.  Unfortuantely, I am not an Apple
-   Developer, and because it costs like $100 a year, I likely never will
-   be.  So, the first time you run the application, you will be presented
-   with a screen like the following:
+#. Double-click the new application.  Because I am paying Apple $150 per year,
+   you should not see a security warning -- the app should "just work."
    
-   .. image:: images/install6.png
-   
-#. To launch Cytoflow anyway, open ``System Preferences`` and select the
-   ``Security and Privacy`` pane:
-   
-   .. image:: images/install7.png
-   
-#. Click the **Open Anyway** button.  Because MacOS wants you to be EXTRA
-   SURE, you will be asked one more time if you're sure you know what you're
-   doing:
-   
-   .. image:: images/install8.png
-   
-   Click **Open** and after a moment, ``Cytoflow`` should launch.
+   (Consider helping me defray some of that cost by donating a few bucks
+   at `<https://ko-fi.com/bteague>`_?)
    
 #. (Optional) Move the Cytoflow application to somewhere else "permanent",
    like the desktop or your Applications folder.

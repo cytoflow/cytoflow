@@ -58,12 +58,12 @@ Cytoflow: Better quantitative flow cytometry.
 			Show me what Cytoflow can do!
 		
 		
-	.. grid-item-card:: Developer Guide
+	.. grid-item-card:: Developer Manual
 		:img-top: _static/code_blocks.svg
 		:class-card: intro-card
 	
-		Do you want to analyze flow data using *Python* and *Jupyter Lab*? Do
-		you want to contribute to *Cytoflow*'s development?
+		Do you want to analyze flow data using **Python** and **JupyterLab**? Do
+		you want to contribute to **Cytoflow**'s development?
 
 		+++
 		
@@ -73,7 +73,7 @@ Cytoflow: Better quantitative flow cytometry.
 			:color: secondary
 			:expand:
 			
-			Take me to the developer's guide!
+			Take me to the developer's manual!
 
 What is Cytoflow?
 -----------------
@@ -88,8 +88,8 @@ How is Cytoflow different?
   collected at different times, treated with varying levels of a chemical,
   etc.  You specify these sample conditions up front, then use those 
   conditions to control your analysis.
-* The analysis is represented as a **workflow**.  Operations such as gating
-  and compensation are applied sequentially; a workflow can be saved a re-used
+* The analysis is represented as a **workflow**.  Operations such as compensation
+  and gating are applied sequentially; a workflow can be saved a re-used
   or shared with colleagues.
 * **Good visualization.** Make publication-ready plots right from the software.
 * **Thoughtful documentation.**  Each module, operation and visualization is
@@ -104,8 +104,8 @@ How is Cytoflow different?
   contribute your changes back so the rest of the community can benefit from
   them.
   
-If you'd like to see Cytoflow in action, here are some 
-:ref:`screenshots <user_screenshots>`, or you can check out a 
+If you'd like to see Cytoflow in action, here are some (slightly dated)
+:ref:`screenshots <user_screenshots>`, or you can check out a (slightly dated)
 `screencast on Youtube <https://www.youtube.com/watch?v=vfEfeFGVtro>`_.
   
 Getting Started
@@ -116,9 +116,8 @@ Quick installation instructions for the point-and-click program:
 * **Windows**: `Download the installer <https://cytoflow.github.io/>`_, 
   then run it.
 * **MacOS (10.10+)**: `Download the ZIP file <https://cytoflow.github.io/>`_.  
-  Unzip the file, then double-click to run the program.  Depending on your
-  security settings, you may have to specifically enable this program 
-  (it's not signed.)
+  Unzip the file, then double-click to run the program.  Make sure you 
+  select whether you are on an Intel- or ARM-powered Mac.
 * **Linux**: `Download the tarball <https://cytoflow.github.io>`_.
   Extract it, then run the *cytoflow* binary.
   
@@ -146,13 +145,13 @@ For Developers
 --------------
 
 If you want to use `Python <https://www.python.org/>`_ to analyze flow
-cytometry data, then Cytoflow is for you!  I've found Cytoflow useful
+cytometry data, then *Cytoflow* is for you!  I've found Cytoflow useful
 for both *interactive data exploration* (ie, poking data to see what it's
 telling you) and *automated data analysis* (ie, writing scripts and pipelines
 to process lots of data.)  
 
 To get a taste of what Cytoflow can do, check out an 
-`example Jupyter notebook <https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`_.
+:doc:`example Jupyter notebook <dev_manual/tutorials/basic_cytometry>`.
 
 Then, head over to the :ref:`developers' manual <dev_manual>`.  There,
 you'll find:
