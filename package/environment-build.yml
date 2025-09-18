@@ -43,6 +43,7 @@ dependencies:
     - setuptools==78.1.1
     - pip
     - swig
+    - conda
     - anaconda-client
     - conda-build
     - sphinx==8.2.3
