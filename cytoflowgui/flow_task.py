@@ -48,7 +48,7 @@ from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskT
 # from pyface.tasks.action.dock_pane_toggle_group import DockPaneToggleGroup, DockPaneToggleAction, ActionItem
 from pyface.api import (FileDialog, ImageResource, AboutDialog,  # @UnresolvedImport
                         confirm, OK, YES, ConfirmationDialog, warning,  # @UnresolvedImport
-                        error)  # @UnresolvedImport
+                        error, MessageDialog)  # @UnresolvedImport
 from pyface.qt import QtGui
 
 from envisage.ui.tasks.api import TaskFactory
@@ -270,6 +270,30 @@ class FlowTask(Task):
         self.window.central_pane.activate()
     
         self.model.modified = False
+        
+        if self.application.preferences_helper.first_run:
+            self.application.preferences_helper.first_run = False
+            
+            msg = dedent("""
+            Welcome to <strong>Cytoflow!</strong>
+            <p>
+            First, you can find <strong>Cytoflow's</strong> manual online at
+            <a href="https://cytoflow.readthedocs.org">https://cytoflow.readthedocs.org</a>.
+            <p>
+            And second, while <strong>Cytoflow</strong> is free to use, publishing 
+            <strong>Cytoflow</strong> for Windows and Mac costs me about $200 per 
+            year. If you can spare a few bucks, please support 
+            <strong>Cytoflow's</strong> ongoing availability at 
+            <a href="https://ko-fi.com/bteague">https://ko-fi.com/bteague</a>?
+            <p>
+            Thanks! And happy flowing!
+            """)
+            
+            dialog = MessageDialog(title = "Welcome to Cytoflow!",
+                                   message = msg,
+                                   text_format = "rich",
+                                   severity = "information")
+            dialog.open()
     
     def _default_layout_default(self):
         """

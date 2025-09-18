@@ -48,6 +48,9 @@ class CytoflowPreferences(PreferencesHelper):
     
     # Should the UI show the toolbar names?
     show_toolbar_names = Bool
+    
+    # Is this our first run?
+    first_run = Bool
 
 
 class CytoflowPreferencesPane(PreferencesPane):
@@ -63,6 +66,9 @@ class CytoflowPreferencesPane(PreferencesPane):
     view = View(VGroup(
         VGroup(HGroup(Item('always_use_default_layout'),
                       Label('Always use the default layout on startup?'),
+                      show_labels = False),
+               HGroup(Item('first_run'),
+                      Label('Show the first-run dialog on next startup?'),
                       show_labels = False),
                label='Application startup'),
         VGroup(HGroup(Item('show_toolbar_names'),
