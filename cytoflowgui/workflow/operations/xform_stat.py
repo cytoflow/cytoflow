@@ -27,7 +27,8 @@ import scipy.stats
 import pandas
 from warnings import warn
 
-from traits.api import (Str, Callable, Property, List, provides, observe, Undefined)  # @UnresolvedImport
+from traits.api import (Str, Callable, Property, List, provides, observe, 
+                        Undefined, Bool)  # @UnresolvedImport
 
 import cytoflow.utility as util
 from cytoflow import TransformStatisticOp
@@ -60,8 +61,10 @@ transform_functions = {"Mean" : np.mean,
 class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
     name = Str(apply = True)
     statistic = Str(apply = True)
+    feature = Str(apply = True)
     function_name = Str(apply = True)
     by = List(Str, apply = True)  
+    ignore_incomplete_groups = Bool(True, apply = True)
     
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
@@ -151,6 +154,16 @@ class TransformStatisticWorkflowOp(WorkflowOperation, TransformStatisticOp):
                 prev_idx = idx - 1) 
             
 ### Serialization
+@camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 4)
+def _dump_v4(op):
+    return dict(name = op.name,
+                statistic = op.statistic,
+                feature = op.feature,
+                function_name = op.function_name,
+                ignore_incomplete_groups = op.ignore_incomplete_groups,
+                by = op.by,
+                subset_list = op.subset_list)
+
 @camel_registry.dumper(TransformStatisticWorkflowOp, 'transform-statistic', version = 3)
 def _dump_v3(op):
     return dict(name = op.name,

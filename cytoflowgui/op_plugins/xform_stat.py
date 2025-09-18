@@ -36,6 +36,10 @@ repeated for each feature (column) in the statistic.
 
     The statistic to apply the function to.
     
+.. object:: Feature
+
+    The column of the statistic to apply the function to.
+    
 .. object:: Function
 
     The function to compute on each group.
@@ -43,6 +47,15 @@ repeated for each feature (column) in the statistic.
 .. object:: Subset
 
     Only apply the function to a subset of the input statistic. 
+    
+.. object:: Ignore Incomplete Subsets
+
+    Should we ignore groups with an incomplete number of levels?
+    Defaults to ``True``.
+    
+.. object:: Group By
+
+    How should we group the statistic before applying the function?
 
 '''
 
@@ -70,6 +83,8 @@ class TransformStatisticHandler(OpHandler):
                                     "model.statistic, "
                                     "model.subset")
     levels = Property(depends_on = "context.previous_wi.statistics, model.statistic")    
+    features = Property(depends_on = "context.previous_wi.statistics, model.statistic")
+
 
     # MAGIC: gets the value for the property indices
     def _get_indices(self):        
@@ -127,6 +142,15 @@ class TransformStatisticHandler(OpHandler):
             
         return ret
     
+    # MAGIC: gets the value for the property "features"
+    def _get_features(self):
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+         
+        stat = self.context.statistics[self.model.statistic]
+        return stat.columns.to_list()
+    
     operation_traits_view = \
         View(Item('name',
                   editor = TextEditor(auto_set = False,
@@ -134,6 +158,9 @@ class TransformStatisticHandler(OpHandler):
              Item('statistic',
                   editor=EnumEditor(name='context_handler.previous_statistics_names'),
                   label = "Statistic"),
+             Item('feature',
+                  editor=EnumEditor(name='handler.features'),
+                  label = "Feature"),
              Item('function_name',
                   editor = EnumEditor(values = sorted(transform_functions.keys())),
                   label = "Function"),
@@ -143,6 +170,8 @@ class TransformStatisticHandler(OpHandler):
                   
                   label = 'Group\nBy',
                   style = 'custom'),
+             Item('ignore_incomplete_groups',
+                  label = "Ignore\nIncomplete\nGroups"),
              VGroup(Item('subset_list',
                          show_label = False,
                          editor = SubsetListEditor(conditions = "handler.levels", 
