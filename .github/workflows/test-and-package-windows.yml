@@ -108,6 +108,10 @@ jobs:
         activate-environment: cytoflow
         environment-file: package/environment-build.yml
         
+    - name: Update base env to use same python as build env
+      run: |
+        conda install -n base -c defaults --yes python=3.13
+        
     - name: Build conda package
 #       continue-on-error: true
       run: |
