@@ -190,7 +190,7 @@ class CytoflowApplication(TasksApplication):
                                              self.remote_canvas_connection, 
                                              ImageResource('gear').create_image(size = (1000, 1000)))
     
-        self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding) 
+        self.canvas.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding, QtGui.QSizePolicy.Policy.Expanding) 
 
         # run the GUI
         super(CytoflowApplication, self).run()

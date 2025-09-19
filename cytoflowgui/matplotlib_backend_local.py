@@ -135,7 +135,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         self._resize_timer = None
         self.send_event = threading.Event()
         
-        self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
+        # self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
         t = threading.Thread(target = self.listen_for_remote, 
                              name = "canvas listen",
@@ -339,7 +339,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         qImage = QtGui.QImage(self.buffer, 
                               self.buffer_width,
                               self.buffer_height,
-                              QtGui.QImage.Format_RGBA8888)
+                              QtGui.QImage.Format.Format_RGBA8888)
             
         # get the rectangle for the image
         p = QtGui.QPainter(self)
