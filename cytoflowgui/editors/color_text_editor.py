@@ -41,7 +41,7 @@ class _ColorTextEditor(ReadonlyEditor):
         super(_ColorTextEditor, self).init(parent)
  
         flags = (self.control.textInteractionFlags() |
-                 QtCore.Qt.TextSelectableByMouse)
+                 QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         self.control.setTextInteractionFlags(flags)
 
         fg_color = self.factory.foreground_color
