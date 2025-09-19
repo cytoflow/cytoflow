@@ -63,10 +63,10 @@ class _VerticalListEditor(_ListEditor):
 
         # Create a widget with a grid layout as the container.
         self.control = QtGui.QWidget()
-        self.control.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                   QtGui.QSizePolicy.Expanding)
+        self.control.setSizePolicy(QtGui.QSizePolicy.Policy.Expanding,
+                                   QtGui.QSizePolicy.Policy.Expanding)
         layout = QtGui.QGridLayout(self.control)
-        layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
         layout.setContentsMargins(0, 0, 0, 0)
         
         # Remember the editor to use for each individual list item:
@@ -115,9 +115,9 @@ class _VerticalListEditor(_ListEditor):
             self.empty_list()
         else:
             # Asking the mapper to send the sender to the callback method
-            self.mapper.mapped.connect(self.popup_menu)
+            self.mapper.mappedInt.connect(self.popup_menu)
             
-        self.delete_mapper.mapped.connect(self._delete_item)
+        self.delete_mapper.mappedInt.connect(self._delete_item)
 
         editor = self._editor
         for index, value in enumerate(self.value):
