@@ -42,8 +42,8 @@ class RangeSlider(QtGui.QSlider):
         self._low = self.minimum()
         self._high = self.maximum()
 
-        self.pressed_control = QtGui.QStyle.SubControl.SC_ScrollBarAddLine
-        self.hover_control = QtGui.QStyle.SubControl.SC_ScrollBarAddLine
+        self.pressed_control = QtGui.QStyle.SC_None
+        self.hover_control = QtGui.QStyle.SC_None
         self.click_offset = 0
 
         # 0 for the low, 1 for the high, -1 for both
@@ -95,23 +95,23 @@ class RangeSlider(QtGui.QSlider):
             # Only draw the groove for the first slider so it doesn't get drawn
             # on top of the existing ones every time
             if not hasPainted:
-                opt.subControls = QtGui.QStyle.SubControls.SC_SliderGroove | QtGui.QStyle.SubControls.SC_SliderHandle
+                opt.subControls = QtGui.QStyle.SC_SliderGroove | QtGui.QStyle.SC_SliderHandle
                 hasPainted = True
             else:
-                opt.subControls = QtGui.QStyle.SubControls.SC_SliderHandle
+                opt.subControls = QtGui.QStyle.SC_SliderHandle
 
-            if self.tickPosition() != self.TickPosition.NoTicks:
-                opt.subControls |= QtGui.QStyle.SubControls.SC_SliderTickmarks
+            if self.tickPosition() != self.NoTicks:
+                opt.subControls |= QtGui.QStyle.SC_SliderTickmarks
 
             if self.pressed_control:
                 opt.activeSubControls = self.pressed_control
-                opt.state |= QtGui.QStyle.StateFlag.State_Sunken
+                opt.state |= QtGui.QStyle.State_Sunken
             else:
                 opt.activeSubControls = self.hover_control
 
             opt.sliderPosition = int(value)
             opt.sliderValue = int(value)
-            style.drawComplexControl(QtGui.QStyle.ComplexControl.CC_Slider, opt, painter, self)
+            style.drawComplexControl(QtGui.QStyle.CC_Slider, opt, painter, self)
 
 
     def mousePressEvent(self, event):
@@ -134,28 +134,28 @@ class RangeSlider(QtGui.QSlider):
 
             for i, value in self.sliderOrderForMove():
                 opt.sliderPosition = int(value)
-                hit = style.hitTestComplexControl(style.ComplexControl.CC_Slider, opt, event.pos(), self)
-                if hit == QtGui.QStyle.SubControls.SC_SliderHandle:
+                hit = style.hitTestComplexControl(style.CC_Slider, opt, event.pos(), self)
+                if hit == style.SC_SliderHandle:
                     self.active_slider = i
                     self.last_active_slider = i
                     self.pressed_control = hit
 
-                    self.triggerAction(self.SliderAction.SliderMove)
-                    self.setRepeatAction(self.SliderAction.SliderNoAction)
+                    self.triggerAction(self.SliderMove)
+                    self.setRepeatAction(self.SliderNoAction)
                     self.setSliderDown(True)
                     break
 
             if self.active_slider < 0:
-                self.pressed_control = QtGui.QStyle.SubControls.SC_SliderHandle
+                self.pressed_control = QtGui.QStyle.SC_SliderHandle
                 self.click_offset = self.__pixelPosToRangeValue(self.__pick(event.pos()))
-                self.triggerAction(self.SliderAction.SliderMove)
-                self.setRepeatAction(self.SliderAction.SliderNoAction)
+                self.triggerAction(self.SliderMove)
+                self.setRepeatAction(self.SliderNoAction)
         else:
             event.ignore()
             
 
     def mouseMoveEvent(self, event):
-        if self.pressed_control != QtGui.QStyle.SubControls.SC_SliderHandle:
+        if self.pressed_control != QtGui.QStyle.SC_SliderHandle:
             event.ignore()
             return
 
@@ -208,13 +208,10 @@ class RangeSlider(QtGui.QSlider):
         self.initStyleOption(opt)
         style = QtGui.QApplication.style()
 
-        gr = style.subControlRect(QtGui.QStyle.ComplexControl.CC_Slider, 
-                                  opt, 
-                                  QtGui.QStyle.SubControls.SC_SliderGroove, 
-                                  self)
-        sr = style.subControlRect(QtGui.QStyle.ComplexControl.CC_Slider, opt, QtGui.QStyle.SubControls.SC_SliderHandle, self)
+        gr = style.subControlRect(style.CC_Slider, opt, style.SC_SliderGroove, self)
+        sr = style.subControlRect(style.CC_Slider, opt, style.SC_SliderHandle, self)
 
-        if self.orientation() == QtCore.Qt.Orientation.Horizontal:
+        if self.orientation() == QtCore.Qt.Horizontal:
             slider_length = sr.width()
             slider_min = gr.x()
             slider_max = gr.right() - slider_length + 1

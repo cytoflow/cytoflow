@@ -101,7 +101,7 @@ class ViewDockPane(TraitsDockPane):
         
         self._window = HintedMainWindow()
         self._toolbar = self._toolbar_mgr.create_tool_bar(self._window)
-        self._window.addToolBar(QtCore.Qt.ToolBarArea.RightToolBarArea, 
+        self._window.addToolBar(QtCore.Qt.RightToolBarArea, 
                                 self._toolbar)
         
         self.ui = self.handler.edit_traits(view = 'selected_view_traits_view',

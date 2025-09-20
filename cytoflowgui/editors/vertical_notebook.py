@@ -251,8 +251,8 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.cmd_button.setIcon(ImageResource('ok').create_icon())
         self.cmd_button.setIconSize(QtCore.QSize(24, 24))
         
-        size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Policy.Expanding,
-                                        QtGui.QSizePolicy.Policy.Preferred)
+        size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Preferred)
         size_policy.setHeightForWidth(True)
         self.cmd_button.setSizePolicy(size_policy)
 
@@ -278,8 +278,8 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.layout.addWidget(self.ui.control)
         
         separator = QtGui.QFrame(control)
-        separator.setFrameShape(QtGui.QFrame.Shape.HLine)
-        separator.setFrameShadow(QtGui.QFrame.Shadow.Sunken)
+        separator.setFrameShape(QtGui.QFrame.HLine)
+        separator.setFrameShadow(QtGui.QFrame.Sunken)
         self.layout.addWidget(separator)
         
         self.layout.setContentsMargins(11, 0, 5, 0)

@@ -83,6 +83,14 @@ def run_gui():
     os.environ["QT_XCB_GL_INTEGRATION"] = "none"
 
     from pyface.qt import QtGui, QtCore
+    
+    # enable high DPI scaling
+    QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    QtGui.QApplication.setHighDpiScaleFactorRoundingPolicy(
+                QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    
+    # use high resolution pixmaps
+    QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
     # take care of the 3 places in the cytoflow module that
     # need different behavior in a GUI
@@ -93,6 +101,19 @@ def run_gui():
     from pyface.qt import qt_api
 
     cmd_line = " ".join(sys.argv)
+    
+    if qt_api == "pyside":
+        print("Cytoflow uses PyQT; but it is trying to use PySide instead.")
+        print(" - Make sure PyQT is installed.")
+        print(" - If both are installed, and you don't need both, uninstall PySide.")
+        print(" - If you must have both installed, select PyQT by setting the")
+        print("   environment variable QT_API to \"pyqt5\"")
+        print("   * eg, on Linux, type on the command line:")
+        print("     QT_API=\"pyqt5\" " + cmd_line)
+        print("   * on Windows, try: ")
+        print("     setx QT_API \"pyqt5\"")
+
+        sys.exit(1)
     
     # parse args
     parser = argparse.ArgumentParser(description = 'Cytoflow GUI')
@@ -160,12 +181,11 @@ def run_gui():
                              
     def QtMsgHandler(msg_type, msg_context, msg_string):
         # Convert Qt msg type to logging level
-        log_level = {QtCore.QtMsgType.QtDebugMsg : logging.DEBUG,
-                     QtCore.QtMsgType.QtInfoMsg : logging.INFO,
-                     QtCore.QtMsgType.QtWarningMsg : logging.WARN,
-                     QtCore.QtMsgType.QtCriticalMsg : logging.ERROR,
-                     QtCore.QtMsgType.QtFatalMsg : logging.FATAL}
-        logging.log(log_level[msg_type], 'Qt message: ' + msg_string)
+        log_level = [logging.DEBUG,
+                     logging.WARN,
+                     logging.ERROR,
+                     logging.FATAL] [ int(msg_type) ]
+        logging.log(log_level, 'Qt message: ' + msg_string)
         
     from pyface.qt.QtCore import qInstallMessageHandler  # @UnresolvedImport
     qInstallMessageHandler(QtMsgHandler)

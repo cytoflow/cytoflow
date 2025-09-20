@@ -79,7 +79,7 @@ class WorkflowDockPane(TraitsDockPane):
         # HintedMainWindow business.
         self._window = HintedMainWindow()          
         self._toolbar = self._toolbar_mgr.create_tool_bar(self._window)
-        self._window.addToolBar(QtCore.Qt.ToolBarArea.LeftToolBarArea,    # @UndefinedVariable
+        self._window.addToolBar(QtCore.Qt.LeftToolBarArea,    # @UndefinedVariable
                                 self._toolbar)
         
         # construct the view 
@@ -101,5 +101,5 @@ class WorkflowDockPane(TraitsDockPane):
         self._toolbar.deleteLater()
         self._toolbar_mgr.show_tool_names = self.task.application.preferences_helper.show_toolbar_names
         self._toolbar = self._toolbar_mgr.create_tool_bar(self._window)
-        self._window.addToolBar(QtCore.Qt.ToolBarArea.LeftToolBarArea,    # @UndefinedVariable
+        self._window.addToolBar(QtCore.Qt.LeftToolBarArea,    # @UndefinedVariable
                                 self._toolbar)

@@ -51,8 +51,8 @@ dependencies = [
      # need to install through your package manager
      # must be versions 5.15.*
 
-      'camel',
-      'yapf'
+      'camel==0.1.2',
+      'yapf==0.40.2'
 ]
 
 classifiers = [
