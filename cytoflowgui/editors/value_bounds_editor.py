@@ -102,7 +102,7 @@ class _ValueBoundsEditor(EditorWithList):
         sh.setWidth(int(sh.width() / 2))
         self._label_lo.setMaximumSize(sh)
 
-        self.control.slider = slider = RangeSlider(QtCore.Qt.Horizontal)
+        self.control.slider = slider = RangeSlider(QtCore.Qt.Orientation.Horizontal)
         slider.setTracking(True)
         slider.setMinimum(0)
         slider.setMaximum(10000)
