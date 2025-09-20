@@ -17,6 +17,12 @@ dynamic = ["version"]
 
 requires-python = ">= 3.12"
 
+# These are NOT intended to get you a working installation. They are
+# intended to allow you to install the source locally, with
+# pip install --editable .
+#
+# make a conda environment with environment.yml!
+
 dependencies = [
     'numpy',
     'pandas',
