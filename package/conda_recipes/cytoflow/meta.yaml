@@ -23,36 +23,36 @@ build:
 requirements:
   host:
     - python
-    - numpy==2.2.5
-    - pandas==2.3.2
-    - matplotlib==3.10.6
-    - bottleneck==1.4.2
-    - numexpr==2.11.0
-    - scipy==1.16.0
-    - scikit-learn==1.7.1
-    - seaborn==0.13.2
-    - statsmodels==0.14.5
-    - natsort==8.4.0
-    - numba==0.61.2
-    - opentsne==1.0.2
-    - python-igraph==0.11.9
-    - scikit-fda==0.10.1
+    - numpy=2.2.5
+    - pandas=2.3.2
+    - matplotlib=3.10.6
+    - bottleneck=1.4.2
+    - numexpr=2.11.0
+    - scipy=1.16.0
+    - scikit-learn=1.7.1
+    - seaborn=0.13.2
+    - statsmodels=0.14.5
+    - natsort=8.4.0
+    - numba=0.61.2
+    - opentsne=1.0.2
+    - python-igraph=0.11.9
+    - scikit-fda=0.10.1
 
-    - traits==7.0.2
-    - traitsui==8.0.0
-    - pyface==8.0.0
-    - conda-forge::envisage==7.0.4
-    - nbformat==5.10.4
-    - python-dateutil==2.9.0post0
-    - importlib_resources==6.4.0
-    - configobj==5.0.9
+    - traits=7.0.2
+    - traitsui=8.0.0
+    - pyface=8.0.0
+    - conda-forge::envisage=7.0.4
+    - nbformat=5.10.4
+    - python-dateutil=2.9.0post0
+    - importlib_resources=6.4.0
+    - configobj=5.0.9
 
-    - defaults::qt==5.*
-    - defaults::pyqt==5.*
+    - defaults::qt=5.*
+    - defaults::pyqt=5.*
     - defaults::pyqtwebengine=5.*
 
-    - cytoflow::camel==0.1.2
-    - yapf==0.40.2
+    - cytoflow::camel=0.1.2
+    - yapf=0.40.2
     
     # only install mkl libraries on windows, where they're required
     - nomkl # [not win]
@@ -71,36 +71,36 @@ requirements:
 
   run:
     - python
-    - numpy==2.2.5
-    - pandas==2.3.2
-    - matplotlib==3.10.6
-    - bottleneck==1.4.2
-    - numexpr==2.11.0
-    - scipy==1.16.0
-    - scikit-learn==1.7.1
-    - seaborn==0.13.2
-    - statsmodels==0.14.5
-    - natsort==8.4.0
-    - numba==0.61.2
-    - opentsne==1.0.2
-    - python-igraph==0.11.9
-    - scikit-fda==0.10.1
+    - numpy=2.2.5
+    - pandas=2.3.2
+    - matplotlib=3.10.6
+    - bottleneck=1.4.2
+    - numexpr=2.11.0
+    - scipy=1.16.0
+    - scikit-learn=1.7.1
+    - seaborn=0.13.2
+    - statsmodels=0.14.5
+    - natsort=8.4.0
+    - numba=0.61.2
+    - opentsne=1.0.2
+    - python-igraph=0.11.9
+    - scikit-fda=0.10.1
 
-    - traits==7.0.2
-    - traitsui==8.0.0
-    - pyface==8.0.0
-    - conda-forge::envisage==7.0.4
-    - nbformat==5.10.4
-    - python-dateutil==2.9.0post0
-    - importlib_resources==6.4.0
-    - configobj==5.0.9
+    - traits=7.0.2
+    - traitsui=8.0.0
+    - pyface=8.0.0
+    - conda-forge::envisage=7.0.4
+    - nbformat=5.10.4
+    - python-dateutil=2.9.0post0
+    - importlib_resources=6.4.0
+    - configobj=5.0.9
 
-    - defaults::qt==5.*
-    - defaults::pyqt==5.*
+    - defaults::qt=5.*
+    - defaults::pyqt=5.*
     - defaults::pyqtwebengine=5.*
 
-    - cytoflow::camel==0.1.2
-    - yapf==0.40.2
+    - cytoflow::camel=0.1.2
+    - yapf=0.40.2
     
     # only install mkl libraries on windows, where they're required
     - nomkl # [not win]
