@@ -60,6 +60,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinxext.plot_directive',
+    'sphinx_design'
     # 'fulltoc'
 ]
 
