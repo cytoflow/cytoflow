@@ -40,6 +40,6 @@ dependencies:
     - ipympl
     - jupyterlab
 
-    - swig # [win]    
+    - swig # [win]
     - mkl-service # [win]
     - nomkl # [not win]
