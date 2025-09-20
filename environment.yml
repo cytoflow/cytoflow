@@ -40,5 +40,5 @@ dependencies:
     - ipympl
     - jupyterlab
 
-    - nomkl # [not win]    
+    - nomkl # [not win]
     
