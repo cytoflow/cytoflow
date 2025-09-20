@@ -80,11 +80,11 @@ requirements:
     - numexpr=2.11
     - scipy=1.16
     - scikit-learn=1.7
-    - seaborn=0.13
+    - seaborn=0.13.2
     - statsmodels=0.14
     - natsort=8.4
     - numba=0.61
-    - opentsne=1.0
+    - opentsne=1.0.2
     - python-igraph=0.11
     - scikit-fda=0.10
 
