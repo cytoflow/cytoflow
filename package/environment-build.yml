@@ -5,42 +5,42 @@ channels:
  - conda-forge
  
 dependencies:
-    - python
-    - numpy=2.2.5
-    - pandas=2.3.2
-    - matplotlib=3.10.6
-    - bottleneck=1.4.2
-    - numexpr=2.11.0
-    - scipy=1.16.0
-    - scikit-learn=1.7.1
+    - python=3.12
+    - numpy=2.2
+    - pandas=2.3
+    - matplotlib=3.10
+    - bottleneck=1.4
+    - numexpr=2.11
+    - scipy=1.16
+    - scikit-learn=1.7
     - seaborn=0.13.2
-    - statsmodels=0.14.5
-    - natsort=8.4.0
-    - numba=0.61.2
+    - statsmodels=0.14
+    - natsort=8.4
+    - numba=0.61
     - opentsne=1.0.2
-    - python-igraph=0.11.9
-    - scikit-fda=0.10.1
+    - python-igraph=0.11
+    - scikit-fda=0.10
 
-    - traits=7.0.2
-    - traitsui=8.0.0
-    - pyface=8.0.0
-    - conda-forge::envisage=7.0.4
-    - nbformat=5.10.4
-    - python-dateutil=2.9.0post0
-    - importlib_resources=6.4.0
-    - configobj=5.0.9
+    - traits=7.0
+    - traitsui=8.0
+    - pyface=8.0
+    - envisage=7.0
+    - nbformat=5.10
+    - python-dateutil=2.9
+    - importlib_resources=6.4
+    - configobj=5.0
 
-    - defaults::qt=5.*
-    - defaults::pyqt=5.*
-    - defaults::pyqtwebengine=5.*
+    - defaults::qt=5
+    - defaults::pyqt=5
+    - defaults::pyqtwebengine=5
 
     - cytoflow::camel=0.1.2
-    - yapf=0.40.2
+    - yapf=0.40
     
     - ipympl
     - jupyterlab
     
-    - setuptools
+    - setuptools>=78.1.1
     - pip
     - swig
     - anaconda-client
