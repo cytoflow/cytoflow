@@ -11,9 +11,6 @@ build:
       python: miniconda3-3.12-24.1
       
    jobs:
-     post_create_environment:
-       - conda install --yes --quiet swig
-       - conda install pydata-sphinx-theme --channel conda-forge
      post_install:
        - pip install --editable .
 
@@ -29,5 +26,5 @@ submodules:
   include: all
 
 conda:
-  environment: environment.yml
+  environment: package/environment-build.yml
   
