@@ -58,7 +58,7 @@ requirements:
     - nomkl # [not win]
 
     # build deps
-    - setuptools
+    - setuptools>=78.1.1
     - pip
     - swig
     - anaconda-client
