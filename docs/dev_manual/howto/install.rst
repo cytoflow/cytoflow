@@ -12,15 +12,12 @@ Cytoflow is available as a package for the Anaconda scientific Python
 distribution.  You can install *cytoflow* through the Anaconda Navigator,
 or by using the command line.
 
-**This is not the only way to get Cytoflow up and running, but it is by far
-the most straightforward.**
-
 Installing from the ``Anaconda Navigator``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Start by installing the Anaconda Python distribution. **Make sure to install
+* Start by installing the Anaconda Python distribution. Make sure to install
   a 64-bit version, unless you will be building *cytoflow* yourself and you know
-  what you're doing.** 
+  what you're doing. 
 
   `Download Anaconda here <https://www.anaconda.com/products/individual>`_
 
@@ -51,16 +48,15 @@ Installing from the ``Anaconda Navigator``
 * To verify installation, start a Jupyter notebook.
 
   * First, *make sure you have the ``cytoflow`` environment selected.*
-  * From the ``Anaconda Navigator``, install and then launch ``Jupyter notebook``.
+  * From the ``Anaconda Navigator``, install and then launch ``JupyterLab``.
   * Create a new *Python 3* notebook.
   * In the first cell, type ``import cytoflow`` and press ``Shift+Enter``.  
     If Python doesn't complain, you're good to go.  (If it does, please submit 
     a bug report at https://github.com/cytoflow/cytoflow/issues )
   
-* **Note: When you install Cytoflow this way, the point-and-click 
-  application is installed as well.**  Launching it from the 
-  ``Anaconda Navigator`` will be significantly faster than downloading the
-  pre-packaged binary.
+* **Note: When you install Cytoflow this way, the point-and-click**
+  **application is installed as well.**  You can launch it from the 
+  ``Anaconda Navigator.``
 
 Installing from the command line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,10 +100,9 @@ library.  So, I have pinned the versions of all of ``cytoflow``'s dependencies,
 which all but guarantees that you'll need to install into a virtual environment.
 This will ensure that the rest of your Python installation doesn't break.
 
-I strongly recommend using Anaconda to install the proper dependencies.  
-A PyPI package (installable using ``pip``) is also available.  The following
-instructions assume that you have installed Anaconda (as above) and launched
-an Anaconda prompt.
+.. note:: ``cytoflow`` cannot be installed using pip, except locally
+   from source with ``pip install --editable .`` I am already supporting it
+   across four operating systems, adding another installer is too much.
 
 Finally, ``cytoflow`` relies on one C++ extension.  On Linux, installing the
 requirements for building it is straightforward.  On MacOS it is harder, and
@@ -122,10 +117,6 @@ the appropriate file.
   * On Ubuntu: ``apt-get git swig python-dev``
   * On Windows: Install a copy of ``git``.  I use `git-for-windows <http://git-for-windows.github.io>`_
   * On MacOS: Install a copy of ``git`` from `the Git website <http://www.git-scm.com>`_.
-
-* If you haven't, add the ``cytoflow`` channel to conda::
-
-    conda config --add channels cytoflow
 
 * Clone the repository, including submodules::
 
@@ -163,7 +154,7 @@ the appropriate file.
 * From the `GitHub releases page <https://github.com/cytoflow/cytoflow/releases>`_ 
   download the appropriate extension file for the version you're installing.
   
-  * **On Windows (64-bit)**: ``_Logicle.cp311-win_amd64.pyd``
+  * **On Windows (64-bit)**: ``_Logicle.cp312-win_amd64.pyd``
   * **On MacOS (Intel)**: ``_Logicle-macos-x86_64.so``
   * **Onw MacOS (Apple Silicon)**: ``_Logicle-macos-arm64.so``
   
