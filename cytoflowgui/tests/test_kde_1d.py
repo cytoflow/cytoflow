@@ -119,7 +119,7 @@ class TestKde1D(ImportedDataTest, Base1DViewTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
         
-        exec(code)  # smoke test
+        exec(code, globals(), locals())  # smoke test
 
         
            

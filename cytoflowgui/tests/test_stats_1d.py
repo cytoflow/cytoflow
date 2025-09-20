@@ -134,7 +134,7 @@ class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
            
-        exec(code) # smoke test
+        exec(code, globals(), locals()) # smoke test
 
 
 if __name__ == "__main__":

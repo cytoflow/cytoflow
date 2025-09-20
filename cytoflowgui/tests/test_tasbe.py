@@ -203,10 +203,9 @@ class TestTASBE(TasbeTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
         
-        code_locals = {}
-        exec(code, locals = code_locals)
+        exec(code, globals(), locals())
 
-        nb_data = code_locals['ex_2'].data
+        nb_data = locals()['ex_2'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         pd.testing.assert_frame_equal(nb_data, remote_data)
         

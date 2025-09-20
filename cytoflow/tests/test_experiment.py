@@ -86,7 +86,7 @@ class TestExperiment(ImportedDataTest):
     def testCloneIsShallow(self):
         ex2 = self.ex.clone(deep = False)
         self.assertNotEqual(self.ex['B1-A'].at[100], 100.0)
-        ex2['B1-A'].at[100] = 100.0
+        ex2.data.loc[100, 'B1-A'] = 100.0
         self.assertEqual(self.ex['B1-A'].at[100], 100.0)
          
     def testReplaceColumn(self):

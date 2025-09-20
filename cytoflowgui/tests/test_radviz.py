@@ -118,7 +118,7 @@ class TestRadviz(ImportedDataTest, BaseDataViewTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
          
-        exec(code)
+        exec(code, globals(), locals())
 
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
