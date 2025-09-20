@@ -3,6 +3,13 @@
 HOWTO: Spin a new release
 =========================
 
+Set up a build environment
+--------------------------
+
+Using Anaconda, create a build environment::
+
+     conda env create --name cf_build --file package/environment-build.yml
+
 Tests
 -----
 
@@ -15,12 +22,12 @@ Tests
   
 - Make sure that the :mod:`cytoflow` tests pass, both locally and on GitHub::
 
-  	  nose2 -c package/nose2.cfg -N 8 cytoflow.tests 
+  	  nose2 -c package/nose2.cfg cytoflow.tests 
   
 - Make sure the :mod:`cytoflowgui` tests pass.  
   **You must do this locally; I'm still working on why it doesn't run on the CI platform.** ::
 
-  	  nose2 -c package/nose2.cfg -N 8 cytoflowgui.tests
+  	  nose2 -c package/nose2.cfg cytoflowgui.tests
   	  
 - Make sure the GitHub Actions are running to completion, at 
   https://github.com/cytoflow/cytoflow/actions
@@ -29,15 +36,8 @@ Tests
 Documentation
 -------------
   
-- Install the documentation requirements::
-
-	  conda install sphinx pandoc
-	  conda install pydata-sphinx-theme sphinx-design --channel conda-forge
-	  
-  
 - Build the user manual and check it for completeness::
 
-      conda install sphinx pandoc  # only necessary once
       sphinx-build docs/ build/manual
       sphinx-build docs/user_manual/reference cytoflowgui/help
   	  
@@ -51,7 +51,6 @@ Test the packaging
   	  
 - Build the conda package locally::
 	
-      conda install conda-build # only necessary once
       conda build package/conda_recipes/cytoflow
       
 - Install the local package in a new environment::
@@ -67,7 +66,6 @@ Test the packaging
 - Make sure that the :mod:`pyinstaller` distribution will build and run on your local 
   machine (back in your development environment).  ::
 
-  	  pip install pyinstaller==6.15.0
   	  pyinstaller package/pyinstaller.spec 
   	  dist/cytoflow/cytoflow
   
@@ -94,7 +92,7 @@ Versioning and dependencies
   the Anaconda Cloud.  Unless there's a really (really!) good reason, please
   make them no-arch.
   
-- Make sure ``install_requires`` in ``pyproject.toml`` matches ``requirements.txt``
+- Make sure ``install_requires`` in ``pyproject.toml`` matches ``environment.yml``
   	
 - Update the version integers in ``package/installer.nsis``
   	
