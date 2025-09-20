@@ -63,6 +63,7 @@ requirements:
     - swig
     - anaconda-client
     - conda-build
+    - conda-verify
     - sphinx
     - pandoc
     - bleach
@@ -107,7 +108,11 @@ requirements:
     - ipympl
     - jupyterlab
     
+    # required on windows. I have no idea why.
+    - swig # [win]
+    
     # only install mkl libraries on windows, where they're required
+    - mkl-service # [win]
     - nomkl # [not win]
 
 test:

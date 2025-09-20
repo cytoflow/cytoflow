@@ -45,6 +45,7 @@ dependencies:
     - swig
     - anaconda-client
     - conda-build
+    - conda-verify
     - sphinx
     - pandoc
     - pydata-sphinx-theme
