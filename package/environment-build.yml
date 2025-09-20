@@ -41,11 +41,13 @@ dependencies:
     - jupyterlab
     
     - setuptools>=78.1.1
+    - nose2
     - pip
     - swig
     - anaconda-client
     - conda-build
     - conda-verify
+    - pyinstaller
     - sphinx
     - pandoc
     - pydata-sphinx-theme
