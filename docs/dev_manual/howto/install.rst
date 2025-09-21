@@ -127,10 +127,6 @@ the appropriate file.
 
     conda env create --name cf_dev --file environment.yml
     
-.. note:: On Windows, you must edit ``environment.yml`` before you execute 
-   ``conda env create``.  Remove the last line, the one that reads
-   ``- nomkl # [not win]``
-  
 * Activate the new environment::
     
     conda activate cf_dev
