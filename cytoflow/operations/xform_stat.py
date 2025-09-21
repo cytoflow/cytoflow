@@ -244,6 +244,10 @@ class TransformStatisticOp(HasStrictTraits):
         if set(self.by) == set(stat.index.names):
             raise util.CytoflowOpError('by',
                                        "You can't set all of the statistic levels in 'by'!")
+            
+        if cytoflow.RUNNING_IN_GUI and not self.by:
+            raise util.CytoflowOpError('by',
+                                       "Must set a value for 'by'")
                 
         new_stat = None
                     
@@ -348,13 +352,9 @@ class TransformStatisticOp(HasStrictTraits):
             v = self.function(stat[self.feature])
             
             if not isinstance(v, pd.Series):
-                if cytoflow.RUNNING_IN_GUI:
-                    raise util.CytoflowOpError('function',
-                                               "If you don't specify anything in 'by', your function must be a transform!")
-                else:
-                    raise util.CytoflowOpError('function',
-                                               "If you don't specify 'by', your function must return a pandas.Series. "
-                                               "Instead, the function returned {} ({})".format(v, type(v)))
+                raise util.CytoflowOpError('function',
+                                           "If you don't specify 'by', your function must return a pandas.Series. "
+                                           "Instead, the function returned {} ({})".format(v, type(v)))
             new_stat[self.feature] = v
         
         # sort the index, for performance
