@@ -104,7 +104,7 @@ class TestHistogram2D(ImportedDataTest, Base2DViewTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
            
-        exec(globals(), locals()) # smoke test
+        exec(code, globals(), locals()) # smoke test
            
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestHistogram2D.testSerialize']
