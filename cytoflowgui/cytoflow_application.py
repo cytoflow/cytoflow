@@ -144,6 +144,14 @@ class CytoflowApplication(TasksApplication):
         ## and display gui messages for exceptions
         gui_error_handler = CallbackHandler(lambda rec, app = self: gui_handler_callback(rec, app))
         gui_error_handler.setLevel(logging.WARNING)
+
+        filter_messages = ["Populating font family aliases"]
+        def gui_filter(record):
+            for fm in filter_messages:
+                if fm in record.message:
+                    return False
+            return True
+        gui_error_handler.addFilter(gui_filter)
         logging.getLogger().addHandler(gui_error_handler)
         
         ## anything that gets printed to stdout, capture that too!
