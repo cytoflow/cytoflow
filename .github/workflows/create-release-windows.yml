@@ -128,7 +128,7 @@ jobs:
     
     - name: Install package locally
       run: |
-        pip install --editable .
+        pip install --verbose --editable .
         
     - name: Reset git
       run: |
@@ -212,7 +212,7 @@ jobs:
             
     - name: Install package locally
       run: |
-        pip install --editable .
+        pip install --verbose --editable .
         
     - name: Build embedded help docs
       run: |

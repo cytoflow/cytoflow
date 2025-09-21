@@ -53,7 +53,7 @@ jobs:
     
     - name: Install package locally
       run: |
-        pip install --editable .
+        pip install --verbose --editable .
         
     - name: Run cytoflow tests
       env:
@@ -178,7 +178,7 @@ jobs:
     
     - name: Install package locally
       run: |
-        pip install --editable .
+        pip install --verbose --editable .
         
     - name: Install packaging deps
       run: |
@@ -257,7 +257,7 @@ jobs:
             
     - name: Install package locally
       run: |
-        pip install --editable .
+        pip install --verbose --editable .
         
     - name: Build embedded help docs
       run: |
