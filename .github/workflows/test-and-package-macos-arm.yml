@@ -32,7 +32,7 @@ jobs:
       
     - name: Remove lines with [win]
       run: |
-        sed -i '/\[win\]/d' package/environment-build.yml
+        sed -i '' '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -76,7 +76,7 @@ jobs:
       
     - name: Remove lines with [win]
       run: |
-        sed -i '/\[win\]/d' package/environment-build.yml
+        sed -i '' '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -139,7 +139,7 @@ jobs:
       
     - name: Remove lines with [win]
       run: |
-        sed -i '/\[win\]/d' package/environment-build.yml
+        sed -i '' '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -201,7 +201,7 @@ jobs:
       
     - name: Remove lines with [win]
       run: |
-        sed -i '/\[win\]/d' package/environment-build.yml
+        sed -i '' '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
