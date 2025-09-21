@@ -44,21 +44,24 @@ dependencies:
     # and matplotlib widgets
     - ipympl
     - jupyterlab
-
-    # get a compatible version of mkl-service
-    - mkl-service
     
-    # build tools
-    - setuptools>=78.1.1
-    - nose2
-    - pip
-    - swig
-    - anaconda-client
-    - conda-build
-    - conda-verify
-    - pyinstaller
-    - sphinx
-    - pandoc
-    - pydata-sphinx-theme
-    - sphinx-design
+    # build tools. the comment is for GitHub workflow preprocessing
+    - setuptools>=78.1.1        # build
+    - nose2                     # build
+    - pip                       # build
+    - swig                      # build
+    - anaconda-client           # build
+    - conda-build               # build
+    - conda-verify              # build
+    - pyinstaller               # build
+    - sphinx                    # build
+    - pandoc                    # build
+    - pydata-sphinx-theme       # build
+    - sphinx-design             # build
+    
+    # If you're NOT installing source on Windows, remove this line:
+    - mkl-service # [win]
+    
+    # If you ARE installing from source on Windows, remove this line:
+    - nomkl # [not win]
 

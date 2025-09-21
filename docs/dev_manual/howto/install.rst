@@ -121,20 +121,20 @@ the appropriate file.
 * Clone the repository, including submodules::
 
     git clone --recurse-submodules https://github.com/cytoflow/cytoflow.git
+    
+* Edit ``environment.yml`` as follows:
+
+  * If you're using *Windows*, REMOVE the line that reads ``- nomkl # [not win]``
+  * If you're *not* using Windows, remove the line that reads ``- mkl-service # [win]``
 
 * Create a new environment.  In this example, I have called it ``cf_dev``.
   In the new repository you just cloned, say::
 
     conda env create --name cf_dev --file environment.yml
-    
-.. note:: On Windows, you must edit ``environment.yml`` before you execute 
-   ``conda env create``.  Remove the last line, the one that reads
-   ``- nomkl # [not win]``
   
 * Activate the new environment::
     
     conda activate cf_dev
-
   
 * **On Windows and MacOS only,** do the following to prevent ``cytoflow``
   from trying to build the C++ extension.

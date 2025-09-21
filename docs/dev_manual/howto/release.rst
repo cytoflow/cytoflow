@@ -83,6 +83,7 @@ Test the packaging
   * Download the conda package from GitHub Actions. Create a local ``anaconda`` environment and install it.
     Check that it runs as both a module and a GUI ::
   
+      # edit environment.yml for your platform
       conda env create --name cf.test -f environment.yml
       conda activate cf.test
       conda install ./cytoflow-*******-tar.bz2

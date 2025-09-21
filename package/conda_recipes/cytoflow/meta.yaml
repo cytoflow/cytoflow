@@ -55,8 +55,6 @@ requirements:
 
     - cytoflow::camel=0.1.2
     - yapf=0.40
-    
-    - mkl-service 
 
     # build deps
     - setuptools>=78.1.1
@@ -70,6 +68,10 @@ requirements:
     - bleach
     - pydata-sphinx-theme
     - sphinx-design
+    
+    # mkl configuration
+    - mkl-service # [win]
+    - nomkl # [not win]
 
   run:
     - python=3.12
@@ -115,8 +117,8 @@ requirements:
     # required on windows. I have no idea why.
     - swig # [win]
     
-    # install a compatible version of mkl-service
-    - mkl-service
+    - mkl-service # [win]
+    - nomkl # [not win]
 
 test:
   # Python imports

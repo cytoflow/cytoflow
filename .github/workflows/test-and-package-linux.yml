@@ -30,6 +30,12 @@ jobs:
         gawk -f package/make_environment.awk package/conda_recipes/cytoflow/meta.yaml | gawk -f package/parse_environment.awk > env_meta
         gawk -f package/parse_environment.awk environment.yml > env_mine
         diff -u env_meta env_mine
+        
+    - name: Compare meta.yaml and package/environment-build.yml
+      run: |
+        gawk -f package/make_environment.awk package/conda_recipes/cytoflow/meta.yaml | gawk -f package/parse_environment.awk > env_meta
+        gawk -f package/parse_environment.awk environment-build.yml | sed '/# build/d' > env_mine
+        diff -u env_meta env_mine
       
   test-on-linux:
     name: Run nose2 on linux runner
@@ -123,9 +129,9 @@ jobs:
         mkdir dist
         mv `conda build --output package/conda_recipes/cytoflow/` dist
         
-    - name: Copy environment.yml into the dist folder
+    - name: Copy package/environment-build.yml into the dist folder
       run: |
-        cp environment.yml dist/
+        cp package/environment-build.yml dist/
         
     - name: List dist/
       run: ls dist/

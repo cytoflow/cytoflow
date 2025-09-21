@@ -38,9 +38,9 @@ jobs:
       run: |
         rm -f /usr/bin/link.exe
         
-    - name: Remove nomkl
+    - name: Remove lines with [not win]
       run: |
-        sed -i '/nomkl/d' environment.yml
+        sed -i '/\[not win\]/d' environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -95,9 +95,9 @@ jobs:
       run: |
         rm -f /usr/bin/link.exe
         
-    - name: Remove nomkl
+    - name: Remove lines with [not win]
       run: |
-        sed -i '/nomkl/d' environment.yml
+        sed -i '/\[not win\]/d' environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -130,9 +130,9 @@ jobs:
         mkdir dist
         mv `conda build --output package/conda_recipes/cytoflow/` dist
         
-    - name: Copy environment.yml into the dist folder
+    - name: Copy package/environment-build.yml into the dist folder
       run: |
-        cp environment.yml dist/
+        cp packge/environment-build.yml dist/
         
     - name: List dist
       run: ls dist/
@@ -167,9 +167,9 @@ jobs:
       run: |
         rm -f /usr/bin/link.exe
         
-    - name: Remove nomkl
+    - name: Remove lines with [not win]
       run: |
-        sed -i '/nomkl/d' environment.yml
+        sed -i '/\[not win\]/d' environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -246,9 +246,9 @@ jobs:
       run: |
         echo "Output from Find Tag: ${GIT_TAG}"
         
-    - name: Remove nomkl
+    - name: Remove lines with [not win]
       run: |
-        sed -i '/nomkl/d' environment.yml
+        sed -i '/\[not win\]/d' environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0

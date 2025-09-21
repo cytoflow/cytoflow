@@ -43,9 +43,9 @@ jobs:
       run: |
         echo "Output from Find Tag: ${GIT_TAG}"
         
-    - name: Remove nomkl
+    - name: Remove lines with [not win]
       run: |
-        sed -i '/nomkl/d' environment.yml
+        sed -i '/\[not win\]/d' environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -110,9 +110,9 @@ jobs:
         fetch-depth: 0
         submodules: true
         
-    - name: Remove nomkl
+    - name: Remove lines with [not win]
       run: |
-        sed -i '/nomkl/d' environment.yml
+        sed -i '/\[not win\]/d' environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -198,9 +198,9 @@ jobs:
       run: |
         echo "Output from Find Tag: ${GIT_TAG}"
         
-    - name: Remove nomkl
+    - name: Remove lines with [not win]
       run: |
-        sed -i '/nomkl/d' environment.yml
+        sed -i '/\[not win\]/d' environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
