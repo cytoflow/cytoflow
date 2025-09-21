@@ -79,7 +79,7 @@ class TestXformStat(ImportedDataTest):
 
     def testChangeBy(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.by = ["Dox", "Well"]
+        self.op.by = ["Well"]
         self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testChangeSubset(self):
