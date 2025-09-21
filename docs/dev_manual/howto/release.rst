@@ -106,12 +106,8 @@ Versioning and dependencies
   	
 - Update the version integers in ``package/installer.nsis``
   	
-Tag and upload the release
---------------------------
-  
-- Push the updated files (probably just ``installer.nsis``) to GitHub.  
-Give the CI builders ~30 minutes, then check the build status on GitHub and 
-ReadTheDocs.
+Tag the release
+---------------
 
 - Create a new tag on the master branch.  This will re-build everything on the CI
   builders.
