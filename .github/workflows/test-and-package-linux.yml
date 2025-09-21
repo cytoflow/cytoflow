@@ -34,7 +34,7 @@ jobs:
     - name: Compare meta.yaml and package/environment-build.yml
       run: |
         gawk -f package/make_environment.awk package/conda_recipes/cytoflow/meta.yaml | gawk -f package/parse_environment.awk > env_meta
-        gawk -f package/parse_environment.awk environment-build.yml | sed '/# build/d' > env_mine
+        gawk -f package/parse_environment.awk package/environment-build.yml | sed '/# build/d' > env_mine
         diff -u env_meta env_mine
       
   test-on-linux:
