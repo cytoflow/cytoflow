@@ -298,7 +298,7 @@ def _get_params_and_attrs(lines, first_attr_line, last_attr_line):
                 continue
             attr_names = lines[i][:colon_idx]
             attr_names = attr_names.split(',')
-            attr_names = [x.strip() for x in attr_names]
+            attr_names = [x.rstrip() for x in attr_names]
             attr_type = lines[i][colon_idx + 1:].strip()
             
         if re.match(r'^\s*$', lines[i]):

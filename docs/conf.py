@@ -80,6 +80,7 @@ if on_rtd:
     
 # napoleon options
 napoleon_use_param = False
+napoleon_numpy_docstring = True
 
 # Include the example source for plots in API docs
 plot_include_source = True
