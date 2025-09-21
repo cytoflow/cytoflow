@@ -6,9 +6,11 @@ HOWTO: Spin a new release
 Set up a build environment
 --------------------------
 
-Using Anaconda, create a build environment::
+Using Anaconda, create a build environment and install the current source::
 
      conda env create --name cf_build --file package/environment-build.yml
+     conda activate cf_dev
+     pip install --editable .
 
 Tests
 -----
@@ -23,13 +25,18 @@ Tests
 - Make sure that the :mod:`cytoflow` tests pass, both locally and on GitHub::
 
   	  nose2 -c package/nose2.cfg cytoflow.tests 
+  	  
+- Run the same tests but saving figures, and scroll through to make sure nothing is
+  too strange::
+  
+      nose2 -c package/nose2.cfg --saveFigures figs.pdf cytoflow.tests
   
 - Make sure the :mod:`cytoflowgui` tests pass.  
   **You must do this locally; I'm still working on why it doesn't run on the CI platform.** ::
 
   	  nose2 -c package/nose2.cfg cytoflowgui.tests
   	  
-- Make sure the GitHub Actions are running to completion, at 
+- Make sure the GitHub Actions are running to completion at 
   https://github.com/cytoflow/cytoflow/actions
   	  
     
@@ -93,14 +100,18 @@ Versioning and dependencies
   make them no-arch.
   
 - Make sure ``install_requires`` in ``pyproject.toml`` matches ``environment.yml``
+
+.. note::
+   You don't have to set version numbers!
   	
 - Update the version integers in ``package/installer.nsis``
   	
 Tag and upload the release
 --------------------------
   
-- Push the updated docs to GitHub.  Give the CI builders ~30 minutes, then 
-  check the build status on GitHub and ReadTheDocs.
+- Push the updated files (probably just ``installer.nsis``) to GitHub.  
+Give the CI builders ~30 minutes, then check the build status on GitHub and 
+ReadTheDocs.
 
 - Create a new tag on the master branch.  This will re-build everything on the CI
   builders.
