@@ -45,11 +45,13 @@ dependencies:
     - ipympl
     - jupyterlab
     
+    # required on windows. i don't know why.
+    - swig # [win]
+    
     # build tools. the comment is for GitHub workflow preprocessing
     - setuptools>=78.1.1        # build
     - nose2                     # build
     - pip                       # build
-    - swig                      # build
     - anaconda-client           # build
     - conda-build               # build
     - conda-verify              # build
