@@ -79,7 +79,7 @@ from .op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
 class TransformStatisticHandler(OpHandler):
     
 #     prev_statistics = Property(depends_on = "info.ui.context")
-    index_names = Property(depends_on = "context.previous_wi.statistics, "
+    indices = Property(depends_on = "context.previous_wi.statistics, "
                                     "model.statistic, "
                                     "model.subset")
     levels = Property(depends_on = "context.previous_wi.statistics, model.statistic")    
@@ -87,7 +87,7 @@ class TransformStatisticHandler(OpHandler):
 
 
     # MAGIC: gets the value for the property indices
-    def _get_index_names(self):        
+    def _get_indices(self):        
         if not (self.context 
                 and self.context.previous_wi 
                 and self.context.previous_wi.statistics 
@@ -166,7 +166,7 @@ class TransformStatisticHandler(OpHandler):
                   label = "Function"),
              Item('by',
                   editor = CheckListEditor(cols = 2,
-                                           name = 'handler.index_names'),
+                                           name = 'handler.indices'),
                   
                   label = 'Group\nBy',
                   style = 'custom'),
