@@ -21,6 +21,9 @@ dependencies:
     - python-igraph=0.11
     - scikit-fda=0.10
 
+    # version 2.2.1 of gmpy2 crashes
+    - gmpy2==2.1.5
+
     - traits=7.0
     - traitsui=8.0
     - pyface=8.0
@@ -45,6 +48,5 @@ dependencies:
     # required on windows. i don't know why.
     - swig # [win]
 
-    # only install mkl on windows
-    - mkl-service # [win]
-    - nomkl # [not win]
+    # install a compatible version of mkl-service
+    - mkl-service

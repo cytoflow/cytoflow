@@ -37,6 +37,9 @@ requirements:
     - python-igraph=0.11
     - scikit-fda=0.10
 
+    # version 2.2.1 of gmpy2 crashes
+    - gmpy2==2.1.5
+
     - traits=7.0
     - traitsui=8.0
     - pyface=8.0
@@ -53,10 +56,7 @@ requirements:
     - cytoflow::camel=0.1.2
     - yapf=0.40
     
-    # only install mkl libraries on windows, where they're required
-    - nomkl # [not win]
-    - mkl-service # [win]
-    - nomkl # [not win]
+    - mkl-service 
 
     # build deps
     - setuptools>=78.1.1
@@ -88,6 +88,9 @@ requirements:
     - python-igraph=0.11
     - scikit-fda=0.10
 
+    # version 2.2.1 of gmpy2 crashes
+    - gmpy2==2.1.5
+
     - traits=7.0
     - traitsui=8.0
     - pyface=8.0
@@ -112,9 +115,8 @@ requirements:
     # required on windows. I have no idea why.
     - swig # [win]
     
-    # only install mkl libraries on windows, where they're required
-    - mkl-service # [win]
-    - nomkl # [not win]
+    # install a compatible version of mkl-service
+    - mkl-service
 
 test:
   # Python imports
