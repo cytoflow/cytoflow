@@ -50,7 +50,8 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
-        channels: cytoflow
+        channels: defaults, cytoflow, conda-forge
+        channel-priority: flexible
         activate-environment: cytoflow
         environment-file: package/environment-build.yml
         
@@ -77,15 +78,15 @@ jobs:
       run: |
         echo 'Output from get_filename: ${CONDA_PACKAGE}'
          
-#     - name: Upload the conda package to the GitHub release
-#       uses: actions/upload-release-asset@v1.0.2
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#       with:
-#         upload_url: ${{ github.event.client_payload.release_url }} 
-#         asset_path: dist/dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
-#         asset_name: dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
-#         asset_content_type: application/x-bzip2
+    - name: Upload the conda package to the GitHub release
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        asset_name: dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        asset_content_type: application/x-bzip2
          
     - name: Upload the conda package to anaconda.org
       run: |
@@ -116,7 +117,8 @@ jobs:
       uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
-        channels: cytoflow
+        channels: defaults, cytoflow, conda-forge
+        channel-priority: flexible
         activate-environment: cytoflow
         environment-file: package/environment-build.yml
         
