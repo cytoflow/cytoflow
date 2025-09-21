@@ -32,6 +32,7 @@ import numpy as np
 from traits.api import (HasStrictTraits, Str, List, Constant, provides,
                         Callable, Bool)
 
+import cytoflow
 import cytoflow.utility as util
 
 from .i_operation import IOperation
@@ -240,6 +241,10 @@ class TransformStatisticOp(HasStrictTraits):
                                            " must be one of {}"
                                            .format(b, stat.index.names))
                 
+        if set(self.by) == set(stat.index.names):
+            raise util.CytoflowOpError('by',
+                                       "You can't set all of the statistic levels in 'by'!")
+                
         new_stat = None
                     
         if self.by: 
@@ -343,9 +348,13 @@ class TransformStatisticOp(HasStrictTraits):
             v = self.function(stat[self.feature])
             
             if not isinstance(v, pd.Series):
-                raise util.CytoflowOpError('function',
-                                           "If you don't specify 'by', your function must return a pandas.Series. "
-                                           "Instead, the function returned {} ({})".format(v, type(v)))
+                if cytoflow.RUNNING_IN_GUI:
+                    raise util.CytoflowOpError('function',
+                                               "If you don't specify anything in 'by', your function must be a transform!")
+                else:
+                    raise util.CytoflowOpError('function',
+                                               "If you don't specify 'by', your function must return a pandas.Series. "
+                                               "Instead, the function returned {} ({})".format(v, type(v)))
             new_stat[self.feature] = v
         
         # sort the index, for performance
