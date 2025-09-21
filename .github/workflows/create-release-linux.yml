@@ -209,11 +209,6 @@ jobs:
       run: |
         pip install --editable .
         
-    - name: Install packaging deps
-      run: |
-        conda install --yes --quiet sphinx pandoc
-        pip install pyinstaller
-        
     - name: Build embedded help docs
       run: |
         sphinx-build docs/user_manual/reference cytoflowgui/help

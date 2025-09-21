@@ -63,10 +63,6 @@ jobs:
       run: |
         pip install --editable .
         
-    - name: Install nose2
-      run: |
-        pip install nose2
-        
     - name: Run cytoflow tests
       env:
         OMP_NUM_THREADS: 1
@@ -231,10 +227,6 @@ jobs:
     - name: Install package locally
       run: |
         pip install --editable .
-        
-    - name: Install pyinstaller
-      run: |
-        pip install pyinstaller==6.15.0
         
     - name: Build embedded help docs
       run: |
