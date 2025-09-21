@@ -73,21 +73,17 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "CONDA_PACKAGE=$(ls cytoflow*.conda)" >> $GITHUB_ENV 
-
-    - name: Show file name
-      run: |
-        echo 'Output from get_filename: ${CONDA_PACKAGE}'
-         
+        echo "CONDA_PACKAGE=$(ls cytoflow*.conda)" >> $GITHUB_OUTPUT
+        
     - name: Upload the conda package to the GitHub release
       uses: actions/upload-release-asset@v1.0.2
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${CONDA_PACKAGE}
-        asset_name: cytoflow-conda-${GIT_TAG}-win-amd64.tar.bz2
-        asset_content_type: application/x-bzip2
+        asset_path: dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        asset_name: ${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        asset_content_type: application/zip
          
     - name: Upload the conda package to anaconda.org
       run: |
