@@ -43,6 +43,10 @@ jobs:
       run: |
         echo "Output from Find Tag: ${GIT_TAG}"
        
+    - name: Remove lines with [win]
+      run: |
+        sed -i '/\[win\]/d' package/environment-build.yml
+      
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
       with:
@@ -104,6 +108,10 @@ jobs:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
+      
+    - name: Remove lines with [win]
+      run: |
+        sed -i '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -196,6 +204,10 @@ jobs:
       id: display
       run: |
         echo "Output from Find Tag: ${GIT_TAG}"
+      
+    - name: Remove lines with [win]
+      run: |
+        sed -i '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0

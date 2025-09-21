@@ -45,7 +45,7 @@ jobs:
         
     - name: Remove lines with [not win]
       run: |
-        sed -i '/\[not win\]/d' environment-build.yml
+        sed -i '/\[not win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -112,7 +112,7 @@ jobs:
         
     - name: Remove lines with [not win]
       run: |
-        sed -i '/\[not win\]/d' environment-build.yml
+        sed -i '/\[not win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0
@@ -200,7 +200,7 @@ jobs:
         
     - name: Remove lines with [not win]
       run: |
-        sed -i '/\[not win\]/d' environment-build.yml
+        sed -i '/\[not win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3.2.0

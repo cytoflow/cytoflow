@@ -46,7 +46,7 @@ dependencies:
     - jupyterlab
 
     # required on windows. i don't know why.
-    - swig 
+    - swig # [win]
 
     # If you're NOT installing source on Windows, remove this line:
     - mkl-service # [win]
