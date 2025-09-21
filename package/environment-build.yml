@@ -46,7 +46,7 @@ dependencies:
     - jupyterlab
     
     # required on windows. i don't know why.
-    - swig # [win]
+    - swig
     
     # build tools. the comment is for GitHub workflow preprocessing
     - setuptools>=78.1.1        # build

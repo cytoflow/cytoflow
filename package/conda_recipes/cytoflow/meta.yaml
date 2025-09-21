@@ -115,7 +115,7 @@ requirements:
     - jupyterlab
     
     # required on windows. I have no idea why.
-    - swig # [win]
+    - swig 
     
     - mkl-service # [win]
     - nomkl # [not win]
