@@ -168,7 +168,7 @@ jobs:
         upload_url: ${{ github.event.client_payload.release_url }} 
         asset_path: dist/${{ steps.get_filenames.outputs.WHEEL_FILE }}
         asset_name: ${{ steps.get_filenames.outputs.WHEEL_FILE }}
-        asset_content_type: application/zip    
+        asset_content_type: application/zip
         
   build-windows-oneclick:
     name: Build Windows one-click
@@ -184,7 +184,7 @@ jobs:
         fetch-depth: 0
         submodules: true
         
-     - name: Set up Visual Studio shell
+    - name: Set up Visual Studio shell
       uses: egor-tensin/vs-shell@v2.1
       with:
         arch: x64
