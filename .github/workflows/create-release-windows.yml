@@ -89,7 +89,7 @@ jobs:
       run: |
         anaconda logout
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-        anaconda upload --user cytoflow dist/$CONDA_PACKAGE
+        anaconda upload --user cytoflow dist/{{ steps.get_filenames.outputs.CONDA_PACKAGE }}
         anaconda logout
         
 
@@ -183,6 +183,20 @@ jobs:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
         submodules: true
+        
+     - name: Set up Visual Studio shell
+      uses: egor-tensin/vs-shell@v2.1
+      with:
+        arch: x64
+        
+    - name: Remove link
+      run: |
+        rm -f /usr/bin/link.exe
+        
+    - name: Install NSIS
+      uses: repolevedavaj/install-nsis@v1.0.3
+      with:
+        nsis-version: '3.10'
         
     - name: Show all the files
       run: find .

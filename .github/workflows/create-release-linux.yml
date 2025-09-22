@@ -89,7 +89,7 @@ jobs:
       run: |
         anaconda logout
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-        anaconda upload --user cytoflow dist/$CONDA_PACKAGE
+        anaconda upload --user cytoflow dist/{{ steps.get_filenames.outputs.CONDA_PACKAGE }}
         anaconda logout
        
   build-linux-wheels:
