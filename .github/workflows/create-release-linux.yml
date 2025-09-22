@@ -87,7 +87,7 @@ jobs:
         
     - name: Upload the conda package to anaconda.org
       run: |
-        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/{{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
        
   build-linux-wheels:
     name: Build and upload source dist, linux wheels
