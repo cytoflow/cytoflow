@@ -26,5 +26,5 @@ submodules:
   include: all
 
 conda:
-  environment: package/environment-build.yml
+  environment: package/environment-docs.yml
   
