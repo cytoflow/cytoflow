@@ -3,4 +3,5 @@ from PyInstaller.utils.hooks import (copy_metadata, collect_submodules,
 
 datas = collect_data_files('sklearn')
 
-hiddenimports = collect_submodules('sklearn.externals')
+hiddenimports = collect_submodules('sklearn.externals') + \
+                collect_submodules('sklearn._cyutility')
