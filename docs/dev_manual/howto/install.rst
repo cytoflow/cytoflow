@@ -136,17 +136,6 @@ the appropriate file.
     
     conda activate cf_dev
   
-* **On Windows and MacOS only,** do the following to prevent ``cytoflow``
-  from trying to build the C++ extension.
-  
-  * **On Windows (in CMD)**::
-  
-       set NO_LOGICLE=True
- 
-  * **On MacOS (or on Windows bash)**::
-  
-       export NO_LOGICLE=True
-    
 * Install ``cytoflow`` in developer's mode::
 
     pip install --editable .
