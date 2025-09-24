@@ -96,7 +96,7 @@ exe = EXE(pyz,
           upx=False,
           console=False,
           bootloader_ignore_signals=False,
-          codesign_identity = '###REPLACEME###',
+          # codesign_identity = '###REPLACEME###',
           entitlements_file = 'package/entitlements.plist',
           icon='icon.ico')
 
