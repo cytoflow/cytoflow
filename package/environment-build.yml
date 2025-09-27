@@ -50,6 +50,7 @@ dependencies:
     
     # build tools. the comment is for GitHub workflow preprocessing
     - setuptools>=78.1.1        # build
+    - setuptools_scm            # build
     - nose2                     # build
     - pip                       # build
     - anaconda-client           # build

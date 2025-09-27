@@ -58,6 +58,7 @@ requirements:
 
     # build deps
     - setuptools>=78.1.1
+    - setuptools_scm
     - pip
     - swig
     - anaconda-client
