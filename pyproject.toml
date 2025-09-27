@@ -117,6 +117,8 @@ cytoflowgui = ['preferences.ini',
                
                
 [tool.setuptools_scm]
+version_scheme = "only-version"
+local_scheme = "no-local-version"
 
 
 
