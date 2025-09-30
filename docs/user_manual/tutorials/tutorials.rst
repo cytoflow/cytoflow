@@ -16,7 +16,7 @@ more advanced analyses.
    quickstart
    dose_response
    hierarchical
-   machine_learning
+   genome_size
    
    
 **Advanced tutorials**
@@ -27,22 +27,8 @@ more advanced analyses.
    induction
    kiani
    repressor
+   machine_learning
    computational_cytometry
-   
-..
-  Basic
-  -----
-  Quick start
-  Yeast dose-response
-  Machine learning
-  
-  
-..
-  Advanced
-  --------
-  2D dose-response (yeast)
-  Machine learning
-  TASBE
-  Advanced statistics (Kiani)
+
   
   
