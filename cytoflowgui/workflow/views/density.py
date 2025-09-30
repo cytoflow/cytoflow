@@ -55,7 +55,7 @@ DensityView.__repr__ = cytoflow_class_repr
 
      
 class DensityPlotParams(Data2DPlotParams):
-    gridsize = util.PositiveCInt(50, allow_zero = False)
+    gridsize = util.PositiveCInt(100, allow_zero = False)
     smoothed = Bool(False)
     smoothed_sigma = util.PositiveCFloat(1.0, allow_zero = False)
     

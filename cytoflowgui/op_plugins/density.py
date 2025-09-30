@@ -77,7 +77,7 @@ before computing and applying the gate.
     ex2 = density_op.apply(ex)
 '''
 
-from traits.api import provides, List
+from traits.api import provides, List, Bool
 from traitsui.api import (View, Item, EnumEditor, VGroup, TextEditor, 
                           CheckListEditor, ButtonEditor)
 from envisage.api import Plugin
@@ -85,7 +85,7 @@ from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..view_plugins import ViewHandler
 from ..view_plugins.density import DensityParamsHandler
-from ..editors import SubsetListEditor, ColorTextEditor, InstanceHandlerEditor
+from ..editors import SubsetListEditor, ColorTextEditor, InstanceHandlerEditor, ToggleButtonEditor
 from ..workflow.operations import DensityGateWorkflowOp, DensityGateWorkflowView
 from ..subset_controllers import subset_handler_factory
 
@@ -93,6 +93,9 @@ from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
 from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
 class DensityGateHandler(OpHandler):
+    
+    show_advanced = Bool(False)
+    
     operation_traits_view = \
         View(Item('name',
                   editor = TextEditor(auto_set = False,
@@ -114,6 +117,30 @@ class DensityGateHandler(OpHandler):
                                       format_func = lambda x: "" if x is None else str(x),
                                       placeholder = "None"),
                   label = "Proportion\nto keep"),
+            Item('handler.show_advanced',
+                 editor = ToggleButtonEditor(label = "Advanced parameters..."),
+                 show_label = False),
+             VGroup(Item('bins',
+                         editor = TextEditor(auto_set = False,
+                                             evaluate = int,
+                                             format_func = lambda x: "" if x is None else str(x))),
+                    Item('min_quantile',
+                         editor = TextEditor(auto_set = False,
+                                             evaluate = float,
+                                             format_func = lambda x: "" if x is None else str(x)),
+                         label = "Min\nQuantile"),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False,
+                                             evaluate = float,
+                                             format_func = lambda x: "" if x is None else str(x)),
+                         label = "Max\nQuantile"),
+                    Item('sigma',
+                         editor = TextEditor(auto_set = False,
+                                             evaluate = float,
+                                             format_func = lambda x: "" if x is None else str(x)),
+                         label = "Sigma"),
+                    label = "Advanced Parameters",
+                    visible_when = "handler.show_advanced"),
              Item('by',
                   editor = CheckListEditor(cols = 2,
                                            name = 'context_handler.previous_conditions_names'),

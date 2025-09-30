@@ -51,7 +51,12 @@ class DensityGateWorkflowOp(WorkflowOperation, DensityGateOp):
     by = List(Str, estimate = True)
     xscale = util.ScaleEnum(estimate = True)
     yscale = util.ScaleEnum(estimate = True)
-        
+    
+    bins = util.PositiveInt(100, allow_zero = False, estimate = True)
+    min_quantile = util.PositiveFloat(0.001, allow_zero = True, estimate = True)
+    max_quantile = util.PositiveFloat(1.0, allow_zero = False, estimate = True)
+    sigma = util.PositiveFloat(1.0, allow_zero = False, estimate = True)
+    
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
     subset = Property(Str, observe = "subset_list.items.str")
@@ -133,9 +138,24 @@ class DensityGateWorkflowView(WorkflowByView, DensityGateView):
                 idx = idx,
                 plot = ", plot_name = " + repr(self.current_plot) if self.current_plot else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
+
+@camel_registry.dumper(DensityGateWorkflowOp, 'density-gate', version = 2)
+def _dump(op):
+    return dict(name = op.name,
+                xchannel = op.xchannel,
+                ychannel = op.ychannel,
+                xscale = op.xscale,
+                yscale = op.yscale,
+                keep = op.keep,
+                bins = op.bins,
+                min_quantile = op.min_quantile,
+                max_quantile = op.max_quantile,
+                sigma = op.sigma,
+                by = op.by,
+                subset_list = op.subset_list)
     
 @camel_registry.dumper(DensityGateWorkflowOp, 'density-gate', version = 1)
-def _dump(op):
+def _dump_v1(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
                 ychannel = op.ychannel,
