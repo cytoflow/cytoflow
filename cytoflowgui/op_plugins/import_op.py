@@ -42,6 +42,16 @@ Import FCS files and associate them with experimental conditions (metadata.)
     set **Events per sample** to empty or 0 and *Cytoflow* will re-run your
     workflow with the entire data set.
     
+.. object:: Ignore Voltage
+
+    By default, *Cytoflow* enforces a constraint that all the channel voltages
+    must be the same in all the FCS files. Click this box to ignore this
+    constraint.
+    
+    .. warning::
+       This will BREAK many experiments! Do not enable this if you are
+       planning to perform quantitative comparisons across tubes!
+    
 .. object:: Set up experiment....
 
     Open the sample editor dialog box.
@@ -145,6 +155,7 @@ class ImportHandler(OpHandler):
                                       placeholder = "None",
                                       format_func = lambda x: "" if x is None else str(x)),
                   label="Events per\nsample"),
+             Item('object.ignore_v_bool', label='Ignore\nVoltage'),
              Item('handler.samples', label='Samples', style='readonly'),
              Item('ret_events', label='Events', style='readonly'),
              Item('handler.setup_event',

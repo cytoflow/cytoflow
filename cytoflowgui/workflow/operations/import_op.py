@@ -22,10 +22,11 @@ cytoflowgui.workflow.operations.import_op
 
 """
 
+import warnings
 from textwrap import dedent 
 
 from traits.api import (HasTraits, String, List, Dict, Str, Enum, Instance, 
-                        provides, BaseCStr, observe)
+                        provides, BaseCStr, Bool, observe)
 
 import cytoflow.utility as util
 from cytoflow import Tube, ImportOp
@@ -58,6 +59,7 @@ class ImportWorkflowOp(WorkflowOperation, ImportOp):
     original_channels = List(Str)
     channels_list = List(Channel, estimate = True)
     events = util.CIntOrNone(None, estimate = True)
+    ignore_v_bool = Bool(estimate = True)
     tubes = List(Tube, estimate = True)
     conditions = Dict(Str, Str, estimate = True)
     channels = Dict(Str, Str, transient = True)
@@ -79,6 +81,10 @@ class ImportWorkflowOp(WorkflowOperation, ImportOp):
 
     def estimate(self, _):
         self.channels = {c.channel : c.name for c in self.channels_list}
+        if self.ignore_v_bool:
+            warnings.warn("Only ignore voltages if you know what you're doing!",
+                          util.CytoflowOpWarning)
+            self.ignore_v = list(self.channels.keys())
         self.ret_experiment = super().apply()
         self.ret_events = len(self.ret_experiment)
         
@@ -109,17 +115,24 @@ class ImportWorkflowOp(WorkflowOperation, ImportOp):
                     idx = idx))
     
 ### Serialization
+
+@camel_registry.dumper(ImportWorkflowOp, 'import', version = 4)
+def _dump_op(op):
+    return dict(tubes = op.tubes,
+                conditions = op.conditions,
+                channels_list = op.channels_list,
+                events = op.events,
+                name_metadata = op.name_metadata,
+                ignore_v_bool = op.ignore_v_bool)
     
 @camel_registry.dumper(ImportWorkflowOp, 'import', version = 3)
-def _dump_op(op):
+def _dump_op_v3(op):
     return dict(tubes = op.tubes,
                 conditions = op.conditions,
                 channels_list = op.channels_list,
                 events = op.events,
                 name_metadata = op.name_metadata)
     
-
-
 @camel_registry.dumper(ImportWorkflowOp, 'import', version = 2)
 def _dump_op_v2(op):
     return dict(tubes = op.tubes,
@@ -140,7 +153,7 @@ def _dump_op_v1(op):
 
 @camel_registry.loader('import', version = 1)
 @camel_registry.loader('import', version = 2)
-def _load_op(data, version):
+def _load_op_v1_v2(data, version):
     data.pop('ret_events', None)
     channels = data.pop('channels', [])
     data['channels_list'] = [Channel(channel = k, name = v )
@@ -149,7 +162,8 @@ def _load_op(data, version):
 
 
 @camel_registry.loader('import', version = 3)
-def _load_op_v3(data, version):
+@camel_registry.loader('import', version = 4)
+def _load_op_v3_v4(data, version):
     return ImportWorkflowOp(**data)
 
 
