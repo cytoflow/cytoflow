@@ -34,6 +34,7 @@ from matplotlib.table import Table
 import numpy as np
 
 from .i_view import IView
+import cytoflow
 import cytoflow.utility as util
 
 @provides(IView)
@@ -131,6 +132,15 @@ class LongTableView(HasStrictTraits):
                 raise util.CytoflowViewError('subset',
                                              "Subset string '{0}' returned no values"
                                              .format(self.subset))
+                
+        if len(data) > 50:
+            if cytoflow.RUNNING_IN_GUI:
+                raise util.CytoflowViewError(None,
+                                             "Can't make a table with more than 50 rows! "
+                                             "You can still export the table, though." )
+            else:
+                raise util.CytoflowViewError(None,
+                                             "Can't make a table with more than 50 rows!")
             
         names = list(data.index.names)
         for name in names:

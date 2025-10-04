@@ -34,6 +34,7 @@ from matplotlib.table import Table
 import numpy as np
 
 from .i_view import IView
+import cytoflow
 import cytoflow.utility as util
 
 @provides(IView)
@@ -48,7 +49,7 @@ class TableView(HasStrictTraits):
     
     Attributes
     ----------
-    statistic : (str, str)
+    statistic : str
         The name of the statistic to plot.  Must be a key in the  
         `Experiment.statistics` attribute of the `Experiment`
         being plotted.  Each level of the statistic's index must be used 
@@ -265,7 +266,26 @@ class TableView(HasStrictTraits):
         row_offset = (self.column_facet != "") + (self.subcolumn_facet != "")        
         col_offset = (self.row_facet != "") + (self.subrow_facet != "")
         
+        num_rows = len(row_groups) * len(subrow_groups) + row_offset
         num_cols = len(col_groups) * len(subcol_groups) + col_offset
+                        
+        if num_rows > 50:
+            if cytoflow.RUNNING_IN_GUI:
+                raise util.CytoflowViewError('row_facet',
+                                             "Can't make a table with more than 50 rows! "
+                                             "You can still export the table, though." )
+            else:
+                raise util.CytoflowViewError('row_facet',
+                                             "Can't make a table with more than 50 rows!")
+                
+        if num_cols > 50:
+            if cytoflow.RUNNING_IN_GUI:
+                raise util.CytoflowViewError('col_facet',
+                                             "Can't make a table with more than 50 columns! "
+                                             "You can still export the table, though." )
+            else:
+                raise util.CytoflowViewError('row_facet',
+                                             "Can't make a table with more than 50 columns!")
         
         fig = plt.figure()
         ax = fig.add_subplot(111)
