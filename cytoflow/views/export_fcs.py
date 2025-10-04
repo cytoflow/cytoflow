@@ -241,6 +241,13 @@ class ExportFCS(HasStrictTraits):
                            if re.search(r'^\$P\d+[BENRDSG]$', k) is None
                            and k not in exclude_keywords}
         
+        # filter out non-printable characters, or fcswrite will wedge
+        
+        def filt_printable(s):
+            return re.sub(r'[^\x00-\x7f]', r'', s)
+        
+        common_metadata = {k : filt_printable(v) for k, v in common_metadata.items()}
+        
         for filename, metadata in experiment.metadata['fcs_metadata'].items():
             if filename == tube0:
                 continue
