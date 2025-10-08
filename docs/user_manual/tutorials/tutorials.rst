@@ -17,6 +17,7 @@ more advanced analyses.
    dose_response
    hierarchical
    genome_size
+   microbial_diversity
    
    
 **Advanced tutorials**
