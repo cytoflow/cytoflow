@@ -81,9 +81,10 @@ Make a table out of a statistic.  The table can then be exported.
 """
 
 import pandas as pd
+import warnings
 
 from traits.api import provides, Property, Event, observe, List
-from traitsui.api import View, Item, EnumEditor, VGroup, ButtonEditor
+from traitsui.api import View, Item, EnumEditor, VGroup, ButtonEditor, TextEditor
 from envisage.api import Plugin
 from pyface.api import ImageResource, FileDialog, OK  # @UnresolvedImport
 
@@ -95,6 +96,7 @@ from ..subset_controllers import subset_handler_factory
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
 from .view_plugin_base import ViewHandler, PluginHelpMixin
 
+import cytoflow.utility as util
     
 class TableHandler(ViewHandler):
 
@@ -128,6 +130,10 @@ class TableHandler(ViewHandler):
                          editor = ExtendableEnumEditor(name='handler.indices',
                                                      extra_items = {"None" : ""}),
                          label = "Subcolumn"),
+                    Item('fill',
+                         editor = TextEditor(evaluate = float,
+                                             auto_set = False,
+                                             placeholder = "None")),
                     Item('handler.export',
                          editor = ButtonEditor(label = "Export..."),
                          enabled_when = 'result is not None',
@@ -224,9 +230,16 @@ class TableHandler(ViewHandler):
         if dialog.open() != OK:
             return
          
-        self.model._export_data(self.model.result, self.model.feature, dialog.path)
-            
-                    
+        with warnings.catch_warnings(record = True) as w:
+            try:    
+                self.model._export_data(self.model.result, self.model.feature, dialog.path)
+            except util.CytoflowError as e:
+                self.context.view_error = e.args[-1] 
+            finally:
+                if w:
+                    self.context.view_warning = w[-1].message.__str__()
+                else:
+                    self.context.view_warning = ""
 
 
 @provides(IViewPlugin)

@@ -47,9 +47,9 @@ class TableWorkflowView(WorkflowByView, TableView):
     def plot(self, experiment, **kwargs):
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
-        
+
+        self.result = experiment.statistics[self.statistic]        
         super().plot(experiment)
-        self.result = experiment.statistics[self.statistic]
         
     def get_notebook_code(self, idx):
         view = TableView()
@@ -64,8 +64,21 @@ class TableWorkflowView(WorkflowByView, TableView):
            
 ### Serialization
 
-@camel_registry.dumper(TableWorkflowView, 'table-view', version = 2)
+@camel_registry.dumper(TableWorkflowView, 'table-view', version = 3)
 def _dump(view):
+    return dict(statistic = view.statistic,
+                feature = view.feature,
+                row_facet = view.row_facet,
+                subrow_facet = view.subrow_facet,
+                column_facet = view.column_facet,
+                subcolumn_facet = view.subcolumn_facet,
+                fill = view.fill,
+                subset_list = view.subset_list,
+                current_plot = view.current_plot)
+    
+
+@camel_registry.dumper(TableWorkflowView, 'table-view', version = 2)
+def _dump_v2(view):
     return dict(statistic = view.statistic,
                 feature = view.feature,
                 row_facet = view.row_facet,
@@ -75,7 +88,7 @@ def _dump(view):
                 subset_list = view.subset_list,
                 current_plot = view.current_plot)
     
-@camel_registry.loader('table-view', version = 2)
+@camel_registry.loader('table-view', version = any)
 def _load(data, version):
     return TableWorkflowView(**data)
 

@@ -27,7 +27,7 @@ cytoflow.views.table
 """
 
 from warnings import warn
-from traits.api import HasStrictTraits, Str, provides, Constant
+from traits.api import HasStrictTraits, Str, provides, Constant, Float
 import matplotlib.pyplot as plt
 
 from matplotlib.table import Table
@@ -67,6 +67,9 @@ class TableView(HasStrictTraits):
 
     subcolumn_facet : str
         The statistic facet to be used as subcolumn headers.
+        
+    fill : Float
+        If exporting, should we fill "None" entries with something?
                 
     subset : str
         A Python expression used to select a subset of the statistic to plot.
@@ -129,6 +132,7 @@ class TableView(HasStrictTraits):
     subrow_facet = Str
     column_facet = Str
     subcolumn_facet = Str
+    fill = util.FloatOrNone(None)
     
     subset = Str
 
@@ -572,7 +576,7 @@ class TableView(HasStrictTraits):
                         try:                      
                             t[row_idx, col_idx] = data.loc[agg_idx, column_name]
                         except KeyError:
-                            text = ""
+                            pass
                         
         # row headers
         if self.row_facet:
@@ -604,6 +608,15 @@ class TableView(HasStrictTraits):
                     text = "{0} = {1}".format(self.subcolumn_facet, c)
                     t[1, col_idx] = text        
                     
+        if (t == None).any():
+            if self.fill is None:
+                warn("Found empty values in the table; they will be replaced with None",
+                     util.CytoflowViewWarning)
+            else:
+                warn("Found empty values in the table; they will be replaced with {}"
+                     .format(self.fill),
+                     util.CytoflowViewWarning)
+                t[t == None] = self.fill
         np.savetxt(filename, t, delimiter = ",", fmt = "%s")
         
         
