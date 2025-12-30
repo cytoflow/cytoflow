@@ -21,7 +21,7 @@ on:
 jobs:
   build-macos-conda-package:
     name: Build and upload MacOS Intel conda package
-    runs-on: macos-13
+    runs-on: macos-15
     defaults:
       run:
         shell: bash -l {0}
@@ -93,7 +93,7 @@ jobs:
 
   build-macos-wheels:
     name: Build MacOS Intel wheel, extension
-    runs-on: macos-13
+    runs-on: macos-15
     defaults:
       run:
         shell: bash -l {0}
@@ -168,7 +168,7 @@ jobs:
         
   build-macos-oneclick:
     name: Build MacOS Intel one-click
-    runs-on: macos-13
+    runs-on: macos-15
     defaults:
       run:
         shell: bash -l {0}

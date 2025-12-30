@@ -20,7 +20,7 @@ jobs:
       
   test-on-macos:
     name: Run nose2 on Intel MacOS runner
-    runs-on: macos-13
+    runs-on: macos-15
     defaults:
       run:
         shell: bash -l {0}
@@ -62,7 +62,7 @@ jobs:
     
   build-macos-conda-package:
     name: Build MacOS Intel conda package
-    runs-on: macos-13
+    runs-on: macos-15
     needs: test-on-macos
     defaults:
       run:
@@ -126,7 +126,7 @@ jobs:
   build-macos-wheels:
     name: Build MacOS Intel wheels
     needs: test-on-macos
-    runs-on: macos-13
+    runs-on: macos-15
     defaults:
       run:
         shell: bash -l {0}
@@ -179,7 +179,7 @@ jobs:
   build-macos-oneclick:
     name: Build MacOS Intel one-click
     needs: test-on-macos
-    runs-on: macos-13
+    runs-on: macos-15
     defaults:
       run:
         shell: bash -l {0}
