@@ -85,13 +85,13 @@ of using a manual gate, let's use a *Density Gate* gate on ``FSC_H`` and ``FSC_W
 to select 80% of the events in the densest clusters. It's more reproducible and 
 less biased than manual gating!
 
-.. image:: images/computational02.png
+.. image:: images/computational03.png
 
 Of course, I say that, then turn around to draw a manual *Range Gate* on the
 ``Live_Dead`` channel. This one is pretty obvious, though. Remember, the **live**
 cells are the ones that **don't** stain.
 
-.. image:: images/computational03.png
+.. image:: images/computational04.png
 
 Clustering with self-organizing maps
 ------------------------------------
@@ -111,7 +111,7 @@ one can take a minute or so on a decent computer, so be patient. This algorithm
 also works substantially better on scaled data, so we'll scale each channel with
 the *logicle* biexponential scale before training the map.
 
-.. image:: images/computational04.png
+.. image:: images/computational05.png
 
 In this example, we know the ground truth, but in general we won't -- so we need
 to use internal measures to evaluate the performance of our classifier. In this 
@@ -128,8 +128,6 @@ the data better. This should decrease, but it pretty much always looks asymptoti
 If it doesn't seem to have decreased much, increase the number of iterations, 
 but beware -- later iterations give you less of a decrease each time than 
 earlier ones!
-
-.. image:: images/computational05.png
 
 To use *Cytoflow*'s self-organizing map module effectively, it's important to
 understand what it did. First, as we can see in the *Experiment Browser*, it 
