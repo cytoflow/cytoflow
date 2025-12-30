@@ -33,7 +33,7 @@ requirements:
     - statsmodels=0.14
     - natsort=8.4
     - numba=0.61
-    - opentsne=1.0
+    - opentsne=1.0.4
     - python-igraph=0.11
     - scikit-fda=0.10
 
@@ -87,7 +87,7 @@ requirements:
     - statsmodels=0.14
     - natsort=8.4
     - numba=0.61
-    - opentsne=1.0.2
+    - opentsne=1.0.4
     - python-igraph=0.11
     - scikit-fda=0.10
 
