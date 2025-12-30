@@ -6,6 +6,7 @@
 * Major GUI code restructure to separate the model from the view and controller.  As a result, cytoflow only creates one icon on the Mac taskbar now!
 * Fix a number of bugs, including one high-profile bug where the GUI would crash on saving.
 * Update dependencies to current versions.
+  
 
 ## Release 1.1 "tdTomato"
 Maintenance release.
