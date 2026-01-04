@@ -165,7 +165,7 @@ def _dump_v1(op):
                 by = op.by,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('density-gate', version = 1)
+@camel_registry.loader('density-gate', version = any)
 def _load(data, version):
     return DensityGateWorkflowOp(**data)
 
