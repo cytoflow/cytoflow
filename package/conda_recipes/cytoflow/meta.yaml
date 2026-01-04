@@ -34,6 +34,7 @@ requirements:
     - natsort=8.4
     - numba=0.61
     - opentsne=1.0.4
+    - igraph=0.10
     - python-igraph=0.11
     - scikit-fda=0.10
 
@@ -88,6 +89,7 @@ requirements:
     - natsort=8.4
     - numba=0.61
     - opentsne=1.0.4
+    - igraph=0.10
     - python-igraph=0.11
     - scikit-fda=0.10
 
