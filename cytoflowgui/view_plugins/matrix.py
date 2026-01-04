@@ -21,22 +21,22 @@
 Matrix Chart
 ------------
 
-Plots a "matrix" chart. This can be a heat map, or a matrix of pie or petal plots:
-
+    Plots a "matrix" chart. This can be a heat map, or a matrix of pie or petal plots:
+    
     * The default behavior will produce a "traditional" heat map, where each "cell" 
       is a circle and the color of the circle is related to the intensity of the 
       value of ``Feature``. (In this scenario, ``Variable`` must be left empty.)
-      
+          
     * Setting ``Style`` to ``Pie plot`` will draw a pie plot in each cell. The values 
       of ``Variable`` are used as the categories of the pie, and the arc length 
       of each slice of pie is related to the intensity of the value of ``Feature``.
-      
+          
     * Setting ``Style`` to ``Petal plot`` will draw a "petal plot" in each cell. The 
       values of ``Variable`` are used as the categories, but unlike a pie plot, the 
       arc width of each slice is equal. Instead, the radius of the pie slice scales 
       with the square root of the intensity, so that the relationship between area and
       intensity remains the same.
-      
+          
     Optionally, you can set ``Scale by events`` to scale the total size of each
     circle, pie or petal plot by the number of events that match the category.
 

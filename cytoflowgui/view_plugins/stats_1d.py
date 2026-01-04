@@ -31,7 +31,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
     Which statistic to plot.
     
 .. object:: Feature
-        The column in the statistic to plot on the Y axis (often a channel name.)
+
+    The column in the statistic to plot on the Y axis (often a channel name.)
     
 .. object:: Variable
 

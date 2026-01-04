@@ -79,12 +79,12 @@ class RegistrationOp(HasStrictTraits):
     kernel : Str (default = ``gaussian``)
         The kernel to use for the kernel density estimate. Choices are:
         
-            - ``gaussian`` (the default)
-            - ``tophat``
-            - ``epanechnikov``
-            - ``exponential``
-            - ``linear``
-            - ``cosine``
+        - ``gaussian`` (the default)
+        - ``tophat``
+        - ``epanechnikov``
+        - ``exponential``
+        - ``linear``
+        - ``cosine``
             
     bw : Str or Float (deafult = ``scott``)
         The bandwidth for the kernel, controls how lumpy or smooth the

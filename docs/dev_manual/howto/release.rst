@@ -9,7 +9,7 @@ Set up a build environment
 Using Anaconda, create a build environment and install the current source::
 
      conda env create --name cf_build --file package/environment-build.yml
-     conda activate cf_dev
+     conda activate cf_build
      pip install --editable .
 
 Tests

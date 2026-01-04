@@ -28,7 +28,8 @@ Make a table out of a statistic.  The table can then be exported.
     Which statistic to view.
     
 .. object:: Feature
-        The column in the statistic to view (often a channel name.)
+    
+    The column in the statistic to view (often a channel name.)
     
 .. object:: Rows
 
