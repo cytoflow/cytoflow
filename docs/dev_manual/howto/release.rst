@@ -86,7 +86,7 @@ Test the packaging
       # edit environment.yml for your platform
       conda env create --name cf.test -f environment.yml
       conda activate cf.test
-      conda install ./cytoflow-*******-tar.bz2
+      conda install ./cytoflow-*******.conda
       python -c "import cytoflow"
       cytoflow
 
