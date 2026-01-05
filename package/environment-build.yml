@@ -24,6 +24,12 @@ dependencies:
 
     # version 2.2.1 of gmpy2 crashes
     - gmpy2==2.1.5
+    
+    # get a compatible version of libffi to make sure ctypes works
+    - defaults::libffi
+    
+    # needed for numpy
+    - mkl-service
 
     - traits=7.0
     - traitsui=8.0
@@ -54,7 +60,6 @@ dependencies:
     - setuptools_scm            # build
     - nose2                     # build
     - pip                       # build
-    - defaults::libffi          # build
     - anaconda-client           # build
     - conda-build               # build
     - conda-verify              # build

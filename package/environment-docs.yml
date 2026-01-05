@@ -24,6 +24,12 @@ dependencies:
 
     # version 2.2.1 of gmpy2 crashes
     - gmpy2==2.1.5
+    
+    # get a compatible version of libffi to make sure ctypes works
+    - defaults::libffi
+    
+    # needed for numpy
+    - mkl-service
 
     - traits=7.0
     - traitsui=8.0
@@ -52,7 +58,6 @@ dependencies:
     # build tools
     - setuptools>=78.1.1       
     - pip           
-    - defaults::libffi          
     - sphinx                   
     - pandoc                    
     - pydata-sphinx-theme      

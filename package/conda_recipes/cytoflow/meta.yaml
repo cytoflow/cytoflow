@@ -41,6 +41,12 @@ requirements:
 
     # version 2.2.1 of gmpy2 crashes
     - gmpy2==2.1.5
+    
+    # get a compatible version of libffi to make sure ctypes works
+    - defaults::libffi
+    
+    # needed for numpy
+    - mkl-service
 
     - traits=7.0
     - traitsui=8.0
@@ -62,7 +68,6 @@ requirements:
     - setuptools>=78.1.1
     - setuptools_scm
     - pip
-    - defaults::libffi
     - swig
     - anaconda-client
     - conda-build
@@ -93,6 +98,12 @@ requirements:
 
     # version 2.2.1 of gmpy2 crashes
     - gmpy2==2.1.5
+    
+    # get a compatible version of libffi to make sure ctypes works
+    - defaults::libffi
+    
+    # needed for numpy
+    - mkl-service
 
     - traits=7.0
     - traitsui=8.0
