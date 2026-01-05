@@ -51,7 +51,8 @@ dependencies:
     
     # build tools
     - setuptools>=78.1.1       
-    - pip                     
+    - pip           
+    - defaults::libffi          
     - sphinx                   
     - pandoc                    
     - pydata-sphinx-theme      

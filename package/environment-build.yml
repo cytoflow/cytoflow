@@ -54,6 +54,7 @@ dependencies:
     - setuptools_scm            # build
     - nose2                     # build
     - pip                       # build
+    - defaults::libffi          # build
     - anaconda-client           # build
     - conda-build               # build
     - conda-verify              # build
