@@ -27,9 +27,6 @@ dependencies:
     
     # get a compatible version of libffi to make sure ctypes works
     - defaults::libffi
-    
-    # needed for numpy
-    - mkl-service
 
     - traits=7.0
     - traitsui=8.0
@@ -68,4 +65,10 @@ dependencies:
     - pandoc                    # build
     - pydata-sphinx-theme       # build
     - sphinx-design             # build
+    
+    # If you're NOT installing source on Windows, remove this line:
+    - mkl-service # [win]
+    
+    # If you ARE installing from source on Windows, remove this line:
+    - nomkl # [not win]
 

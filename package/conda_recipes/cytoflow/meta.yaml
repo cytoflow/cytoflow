@@ -44,9 +44,6 @@ requirements:
     
     # get a compatible version of libffi to make sure ctypes works
     - defaults::libffi
-    
-    # needed for numpy
-    - mkl-service
 
     - traits=7.0
     - traitsui=8.0
@@ -77,6 +74,10 @@ requirements:
     - bleach
     - pydata-sphinx-theme
     - sphinx-design
+    
+    # mkl configuration
+    - mkl-service # [win]
+    - nomkl # [not win]
 
   run:
     - python=3.12
@@ -128,6 +129,10 @@ requirements:
     
     # required on windows. I have no idea why.
     - swig
+
+    # mkl configuration
+    - mkl-service # [win]
+    - nomkl # [not win]
 
 test:
   # Python imports
