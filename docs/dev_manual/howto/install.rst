@@ -28,6 +28,8 @@ Installing from the ``Anaconda Navigator``
   
   .. image:: images/channels.PNG
   
+* Click ``Add...`` and type ``conda-forge``. Select "Update channels."
+  
 * Click ``Add...`` and type ``cytoflow``.  Select "Update channels."
   
   .. image:: images/add-channels.PNG
@@ -63,15 +65,19 @@ Installing from the command line
 
 * Start ``Anaconda Prompt`` from the Start Menu (Windows) or Finder (Mac).
 
+* If you don't have it already, add the ``conda-forge`` channel::
+
+    conda config --add channels conda-forge
+
 * Add the ``cytoflow`` channel::
 
     conda config --add channels cytoflow
 
-* Create a new environment and install ``cytoflow`` and the Jupyter notebook.  
+* Create a new environment and install ``cytoflow`` and Jupyter Lab.  
   In this example, the new environment will be called ``cf`` -- feel free to
   choose a different name::
   
-    conda create --name cf cytoflow notebook
+    conda create --name cf cytoflow jupyterlab
     
 * Activate the new environment::
 
@@ -79,7 +85,7 @@ Installing from the command line
     
 * Launch the Jupyter notebook::
 
-    jupyter notebook
+    jupyter lab
     
 * Create a new *Python 3* notebook.  In the first cell, type ``import cytoflow``
   and press ``Shift+Enter``.  If Python doesn't complain, you're good to go.  
