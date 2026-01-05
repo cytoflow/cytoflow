@@ -70,10 +70,6 @@ requirements:
     - bleach
     - pydata-sphinx-theme
     - sphinx-design
-    
-    # mkl configuration
-    - mkl-service # [win]
-    - nomkl # [not win]
 
   run:
     - python=3.12
@@ -119,9 +115,6 @@ requirements:
     
     # required on windows. I have no idea why.
     - swig
-    
-    - mkl-service # [win]
-    - nomkl # [not win]
 
 test:
   # Python imports
