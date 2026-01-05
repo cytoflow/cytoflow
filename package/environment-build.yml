@@ -62,4 +62,10 @@ dependencies:
     - pandoc                    # build
     - pydata-sphinx-theme       # build
     - sphinx-design             # build
+    
+    # If you're NOT installing source on Windows, remove this line:
+    - mkl-service # [win]
+    
+    # If you ARE installing from source on Windows, remove this line:
+    - nomkl # [not win]
 

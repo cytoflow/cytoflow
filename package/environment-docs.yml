@@ -56,5 +56,7 @@ dependencies:
     - pandoc                    
     - pydata-sphinx-theme      
     - sphinx-design           
-
+    
+    # If you ARE installing from source on Windows, remove this line:
+    - nomkl # [not win]
 
