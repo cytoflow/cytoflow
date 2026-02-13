@@ -331,7 +331,7 @@ class ImportOp(HasStrictTraits):
             # keep track of the channel's PMT voltage
             if("$PnV" in meta_channels.loc[channel]):
                 v = meta_channels.loc[channel]['$PnV']
-                if v: experiment.metadata[channel]["voltage"] = v
+                if v and not pd.isna(v): experiment.metadata[channel]["voltage"] = v
                             
             # add the maximum possible value for this channel.
             data_range = meta_channels.loc[channel]['$PnR']
@@ -531,8 +531,13 @@ def check_tube(filename, experiment, data_set = 0):
     for channel in experiment.channels:  
         fcs_name = experiment.metadata[channel]["fcs_name"]      
         # first check voltage
-        if "voltage" in experiment.metadata[channel]:    
-            if not "$PnV" in tube_channels.loc[fcs_name]:
+        if "voltage" in experiment.metadata[channel]:
+            
+            # Time often doesn't have a voltage    
+            if "time" in fcs_name.lower():
+                continue
+            
+            if not "$PnV" in tube_channels.loc[fcs_name] or pd.isna(tube_channels.loc[fcs_name, "$PnV"]):
                 raise util.CytoflowError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, filename))
             

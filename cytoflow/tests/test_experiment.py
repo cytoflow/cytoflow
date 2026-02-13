@@ -81,13 +81,6 @@ class TestExperiment(ImportedDataTest):
         self.assertEqual(len(self.ex['Dox'].unique()), 4)
         self.assertEqual(len(self.ex['Well'].unique()), 4)
         self.assertEqual(len(self.ex), len(ex2) + old_len)
-        
-    
-    def testCloneIsShallow(self):
-        ex2 = self.ex.clone(deep = False)
-        self.assertNotEqual(self.ex['B1-A'].at[100], 100.0)
-        ex2.data.loc[100, 'B1-A'] = 100.0
-        self.assertEqual(self.ex['B1-A'].at[100], 100.0)
          
     def testReplaceColumn(self):
         # clone self.ex; replace column B1-A with [100.0] * len(self.ex) in clone;

@@ -185,9 +185,7 @@ class Experiment(HasStrictTraits):
      
     def __setitem__(self, key, value):
         """Override __setitem__ so we can assign columns like ex.column = ..."""
-        if key in self.data:
-            self.data.drop(key, axis = 'columns', inplace = True)
-        return self.data.__setitem__(key, value)
+        self.data.loc[:, key] = value
     
     def __len__(self):
         """Return the length of the underlying `pandas.DataFrame`"""
@@ -312,10 +310,9 @@ class Experiment(HasStrictTraits):
         .. warning:: The intent is that ``deep`` is set to ``False`` by 
                      operations that are only adding columns to the 
                      underlying `pandas.DataFrame`.  This will
-                     improve memory performance.  However, the resulting
-                     `Experiment`  **CANNOT BE MODIFIED IN-PLACE**,
-                     because doing so will affect the other `Experiment` s
-                     that are clones of the one being modified.
+                     improve memory performance, and because of pandas' 
+                     copy-on-write behavior, data that needs to be copied
+                     will be copied when necessary.
         """
         
         new_exp = self.clone_traits()
