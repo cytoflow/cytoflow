@@ -5,19 +5,19 @@ channels:
  - conda-forge
  
 dependencies:
-    - python=3.12
-    - numpy=2.2
-    - pandas=2.3
+    - python=3.13
+    - numpy=2.3
+    - pandas=3.0
     - matplotlib=3.10
     - bottleneck=1.4
-    - numexpr=2.11
+    - numexpr=2.14
     - scipy=1.16
-    - scikit-learn=1.7
-    - seaborn=0.13.2
+    - scikit-learn=1.8
+    - seaborn=0.13
     - statsmodels=0.14
     - natsort=8.4
-    - numba=0.61
-    - opentsne=1.0.4
+    - numba=0.63
+    - opentsne=1.0
     - igraph=0.10
     - python-igraph=0.11
     - scikit-fda=0.10
@@ -34,12 +34,12 @@ dependencies:
     - envisage=7.0
     - nbformat=5.10
     - python-dateutil=2.9
-    - importlib_resources=6.4
+    - importlib_resources=6.5
     - configobj=5.0
 
-    - defaults::qt=5
-    - defaults::pyqt=5
-    - defaults::pyqtwebengine=5
+    - defaults::qt=6
+    - defaults::pyqt=6
+    - defaults::pyqtwebengine=6
 
     - cytoflow::camel=0.1.2
     - yapf=0.40
