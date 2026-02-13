@@ -36,12 +36,8 @@ dependencies = [
     'natsort',
     'numba',
     'opentsne',
-<<<<<<< qt6
     'igraph==0.11.*',
     'python-igraph==0.11.*',
-=======
-    'python_igraph',
->>>>>>> 6e122c9 qt6: fix a bunch of enums for pyside6
     'scikit-fda',
                 
     'traits',
