@@ -37,9 +37,8 @@ dependencies:
     - importlib_resources=6.4
     - configobj=5.0
 
-    - defaults::qt=6
-    - defaults::pyqt=6
-    - defaults::pyqtwebengine=6
+    - qt=6
+    - pyside6
 
     - cytoflow::camel=0.1.2
     - yapf=0.40

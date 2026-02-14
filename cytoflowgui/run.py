@@ -88,11 +88,10 @@ def run_gui():
     # need different behavior in a GUI
     import cytoflow
     cytoflow.RUNNING_IN_GUI = True
-            
+    
     # check that we're using the right Qt API
     from pyface.qt import qt_api
-
-    cmd_line = " ".join(sys.argv)
+    assert(qt_api == "pyside6")
     
     # parse args
     parser = argparse.ArgumentParser(description = 'Cytoflow GUI')
