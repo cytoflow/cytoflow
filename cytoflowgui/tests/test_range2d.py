@@ -189,10 +189,11 @@ class TestRange2D(ImportedDataTest):
             
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
-         
-        exec(code, globals(), locals())
-            
-        nb_data = locals()['ex_3'].data
+        
+        exec_locals = {}
+        exec(code, locals = exec_locals)
+
+        nb_data = exec_locals['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)
@@ -247,9 +248,10 @@ class TestRange2D(ImportedDataTest):
             for view in wi.views:
                 code = code + view.get_notebook_code(i)
          
-        exec(code, globals(), locals())
-            
-        nb_data = locals()['ex_3'].data
+        exec_locals = {}
+        exec(code, locals = exec_locals)
+
+        nb_data = exec_locals['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)
