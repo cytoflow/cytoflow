@@ -114,8 +114,8 @@ jobs:
         
     - name: Build conda package
       run: |
-        conda render package/conda_recipes/cytoflow
-        conda build --quiet package/conda_recipes/cytoflow
+        conda-render package/conda_recipes/cytoflow
+        conda-build --quiet package/conda_recipes/cytoflow
         
 #     - name: Zip up the build directory
 #       run: |
@@ -131,7 +131,7 @@ jobs:
     - name: Move conda package into the dist folder
       run: |
         mkdir dist
-        mv `conda build --output package/conda_recipes/cytoflow/` dist
+        mv `conda-build --output package/conda_recipes/cytoflow/` dist
         
     - name: Copy package/environment-build.yml into the dist folder
       run: |
