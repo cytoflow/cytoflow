@@ -58,7 +58,7 @@ Test the packaging
   	  
 - Build the conda package locally::
 	
-      conda build package/conda_recipes/cytoflow
+      conda-build package/conda_recipes/cytoflow
       
 - Install the local package in a new environment::
 
