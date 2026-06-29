@@ -375,7 +375,7 @@ class BaseView(HasStrictTraits):
             g.set_titles(template = "{row_var} = {row_name}\n{col_var} = {col_name}")
                         
         if title:
-            plt.suptitle(title, y = 1.02)
+            plt.suptitle(title)
             
         g.set_axis_labels(xlabel, ylabel)
       
