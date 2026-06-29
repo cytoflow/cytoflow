@@ -38,6 +38,7 @@ class MatrixPlotParams(HasStrictTraits):
     xlabel = Str
     ylabel = Str
     legendlabel = Str
+    legend_loc = Str("upper right")
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
     sns_context = Enum(['notebook', 'paper', 'poster', 'talk'])

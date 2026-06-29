@@ -130,12 +130,13 @@ from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import MSTWorkflowView, MSTPlotParams
-from ..workflow.views.view_base import COLORMAPS
+from ..workflow.views.view_base import COLORMAPS, LEGEND_LOCATIONS
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 from ..subset_controllers import subset_handler_factory
 
+
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .view_plugin_base import ViewHandler, PluginHelpMixin, BasePlotParamsView
+from .view_plugin_base import ViewHandler, PluginHelpMixin
 
 METRICS = ['euclidean', 'cosine', 'braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 
            'dice', 'hamming', 'jaccard', 'jensenshannon', 'kulczynski1', 'mahalanobis', 
@@ -143,7 +144,6 @@ METRICS = ['euclidean', 'cosine', 'braycurtis', 'canberra', 'chebyshev', 'citybl
            'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
 
 class MSTParamsHandler(Controller):
-    view_params_view = BasePlotParamsView
     view_params_view = \
         View(Item('title',
                   editor = TextEditor(auto_set = False,
@@ -158,6 +158,9 @@ class MSTParamsHandler(Controller):
                   label = "Context"),
              Item('legend',
                   label = "Show legend?"),
+             Item('legend_loc',
+                  label = "Legend\nlocation",
+                  editor = EnumEditor(values = LEGEND_LOCATIONS)),
              Item('palette',
                   label = "Color palette",
                   editor = EnumEditor(values = {'' : '0:(Default)'} | COLORMAPS)))

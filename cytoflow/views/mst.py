@@ -260,6 +260,11 @@ class MSTView(HasStrictTraits):
         legend : bool
             Plot a legend or color bar?  Defaults to `True`.
             
+        legend_loc : str
+            If we plot a legend, where should it go? This is a ``matplotlib``
+            legend location string, like 'lower right' or 'outside center right'.
+            Default is 'upper right'.
+            
         legendlabel : str
             Set the label for the color bar or legend
  
@@ -293,50 +298,6 @@ class MSTView(HasStrictTraits):
         stat = self._subset_data(self.statistic, stat)
         locs = self._subset_data(self.locations, locs)
         experiment_data = experiment.data
-        
-        # if not self.feature:
-        #     raise util.CytoflowViewError('feature',
-        #                                  "Must set `feature` to a feature in `statistic`")
-        #
-        # # the indices of `stat` and `locs` may have the same levels, or the index 
-        # # of `stat` may have one more -- if so, it must be `self.variable`. to get
-        # # things compatible, we'll re-order the index levels of stats.
-        # locs_names = set(stat.index.names) - set([self.variable]) if self.variable else set(stat.index.names)
-        # if locs_names != set(locs.index.names):
-        #     if self.style == "heat":
-        #         raise util.CytoflowViewError('locations',
-        #                                      "If `style` is \"heat\", the levels of 'locations' must be the same as levels of 'statistic'")
-        #     else:
-        #         raise util.CytoflowViewError('locations',
-        #                                      "If `style` is not \"heat\", then the levels of 'locations' must be the same as the levels of 'statistic' without 'variable'.")
-        #
-        # # need to re-index stat to be compatible with locs
-        # stat_names = locs.index.names + [self.variable] if self.variable else locs.index.names
-        # new_stat_idx = stat.index.reorder_levels(stat_names)
-        # stat = stat.copy()
-        # stat.index = new_stat_idx
-        #
-        # # gotta remove rows of stat that aren't in locs
-        # # (because some clustering add a -1 value
-        # stat_idx = stat.index.droplevel(self.variable) if self.variable else stat.index
-        # stat = stat[[v in locs.index for v in stat_idx]]
-        #
-        # if stat.empty:
-        #     raise util.CytoflowViewError('locations',
-        #                                  f'{self.statistic} and {self.locations} dont share any rows!')
-        #
-        # # do we have to get a plot_name?
-        # if len(locs_names) > 1 and not self.locations_level:
-        #     raise util.CytoflowViewError('location_level',
-        #                                  'If `locations` has more than one index level, you must set `location_level`.')
-        #
-        # if self.locations_level and self.locations_level not in locs_names:
-        #     raise util.CytoflowViewError('location_level',
-        #                                  '`location_level` value {} is not in {}'
-        #                                  .format(self.locations_level, self.ocations))
-        #
-        # self._loc_level = loc_level = self.locations_level if self.locations_level else list(locs_names)[0]            
-        # unused_names = list(set(locs_names) - set([loc_level]))
         
         if locs.index.nlevels > 1:
             if not self.locations_level:
@@ -440,6 +401,7 @@ class MSTView(HasStrictTraits):
         
         title = kwargs.pop("title", None)
         legend = kwargs.pop('legend', True)
+        legend_loc = kwargs.pop('legend_loc', 'upper right')
         legendlabel = kwargs.pop('legendlabel', self.variable)
                 
         if cytoflow.RUNNING_IN_GUI:
@@ -571,7 +533,8 @@ class MSTView(HasStrictTraits):
             if legend:
                 plt.colorbar(mpl.cm.ScalarMappable(norm = data_norm, cmap = cmap),
                              ax = ax,
-                             label = legendlabel)
+                             label = legendlabel,
+                             loc = legend_loc)
 
         elif self.style == "pie":
             if self.variable:
@@ -693,14 +656,15 @@ class MSTView(HasStrictTraits):
             if(legend):
                 legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
                 ax.legend(handles = legend_artists.values(),
-                          title = legendlabel)    
+                          title = legendlabel,
+                          loc = legend_loc)    
         
         # make axes equal (spacing)
         ax.axis('equal')
         ax.set_axis_off()
         
         if title:
-            plt.suptitle(title, y = 1.02)
+            plt.suptitle(title)
             
     def enum_plots(self, experiment):
         """

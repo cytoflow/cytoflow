@@ -117,12 +117,12 @@ from envisage.api import Plugin
 from pyface.api import ImageResource  # @UnresolvedImport
 
 from ..workflow.views import MatrixWorkflowView, MatrixPlotParams
-from ..workflow.views.view_base import COLORMAPS
+from ..workflow.views.view_base import COLORMAPS, LEGEND_LOCATIONS
 from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 from ..subset_controllers import subset_handler_factory
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .view_plugin_base import ViewHandler, PluginHelpMixin, BasePlotParamsView
+from .view_plugin_base import ViewHandler, PluginHelpMixin
 
 
 class MatrixParamsHandler(Controller):
@@ -148,6 +148,9 @@ class MatrixParamsHandler(Controller):
                   label = "Context"),
              Item('legend',
                   label = "Show legend?"),
+             Item('legend_loc',
+                  label = "Legend\nlocation",
+                  editor = EnumEditor(values = LEGEND_LOCATIONS)),
              Item('palette',
                   label = "Color palette",
                   editor = EnumEditor(values = {'' : '0:(Default)'} | COLORMAPS)))

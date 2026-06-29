@@ -36,6 +36,7 @@ MSTView.__repr__ = cytoflow_class_repr
 class MSTPlotParams(HasStrictTraits):
     title = Str
     legendlabel = Str
+    legend_loc = Str("upper right")
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
     sns_context = Enum(['notebook', 'paper', 'poster', 'talk'])

@@ -230,6 +230,11 @@ class MatrixView(HasStrictTraits):
             
         legendlabel : str
             Set the label for the color bar or legend
+            
+        legend_loc : str
+            If we plot a legend, where should it go? This is a ``matplotlib``
+            legend location string, like 'lower right' or 'outside center right'.
+            Default is 'upper right'.
  
         palette : palette name
             Colors to use for the different levels of the hue variable. 
@@ -321,6 +326,7 @@ class MatrixView(HasStrictTraits):
 
         legend = kwargs.pop('legend', True)
         legendlabel = kwargs.pop('legendlabel', self.feature)
+        legend_loc = kwargs.pop('legend_loc', 'upper right')
                 
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
@@ -505,7 +511,7 @@ class MatrixView(HasStrictTraits):
                 legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
                 grid.axes_row[0][-1].legend(handles = legend_artists.values(),
                                             bbox_to_anchor = (1, 1), 
-                                            loc = "upper left",
+                                            loc = legend_loc,
                                             title = legendlabel)
                 
             for ax in grid:
@@ -586,7 +592,7 @@ class MatrixView(HasStrictTraits):
                 legend_artists = {k: legend_artists[k] for k in natsorted(legend_artists.keys())}
                 grid.axes_row[0][-1].legend(handles = legend_artists.values(),
                                             bbox_to_anchor = (1, 1), 
-                                            loc = "upper left",
+                                            loc = legend_loc,
                                             title = legendlabel)
                 
             for ax in grid:
@@ -630,7 +636,7 @@ class MatrixView(HasStrictTraits):
         plt.gcf().supylabel(ylabel, x = min_x - 0.04)
         
         if title:
-            plt.suptitle(title, y = 1.02)
+            plt.suptitle(title)
             
     def enum_plots(self, experiment):
         if experiment is None:
