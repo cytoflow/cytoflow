@@ -53,7 +53,7 @@ dependencies:
     - swig
     
     # build tools. the comment is for GitHub workflow preprocessing
-    - setuptools=80        # build
+    - setuptools=80             # build
     - setuptools_scm            # build
     - nose2                     # build
     - pip                       # build

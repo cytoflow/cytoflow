@@ -43,6 +43,7 @@ dependencies:
 
     - cytoflow::camel=0.1.2
     - yapf=0.40
+    - setuptools=80
     
     # make sure some compatible version of jupyterlab and
     # matplotlib widgets are installed
