@@ -533,8 +533,7 @@ class MSTView(HasStrictTraits):
             if legend:
                 plt.colorbar(mpl.cm.ScalarMappable(norm = data_norm, cmap = cmap),
                              ax = ax,
-                             label = legendlabel,
-                             loc = legend_loc)
+                             label = legendlabel)
 
         elif self.style == "pie":
             if self.variable:
