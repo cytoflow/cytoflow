@@ -25,7 +25,7 @@ jobs:
         shell: bash -l {0}        
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.2.2    
+      uses: actions/checkout@v7.0.0    
       with:
         submodules: true    
         
@@ -43,7 +43,7 @@ jobs:
         sed -i '/\[not win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.2.0
+      uses: conda-incubator/setup-miniconda@v4.0.1
       with:
         auto-update-conda: true
         channels: defaults, cytoflow, conda-forge
@@ -77,7 +77,7 @@ jobs:
     needs: test-on-windows
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v7.0.0
       with:
         fetch-depth: 0
         submodules: true
@@ -96,7 +96,7 @@ jobs:
         sed -i '/\[not win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.2.0
+      uses: conda-incubator/setup-miniconda@v4.0.1
       with:
         auto-update-conda: true
         channels: defaults, cytoflow, conda-forge
@@ -115,7 +115,7 @@ jobs:
 #         7z a -tzip conda-build.zip /c/Miniconda/envs/cytoflow/conda-bld/
 #                 
 #     - name: Save the contents of the conda-build folder as artifacts
-#       uses: actions/upload-artifact@v4.3.6
+#       uses: actions/upload-artifact@v7.0.1
 #       with:
 #         name: windows-conda-build-dir
 #         retention-days: 7
@@ -134,7 +134,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v4.3.6
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: windows-conda-package
         retention-days: 7
@@ -149,7 +149,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.2.2  
+      uses: actions/checkout@v7.0.0  
       with:
         fetch-depth: 0
         submodules: true
@@ -168,7 +168,7 @@ jobs:
         sed -i '/\[not win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.2.0
+      uses: conda-incubator/setup-miniconda@v4.0.1
       with:
         auto-update-conda: true
         channels: defaults, cytoflow, conda-forge
@@ -196,7 +196,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v4.3.6
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: windows-wheels
         retention-days: 7
@@ -211,7 +211,7 @@ jobs:
         shell: bash -l {0}
     steps:        
     - name: Check out repo
-      uses: actions/checkout@v4.2.2  
+      uses: actions/checkout@v7.0.0  
       with:
         fetch-depth: 0
         submodules: true
@@ -247,7 +247,7 @@ jobs:
         sed -i '/\[not win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.2.0
+      uses: conda-incubator/setup-miniconda@v4.0.1
       with:
         auto-update-conda: true
         channels: defaults, cytoflow, conda-forge
@@ -281,7 +281,7 @@ jobs:
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
-      uses: actions/upload-artifact@v4.3.6
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: windows-oneclick
         retention-days: 7

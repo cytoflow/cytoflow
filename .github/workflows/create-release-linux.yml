@@ -28,7 +28,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v7.0.0
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -48,7 +48,7 @@ jobs:
         sed -i '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.2.0
+      uses: conda-incubator/setup-miniconda@v4.0.1
       with:
         auto-update-conda: true
         channels: defaults, cytoflow, conda-forge
@@ -100,7 +100,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v7.0.0
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -111,7 +111,7 @@ jobs:
         sed -i '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.2.0
+      uses: conda-incubator/setup-miniconda@v4.0.1
       with:
         auto-update-conda: true
         channels: defaults, cytoflow, conda-forge
@@ -188,7 +188,7 @@ jobs:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v4.2.2  
+      uses: actions/checkout@v7.0.0  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
@@ -208,7 +208,7 @@ jobs:
         sed -i '/\[win\]/d' package/environment-build.yml
       
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v3.2.0
+      uses: conda-incubator/setup-miniconda@v4.0.1
       with:
         auto-update-conda: true
         channels: defaults, cytoflow, conda-forge
@@ -265,7 +265,7 @@ jobs:
         echo "${{ github.event.client_payload.release_url }}"
 
     - name: Check out repo
-      uses: actions/checkout@v4.2.2  
+      uses: actions/checkout@v7.0.0  
       with:
         ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
