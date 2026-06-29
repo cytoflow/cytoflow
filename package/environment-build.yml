@@ -43,6 +43,7 @@ dependencies:
 
     - cytoflow::camel=0.1.2
     - yapf=0.40
+    - setuptools=80
     
     # install a compatible version of jupyterlab
     # and matplotlib widgets
@@ -53,7 +54,6 @@ dependencies:
     - swig
     
     # build tools. the comment is for GitHub workflow preprocessing
-    - setuptools=80             # build
     - setuptools_scm            # build
     - nose2                     # build
     - pip                       # build
