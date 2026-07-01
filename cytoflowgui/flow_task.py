@@ -284,7 +284,7 @@ class FlowTask(Task):
             <strong>Cytoflow</strong> for Windows and Mac costs me about $200 per 
             year. If you can spare a few bucks, please support 
             <strong>Cytoflow's</strong> ongoing availability at 
-            <a href="https://ko-fi.com/bteague">https://ko-fi.com/bteague</a>?
+            <a href="https://ko-fi.com/lrteague">https://ko-fi.com/lrteague</a>?
             <p>
             Thanks! And happy flowing!
             """)
