@@ -19,7 +19,7 @@ My 'day job' is teaching at a regional comprehensive college, so during the seme
 
 ## Cytoflow's development isn't free -- your support is appreciated.
 
-I pay several hundred dollars a year to sign the code so it can be installed on Windows and Mac systems. If you have found it useful, consider [contributing a few dollars on Ko-Fi?](https://ko-fi.com/bteague)
+I pay several hundred dollars a year to sign the code so it can be installed on Windows and Mac systems. If you have found it useful, consider [contributing a few dollars on Ko-Fi?](https://ko-fi.com/lrteague)
 
 ### What's wrong with other packages?  
 
