@@ -93,19 +93,21 @@ Test the packaging
 Versioning and dependencies
 ---------------------------
 
-- We're using ``setuptools-scm`` to manage versions.  No manual versions required.
-
+.. note::
+   You don't have to set version numbers in the code or docs -- we're using
+   ``setuptools-scm`` to get them from ``git``.
+   
+- Update the version integers in ``package/installer.nsis``
+   
 - If there are dependencies that don't have packages on Anaconda, add recipes
   to ``package/conda_recipes`` (using ``conda skeleton``) and upload them to
   the Anaconda Cloud.  Unless there's a really (really!) good reason, please
   make them no-arch.
   
-- Make sure ``install_requires`` in ``pyproject.toml`` matches ``environment.yml``
-
-.. note::
-   You don't have to set version numbers!
+- Make sure ``dependencies`` in ``pyproject.toml`` matches ``environment.yml``.
+  It's not used directly by end-users, but it is read by ``pip install --editable``
+  for building the packages and by developers.
   	
-- Update the version integers in ``package/installer.nsis``
   	
 Tag the release
 ---------------
