@@ -41,8 +41,13 @@ a = Analysis(['../cytoflowgui/run.py'],
 # remove a few libraries that cause crashes if we don't use the system
 # versions
 
-remove_strs = ["glib", "gobject", "gthread", "libX", "libICE", "libdrm", "terminfo"]
+remove_strs = ["glib", "gobject", "gthread", "libICE", "libdrm", "terminfo"]
 
+# on mac, the PIL needs some X libraries to be available to the linker.
+# on others, get rid of them.
+if sys.platform != 'darwin':
+    remove_strs.append("libX")
+    
 # on linux, Anaconda version of fontconfig looks for the config bundled with
 # Anaconda instead of the system config.  this breaks the fonts when you
 # run on a system that you didn't build on
