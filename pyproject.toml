@@ -47,7 +47,7 @@ dependencies = [
     'nbformat',
     'python-dateutil',
     'importlib_resources',
-    'setuptools=80',
+    'setuptools==80',
        
      # pyqt, qt, qtwebengine are not in pip
      # need to install through your package manager
