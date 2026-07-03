@@ -29,7 +29,7 @@ On Windows, you can use a graphical to install Cytoflow.
    
    Note that signing this application costs me about $150 a year. 
    Help me defray some of those costs by tossing me a few bucks
-   at `<https://ko-fi.com/bteague>`_?
+   at `<https://ko-fi.com/lrteague>`_?
    
 #. Follow the instructions in the installer.  Once you've completed the
    installation, you should be able to find ``Cytoflow`` in your Start
@@ -65,7 +65,7 @@ so they may not work on an A1 mac.
    you should not see a security warning -- the app should "just work."
    
    (Consider helping me defray some of that cost by donating a few bucks
-   at `<https://ko-fi.com/bteague>`_?)
+   at `<https://ko-fi.com/lrteague>`_?)
    
 #. (Optional) Move the Cytoflow application to somewhere else "permanent",
    like the desktop or your Applications folder.
