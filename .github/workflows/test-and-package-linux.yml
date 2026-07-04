@@ -172,7 +172,7 @@ jobs:
         anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
 
   build-linux-wheels:
-    name: Build source dist, linux wheels
+    name: Build source dist, wheels and binary extension
     needs: test-on-linux
     runs-on: ubuntu-22.04
     defaults:

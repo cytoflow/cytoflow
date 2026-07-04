@@ -149,7 +149,7 @@ jobs:
 
 
   build-macos-wheels:
-    name: Build MacOS ARM wheels
+    name: Build MacOS ARM wheels and binary extension
     needs: test-on-macos
     runs-on: macos-14
     defaults:

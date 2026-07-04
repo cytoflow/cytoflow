@@ -149,7 +149,7 @@ jobs:
 
 
   build-macos-wheels:
-    name: Build MacOS Intel wheels
+    name: Build MacOS Intel wheels and binary extension
     needs: test-on-macos
     runs-on: macos-15
     defaults:

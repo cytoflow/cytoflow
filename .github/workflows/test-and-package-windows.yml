@@ -166,7 +166,7 @@ jobs:
         
 
   build-windows-wheels:
-    name: Build source dist, linux wheels
+    name: Build wheels and binary extension
     needs: test-on-windows
     runs-on: windows-2025
     defaults:
