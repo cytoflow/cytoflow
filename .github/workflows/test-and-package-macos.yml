@@ -122,6 +122,31 @@ jobs:
         name: macos-conda-package
         retention-days: 7
         path: dist/*
+        
+    - name: Get file names
+      id: get_filenames
+      run: |
+        cd dist
+        echo "CONDA_PACKAGE=$(ls cytoflow*.conda)" >> $GITHUB_OUTPUT
+        
+      # commented out because the file name is the same for each platform.
+      # upload to anaconda.org instead.        
+        
+#     - name: Upload the conda package to the GitHub release
+#       uses: actions/upload-release-asset@v1.0.2
+#       env:
+#         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#       with:
+#         upload_url: ${{ github.event.client_payload.release_url }} 
+#         asset_path: dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_name: ${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_content_type: application/zip
+        
+    - name: Upload conda package to anaconda.org
+      if: github.ref_type == 'tag'
+      run: |
+        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+
 
   build-macos-wheels:
     name: Build MacOS Intel wheels
@@ -176,6 +201,22 @@ jobs:
         retention-days: 7
         path: dist/*   
         
+    - name: Get file names
+      id: get_filenames
+      run: |
+        cd dist
+        echo "EXTENSION_FILE=$(ls _Logicle*.so)" >> $GITHUB_OUTPUT
+        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_OUTPUT
+        
+    - name: Upload files to a Github release
+      uses: softprops/action-gh-release@v3
+      if: github.ref_type == 'tag'
+      with:
+        draft: true
+        files: |
+          ${{ steps.get_filenames.outputs.EXTENSION_FILE }}
+          ${{ steps.get_filenames.outputs.WHEEL_FILE }}
+        
   build-macos-oneclick:
     name: Build MacOS Intel one-click
     needs: test-on-macos
@@ -228,11 +269,13 @@ jobs:
       run: ls dist/
         
     - name: Rename and zip Mac app
+      id: zip_tarball
       run: |
         cd dist/
         mv Cytoflow.app Cytoflow-${GIT_TAG}.app
-        zip -r cytoflow-${GIT_TAG}.macos.zip Cytoflow-${GIT_TAG}.app/
+        zip -r cytoflow-gui-${GIT_TAG}-macos_x86-64.zip Cytoflow-${GIT_TAG}.app/
         rm -rf Cytoflow-${GIT_TAG}.app cytoflow
+        echo "GUI_FILE=cytoflow-gui-${GIT_TAG}-macos_x86-64.zip" >> $GITHUB_OUTPUT
         
     - name: List dist
       run: ls dist/
@@ -243,3 +286,11 @@ jobs:
         name: macos-oneclick
         retention-days: 7
         path: dist/*
+        
+    - name: Upload files to a Github release
+      uses: softprops/action-gh-release@v3
+      if: github.ref_type == 'tag'
+      with:
+        draft: true
+        files: |
+          ${{ steps.rename_directory.outputs.GUI_FILE }}
