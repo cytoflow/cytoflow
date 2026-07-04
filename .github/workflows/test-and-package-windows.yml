@@ -140,6 +140,31 @@ jobs:
         retention-days: 7
         path: dist/*
 
+    - name: Get file names
+      id: get_filenames
+      run: |
+        cd dist
+        echo "CONDA_PACKAGE=$(ls cytoflow*.conda)" >> $GITHUB_OUTPUT
+        
+      # commented out because the file name is the same for each platform.
+      # upload to anaconda.org instead.        
+        
+#     - name: Upload the conda package to the GitHub release
+#       uses: actions/upload-release-asset@v1.0.2
+#       env:
+#         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#       with:
+#         upload_url: ${{ github.event.client_payload.release_url }} 
+#         asset_path: dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_name: ${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+#         asset_content_type: application/zip
+         
+    - name: Upload the conda package to anaconda.org
+      if: github.ref_type == 'tag'
+      run: |
+        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        
+
   build-windows-wheels:
     name: Build source dist, linux wheels
     needs: test-on-windows
@@ -201,6 +226,22 @@ jobs:
         name: windows-wheels
         retention-days: 7
         path: dist/*   
+        
+    - name: Get file names
+      id: get_filenames
+      run: |
+        cd dist
+        echo "EXTENSION_FILE=$(ls _Logicle*.pyd)" >> $GITHUB_OUTPUT
+        echo "WHEEL_FILE=$(ls cytoflow*.whl)" >> $GITHUB_OUTPUT
+      
+    - name: Upload files to a Github release
+      uses: softprops/action-gh-release@v3
+      if: github.ref_type == 'tag'
+      with:
+        draft: true
+        files: |
+          ${{ steps.get_filenames.outputs.EXTENSION_FILE }}
+          ${{ steps.get_filenames.outputs.WHEEL_FILE }}
         
   build-windows-oneclick:
     name: Build Windows one-click
@@ -275,6 +316,7 @@ jobs:
       run: |
         cd dist
         mv cytoflow-installer.exe cytoflow-installer-${GIT_TAG}-win-amd64.exe
+        echo "GUI_FILE=cytoflow-gui-${GIT_TAG}-win_x86-64.exe" >> $GITHUB_OUTPUT
         rm -rf cytoflow
         
     - name: List dist
@@ -286,3 +328,11 @@ jobs:
         name: windows-oneclick
         retention-days: 7
         path: dist/*
+        
+    - name: Upload files to a Github release
+      uses: softprops/action-gh-release@v3
+      if: github.ref_type == 'tag'
+      with:
+        draft: true
+        files: |
+          ${{ steps.rename_directory.outputs.GUI_FILE }}
