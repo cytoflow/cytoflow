@@ -169,7 +169,7 @@ jobs:
     - name: Upload conda package to anaconda.org
       if: github.ref_type == 'tag'
       run: |
-        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow --force dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
 
   build-linux-wheels:
     name: Build source dist, wheels and binary extension
@@ -300,7 +300,7 @@ jobs:
 #        xvfb-run dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
 
     - name: Rename directory and make a tarball
-      id: rename_directory
+      id: zip_app
       run: |
         cd dist
         mv cytoflow cytoflow-${GIT_TAG}
@@ -325,7 +325,7 @@ jobs:
         draft: true
         working_directory: dist
         files: |
-          ${{ steps.rename_directory.outputs.GUI_FILE }}
+          ${{ steps.zip_app.outputs.GUI_FILE }}
         
   build-examples:
     name: Zip up examples

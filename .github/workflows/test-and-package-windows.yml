@@ -162,7 +162,7 @@ jobs:
     - name: Upload the conda package to anaconda.org
       if: github.ref_type == 'tag'
       run: |
-        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow --force dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
         
 
   build-windows-wheels:
@@ -314,6 +314,7 @@ jobs:
         makensis.exe //NOCD package/installer.nsis
         
     - name: Rename installer and remove remaining files
+      id: zip_app
       run: |
         cd dist
         mv cytoflow-installer.exe cytoflow-installer-${GIT_TAG}-win-amd64.exe
@@ -337,4 +338,4 @@ jobs:
         draft: true
         working_directory: dist
         files: |
-          ${{ steps.rename_directory.outputs.GUI_FILE }}
+          ${{ steps.zip_app.outputs.GUI_FILE }}
