@@ -213,6 +213,7 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         draft: true
+        working_directory: dist
         files: |
           ${{ steps.get_filenames.outputs.EXTENSION_FILE }}
           ${{ steps.get_filenames.outputs.WHEEL_FILE }}
@@ -293,5 +294,6 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         draft: true
+        working_directory: dist
         files: |
           ${{ steps.rename_directory.outputs.GUI_FILE }}
