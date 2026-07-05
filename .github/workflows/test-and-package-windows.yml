@@ -317,7 +317,7 @@ jobs:
       id: zip_app
       run: |
         cd dist
-        mv cytoflow-installer.exe cytoflow-gui-${GIT_TAG}-win_x86_64.exe
+        mv cytoflow-installer.exe cytoflow-gui-${GIT_TAG}-win_x86-64.exe
         echo "GUI_FILE=cytoflow-gui-${GIT_TAG}-win_x86-64.exe" >> $GITHUB_OUTPUT
         rm -rf cytoflow
         
