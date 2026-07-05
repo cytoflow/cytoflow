@@ -313,12 +313,11 @@ jobs:
       run: |
         makensis.exe //NOCD package/installer.nsis
         
-    - name: Rename installer and remove remaining files
+    - name: Remove remaining files in dist/
       id: zip_app
       run: |
         cd dist
-        mv cytoflow-installer*.exe cytoflow-installer-${GIT_TAG}-win-amd64.exe
-        echo "GUI_FILE=cytoflow-gui-${GIT_TAG}-win_x86-64.exe" >> $GITHUB_OUTPUT
+        echo "GUI_FILE=cytoflow-installer-${GIT_TAG}-win-amd64.exe" >> $GITHUB_OUTPUT
         rm -rf cytoflow
         
     - name: List dist
