@@ -544,7 +544,6 @@ class VerticalNotebook(HasPrivateTraits):
         for page in self.pages:
             self.layout.addWidget(page.control)
             
-        self.layout.addStretch(1)
         self.control.setUpdatesEnabled(True)
 
 
