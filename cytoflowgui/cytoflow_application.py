@@ -145,7 +145,10 @@ class CytoflowApplication(TasksApplication):
         gui_error_handler = CallbackHandler(lambda rec, app = self: gui_handler_callback(rec, app))
         gui_error_handler.setLevel(logging.WARNING)
 
-        filter_messages = ["Populating font family aliases"]
+        # strings that we don't want to log
+        filter_messages = ["Populating font family aliases", 
+                           "GPUInfo"]
+        
         def gui_filter(record):
             for fm in filter_messages:
                 if fm in record.message:
