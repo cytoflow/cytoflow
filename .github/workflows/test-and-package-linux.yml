@@ -169,11 +169,15 @@ jobs:
     - name: Upload conda package to anaconda.org
       if: github.ref_type == 'tag'
       run: |
+<<<<<<< HEAD
 <<<<<<< Upstream, based on 1.3.1-fixes
         anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow --force dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
 =======
         anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
 >>>>>>> b386107 build: use softprops/action-gh-release
+=======
+        anaconda -t ${{ secrets.CONDA_TOKEN }} upload --user cytoflow dist/${{ steps.get_filenames.outputs.CONDA_PACKAGE }}
+>>>>>>> branch 'master' of git@github.com:cytoflow/cytoflow.git
 
   build-linux-wheels:
     name: Build source dist, wheels and binary extension
@@ -245,10 +249,13 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         draft: true
+<<<<<<< HEAD
 <<<<<<< Upstream, based on 1.3.1-fixes
         working_directory: dist
 =======
 >>>>>>> b386107 build: use softprops/action-gh-release
+=======
+>>>>>>> branch 'master' of git@github.com:cytoflow/cytoflow.git
         files: |
           ${{ steps.get_filenames.outputs.EXTENSION_FILE }}
           ${{ steps.get_filenames.outputs.WHEEL_FILE }}
@@ -307,11 +314,15 @@ jobs:
 #        xvfb-run dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
 
     - name: Rename directory and make a tarball
+<<<<<<< HEAD
 <<<<<<< Upstream, based on 1.3.1-fixes
       id: zip_app
 =======
       id: rename_directory
 >>>>>>> b386107 build: use softprops/action-gh-release
+=======
+      id: rename_directory
+>>>>>>> branch 'master' of git@github.com:cytoflow/cytoflow.git
       run: |
         cd dist
         mv cytoflow cytoflow-${GIT_TAG}
@@ -334,6 +345,7 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         draft: true
+<<<<<<< HEAD
 <<<<<<< Upstream, based on 1.3.1-fixes
         working_directory: dist
         files: |
@@ -342,6 +354,10 @@ jobs:
         files: |
           ${{ steps.rename_directory.outputs.GUI_FILE }}
 >>>>>>> b386107 build: use softprops/action-gh-release
+=======
+        files: |
+          ${{ steps.rename_directory.outputs.GUI_FILE }}
+>>>>>>> branch 'master' of git@github.com:cytoflow/cytoflow.git
         
   build-examples:
     name: Zip up examples
@@ -391,10 +407,13 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         draft: true
+<<<<<<< HEAD
 <<<<<<< Upstream, based on 1.3.1-fixes
         working_directory: dist
 =======
 >>>>>>> b386107 build: use softprops/action-gh-release
+=======
+>>>>>>> branch 'master' of git@github.com:cytoflow/cytoflow.git
         files: |
           ${{ steps.zip_examples.outputs.BASIC_FILE }}
           ${{ steps.zip_examples.outputs.ADVANCED_FILE }}
