@@ -559,10 +559,9 @@ class GaussianMixtureOp(HasStrictTraits):
                     s = np.linalg.pinv(gmm.covariances_[c])
                     mu = gmm.means_[c]
                     
-                    # compute the Mahalanobis distance
-
-                    f = lambda x, mu, s: np.dot(np.dot((x - mu).T, s), (x - mu))
-                    dist = np.apply_along_axis(f, 1, x, mu, s)
+                    # compute the Mahalanobis distance (vectorized)
+                    diff = x - mu
+                    dist = np.sum(diff @ s * diff, axis=1)
 
                     # come up with a threshold based on sigma.  you'll note we
                     # didn't sqrt dist: that's because for a multivariate 
