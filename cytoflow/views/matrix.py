@@ -30,6 +30,7 @@ petal plots.
 import math
 from warnings import warn
 from natsort import natsorted
+from itertools import compress
 
 from traits.api import HasStrictTraits, provides, Enum, Str, Constant, Callable
 import seaborn as sns
@@ -424,10 +425,11 @@ class MatrixView(HasStrictTraits):
                     row_idx = rows.index(group_name)
                     col_idx = 0
                 else:
-                    # can't depend on the order of row, column
-                    row_name = next(filter(lambda x: x in rows, group_name))
+                    # can't depend on the order of row, column becase we sorted the keys to 
+                    # match the index order, above
+                    row_name = next(compress(group_name, [x == self.xfacet for x in group_keys]))
                     row_idx = rows.index(row_name)
-                    col_name = next(filter(lambda x: x in cols, group_name))
+                    col_name = next(compress(group_name, [x == self.yfacet for x in group_keys]))
                     col_idx = cols.index(col_name)
                     
                 plt.sca(grid.axes_row[row_idx][col_idx])
@@ -477,9 +479,9 @@ class MatrixView(HasStrictTraits):
                     col_idx = 0
                 else:
                     # can't depend on the order of row, column
-                    row_name = next(filter(lambda x: x in rows, group_name))
+                    row_name = next(compress(group_name, [x == self.xfacet for x in group_keys]))
                     row_idx = rows.index(row_name)
-                    col_name = next(filter(lambda x: x in cols, group_name))
+                    col_name = next(compress(group_name, [x == self.yfacet for x in group_keys]))
                     col_idx = cols.index(col_name)
                     
                 if self.variable:
@@ -549,9 +551,9 @@ class MatrixView(HasStrictTraits):
                     col_idx = 0
                 else:
                     # can't depend on the order of row, column
-                    row_name = next(filter(lambda x: x in rows, group_name))
+                    row_name = next(compress(group_name, [x == self.xfacet for x in group_keys]))
                     row_idx = rows.index(row_name)
-                    col_name = next(filter(lambda x: x in cols, group_name))
+                    col_name = next(compress(group_name, [x == self.yfacet for x in group_keys]))
                     col_idx = cols.index(col_name)
                     
                 plt.sca(grid.axes_row[row_idx][col_idx])
